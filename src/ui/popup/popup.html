@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>arXiv to Markdown</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <path d="M14 2v6h6"/>
+        </svg>
+        <h1>arXiv to Markdown</h1>
+      </div>
+      <div class="version">v1.0.0</div>
+    </div>
+
+    <!-- Status Section -->
+    <div class="status-section">
+      <div class="status-item">
+        <div class="status-label">转换模式</div>
+        <div class="status-value" id="currentMode">加载中...</div>
+      </div>
+      <div class="status-item">
+        <div class="status-label">MinerU Token</div>
+        <div class="status-value" id="tokenStatus">未配置</div>
+      </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats-section">
+      <h3>转换统计</h3>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number" id="totalConversions">0</div>
+          <div class="stat-label">总转换数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="ar5ivSuccess">0</div>
+          <div class="stat-label">ar5iv 成功</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="mineruSuccess">0</div>
+          <div class="stat-label">MinerU 成功</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="pdfFallback">0</div>
+          <div class="stat-label">PDF 兜底</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="actions-section">
+      <button class="btn btn-primary" id="convertBtn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 1v6h6"/>
+        </svg>
+        转换当前论文
+      </button>
+      <button class="btn btn-secondary" id="settingsBtn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
+          <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319z"/>
+        </svg>
+        设置
+      </button>
+    </div>
+
+    <!-- Help Text -->
+    <div class="help-text">
+      <p>💡 提示：在 arXiv 论文页面点击"保存为 Markdown"按钮即可转换</p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <a href="https://github.com/yourusername/arxiv-md" target="_blank">GitHub</a>
+      <span>•</span>
+      <a href="#" id="feedbackLink">反馈问题</a>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
+
