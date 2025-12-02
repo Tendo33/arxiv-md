@@ -20,6 +20,7 @@
 ## 生成图标
 
 可以使用以下工具：
+
 - [Figma](https://figma.com)
 - [Canva](https://canva.com)
 - [GIMP](https://www.gimp.org/)
@@ -36,4 +37,3 @@ convert -size 16x16 xc:#667eea icon-16.png
 convert -size 48x48 xc:#667eea icon-48.png
 convert -size 128x128 xc:#667eea icon-128.png
 ```
-

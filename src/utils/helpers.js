@@ -1,6 +1,6 @@
 // 通用工具函数集合
 
-import { REGEX } from '@config/constants';
+import { REGEX } from "@config/constants";
 
 /**
  * 从 URL 或文本中提取 arXiv ID
@@ -19,41 +19,41 @@ export function extractArxivId(text) {
  */
 export function sanitizeFilename(filename) {
   return filename
-    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '') // 移除非法字符
-    .replace(/\s+/g, ' ')                  // 合并多个空格
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, "") // 移除非法字符
+    .replace(/\s+/g, " ") // 合并多个空格
     .trim()
-    .substring(0, 200);                    // 限制长度
+    .substring(0, 200); // 限制长度
 }
 
 /**
  * 生成文件名
  * 格式: (Year) Title - FirstAuthor.ext
  */
-export function generateFilename(metadata, extension = 'md') {
+export function generateFilename(metadata, extension = "md") {
   const { title, authors, year, arxivId } = metadata;
-  let filename = '';
-  
+  let filename = "";
+
   if (year) {
     filename += `(${year}) `;
   }
-  
-  if (title && typeof title === 'string' && title.trim() !== '') {
+
+  if (title && typeof title === "string" && title.trim() !== "") {
     filename += sanitizeFilename(title);
   } else {
-    filename += `arxiv_${arxivId || 'unknown'}`;
+    filename += `arxiv_${arxivId || "unknown"}`;
   }
-  
+
   if (authors && Array.isArray(authors) && authors.length > 0) {
-    const firstAuthor = authors[0].split(' ').pop();
+    const firstAuthor = authors[0].split(" ").pop();
     if (firstAuthor) {
       filename += ` - ${sanitizeFilename(firstAuthor)}`;
     }
   }
-  
-  if (!filename || filename.trim() === '') {
+
+  if (!filename || filename.trim() === "") {
     filename = `arxiv_${arxivId || Date.now()}`;
   }
-  
+
   return `${filename.trim()}.${extension}`;
 }
 
@@ -63,7 +63,7 @@ export function generateFilename(metadata, extension = 'md') {
  * @returns {Promise}
  */
 export function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -73,7 +73,7 @@ export function sleep(ms) {
  */
 export async function checkUrlExists(url) {
   try {
-    const response = await fetch(url, { method: 'HEAD' });
+    const response = await fetch(url, { method: "HEAD" });
     return response.ok;
   } catch (error) {
     return false;
@@ -92,7 +92,7 @@ export function downloadFile(url, filename) {
       {
         url: url,
         filename: filename,
-        saveAs: false
+        saveAs: false,
       },
       (downloadId) => {
         if (chrome.runtime.lastError) {
@@ -100,7 +100,7 @@ export function downloadFile(url, filename) {
         } else {
           resolve(downloadId);
         }
-      }
+      },
     );
   });
 }
@@ -110,45 +110,49 @@ export function downloadFile(url, filename) {
  */
 export function downloadBlob(blob, filename) {
   // 验证并清理文件名
-  if (!filename || typeof filename !== 'string' || filename.trim() === '') {
+  if (!filename || typeof filename !== "string" || filename.trim() === "") {
     filename = `arxiv_document_${Date.now()}.md`;
   }
-  
+
   // 清理非法字符
-  let cleanFilename = filename
-    .replace(/[<>:"/\\|?*\[\]]/g, '_')
-    .replace(/\s+/g, ' ')
-    .replace(/^\.+/, '')
-    .trim() || `arxiv_${Date.now()}.md`;
-  
-  if (!cleanFilename.includes('.')) {
-    cleanFilename += '.md';
+  let cleanFilename =
+    filename
+      .replace(/[<>:"/\\|?*\[\]]/g, "_")
+      .replace(/\s+/g, " ")
+      .replace(/^\.+/, "")
+      .trim() || `arxiv_${Date.now()}.md`;
+
+  if (!cleanFilename.includes(".")) {
+    cleanFilename += ".md";
   }
-  
+
   // 转换为 ASCII 安全格式（Chrome 对非 ASCII 文件名支持不佳）
   const asciiSafeFilename = cleanFilename
-    .replace(/[^\x00-\x7F]+/g, '_')
-    .replace(/_+/g, '_')
-    .replace(/^_+|_+$/g, '');
-  
+    .replace(/[^\x00-\x7F]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
   const reader = new FileReader();
   reader.onloadend = () => {
-    chrome.downloads.download({
-      url: reader.result,
-      filename: asciiSafeFilename,
-      saveAs: false,
-      conflictAction: 'uniquify'
-    }, (downloadId) => {
-      if (chrome.runtime.lastError) {
-        // 回退：使用保存对话框
-        chrome.downloads.download({
-          url: reader.result,
-          filename: cleanFilename,
-          saveAs: true,
-          conflictAction: 'uniquify'
-        });
-      }
-    });
+    chrome.downloads.download(
+      {
+        url: reader.result,
+        filename: asciiSafeFilename,
+        saveAs: false,
+        conflictAction: "uniquify",
+      },
+      (downloadId) => {
+        if (chrome.runtime.lastError) {
+          // 回退：使用保存对话框
+          chrome.downloads.download({
+            url: reader.result,
+            filename: cleanFilename,
+            saveAs: true,
+            conflictAction: "uniquify",
+          });
+        }
+      },
+    );
   };
   reader.readAsDataURL(blob);
 }
@@ -159,9 +163,9 @@ export function downloadBlob(blob, filename) {
  * @returns {string} 格式化后的字符串
  */
 export function formatBytes(bytes) {
-  if (bytes === 0) return '0 B';
+  if (bytes === 0) return "0 B";
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
 }
@@ -185,12 +189,12 @@ export function formatDuration(ms) {
  * @param {string} message - 消息
  * @param {string} type - 类型 ('basic', 'image', 'list', 'progress')
  */
-export function showNotification(title, message, type = 'basic') {
+export function showNotification(title, message, type = "basic") {
   chrome.notifications.create({
     type: type,
-    iconUrl: 'assets/icon-128.png',
+    iconUrl: "assets/icon-128.png",
     title: title,
-    message: message
+    message: message,
   });
 }
 
@@ -204,9 +208,8 @@ export function asyncErrorHandler(fn) {
     try {
       return await fn(...args);
     } catch (error) {
-      console.error('Async error:', error);
+      console.error("Async error:", error);
       throw error;
     }
   };
 }
-

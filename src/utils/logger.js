@@ -4,13 +4,16 @@ const LOG_LEVELS = {
   ERROR: 0,
   WARN: 1,
   INFO: 2,
-  DEBUG: 3
+  DEBUG: 3,
 };
 
 class Logger {
-  constructor(namespace = 'ArxivMD') {
+  constructor(namespace = "ArxivMD") {
     this.namespace = namespace;
-    this.level = process.env.NODE_ENV === 'production' ? LOG_LEVELS.WARN : LOG_LEVELS.DEBUG;
+    this.level =
+      process.env.NODE_ENV === "production"
+        ? LOG_LEVELS.WARN
+        : LOG_LEVELS.DEBUG;
   }
 
   _log(level, levelName, ...args) {
@@ -22,19 +25,19 @@ class Logger {
   }
 
   error(...args) {
-    this._log(LOG_LEVELS.ERROR, 'ERROR', ...args);
+    this._log(LOG_LEVELS.ERROR, "ERROR", ...args);
   }
 
   warn(...args) {
-    this._log(LOG_LEVELS.WARN, 'WARN', ...args);
+    this._log(LOG_LEVELS.WARN, "WARN", ...args);
   }
 
   info(...args) {
-    this._log(LOG_LEVELS.INFO, 'INFO', ...args);
+    this._log(LOG_LEVELS.INFO, "INFO", ...args);
   }
 
   debug(...args) {
-    this._log(LOG_LEVELS.DEBUG, 'DEBUG', ...args);
+    this._log(LOG_LEVELS.DEBUG, "DEBUG", ...args);
   }
 
   setLevel(level) {
@@ -43,8 +46,7 @@ class Logger {
 }
 
 // 导出单例
-export default new Logger('ArxivMD');
+export default new Logger("ArxivMD");
 
 // 导出创建自定义 logger 的工厂函数
 export const createLogger = (namespace) => new Logger(namespace);
-

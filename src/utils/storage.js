@@ -1,7 +1,7 @@
 // Chrome Storage 封装 - 提供类型安全的存储访问
 
-import { STORAGE_KEYS, DEFAULTS } from '@config/constants';
-import logger from './logger';
+import { STORAGE_KEYS, DEFAULTS } from "@config/constants";
+import logger from "./logger";
 
 /**
  * Storage Manager - 封装 Chrome Storage API
@@ -22,7 +22,7 @@ class StorageManager {
       const result = await this.storage.get(key);
       return result[key] !== undefined ? result[key] : defaultValue;
     } catch (error) {
-      logger.error('Storage get error:', error);
+      logger.error("Storage get error:", error);
       return defaultValue;
     }
   }
@@ -38,7 +38,7 @@ class StorageManager {
       await this.storage.set({ [key]: value });
       logger.debug(`Storage set: ${key}`, value);
     } catch (error) {
-      logger.error('Storage set error:', error);
+      logger.error("Storage set error:", error);
       throw error;
     }
   }
@@ -52,7 +52,7 @@ class StorageManager {
     try {
       return await this.storage.get(keys);
     } catch (error) {
-      logger.error('Storage getMultiple error:', error);
+      logger.error("Storage getMultiple error:", error);
       return {};
     }
   }
@@ -65,9 +65,9 @@ class StorageManager {
   async setMultiple(items) {
     try {
       await this.storage.set(items);
-      logger.debug('Storage setMultiple:', Object.keys(items));
+      logger.debug("Storage setMultiple:", Object.keys(items));
     } catch (error) {
-      logger.error('Storage setMultiple error:', error);
+      logger.error("Storage setMultiple error:", error);
       throw error;
     }
   }
@@ -80,9 +80,9 @@ class StorageManager {
   async remove(keys) {
     try {
       await this.storage.remove(keys);
-      logger.debug('Storage remove:', keys);
+      logger.debug("Storage remove:", keys);
     } catch (error) {
-      logger.error('Storage remove error:', error);
+      logger.error("Storage remove error:", error);
       throw error;
     }
   }
@@ -94,9 +94,9 @@ class StorageManager {
   async clear() {
     try {
       await this.storage.clear();
-      logger.warn('Storage cleared');
+      logger.warn("Storage cleared");
     } catch (error) {
-      logger.error('Storage clear error:', error);
+      logger.error("Storage clear error:", error);
       throw error;
     }
   }
@@ -145,7 +145,7 @@ class StorageManager {
       ar5ivSuccess: 0,
       mineruSuccess: 0,
       pdfFallback: 0,
-      lastConversionTime: null
+      lastConversionTime: null,
     });
   }
 
@@ -166,23 +166,25 @@ class StorageManager {
   async incrementConversion(tier) {
     const stats = await this.getStatistics();
     stats.totalConversions += 1;
-    
+
     switch (tier) {
-    case 'ar5iv_local':
-      stats.ar5ivSuccess += 1;
-      break;
-    case 'mineru_api':
-      stats.mineruSuccess += 1;
-      break;
-    case 'pdf_fallback':
-      stats.pdfFallback += 1;
-      break;
+      case "ar5iv_local":
+        stats.ar5ivSuccess += 1;
+        break;
+      case "mineru_api":
+        stats.mineruSuccess += 1;
+        break;
+      case "pdf_fallback":
+        stats.pdfFallback += 1;
+        break;
     }
-    
-    await this.set(STORAGE_KEYS.STATISTICS, { ...stats, lastConversionTime: Date.now() });
+
+    await this.set(STORAGE_KEYS.STATISTICS, {
+      ...stats,
+      lastConversionTime: Date.now(),
+    });
   }
 }
 
 // 导出单例
 export default new StorageManager();
-

@@ -1,197 +1,250 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>arXiv to Markdown - 设置</title>
-  <link rel="stylesheet" href="settings.css">
-</head>
-<body>
-  <div class="settings-container">
-    <!-- Header -->
-    <header class="header">
-      <div class="header-content">
-        <div class="logo">
-          <!-- Brand Logo -->
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="24" height="24" rx="6" fill="white" fill-opacity="0.2"/>
-            <text x="12" y="17" font-family="Arial, sans-serif" font-weight="bold" font-size="13" fill="white" text-anchor="middle">Md</text>
-          </svg>
-          <h1>arXiv to Markdown</h1>
-        </div>
-        <div class="version">v1.0.0</div>
-      </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="main-content">
-      <!-- Welcome Message (shown on first install) -->
-      <div class="welcome-banner" id="welcomeBanner" style="display: none;">
-        <h2>🎉 欢迎使用 arXiv to Markdown！</h2>
-        <p>一键将 arXiv 论文转换为 Markdown，支持智能三层降级策略，保证最佳转换质量。</p>
-      </div>
-
-      <!-- Conversion Mode Section -->
-      <section class="settings-section">
-        <h2>转换模式</h2>
-        <p class="section-description">选择论文转换的默认策略</p>
-        
-        <div class="mode-cards">
-          <label class="mode-card">
-            <input type="radio" name="conversionMode" value="fast">
-            <div class="mode-content">
-              <div class="mode-icon">⚡</div>
-              <div class="mode-title">快速模式</div>
-              <div class="mode-description">仅使用 ar5iv + 本地转换，速度最快</div>
-              <div class="mode-badge">推荐：日常使用</div>
-            </div>
-          </label>
-
-          <label class="mode-card">
-            <input type="radio" name="conversionMode" value="quality" checked>
-            <div class="mode-content">
-              <div class="mode-icon">🔥</div>
-              <div class="mode-title">质量模式</div>
-              <div class="mode-description">ar5iv 失败时自动调用 MinerU 深度解析</div>
-              <div class="mode-badge mode-badge-recommended">默认推荐</div>
-            </div>
-          </label>
-
-          <label class="mode-card">
-            <input type="radio" name="conversionMode" value="always">
-            <div class="mode-content">
-              <div class="mode-icon">💎</div>
-              <div class="mode-title">极致模式</div>
-              <div class="mode-description">始终使用 MinerU，质量最高但速度较慢</div>
-              <div class="mode-badge">需要 Token</div>
-            </div>
-          </label>
-        </div>
-      </section>
-
-      <!-- MinerU API Section -->
-      <section class="settings-section">
-        <h2>MinerU API 配置</h2>
-        <p class="section-description">配置后可享受高质量 PDF 解析（可选）</p>
-        
-        <div class="form-group">
-          <label for="mineruToken">API Token</label>
-          <div class="input-group">
-            <input 
-              type="password" 
-              id="mineruToken" 
-              placeholder="输入您的 MinerU API Token"
-              class="input-field"
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>arXiv to Markdown - 设置</title>
+    <link rel="stylesheet" href="settings.css" />
+  </head>
+  <body>
+    <div class="settings-container">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-content">
+          <div class="logo">
+            <!-- Brand Logo -->
+            <svg
+              width="36"
+              height="36"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
             >
-            <button id="toggleTokenBtn" class="btn-icon" title="显示/隐藏">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                <circle cx="12" cy="12" r="3"/>
-              </svg>
-            </button>
+              <rect
+                width="24"
+                height="24"
+                rx="6"
+                fill="white"
+                fill-opacity="0.2"
+              />
+              <text
+                x="12"
+                y="17"
+                font-family="Arial, sans-serif"
+                font-weight="bold"
+                font-size="13"
+                fill="white"
+                text-anchor="middle"
+              >
+                Md
+              </text>
+            </svg>
+            <h1>arXiv to Markdown</h1>
           </div>
-          <div class="form-hint">
-            🔗 <a href="https://mineru.net" target="_blank">访问 mineru.net</a> 注册账号并获取 Token
+          <div class="version">v1.0.0</div>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Welcome Message (shown on first install) -->
+        <div class="welcome-banner" id="welcomeBanner" style="display: none">
+          <h2>🎉 欢迎使用 arXiv to Markdown！</h2>
+          <p>
+            一键将 arXiv 论文转换为
+            Markdown，支持智能三层降级策略，保证最佳转换质量。
+          </p>
+        </div>
+
+        <!-- Conversion Mode Section -->
+        <section class="settings-section">
+          <h2>转换模式</h2>
+          <p class="section-description">选择论文转换的默认策略</p>
+
+          <div class="mode-cards">
+            <label class="mode-card">
+              <input type="radio" name="conversionMode" value="fast" />
+              <div class="mode-content">
+                <div class="mode-icon">⚡</div>
+                <div class="mode-title">快速模式</div>
+                <div class="mode-description">
+                  仅使用 ar5iv + 本地转换，速度最快
+                </div>
+                <div class="mode-badge">推荐：日常使用</div>
+              </div>
+            </label>
+
+            <label class="mode-card">
+              <input
+                type="radio"
+                name="conversionMode"
+                value="quality"
+                checked
+              />
+              <div class="mode-content">
+                <div class="mode-icon">🔥</div>
+                <div class="mode-title">质量模式</div>
+                <div class="mode-description">
+                  ar5iv 失败时自动调用 MinerU 深度解析
+                </div>
+                <div class="mode-badge mode-badge-recommended">默认推荐</div>
+              </div>
+            </label>
+
+            <label class="mode-card">
+              <input type="radio" name="conversionMode" value="always" />
+              <div class="mode-content">
+                <div class="mode-icon">💎</div>
+                <div class="mode-title">极致模式</div>
+                <div class="mode-description">
+                  始终使用 MinerU，质量最高但速度较慢
+                </div>
+                <div class="mode-badge">需要 Token</div>
+              </div>
+            </label>
           </div>
-          <div class="token-status" id="tokenStatus"></div>
-        </div>
+        </section>
 
-        <div class="info-box">
-          <div class="info-title">💡 MinerU 的优势</div>
-          <ul>
-            <li>✅ 完美处理复杂 LaTeX 公式</li>
-            <li>✅ 高精度表格识别</li>
-            <li>✅ 图片自动提取</li>
-            <li>✅ 支持所有 PDF（不依赖 ar5iv）</li>
-          </ul>
-          <div class="info-quota">
-            免费账号：每天 2000 页解析额度
+        <!-- MinerU API Section -->
+        <section class="settings-section">
+          <h2>MinerU API 配置</h2>
+          <p class="section-description">配置后可享受高质量 PDF 解析（可选）</p>
+
+          <div class="form-group">
+            <label for="mineruToken">API Token</label>
+            <div class="input-group">
+              <input
+                type="password"
+                id="mineruToken"
+                placeholder="输入您的 MinerU API Token"
+                class="input-field"
+              />
+              <button id="toggleTokenBtn" class="btn-icon" title="显示/隐藏">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                >
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
+            </div>
+            <div class="form-hint">
+              🔗
+              <a href="https://mineru.net" target="_blank">访问 mineru.net</a>
+              注册账号并获取 Token
+            </div>
+            <div class="token-status" id="tokenStatus"></div>
+          </div>
+
+          <div class="info-box">
+            <div class="info-title">💡 MinerU 的优势</div>
+            <ul>
+              <li>✅ 完美处理复杂 LaTeX 公式</li>
+              <li>✅ 高精度表格识别</li>
+              <li>✅ 图片自动提取</li>
+              <li>✅ 支持所有 PDF（不依赖 ar5iv）</li>
+            </ul>
+            <div class="info-quota">免费账号：每天 2000 页解析额度</div>
+          </div>
+        </section>
+
+        <!-- Advanced Settings -->
+        <section class="settings-section">
+          <h2>高级选项</h2>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="autoConvert" />
+              <span>自动转换（进入论文页面自动弹出转换提示）</span>
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="includeMetadata" checked />
+              <span>在 Markdown 中包含元数据（标题、作者、ID 等）</span>
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="showNotifications" checked />
+              <span>显示桌面通知</span>
+            </label>
+          </div>
+        </section>
+
+        <!-- Statistics -->
+        <section class="settings-section">
+          <h2>使用统计</h2>
+
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-number" id="totalConversions">0</div>
+              <div class="stat-label">总转换次数</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number" id="ar5ivSuccess">0</div>
+              <div class="stat-label">ar5iv 成功</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number" id="mineruSuccess">0</div>
+              <div class="stat-label">MinerU 成功</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number" id="pdfFallback">0</div>
+              <div class="stat-label">PDF 兜底</div>
+            </div>
+          </div>
+
+          <button class="btn btn-secondary" id="resetStatsBtn">
+            重置统计数据
+          </button>
+        </section>
+
+        <!-- Actions -->
+        <div class="actions-bar">
+          <button class="btn btn-primary" id="saveBtn">保存设置</button>
+          <button class="btn btn-secondary" id="resetBtn">恢复默认</button>
+        </div>
+      </main>
+
+      <!-- Footer -->
+      <footer class="footer">
+        <div class="footer-content">
+          <div class="footer-links">
+            <a href="https://github.com/yourusername/arxiv-md" target="_blank"
+              >GitHub</a
+            >
+            <span>•</span>
+            <a
+              href="https://github.com/yourusername/arxiv-md/issues"
+              target="_blank"
+              >报告问题</a
+            >
+            <span>•</span>
+            <a
+              href="https://github.com/yourusername/arxiv-md/blob/main/LICENSE"
+              target="_blank"
+              >MIT License</a
+            >
+          </div>
+          <div class="footer-copyright">
+            © 2025 Jinfeng Sun. Made with ❤️ for researchers.
           </div>
         </div>
-      </section>
+      </footer>
+    </div>
 
-      <!-- Advanced Settings -->
-      <section class="settings-section">
-        <h2>高级选项</h2>
-        
-        <div class="form-group">
-          <label class="checkbox-label">
-            <input type="checkbox" id="autoConvert">
-            <span>自动转换（进入论文页面自动弹出转换提示）</span>
-          </label>
-        </div>
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+      <span class="toast-message"></span>
+    </div>
 
-        <div class="form-group">
-          <label class="checkbox-label">
-            <input type="checkbox" id="includeMetadata" checked>
-            <span>在 Markdown 中包含元数据（标题、作者、ID 等）</span>
-          </label>
-        </div>
-
-        <div class="form-group">
-          <label class="checkbox-label">
-            <input type="checkbox" id="showNotifications" checked>
-            <span>显示桌面通知</span>
-          </label>
-        </div>
-      </section>
-
-      <!-- Statistics -->
-      <section class="settings-section">
-        <h2>使用统计</h2>
-        
-        <div class="stats-grid">
-          <div class="stat-item">
-            <div class="stat-number" id="totalConversions">0</div>
-            <div class="stat-label">总转换次数</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number" id="ar5ivSuccess">0</div>
-            <div class="stat-label">ar5iv 成功</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number" id="mineruSuccess">0</div>
-            <div class="stat-label">MinerU 成功</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number" id="pdfFallback">0</div>
-            <div class="stat-label">PDF 兜底</div>
-          </div>
-        </div>
-
-        <button class="btn btn-secondary" id="resetStatsBtn">重置统计数据</button>
-      </section>
-
-      <!-- Actions -->
-      <div class="actions-bar">
-        <button class="btn btn-primary" id="saveBtn">保存设置</button>
-        <button class="btn btn-secondary" id="resetBtn">恢复默认</button>
-      </div>
-    </main>
-
-    <!-- Footer -->
-    <footer class="footer">
-      <div class="footer-content">
-        <div class="footer-links">
-          <a href="https://github.com/yourusername/arxiv-md" target="_blank">GitHub</a>
-          <span>•</span>
-          <a href="https://github.com/yourusername/arxiv-md/issues" target="_blank">报告问题</a>
-          <span>•</span>
-          <a href="https://github.com/yourusername/arxiv-md/blob/main/LICENSE" target="_blank">MIT License</a>
-        </div>
-        <div class="footer-copyright">
-          © 2025 Jinfeng Sun. Made with ❤️ for researchers.
-        </div>
-      </div>
-    </footer>
-  </div>
-
-  <!-- Toast Notification -->
-  <div class="toast" id="toast">
-    <span class="toast-message"></span>
-  </div>
-
-  <script src="settings.js"></script>
-</body>
+    <script src="settings.js"></script>
+  </body>
 </html>
-

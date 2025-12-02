@@ -10,6 +10,7 @@
 ### 🎉 首次发布
 
 #### 新增功能
+
 - ✨ 三层智能降级转换架构
   - Tier 1: ar5iv + 本地 Turndown（快速模式）
   - Tier 2: MinerU API 深度解析（质量模式）
@@ -44,6 +45,7 @@
   - 桌面通知
 
 #### 技术特性
+
 - 📦 Webpack 5 构建系统
 - 🎯 ES6+ 现代 JavaScript
 - 🛠️ 模块化架构（SOLID 原则）
@@ -52,18 +54,21 @@
 - 🚀 Chrome Extension Manifest V3
 
 #### 文档
+
 - 📖 完整的 README.md
 - 📝 CONTRIBUTING.md 贡献指南
 - 📄 CHANGELOG.md 更新日志
 - 🔧 开发和构建文档
 
 ### 已知限制
+
 - ar5iv 覆盖率约 85%（取决于 LaTeX 源码复杂度）
 - MinerU 免费账号每天 2000 页额度
 - 图片以外链形式保存（需联网查看）
 - 仅支持 Chrome/Edge 浏览器
 
 ### 计划中的功能
+
 - [ ] Firefox 版本
 - [ ] 批量转换
 - [ ] 本地图片下载选项
@@ -75,6 +80,7 @@
 ## [未发布]
 
 ### 即将推出
+
 - 批量转换模式
 - 图片本地化选项
 - 更多转换模式
@@ -82,4 +88,3 @@
 ---
 
 [1.0.0]: https://github.com/yourusername/arxiv-md/releases/tag/v1.0.0
-

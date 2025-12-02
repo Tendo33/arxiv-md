@@ -1,19 +1,19 @@
 // Content Script - 在 arXiv 页面注入功能，提取元数据，触发转换
 
-import metadataExtractor from '@core/metadata-extractor';
-import logger from '@utils/logger';
-import { REGEX } from '@config/constants';
-import TurndownService from 'turndown';
-import { gfm } from 'turndown-plugin-gfm';
+import metadataExtractor from "@core/metadata-extractor";
+import logger from "@utils/logger";
+import { REGEX } from "@config/constants";
+import TurndownService from "turndown";
+import { gfm } from "turndown-plugin-gfm";
 
-logger.info('Content script loaded on:', window.location.href);
+logger.info("Content script loaded on:", window.location.href);
 
 // 检查是否在 arXiv 页面
 const isArxivAbsPage = REGEX.ARXIV_ABS_PAGE.test(window.location.href);
 const isArxivPdfPage = REGEX.ARXIV_PDF_PAGE.test(window.location.href);
 
 if (!isArxivAbsPage && !isArxivPdfPage) {
-  logger.warn('Not an arXiv page, exiting');
+  logger.warn("Not an arXiv page, exiting");
 } else {
   init();
 }
@@ -22,35 +22,35 @@ if (!isArxivAbsPage && !isArxivPdfPage) {
  * 初始化
  */
 function init() {
-  logger.debug('Initializing content script');
-  
+  logger.debug("Initializing content script");
+
   // 注入转换按钮
   injectConvertButton();
-  
+
   // 监听来自 Background 的消息
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    logger.debug('Content script received message:', message);
-    
+    logger.debug("Content script received message:", message);
+
     switch (message.type) {
-    case 'TRIGGER_CONVERSION':
-      handleConversionTrigger();
-      break;
-      
-    case 'CONVERSION_PROGRESS':
-      updateProgressUI(message.data);
-      break;
-      
-    case 'CONVERT_HTML_TO_MARKDOWN':
-      // 在真实浏览器环境中执行 HTML → Markdown 转换
-      handleHtmlToMarkdown(message.data, sendResponse);
-      return true; // 保持消息通道打开以异步响应
-      
-    case 'DOWNLOAD_FILE':
-      // 在页面环境中执行文件下载（使用 <a> download 属性）
-      handleFileDownload(message.data, sendResponse);
-      return true; // 保持消息通道打开以异步响应
+      case "TRIGGER_CONVERSION":
+        handleConversionTrigger();
+        break;
+
+      case "CONVERSION_PROGRESS":
+        updateProgressUI(message.data);
+        break;
+
+      case "CONVERT_HTML_TO_MARKDOWN":
+        // 在真实浏览器环境中执行 HTML → Markdown 转换
+        handleHtmlToMarkdown(message.data, sendResponse);
+        return true; // 保持消息通道打开以异步响应
+
+      case "DOWNLOAD_FILE":
+        // 在页面环境中执行文件下载（使用 <a> download 属性）
+        handleFileDownload(message.data, sendResponse);
+        return true; // 保持消息通道打开以异步响应
     }
-    
+
     sendResponse({ received: true });
   });
 }
@@ -60,25 +60,25 @@ function init() {
  */
 function injectConvertButton() {
   if (!isArxivAbsPage) return; // 只在 Abstract 页面注入
-  
+
   // 查找 PDF 下载链接位置
   const pdfLink = document.querySelector('a[href^="/pdf"]');
   if (!pdfLink) {
-    logger.warn('PDF link not found, cannot inject button');
+    logger.warn("PDF link not found, cannot inject button");
     return;
   }
-  
+
   // 创建按钮容器
-  const container = document.createElement('div');
-  container.className = 'arxiv-md-button-container';
+  const container = document.createElement("div");
+  container.className = "arxiv-md-button-container";
   container.style.cssText = `
     display: inline-block;
     margin-left: 10px;
   `;
-  
+
   // 创建按钮
-  const button = document.createElement('button');
-  button.className = 'arxiv-md-convert-btn';
+  const button = document.createElement("button");
+  button.className = "arxiv-md-convert-btn";
   button.innerHTML = `
     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: -2px; margin-right: 4px;">
       <path d="M8.5 1.5A1.5 1.5 0 0 0 7 0H3.5A1.5 1.5 0 0 0 2 1.5v13A1.5 1.5 0 0 0 3.5 16h9a1.5 1.5 0 0 0 1.5-1.5V7L8.5 1.5z"/>
@@ -98,22 +98,22 @@ function injectConvertButton() {
     transition: all 0.2s;
     box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
   `;
-  
-  button.addEventListener('mouseenter', () => {
-    button.style.transform = 'translateY(-2px)';
-    button.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
+
+  button.addEventListener("mouseenter", () => {
+    button.style.transform = "translateY(-2px)";
+    button.style.boxShadow = "0 4px 12px rgba(102, 126, 234, 0.4)";
   });
-  
-  button.addEventListener('mouseleave', () => {
-    button.style.transform = 'translateY(0)';
-    button.style.boxShadow = '0 2px 8px rgba(102, 126, 234, 0.3)';
+
+  button.addEventListener("mouseleave", () => {
+    button.style.transform = "translateY(0)";
+    button.style.boxShadow = "0 2px 8px rgba(102, 126, 234, 0.3)";
   });
-  
-  button.addEventListener('click', handleConversionTrigger);
-  
+
+  button.addEventListener("click", handleConversionTrigger);
+
   // 创建进度指示器（初始隐藏）
-  const progressIndicator = document.createElement('div');
-  progressIndicator.className = 'arxiv-md-progress';
+  const progressIndicator = document.createElement("div");
+  progressIndicator.className = "arxiv-md-progress";
   progressIndicator.style.cssText = `
     display: none;
     margin-left: 10px;
@@ -127,64 +127,66 @@ function injectConvertButton() {
     <span class="progress-text">正在转换...</span>
     <span class="progress-percent" style="margin-left: 8px; font-weight: 500;">0%</span>
   `;
-  
+
   container.appendChild(button);
   container.appendChild(progressIndicator);
-  
+
   // 插入到 PDF 链接后面
   pdfLink.parentElement.insertBefore(container, pdfLink.nextSibling);
-  
-  logger.info('Convert button injected');
+
+  logger.info("Convert button injected");
 }
 
 /**
  * 处理转换触发
  */
 async function handleConversionTrigger() {
-  logger.info('Conversion triggered');
-  
+  logger.info("Conversion triggered");
+
   try {
-    const button = document.querySelector('.arxiv-md-convert-btn');
-    const progressIndicator = document.querySelector('.arxiv-md-progress');
-    
+    const button = document.querySelector(".arxiv-md-convert-btn");
+    const progressIndicator = document.querySelector(".arxiv-md-progress");
+
     if (button) {
       button.disabled = true;
-      button.style.opacity = '0.5';
-      button.style.cursor = 'not-allowed';
+      button.style.opacity = "0.5";
+      button.style.cursor = "not-allowed";
     }
-    
+
     if (progressIndicator) {
-      progressIndicator.style.display = 'inline-block';
+      progressIndicator.style.display = "inline-block";
     }
-    
+
     const metadata = isArxivAbsPage
       ? metadataExtractor.extractFromAbsPage()
       : await fetchMetadataFromAbsPage();
-    
-    logger.debug('Extracted metadata:', metadata);
-    
-    chrome.runtime.sendMessage({ type: 'CONVERT_PAPER', data: metadata }, (response) => {
-      logger.debug('Conversion response:', response);
-      
-      if (button) {
-        button.disabled = false;
-        button.style.opacity = '1';
-        button.style.cursor = 'pointer';
-      }
-      
-      if (progressIndicator) {
-        progressIndicator.style.display = 'none';
-      }
-      
-      if (response && response.success) {
-        showSuccessToast(response.data);
-      } else {
-        showErrorToast(response?.error || 'Unknown error');
-      }
-    });
-    
+
+    logger.debug("Extracted metadata:", metadata);
+
+    chrome.runtime.sendMessage(
+      { type: "CONVERT_PAPER", data: metadata },
+      (response) => {
+        logger.debug("Conversion response:", response);
+
+        if (button) {
+          button.disabled = false;
+          button.style.opacity = "1";
+          button.style.cursor = "pointer";
+        }
+
+        if (progressIndicator) {
+          progressIndicator.style.display = "none";
+        }
+
+        if (response && response.success) {
+          showSuccessToast(response.data);
+        } else {
+          showErrorToast(response?.error || "Unknown error");
+        }
+      },
+    );
   } catch (error) {
-    logger.error('Conversion trigger failed:', error);
+    logger.error("Conversion trigger failed:", error);
     showErrorToast(error.message);
   }
 }
@@ -194,11 +196,11 @@ async function handleConversionTrigger() {
  */
 async function fetchMetadataFromAbsPage() {
   const arxivId = metadataExtractor._extractIdFromUrl(window.location.href);
-  
+
   if (!arxivId) {
-    throw new Error('Cannot extract arXiv ID');
+    throw new Error("Cannot extract arXiv ID");
   }
-  
+
   // 使用 API 获取
   return await metadataExtractor.fetchMetadataFromApi(arxivId);
 }
@@ -207,22 +209,22 @@ async function fetchMetadataFromAbsPage() {
  * 更新进度 UI
  */
 function updateProgressUI(progress) {
-  const progressIndicator = document.querySelector('.arxiv-md-progress');
+  const progressIndicator = document.querySelector(".arxiv-md-progress");
   if (!progressIndicator) return;
-  
-  const textEl = progressIndicator.querySelector('.progress-text');
-  const percentEl = progressIndicator.querySelector('.progress-percent');
-  
+
+  const textEl = progressIndicator.querySelector(".progress-text");
+  const percentEl = progressIndicator.querySelector(".progress-percent");
+
   if (textEl && percentEl) {
     const stageText = {
-      'checking': '检查 ar5iv...',
-      'downloading': '下载 PDF...',
-      'uploading': '上传到 MinerU...',
-      'processing': 'MinerU 解析中...',
-      'completed': '完成!'
+      checking: "检查 ar5iv...",
+      downloading: "下载 PDF...",
+      uploading: "上传到 MinerU...",
+      processing: "MinerU 解析中...",
+      completed: "完成!",
     };
-    
-    textEl.textContent = stageText[progress.stage] || '处理中...';
+
+    textEl.textContent = stageText[progress.stage] || "处理中...";
     percentEl.textContent = `${Math.round(progress.progress || 0)}%`;
   }
 }
@@ -232,12 +234,12 @@ function updateProgressUI(progress) {
  */
 function showSuccessToast(result) {
   const toast = createToast(
-    '✅ 转换成功',
+    "✅ 转换成功",
     `已保存：${result.filename}`,
-    'success'
+    "success",
   );
   document.body.appendChild(toast);
-  
+
   setTimeout(() => toast.remove(), 5000);
 }
 
@@ -245,21 +247,17 @@ function showSuccessToast(result) {
  * 显示错误提示
  */
 function showErrorToast(message) {
-  const toast = createToast(
-    '❌ 转换失败',
-    message,
-    'error'
-  );
+  const toast = createToast("❌ 转换失败", message, "error");
   document.body.appendChild(toast);
-  
+
   setTimeout(() => toast.remove(), 5000);
 }
 
 /**
  * 创建 Toast 通知
  */
-function createToast(title, message, type = 'info') {
-  const toast = document.createElement('div');
+function createToast(title, message, type = "info") {
+  const toast = document.createElement("div");
   toast.className = `arxiv-md-toast arxiv-md-toast-${type}`;
   toast.style.cssText = `
     position: fixed;
@@ -273,20 +271,20 @@ function createToast(title, message, type = 'info') {
     max-width: 400px;
     animation: slideIn 0.3s ease-out;
   `;
-  
-  if (type === 'success') {
-    toast.style.borderLeft = '4px solid #10b981';
-  } else if (type === 'error') {
-    toast.style.borderLeft = '4px solid #ef4444';
+
+  if (type === "success") {
+    toast.style.borderLeft = "4px solid #10b981";
+  } else if (type === "error") {
+    toast.style.borderLeft = "4px solid #ef4444";
   }
-  
+
   toast.innerHTML = `
     <div style="font-weight: 600; margin-bottom: 4px;">${title}</div>
     <div style="font-size: 13px; color: #666;">${message}</div>
   `;
-  
+
   // 添加动画
-  const style = document.createElement('style');
+  const style = document.createElement("style");
   style.textContent = `
     @keyframes slideIn {
       from {
@@ -300,7 +298,7 @@ function createToast(title, message, type = 'info') {
     }
   `;
   document.head.appendChild(style);
-  
+
   return toast;
 }
 
@@ -312,33 +310,37 @@ function createToast(title, message, type = 'info') {
  */
 function isBlockFormula(mathEl, latex) {
   // 1. 显式 display="block" 属性
-  const displayAttr = mathEl.getAttribute('display');
-  if (displayAttr === 'block') return true;
-  
+  const displayAttr = mathEl.getAttribute("display");
+  if (displayAttr === "block") return true;
+
   // 2. 在方程式容器中（ar5iv 特有的 class）
-  const equationContainer = mathEl.closest('.ltx_equation, .ltx_equationgroup, .ltx_eqn_table, .ltx_eqn_row');
+  const equationContainer = mathEl.closest(
+    ".ltx_equation, .ltx_equationgroup, .ltx_eqn_table, .ltx_eqn_row",
+  );
   if (equationContainer) return true;
-  
+
   // 3. LaTeX 内容包含 \displaystyle 命令（说明原本是块级公式）
-  if (latex.includes('\\displaystyle')) return true;
-  
+  if (latex.includes("\\displaystyle")) return true;
+
   // 4. LaTeX 内容是多行公式（包含 \\ 换行或 aligned/array 环境）
-  if (latex.includes('\\\\') || 
-      latex.includes('\\begin{aligned}') || 
-      latex.includes('\\begin{array}') ||
-      latex.includes('\\begin{cases}')) {
+  if (
+    latex.includes("\\\\") ||
+    latex.includes("\\begin{aligned}") ||
+    latex.includes("\\begin{array}") ||
+    latex.includes("\\begin{cases}")
+  ) {
     return true;
   }
-  
+
   // 5. 在独立段落中（父元素是 p 或 div，且只有这一个 math 子元素）
   const parent = mathEl.parentElement;
-  if (parent && (parent.tagName === 'P' || parent.tagName === 'DIV')) {
+  if (parent && (parent.tagName === "P" || parent.tagName === "DIV")) {
     const childElements = Array.from(parent.children);
     if (childElements.length === 1 && childElements[0] === mathEl) {
       return true;
     }
   }
-  
+
   return false;
 }
 
@@ -348,37 +350,41 @@ function isBlockFormula(mathEl, latex) {
 function preprocessMathElements(doc) {
   const mathMap = new Map();
   let mathCounter = 0;
-  
+
   const createPlaceholder = (id, isBlock) => {
-    return isBlock ? `MATHBLOCKSTART${id}MATHBLOCKEND` : `MATHINLINESTART${id}MATHINLINEEND`;
+    return isBlock
+      ? `MATHBLOCKSTART${id}MATHBLOCKEND`
+      : `MATHINLINESTART${id}MATHINLINEEND`;
   };
-  
+
   // 处理所有 <math> 标签
-  doc.querySelectorAll('math').forEach((mathEl) => {
-    const alttext = mathEl.getAttribute('alttext');
-    
+  doc.querySelectorAll("math").forEach((mathEl) => {
+    const alttext = mathEl.getAttribute("alttext");
+
     if (alttext) {
       let latex = alttext.trim();
       const isBlock = isBlockFormula(mathEl, latex);
-      
-      if (isBlock && latex.startsWith('\\displaystyle')) {
-        latex = latex.replace(/^\\displaystyle\s*/, '');
+
+      if (isBlock && latex.startsWith("\\displaystyle")) {
+        latex = latex.replace(/^\\displaystyle\s*/, "");
       }
-      
+
       const placeholder = createPlaceholder(mathCounter, isBlock);
       mathMap.set(placeholder, { latex, isBlock });
       mathCounter++;
       mathEl.replaceWith(doc.createTextNode(placeholder));
     } else {
-      const annotation = mathEl.querySelector('annotation[encoding="application/x-tex"]');
+      const annotation = mathEl.querySelector(
+        'annotation[encoding="application/x-tex"]',
+      );
       if (annotation && annotation.textContent) {
         let latex = annotation.textContent.trim();
         const isBlock = isBlockFormula(mathEl, latex);
-        
-        if (isBlock && latex.startsWith('\\displaystyle')) {
-          latex = latex.replace(/^\\displaystyle\s*/, '');
+
+        if (isBlock && latex.startsWith("\\displaystyle")) {
+          latex = latex.replace(/^\\displaystyle\s*/, "");
         }
-        
+
         const placeholder = createPlaceholder(mathCounter, isBlock);
         mathMap.set(placeholder, { latex, isBlock });
         mathCounter++;
@@ -388,12 +394,30 @@ function preprocessMathElements(doc) {
       }
     }
   });
-  
+
   // 清理残留的 MathML 标签
-  const mathMLTags = ['semantics', 'mrow', 'mi', 'mo', 'mn', 'msub', 'msup', 'mfrac', 'msqrt', 'mtext', 
-                      'annotation-xml', 'annotation', 'apply', 'csymbol', 'ci', 'cn'];
-  mathMLTags.forEach(tag => doc.querySelectorAll(tag).forEach(el => el.remove()));
-  
+  const mathMLTags = [
+    "semantics",
+    "mrow",
+    "mi",
+    "mo",
+    "mn",
+    "msub",
+    "msup",
+    "mfrac",
+    "msqrt",
+    "mtext",
+    "annotation-xml",
+    "annotation",
+    "apply",
+    "csymbol",
+    "ci",
+    "cn",
+  ];
+  mathMLTags.forEach((tag) =>
+    doc.querySelectorAll(tag).forEach((el) => el.remove()),
+  );
+
   logger.debug(`Extracted ${mathCounter} math formulas`);
   return { doc, mathMap };
 }
@@ -403,22 +427,22 @@ function preprocessMathElements(doc) {
  */
 function preprocessAuthorsAndMetadata(doc) {
   // 移除 \AND 错误标记
-  doc.querySelectorAll('.ltx_ERROR').forEach(el => {
-    if (el.textContent.includes('\\AND')) el.remove();
+  doc.querySelectorAll(".ltx_ERROR").forEach((el) => {
+    if (el.textContent.includes("\\AND")) el.remove();
   });
-  
+
   // 清理脚注标记
-  doc.querySelectorAll('.ltx_note_mark, sup.ltx_note_mark').forEach(el => {
-    const text = el.textContent.replace(/footnotemark:\s*/g, '').trim();
+  doc.querySelectorAll(".ltx_note_mark, sup.ltx_note_mark").forEach((el) => {
+    const text = el.textContent.replace(/footnotemark:\s*/g, "").trim();
     if (text) el.textContent = text;
   });
-  
+
   // 清理脚注内容
-  doc.querySelectorAll('.ltx_note_content').forEach(el => el.remove());
-  
+  doc.querySelectorAll(".ltx_note_content").forEach((el) => el.remove());
+
   // 清理作者分隔符
-  doc.querySelectorAll('.ltx_personname').forEach(el => {
-    el.innerHTML = el.innerHTML.replace(/&amp;/g, '\n\n');
+  doc.querySelectorAll(".ltx_personname").forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(/&amp;/g, "\n\n");
   });
 }
 
@@ -428,20 +452,27 @@ function preprocessAuthorsAndMetadata(doc) {
  * 数据表格 (.ltx_tabular) 是实际数据表格
  */
 function preprocessTables(doc) {
-  doc.querySelectorAll('table').forEach((table) => {
-    const isEquationTable = table.classList.contains('ltx_eqn_table') ||
-                            table.classList.contains('ltx_eqn_row') ||
-                            table.closest('.ltx_equation, .ltx_equationgroup') !== null;
-    const hasMathPlaceholder = table.textContent.includes('MATHBLOCK') || 
-                               table.textContent.includes('MATHINLINE');
-    
+  doc.querySelectorAll("table").forEach((table) => {
+    const isEquationTable =
+      table.classList.contains("ltx_eqn_table") ||
+      table.classList.contains("ltx_eqn_row") ||
+      table.closest(".ltx_equation, .ltx_equationgroup") !== null;
+    const hasMathPlaceholder =
+      table.textContent.includes("MATHBLOCK") ||
+      table.textContent.includes("MATHINLINE");
+
     if (isEquationTable) {
-      const placeholders = table.textContent.match(/MATHBLOCKSTART\d+MATHBLOCKEND|MATHINLINESTART\d+MATHINLINEEND/g) || [];
+      const placeholders =
+        table.textContent.match(
+          /MATHBLOCKSTART\d+MATHBLOCKEND|MATHINLINESTART\d+MATHINLINEEND/g,
+        ) || [];
       if (placeholders.length > 0) {
-        table.replaceWith(doc.createTextNode(`\n\n${placeholders.join('\n\n')}\n\n`));
+        table.replaceWith(
+          doc.createTextNode(`\n\n${placeholders.join("\n\n")}\n\n`),
+        );
         return;
       }
-      const text = table.textContent.replace(/\s+/g, ' ').trim();
+      const text = table.textContent.replace(/\s+/g, " ").trim();
       if (text) {
         table.replaceWith(doc.createTextNode(`\n\n${text}\n\n`));
         return;
@@ -449,50 +480,62 @@ function preprocessTables(doc) {
       table.remove();
       return;
     }
-    
-    const isDataTable = table.classList.contains('ltx_tabular') ||
-                        table.closest('.ltx_table, figure.ltx_table') !== null;
-    
+
+    const isDataTable =
+      table.classList.contains("ltx_tabular") ||
+      table.closest(".ltx_table, figure.ltx_table") !== null;
+
     if (isDataTable || !hasMathPlaceholder) {
-      table.removeAttribute('id');
-      table.removeAttribute('style');
-      
-      const firstRow = table.querySelector('tr');
-      const hasHeader = table.querySelector('thead') || (firstRow && firstRow.querySelector('th'));
-      
+      table.removeAttribute("id");
+      table.removeAttribute("style");
+
+      const firstRow = table.querySelector("tr");
+      const hasHeader =
+        table.querySelector("thead") ||
+        (firstRow && firstRow.querySelector("th"));
+
       if (!hasHeader && firstRow) {
-        const firstRowCells = firstRow.querySelectorAll('td');
-        const isLikelyHeader = firstRowCells.length > 0 && 
-          Array.from(firstRowCells).some(cell => cell.textContent.trim().length < 50 && !cell.textContent.includes('.'));
-        
+        const firstRowCells = firstRow.querySelectorAll("td");
+        const isLikelyHeader =
+          firstRowCells.length > 0 &&
+          Array.from(firstRowCells).some(
+            (cell) =>
+              cell.textContent.trim().length < 50 &&
+              !cell.textContent.includes("."),
+          );
+
         if (isLikelyHeader) {
-          firstRowCells.forEach(td => {
-            const th = doc.createElement('th');
+          firstRowCells.forEach((td) => {
+            const th = doc.createElement("th");
             th.innerHTML = td.innerHTML;
             td.replaceWith(th);
           });
         }
       }
-      
-      table.querySelectorAll('td, th').forEach(cell => {
-        cell.removeAttribute('id');
-        cell.removeAttribute('style');
-        cell.removeAttribute('class');
+
+      table.querySelectorAll("td, th").forEach((cell) => {
+        cell.removeAttribute("id");
+        cell.removeAttribute("style");
+        cell.removeAttribute("class");
       });
-      
-      table.querySelectorAll('tr').forEach(row => {
-        row.removeAttribute('id');
-        row.removeAttribute('style');
-        row.removeAttribute('class');
+
+      table.querySelectorAll("tr").forEach((row) => {
+        row.removeAttribute("id");
+        row.removeAttribute("style");
+        row.removeAttribute("class");
       });
       return;
     }
-    
+
     // 小表格（可能是布局用）
-    const rows = table.querySelectorAll('tr');
-    const cells = table.querySelectorAll('td, th');
+    const rows = table.querySelectorAll("tr");
+    const cells = table.querySelectorAll("td, th");
     if (rows.length <= 3 && cells.length <= 6 && hasMathPlaceholder) {
-      table.replaceWith(doc.createTextNode(`\n\n${table.textContent.replace(/\s+/g, ' ').trim()}\n\n`));
+      table.replaceWith(
+        doc.createTextNode(
+          `\n\n${table.textContent.replace(/\s+/g, " ").trim()}\n\n`,
+        ),
+      );
     }
   });
 }
@@ -502,31 +545,35 @@ function preprocessTables(doc) {
  */
 function preprocessLists(doc) {
   // 移除列表项中的标签元素
-  doc.querySelectorAll('li .ltx_tag, li .ltx_tag_item, li .ltx_tag_itemize').forEach(tag => tag.remove());
-  
+  doc
+    .querySelectorAll("li .ltx_tag, li .ltx_tag_item, li .ltx_tag_itemize")
+    .forEach((tag) => tag.remove());
+
   // 移除列表项中的孤立 • 符号
-  doc.querySelectorAll('li').forEach(li => {
+  doc.querySelectorAll("li").forEach((li) => {
     const firstChild = li.firstChild;
     if (firstChild && firstChild.nodeType === Node.TEXT_NODE) {
-      firstChild.textContent = firstChild.textContent.replace(/^[\s•]+/, '');
+      firstChild.textContent = firstChild.textContent.replace(/^[\s•]+/, "");
     }
-    li.querySelectorAll('span').forEach(span => {
-      if (span.textContent.trim() === '•' || span.textContent.trim() === '–') {
+    li.querySelectorAll("span").forEach((span) => {
+      if (span.textContent.trim() === "•" || span.textContent.trim() === "–") {
         span.remove();
       }
     });
   });
-  
+
   // 确保列表项内容在同一行
-  doc.querySelectorAll('li > .ltx_para, li > .ltx_p, li > p').forEach(para => {
-    const parent = para.parentElement;
-    if (parent && parent.tagName === 'LI') {
-      while (para.firstChild) {
-        parent.insertBefore(para.firstChild, para);
+  doc
+    .querySelectorAll("li > .ltx_para, li > .ltx_p, li > p")
+    .forEach((para) => {
+      const parent = para.parentElement;
+      if (parent && parent.tagName === "LI") {
+        while (para.firstChild) {
+          parent.insertBefore(para.firstChild, para);
+        }
+        para.remove();
       }
-      para.remove();
-    }
-  });
+    });
 }
 
 /**
@@ -534,224 +581,265 @@ function preprocessLists(doc) {
  */
 function preprocessAr5ivElements(doc) {
   // 处理章节标题中的编号标签
-  doc.querySelectorAll('.ltx_title_section, .ltx_title_subsection, .ltx_title_subsubsection, .ltx_title_paragraph').forEach(title => {
-    const tagEl = title.querySelector('.ltx_tag');
-    if (tagEl) {
-      const tagText = tagEl.textContent.trim();
-      tagEl.remove();
-      if (tagText && title.firstChild) {
-        title.insertBefore(doc.createTextNode(tagText + ' '), title.firstChild);
+  doc
+    .querySelectorAll(
+      ".ltx_title_section, .ltx_title_subsection, .ltx_title_subsubsection, .ltx_title_paragraph",
+    )
+    .forEach((title) => {
+      const tagEl = title.querySelector(".ltx_tag");
+      if (tagEl) {
+        const tagText = tagEl.textContent.trim();
+        tagEl.remove();
+        if (tagText && title.firstChild) {
+          title.insertBefore(
+            doc.createTextNode(tagText + " "),
+            title.firstChild,
+          );
+        }
       }
-    }
-  });
-  
+    });
+
   // 移除不需要转换的元素
-  ['.ltx_pagination', '.ltx_break', '.ltx_rule', '.ltx_dates', '.ar5iv-feedback']
-    .forEach(selector => doc.querySelectorAll(selector).forEach(el => el.remove()));
-  
+  [
+    ".ltx_pagination",
+    ".ltx_break",
+    ".ltx_rule",
+    ".ltx_dates",
+    ".ar5iv-feedback",
+  ].forEach((selector) =>
+    doc.querySelectorAll(selector).forEach((el) => el.remove()),
+  );
+
   // 清理图片的相对路径
-  doc.querySelectorAll('img').forEach(img => {
-    let src = img.getAttribute('src');
-    if (src && !src.startsWith('http') && !src.startsWith('data:')) {
-      img.setAttribute('src', src.startsWith('/') ? `https://ar5iv.org${src}` : `https://ar5iv.org/${src}`);
+  doc.querySelectorAll("img").forEach((img) => {
+    let src = img.getAttribute("src");
+    if (src && !src.startsWith("http") && !src.startsWith("data:")) {
+      img.setAttribute(
+        "src",
+        src.startsWith("/")
+          ? `https://ar5iv.org${src}`
+          : `https://ar5iv.org/${src}`,
+      );
     }
   });
-  
+
   // 处理参考文献列表
-  doc.querySelectorAll('.ltx_bibitem').forEach(bibitem => {
-    const tag = bibitem.querySelector('.ltx_tag');
-    const tagText = tag ? tag.textContent.trim() : '';
-    const bibblocEl = bibitem.querySelector('.ltx_bibblock');
+  doc.querySelectorAll(".ltx_bibitem").forEach((bibitem) => {
+    const tag = bibitem.querySelector(".ltx_tag");
+    const tagText = tag ? tag.textContent.trim() : "";
+    const bibblocEl = bibitem.querySelector(".ltx_bibblock");
     if (tagText && bibblocEl) {
       bibitem.innerHTML = `<span class="ltx_bib_tag">${tagText}</span> ${bibblocEl.innerHTML}`;
     }
   });
-  
+
   // 处理代码块
-  doc.querySelectorAll('.ltx_listing, .ltx_verbatim, pre.ltx_code').forEach(code => {
-    if (!code.querySelector('code')) {
-      code.innerHTML = `<code>${code.textContent}</code>`;
-    }
-  });
-  
+  doc
+    .querySelectorAll(".ltx_listing, .ltx_verbatim, pre.ltx_code")
+    .forEach((code) => {
+      if (!code.querySelector("code")) {
+        code.innerHTML = `<code>${code.textContent}</code>`;
+      }
+    });
+
   // 处理引用块
-  doc.querySelectorAll('.ltx_quote').forEach(quote => {
-    if (quote.tagName !== 'BLOCKQUOTE') {
-      const blockquote = doc.createElement('blockquote');
+  doc.querySelectorAll(".ltx_quote").forEach((quote) => {
+    if (quote.tagName !== "BLOCKQUOTE") {
+      const blockquote = doc.createElement("blockquote");
       blockquote.innerHTML = quote.innerHTML;
       quote.replaceWith(blockquote);
     }
   });
-  
+
   // 【关键】处理 span.ltx_tabular 伪表格
   // 检测是否有复杂的 colspan/rowspan，如果有则转为纯文本表格
-  doc.querySelectorAll('span.ltx_tabular, div.ltx_tabular').forEach(tabular => {
-    try {
-      const rows = Array.from(tabular.querySelectorAll(':scope > .ltx_tr'));
-      if (rows.length === 0) return;
-      
-      // 检测是否有复杂结构（colspan/rowspan）
-      const hasComplexStructure = tabular.innerHTML.includes('ltx_colspan') || 
-                                   tabular.innerHTML.includes('ltx_rowspan');
-      
-      if (hasComplexStructure) {
-        // 复杂表格：转换为纯文本对齐格式
-        const textRows = [];
-        const colWidths = [];
-        
-        // 第一遍：收集所有单元格内容，计算列宽
-        const allRowsData = rows.map(row => {
-          const cells = Array.from(row.querySelectorAll(':scope > .ltx_td, :scope > .ltx_th'));
-          return cells.map(cell => {
-            // 获取纯文本，处理数学公式占位符
-            let text = cell.textContent.trim().replace(/\s+/g, ' ');
-            // 获取 colspan
-            const colspanMatch = cell.className.match(/ltx_colspan_(\d+)/);
-            const colspan = colspanMatch ? parseInt(colspanMatch[1]) : 1;
-            return { text, colspan };
+  doc
+    .querySelectorAll("span.ltx_tabular, div.ltx_tabular")
+    .forEach((tabular) => {
+      try {
+        const rows = Array.from(tabular.querySelectorAll(":scope > .ltx_tr"));
+        if (rows.length === 0) return;
+
+        // 检测是否有复杂结构（colspan/rowspan）
+        const hasComplexStructure =
+          tabular.innerHTML.includes("ltx_colspan") ||
+          tabular.innerHTML.includes("ltx_rowspan");
+
+        if (hasComplexStructure) {
+          // 复杂表格：转换为纯文本对齐格式
+          const textRows = [];
+          const colWidths = [];
+
+          // 第一遍：收集所有单元格内容，计算列宽
+          const allRowsData = rows.map((row) => {
+            const cells = Array.from(
+              row.querySelectorAll(":scope > .ltx_td, :scope > .ltx_th"),
+            );
+            return cells.map((cell) => {
+              // 获取纯文本，处理数学公式占位符
+              let text = cell.textContent.trim().replace(/\s+/g, " ");
+              // 获取 colspan
+              const colspanMatch = cell.className.match(/ltx_colspan_(\d+)/);
+              const colspan = colspanMatch ? parseInt(colspanMatch[1]) : 1;
+              return { text, colspan };
+            });
           });
-        });
-        
-        // 计算每列最大宽度
-        allRowsData.forEach(rowData => {
-          let colIdx = 0;
-          rowData.forEach(cell => {
-            const cellWidth = Math.ceil(cell.text.length / cell.colspan);
-            for (let i = 0; i < cell.colspan; i++) {
-              colWidths[colIdx + i] = Math.max(colWidths[colIdx + i] || 0, cellWidth);
-            }
-            colIdx += cell.colspan;
-          });
-        });
-        
-        // 第二遍：生成对齐的文本行
-        allRowsData.forEach((rowData, rowIdx) => {
-          const parts = [];
-          let colIdx = 0;
-          rowData.forEach(cell => {
-            // 计算这个单元格应该占用的总宽度
-            let totalWidth = 0;
-            for (let i = 0; i < cell.colspan; i++) {
-              totalWidth += (colWidths[colIdx + i] || 8) + 3; // +3 for padding and separator
-            }
-            totalWidth -= 3; // 减去最后一个的分隔符空间
-            totalWidth = Math.max(totalWidth, cell.text.length);
-            
-            parts.push(cell.text.padEnd(totalWidth));
-            colIdx += cell.colspan;
-          });
-          textRows.push('| ' + parts.join(' | ') + ' |');
-          
-          // 在表头后添加分隔行
-          if (rowIdx === 0 || (rowIdx === 1 && allRowsData[0].some(c => c.colspan > 1))) {
-            const separators = [];
-            colIdx = 0;
-            rowData.forEach(cell => {
-              let totalWidth = 0;
+
+          // 计算每列最大宽度
+          allRowsData.forEach((rowData) => {
+            let colIdx = 0;
+            rowData.forEach((cell) => {
+              const cellWidth = Math.ceil(cell.text.length / cell.colspan);
               for (let i = 0; i < cell.colspan; i++) {
-                totalWidth += (colWidths[colIdx + i] || 8) + 3;
+                colWidths[colIdx + i] = Math.max(
+                  colWidths[colIdx + i] || 0,
+                  cellWidth,
+                );
               }
-              totalWidth -= 3;
-              totalWidth = Math.max(totalWidth, cell.text.length);
-              separators.push('-'.repeat(totalWidth));
               colIdx += cell.colspan;
             });
-            textRows.push('| ' + separators.join(' | ') + ' |');
-          }
-        });
-        
-        // 创建文本节点替换
-        const textTable = doc.createElement('div');
-        textTable.className = 'ltx_table_text';
-        textTable.innerHTML = `<pre><code>${textRows.join('\n')}</code></pre>`;
-        tabular.replaceWith(textTable);
-        console.log(`[PREPROCESS] ✅ 复杂表格转为文本格式 (${rows.length} 行)`);
-      } else {
-        // 简单表格：转换为标准 HTML table
-        const table = doc.createElement('table');
-        const tbody = doc.createElement('tbody');
-        
-        rows.forEach((row, rowIdx) => {
-          const tr = doc.createElement('tr');
-          const cells = row.querySelectorAll(':scope > .ltx_td, :scope > .ltx_th');
-          cells.forEach(cell => {
-            const isHeader = cell.classList.contains('ltx_th') || rowIdx === 0;
-            const cellEl = doc.createElement(isHeader ? 'th' : 'td');
-            cellEl.innerHTML = cell.innerHTML;
-            tr.appendChild(cellEl);
           });
-          if (tr.children.length > 0) {
-            tbody.appendChild(tr);
+
+          // 第二遍：生成对齐的文本行
+          allRowsData.forEach((rowData, rowIdx) => {
+            const parts = [];
+            let colIdx = 0;
+            rowData.forEach((cell) => {
+              // 计算这个单元格应该占用的总宽度
+              let totalWidth = 0;
+              for (let i = 0; i < cell.colspan; i++) {
+                totalWidth += (colWidths[colIdx + i] || 8) + 3; // +3 for padding and separator
+              }
+              totalWidth -= 3; // 减去最后一个的分隔符空间
+              totalWidth = Math.max(totalWidth, cell.text.length);
+
+              parts.push(cell.text.padEnd(totalWidth));
+              colIdx += cell.colspan;
+            });
+            textRows.push("| " + parts.join(" | ") + " |");
+
+            // 在表头后添加分隔行
+            if (
+              rowIdx === 0 ||
+              (rowIdx === 1 && allRowsData[0].some((c) => c.colspan > 1))
+            ) {
+              const separators = [];
+              colIdx = 0;
+              rowData.forEach((cell) => {
+                let totalWidth = 0;
+                for (let i = 0; i < cell.colspan; i++) {
+                  totalWidth += (colWidths[colIdx + i] || 8) + 3;
+                }
+                totalWidth -= 3;
+                totalWidth = Math.max(totalWidth, cell.text.length);
+                separators.push("-".repeat(totalWidth));
+                colIdx += cell.colspan;
+              });
+              textRows.push("| " + separators.join(" | ") + " |");
+            }
+          });
+
+          // 创建文本节点替换
+          const textTable = doc.createElement("div");
+          textTable.className = "ltx_table_text";
+          textTable.innerHTML = `<pre><code>${textRows.join("\n")}</code></pre>`;
+          tabular.replaceWith(textTable);
+          console.log(
+            `[PREPROCESS] ✅ 复杂表格转为文本格式 (${rows.length} 行)`,
+          );
+        } else {
+          // 简单表格：转换为标准 HTML table
+          const table = doc.createElement("table");
+          const tbody = doc.createElement("tbody");
+
+          rows.forEach((row, rowIdx) => {
+            const tr = doc.createElement("tr");
+            const cells = row.querySelectorAll(
+              ":scope > .ltx_td, :scope > .ltx_th",
+            );
+            cells.forEach((cell) => {
+              const isHeader =
+                cell.classList.contains("ltx_th") || rowIdx === 0;
+              const cellEl = doc.createElement(isHeader ? "th" : "td");
+              cellEl.innerHTML = cell.innerHTML;
+              tr.appendChild(cellEl);
+            });
+            if (tr.children.length > 0) {
+              tbody.appendChild(tr);
+            }
+          });
+
+          if (tbody.children.length > 0) {
+            table.appendChild(tbody);
+            tabular.replaceWith(table);
+            console.log(
+              `[PREPROCESS] ✅ 简单表格转为 HTML table (${rows.length} 行)`,
+            );
           }
-        });
-        
-        if (tbody.children.length > 0) {
-          table.appendChild(tbody);
-          tabular.replaceWith(table);
-          console.log(`[PREPROCESS] ✅ 简单表格转为 HTML table (${rows.length} 行)`);
         }
+      } catch (e) {
+        console.error("[PREPROCESS] ❌ 转换伪表格失败:", e);
       }
-    } catch (e) {
-      console.error('[PREPROCESS] ❌ 转换伪表格失败:', e);
-    }
-  });
-  
+    });
+
   // 【关键】处理 Algorithm 伪代码块
-  doc.querySelectorAll('figure.ltx_float_algorithm').forEach(alg => {
+  doc.querySelectorAll("figure.ltx_float_algorithm").forEach((alg) => {
     try {
-      const caption = alg.querySelector('figcaption');
-      const captionText = caption ? caption.textContent.trim() : 'Algorithm';
-      
+      const caption = alg.querySelector("figcaption");
+      const captionText = caption ? caption.textContent.trim() : "Algorithm";
+
       // 提取算法内容
-      const contentDiv = alg.querySelector('.ltx_flex_figure, .ltx_flex_cell');
+      const contentDiv = alg.querySelector(".ltx_flex_figure, .ltx_flex_cell");
       if (contentDiv) {
         // 收集所有算法步骤
         const steps = [];
-        contentDiv.querySelectorAll('p, .ltx_p, .ltx_text').forEach(el => {
+        contentDiv.querySelectorAll("p, .ltx_p, .ltx_text").forEach((el) => {
           const text = el.textContent.trim();
-          if (text && !el.closest('figcaption')) {
+          if (text && !el.closest("figcaption")) {
             steps.push(text);
           }
         });
-        
+
         if (steps.length > 0) {
           // 创建代码块
-          const pre = doc.createElement('pre');
-          const code = doc.createElement('code');
-          code.textContent = `${captionText}\n${'─'.repeat(40)}\n${steps.join('\n')}`;
+          const pre = doc.createElement("pre");
+          const code = doc.createElement("code");
+          code.textContent = `${captionText}\n${"─".repeat(40)}\n${steps.join("\n")}`;
           pre.appendChild(code);
-          pre.className = 'ltx_algorithm_converted';
+          pre.className = "ltx_algorithm_converted";
           alg.replaceWith(pre);
-          console.log(`[PREPROCESS] ✅ 转换 Algorithm 为代码块: ${captionText}`);
+          console.log(
+            `[PREPROCESS] ✅ 转换 Algorithm 为代码块: ${captionText}`,
+          );
         }
       }
     } catch (e) {
-      console.error('[PREPROCESS] ❌ 转换 Algorithm 失败:', e);
+      console.error("[PREPROCESS] ❌ 转换 Algorithm 失败:", e);
     }
   });
-  
+
   // 【关键】处理加粗文本 (ltx_font_bold)
-  doc.querySelectorAll('.ltx_font_bold, .ltx_text_bold').forEach(bold => {
+  doc.querySelectorAll(".ltx_font_bold, .ltx_text_bold").forEach((bold) => {
     // 不处理已经在 strong/b 标签中的
-    if (bold.closest('strong') || bold.closest('b')) return;
+    if (bold.closest("strong") || bold.closest("b")) return;
     // 不处理标题中的
-    if (bold.closest('h1, h2, h3, h4, h5, h6, figcaption')) return;
-    
-    const strong = doc.createElement('strong');
+    if (bold.closest("h1, h2, h3, h4, h5, h6, figcaption")) return;
+
+    const strong = doc.createElement("strong");
     strong.innerHTML = bold.innerHTML;
     bold.replaceWith(strong);
   });
-  
+
   // 处理斜体文本 (ltx_font_italic, ltx_emph)
-  doc.querySelectorAll('.ltx_font_italic, .ltx_emph').forEach(italic => {
-    if (italic.closest('em') || italic.closest('i')) return;
-    if (italic.closest('h1, h2, h3, h4, h5, h6')) return;
-    
-    const em = doc.createElement('em');
+  doc.querySelectorAll(".ltx_font_italic, .ltx_emph").forEach((italic) => {
+    if (italic.closest("em") || italic.closest("i")) return;
+    if (italic.closest("h1, h2, h3, h4, h5, h6")) return;
+
+    const em = doc.createElement("em");
     em.innerHTML = italic.innerHTML;
     italic.replaceWith(em);
   });
-  
+
   console.log(`[PREPROCESS] ✅ ar5iv 元素清理完成`);
 }
 
@@ -760,13 +848,24 @@ function preprocessAr5ivElements(doc) {
  */
 function removeMathMLArtifacts(doc) {
   const mathMLSelectors = [
-    'math', 'semantics', 'mrow', 'mi', 'mo', 'mn', 'msub', 'msup', 
-    'mfrac', 'msqrt', 'mtext', 'annotation-xml', 'annotation'
+    "math",
+    "semantics",
+    "mrow",
+    "mi",
+    "mo",
+    "mn",
+    "msub",
+    "msup",
+    "mfrac",
+    "msqrt",
+    "mtext",
+    "annotation-xml",
+    "annotation",
   ];
-  
-  mathMLSelectors.forEach(selector => {
-    doc.querySelectorAll(selector).forEach(el => {
-      if (el.textContent && !el.querySelector('annotation')) {
+
+  mathMLSelectors.forEach((selector) => {
+    doc.querySelectorAll(selector).forEach((el) => {
+      if (el.textContent && !el.querySelector("annotation")) {
         const text = el.textContent.trim();
         text ? el.replaceWith(doc.createTextNode(text)) : el.remove();
       } else {
@@ -781,38 +880,61 @@ function removeMathMLArtifacts(doc) {
  */
 function cleanLatexFormula(latex) {
   let result = latex;
-  
+
   // 1. 移除颜色定义命令 \definecolor[named]{...}{...}{...} 或 \definecolor{...}{...}{...}
-  result = result.replace(/\\definecolor\s*(?:\[[^\]]*\])?\s*\{[^}]*\}\s*\{[^}]*\}(?:\s*\{[^}]*\})?/g, '');
-  
+  result = result.replace(
+    /\\definecolor\s*(?:\[[^\]]*\])?\s*\{[^}]*\}\s*\{[^}]*\}(?:\s*\{[^}]*\})?/g,
+    "",
+  );
+
   // 2. 移除 \color[rgb]{...} 或 \color{...} 命令（保留后续内容）
-  result = result.replace(/\\color\s*(?:\[[^\]]*\])?\s*\{[^}]*\}/g, '');
-  
+  result = result.replace(/\\color\s*(?:\[[^\]]*\])?\s*\{[^}]*\}/g, "");
+
   // 3. 移除 \textcolor{...}{content} - 保留 content（处理嵌套大括号）
-  result = result.replace(/\\textcolor\s*\{[^}]*\}\s*\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/g, '$1');
-  
+  result = result.replace(
+    /\\textcolor\s*\{[^}]*\}\s*\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/g,
+    "$1",
+  );
+
   // 4. 移除 pgf 相关颜色命令
-  result = result.replace(/\\pgfstrokecolor/g, '');
-  result = result.replace(/\\pgfsetcolor\s*\{[^}]*\}/g, '');
-  result = result.replace(/\\pgfsetfillcolor\s*\{[^}]*\}/g, '');
-  
+  result = result.replace(/\\pgfstrokecolor/g, "");
+  result = result.replace(/\\pgfsetcolor\s*\{[^}]*\}/g, "");
+  result = result.replace(/\\pgfsetfillcolor\s*\{[^}]*\}/g, "");
+
   // 5. 移除字体大小命令
   const fontSizeCommands = [
-    '\\footnotesize', '\\scriptsize', '\\tiny', '\\small', '\\normalsize',
-    '\\large', '\\Large', '\\LARGE', '\\huge', '\\Huge', '\\bigskip', '\\medskip', '\\smallskip'
+    "\\footnotesize",
+    "\\scriptsize",
+    "\\tiny",
+    "\\small",
+    "\\normalsize",
+    "\\large",
+    "\\Large",
+    "\\LARGE",
+    "\\huge",
+    "\\Huge",
+    "\\bigskip",
+    "\\medskip",
+    "\\smallskip",
   ];
-  fontSizeCommands.forEach(cmd => {
-    result = result.replace(new RegExp(cmd.replace(/\\/g, '\\\\') + '(?:\\s+|(?=\\\\)|(?=[^a-zA-Z]))', 'g'), '');
+  fontSizeCommands.forEach((cmd) => {
+    result = result.replace(
+      new RegExp(
+        cmd.replace(/\\/g, "\\\\") + "(?:\\s+|(?=\\\\)|(?=[^a-zA-Z]))",
+        "g",
+      ),
+      "",
+    );
   });
-  
+
   // 6. 移除其他不常见的格式命令
-  result = result.replace(/\\mbox\s*\{([^}]*)\}/g, '$1');  // \mbox{text} -> text
-  result = result.replace(/\\text\s*\{([^}]*)\}/g, '\\text{$1}');  // 保留 \text
-  
+  result = result.replace(/\\mbox\s*\{([^}]*)\}/g, "$1"); // \mbox{text} -> text
+  result = result.replace(/\\text\s*\{([^}]*)\}/g, "\\text{$1}"); // 保留 \text
+
   // 7. 清理多余空格和空大括号
-  result = result.replace(/\{\s*\}/g, '');  // 移除空大括号 {}
-  result = result.replace(/\s{2,}/g, ' ').trim();
-  
+  result = result.replace(/\{\s*\}/g, ""); // 移除空大括号 {}
+  result = result.replace(/\s{2,}/g, " ").trim();
+
   return result;
 }
 
@@ -821,23 +943,26 @@ function cleanLatexFormula(latex) {
  */
 function restoreMathPlaceholders(markdown, mathMap) {
   let result = markdown;
-  
+
   mathMap.forEach((value, placeholder) => {
     let { latex, isBlock } = value;
-    
+
     // 清理 LaTeX 中不支持的命令
     latex = cleanLatexFormula(latex);
-    
-    const escapedPlaceholder = placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(escapedPlaceholder, 'g');
-    
+
+    const escapedPlaceholder = placeholder.replace(
+      /[.*+?^${}()|[\]\\]/g,
+      "\\$&",
+    );
+    const regex = new RegExp(escapedPlaceholder, "g");
+
     if (isBlock) {
       result = result.replace(regex, `$$${latex.trim()}$$`);
     } else {
       result = result.replace(regex, `$${latex}$`);
     }
   });
-  
+
   return result;
 }
 
@@ -846,56 +971,76 @@ function restoreMathPlaceholders(markdown, mathMap) {
  */
 function postProcessMarkdown(markdown) {
   let result = markdown;
-  
+
   // 恢复被转义的引用方括号
-  result = result.replace(/\\\[(\d+(?:\s*,\s*\d+)*)\\\]/g, '[$1]');
-  
+  result = result.replace(/\\\[(\d+(?:\s*,\s*\d+)*)\\\]/g, "[$1]");
+
   // 修复章节标题格式
-  result = result.replace(/^\s*\((\d+(?:\.\d+)*)\)\s+(.+)$/gm, (match, num, title) => {
-    const level = num.split('.').length + 1;
-    return `${'#'.repeat(Math.min(level, 6))} ${num} ${title}`;
-  });
-  
+  result = result.replace(
+    /^\s*\((\d+(?:\.\d+)*)\)\s+(.+)$/gm,
+    (match, num, title) => {
+      const level = num.split(".").length + 1;
+      return `${"#".repeat(Math.min(level, 6))} ${num} ${title}`;
+    },
+  );
+
   // 修复列表项格式
-  result = result.replace(/-\s+\(•\)\s*\n\n\s+/g, '- ');
-  result = result.replace(/-\s+\(•\)\s*/g, '- ');
-  result = result.replace(/-\s+•\s*/g, '- ');
-  
+  result = result.replace(/-\s+\(•\)\s*\n\n\s+/g, "- ");
+  result = result.replace(/-\s+\(•\)\s*/g, "- ");
+  result = result.replace(/-\s+•\s*/g, "- ");
+
   // 清理重复的数学表达式
   result = result
-    .replace(/([a-zA-Z]+)([\u{1D400}-\u{1D7FF}]+)\1\{([^}]+)\}/gu, '$$1_{$3}$')
-    .replace(/([a-zA-Z]+)([\u{1D400}-\u{1D7FF}]+)\1\^\{([^}]+)\}/gu, '$$1^{$3}$');
-  
+    .replace(/([a-zA-Z]+)([\u{1D400}-\u{1D7FF}]+)\1\{([^}]+)\}/gu, "$$1_{$3}$")
+    .replace(
+      /([a-zA-Z]+)([\u{1D400}-\u{1D7FF}]+)\1\^\{([^}]+)\}/gu,
+      "$$1^{$3}$",
+    );
+
   // 移除孤立的 Unicode 数学符号
-  result = result.replace(/([a-zA-Z])([\u{1D400}-\u{1D7FF}]+)(\d)/gu, '$1$3');
-  
+  result = result.replace(/([a-zA-Z])([\u{1D400}-\u{1D7FF}]+)(\d)/gu, "$1$3");
+
   // 清理脚标文本和脚注标记
-  result = result.replace(/\bsubscript\b/gi, '').replace(/\bsuperscript\b/gi, '');
-  result = result.replace(/\d+footnotemark:\s*\d+/g, '').replace(/footnotemark:\s*/g, '');
-  
+  result = result
+    .replace(/\bsubscript\b/gi, "")
+    .replace(/\bsuperscript\b/gi, "");
+  result = result
+    .replace(/\d+footnotemark:\s*\d+/g, "")
+    .replace(/footnotemark:\s*/g, "");
+
   // 清理重复的项目符号
-  result = result.replace(/^(\s*-\s*)•\s*/gm, '$1');
-  
+  result = result.replace(/^(\s*-\s*)•\s*/gm, "$1");
+
   // 修复表格和空格
-  result = result.replace(/\|\s*\|\s*\|/g, '| |');
-  result = result.replace(/[ \t]+$/gm, '');
-  
+  result = result.replace(/\|\s*\|\s*\|/g, "| |");
+  result = result.replace(/[ \t]+$/gm, "");
+
   // 移除 HTML 实体残留
-  result = result.replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-                 .replace(/&amp;/g, '&').replace(/&quot;/g, '"');
-  
+  result = result
+    .replace(/&nbsp;/g, " ")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"');
+
   // 清理 LaTeX 命令残留
-  result = result.replace(/\\\\AND/g, '').replace(/\\AND/g, '');
-  
+  result = result.replace(/\\\\AND/g, "").replace(/\\AND/g, "");
+
   // 修复连续的行内公式
-  result = result.replace(/\$\$([^$]+)\$\$/g, 'DOUBLEDOLLARSTART$1DOUBLEDOLLAREND');
-  result = result.replace(/\$([^$]+)\$\$([^$]+)\$/g, '$$$1$ $$$2$');
-  result = result.replace(/DOUBLEDOLLARSTART([^]*?)DOUBLEDOLLAREND/g, (_, content) => `\n\n$$\n${content.trim()}\n$$\n\n`);
-  
+  result = result.replace(
+    /\$\$([^$]+)\$\$/g,
+    "DOUBLEDOLLARSTART$1DOUBLEDOLLAREND",
+  );
+  result = result.replace(/\$([^$]+)\$\$([^$]+)\$/g, "$$$1$ $$$2$");
+  result = result.replace(
+    /DOUBLEDOLLARSTART([^]*?)DOUBLEDOLLAREND/g,
+    (_, content) => `\n\n$$\n${content.trim()}\n$$\n\n`,
+  );
+
   // 清理多余空行和 HTML 标签残留
-  result = result.replace(/\n{4,}/g, '\n\n\n');
-  result = result.replace(/<\/?[a-z][^>]*>/gi, '');
-  
+  result = result.replace(/\n{4,}/g, "\n\n\n");
+  result = result.replace(/<\/?[a-z][^>]*>/gi, "");
+
   return result;
 }
 
@@ -904,24 +1049,26 @@ function postProcessMarkdown(markdown) {
  */
 function handleFileDownload(data, sendResponse) {
   try {
-    const blob = new Blob([data.content], { type: data.mimeType || 'text/plain' });
+    const blob = new Blob([data.content], {
+      type: data.mimeType || "text/plain",
+    });
     const url = window.URL.createObjectURL(blob);
-    
-    const a = document.createElement('a');
+
+    const a = document.createElement("a");
     a.href = url;
     a.download = data.filename;
-    a.style.display = 'none';
+    a.style.display = "none";
     document.body.appendChild(a);
     a.click();
-    
+
     setTimeout(() => {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     }, 100);
-    
+
     sendResponse({ success: true });
   } catch (error) {
-    logger.error('Download failed:', error);
+    logger.error("Download failed:", error);
     sendResponse({ success: false, error: error.message });
   }
 }
@@ -932,8 +1079,8 @@ function handleFileDownload(data, sendResponse) {
 function handleHtmlToMarkdown(data, sendResponse) {
   try {
     const parser = new DOMParser();
-    const doc = parser.parseFromString(data.html, 'text/html');
-    
+    const doc = parser.parseFromString(data.html, "text/html");
+
     // 预处理流程
     preprocessAuthorsAndMetadata(doc);
     const { doc: cleanedDoc, mathMap } = preprocessMathElements(doc);
@@ -941,303 +1088,336 @@ function handleHtmlToMarkdown(data, sendResponse) {
     preprocessAr5ivElements(cleanedDoc);
     preprocessTables(cleanedDoc);
     removeMathMLArtifacts(cleanedDoc);
-    
+
     // Turndown 转换
     const turndownService = new TurndownService({
-      headingStyle: 'atx',
-      codeBlockStyle: 'fenced',
-      bulletListMarker: '-',
-      emDelimiter: '*',
-      strongDelimiter: '**'
+      headingStyle: "atx",
+      codeBlockStyle: "fenced",
+      bulletListMarker: "-",
+      emDelimiter: "*",
+      strongDelimiter: "**",
     });
-    
+
     // 启用 GFM 插件（表格、删除线等）
     turndownService.use(gfm);
-    
+
     // 自定义规则：处理图片
-    turndownService.addRule('arxivImages', {
-      filter: 'img',
+    turndownService.addRule("arxivImages", {
+      filter: "img",
       replacement: (content, node) => {
-        const alt = node.alt || 'image';
-        let src = node.getAttribute('src') || '';
-        
+        const alt = node.alt || "image";
+        let src = node.getAttribute("src") || "";
+
         // 清理错误的 chrome-extension URL
-        src = src.replace(/chrome-extension:\/\/[^/]+\//, '');
-        
+        src = src.replace(/chrome-extension:\/\/[^/]+\//, "");
+
         // 处理相对路径 - 统一使用 ar5iv.org 域名
-        if (src && !src.startsWith('http')) {
-          const cleanSrc = src.startsWith('/') ? src.substring(1) : src;
+        if (src && !src.startsWith("http")) {
+          const cleanSrc = src.startsWith("/") ? src.substring(1) : src;
           src = `https://ar5iv.org/${cleanSrc}`;
         }
-        
-        return src ? `![${alt}](${src})` : '';
-      }
+
+        return src ? `![${alt}](${src})` : "";
+      },
     });
-    
+
     // 自定义规则：处理 ar5iv 的引用链接
-    turndownService.addRule('citations', {
+    turndownService.addRule("citations", {
       filter: (node) => {
-        if (node.nodeName === 'A') {
-          const href = node.getAttribute('href') || '';
+        if (node.nodeName === "A") {
+          const href = node.getAttribute("href") || "";
           // 过滤 chrome-extension URL
-          if (href.includes('chrome-extension://')) return true;
+          if (href.includes("chrome-extension://")) return true;
           // 过滤 ar5iv 引用链接（指向参考文献的内部链接）
-          if (href.startsWith('#bib.')) return true;
+          if (href.startsWith("#bib.")) return true;
           // 过滤带有 ltx_ref 类的链接（ar5iv 的内部引用）
-          if (node.classList && (node.classList.contains('ltx_ref') || node.classList.contains('ltx_cite'))) {
+          if (
+            node.classList &&
+            (node.classList.contains("ltx_ref") ||
+              node.classList.contains("ltx_cite"))
+          ) {
             return true;
           }
         }
         return false;
       },
       replacement: (content, node) => {
-        const href = node.getAttribute('href') || '';
-        
+        const href = node.getAttribute("href") || "";
+
         // chrome-extension URL：只保留内容
-        if (href.includes('chrome-extension://')) {
+        if (href.includes("chrome-extension://")) {
           return content;
         }
-        
+
         // ar5iv 的内部引用链接：转换为 [内容] 格式
-        if (href.startsWith('#bib.') || href.startsWith('#')) {
+        if (href.startsWith("#bib.") || href.startsWith("#")) {
           // 清理内容中的多余空白
-          const cleanContent = content.replace(/\s+/g, ' ').trim();
+          const cleanContent = content.replace(/\s+/g, " ").trim();
           return `[${cleanContent}]`;
         }
-        
+
         // ltx_ref 类：保留内容
-        if (node.classList && node.classList.contains('ltx_ref')) {
+        if (node.classList && node.classList.contains("ltx_ref")) {
           return content;
         }
-        
+
         return `[${content}](${href})`;
-      }
+      },
     });
-    
+
     // 自定义规则：处理 ar5iv 的脚注
-    turndownService.addRule('footnotes', {
+    turndownService.addRule("footnotes", {
       filter: (node) => {
         if (node.classList) {
-          return node.classList.contains('ltx_note') ||
-                 node.classList.contains('ltx_note_mark') ||
-                 node.classList.contains('ltx_note_content');
+          return (
+            node.classList.contains("ltx_note") ||
+            node.classList.contains("ltx_note_mark") ||
+            node.classList.contains("ltx_note_content")
+          );
         }
         return false;
       },
       replacement: (content, node) => {
         // 脚注标记：返回上标数字
-        if (node.classList.contains('ltx_note_mark')) {
-          const num = content.replace(/[^\d]/g, '');
-          return num ? `^${num}` : '';
+        if (node.classList.contains("ltx_note_mark")) {
+          const num = content.replace(/[^\d]/g, "");
+          return num ? `^${num}` : "";
         }
         // 脚注内容：在后处理中会被移除
-        if (node.classList.contains('ltx_note_content')) {
-          return '';
+        if (node.classList.contains("ltx_note_content")) {
+          return "";
         }
         return content;
-      }
+      },
     });
-    
+
     // 自定义规则：处理 ar5iv 的图片容器 (figure)
-    turndownService.addRule('arxivFigures', {
+    turndownService.addRule("arxivFigures", {
       filter: (node) => {
-        return node.nodeName === 'FIGURE' && 
-               node.classList && 
-               (node.classList.contains('ltx_figure') || node.classList.contains('ltx_table'));
+        return (
+          node.nodeName === "FIGURE" &&
+          node.classList &&
+          (node.classList.contains("ltx_figure") ||
+            node.classList.contains("ltx_table"))
+        );
       },
       replacement: (content, node) => {
         // 保留 figure 内容，添加换行
         return `\n\n${content}\n\n`;
-      }
+      },
     });
-    
+
     // 自定义规则：处理图表标题 (figcaption)
-    turndownService.addRule('arxivCaptions', {
+    turndownService.addRule("arxivCaptions", {
       filter: (node) => {
-        return node.nodeName === 'FIGCAPTION' ||
-               (node.classList && node.classList.contains('ltx_caption'));
+        return (
+          node.nodeName === "FIGCAPTION" ||
+          (node.classList && node.classList.contains("ltx_caption"))
+        );
       },
       replacement: (content, node) => {
         // 格式化标题
-        const cleanContent = content.replace(/\s+/g, ' ').trim();
-        return cleanContent ? `\n\n${cleanContent}\n\n` : '';
-      }
+        const cleanContent = content.replace(/\s+/g, " ").trim();
+        return cleanContent ? `\n\n${cleanContent}\n\n` : "";
+      },
     });
-    
+
     // 自定义规则：处理 ar5iv 的定理/引理/证明等
-    turndownService.addRule('arxivTheorems', {
+    turndownService.addRule("arxivTheorems", {
       filter: (node) => {
         if (node.classList) {
-          return node.classList.contains('ltx_theorem') ||
-                 node.classList.contains('ltx_proof') ||
-                 node.classList.contains('ltx_definition') ||
-                 node.classList.contains('ltx_lemma') ||
-                 node.classList.contains('ltx_corollary');
+          return (
+            node.classList.contains("ltx_theorem") ||
+            node.classList.contains("ltx_proof") ||
+            node.classList.contains("ltx_definition") ||
+            node.classList.contains("ltx_lemma") ||
+            node.classList.contains("ltx_corollary")
+          );
         }
         return false;
       },
       replacement: (content, node) => {
         // 获取定理类型
-        let type = '';
-        if (node.classList.contains('ltx_theorem')) type = '**Theorem**';
-        else if (node.classList.contains('ltx_proof')) type = '**Proof**';
-        else if (node.classList.contains('ltx_definition')) type = '**Definition**';
-        else if (node.classList.contains('ltx_lemma')) type = '**Lemma**';
-        else if (node.classList.contains('ltx_corollary')) type = '**Corollary**';
-        
+        let type = "";
+        if (node.classList.contains("ltx_theorem")) type = "**Theorem**";
+        else if (node.classList.contains("ltx_proof")) type = "**Proof**";
+        else if (node.classList.contains("ltx_definition"))
+          type = "**Definition**";
+        else if (node.classList.contains("ltx_lemma")) type = "**Lemma**";
+        else if (node.classList.contains("ltx_corollary"))
+          type = "**Corollary**";
+
         const cleanContent = content.trim();
-        return type ? `\n\n${type}: ${cleanContent}\n\n` : `\n\n${cleanContent}\n\n`;
-      }
+        return type
+          ? `\n\n${type}: ${cleanContent}\n\n`
+          : `\n\n${cleanContent}\n\n`;
+      },
     });
-    
+
     // 自定义规则：处理公式编号标签
-    turndownService.addRule('arxivTags', {
+    turndownService.addRule("arxivTags", {
       filter: (node) => {
-        return node.classList && node.classList.contains('ltx_tag');
+        return node.classList && node.classList.contains("ltx_tag");
       },
       replacement: (content, node) => {
         // 公式编号：保留在括号中
         const cleanContent = content.trim();
-        return cleanContent ? ` (${cleanContent})` : '';
-      }
+        return cleanContent ? ` (${cleanContent})` : "";
+      },
     });
-    
+
     // 自定义规则：处理 ar5iv 的章节标题
-    turndownService.addRule('arxivSectionTitles', {
+    turndownService.addRule("arxivSectionTitles", {
       filter: (node) => {
         // ar5iv 使用 h2-h6 来表示章节标题，但有特殊的 class
         if (node.nodeName.match(/^H[1-6]$/)) {
-          return node.classList && 
-                 (node.classList.contains('ltx_title_section') ||
-                  node.classList.contains('ltx_title_subsection') ||
-                  node.classList.contains('ltx_title_subsubsection') ||
-                  node.classList.contains('ltx_title_paragraph') ||
-                  node.classList.contains('ltx_title_subparagraph'));
+          return (
+            node.classList &&
+            (node.classList.contains("ltx_title_section") ||
+              node.classList.contains("ltx_title_subsection") ||
+              node.classList.contains("ltx_title_subsubsection") ||
+              node.classList.contains("ltx_title_paragraph") ||
+              node.classList.contains("ltx_title_subparagraph"))
+          );
         }
         return false;
       },
       replacement: (content, node) => {
         // 提取标题文本，清理多余空白
-        let text = content.replace(/\s+/g, ' ').trim();
-        
+        let text = content.replace(/\s+/g, " ").trim();
+
         // 移除章节编号中的括号格式，如 "(1)" -> "1"
-        text = text.replace(/^\((\d+(?:\.\d+)*)\)\s*/, '$1 ');
-        
+        text = text.replace(/^\((\d+(?:\.\d+)*)\)\s*/, "$1 ");
+
         // 根据标题级别生成 Markdown
         const level = parseInt(node.nodeName.charAt(1), 10);
-        const prefix = '#'.repeat(Math.min(level, 6));
-        
+        const prefix = "#".repeat(Math.min(level, 6));
+
         return `\n\n${prefix} ${text}\n\n`;
-      }
+      },
     });
-    
+
     // 自定义规则：移除错误元素
-    turndownService.addRule('removeErrors', {
+    turndownService.addRule("removeErrors", {
       filter: (node) => {
-        return node.classList && node.classList.contains('ltx_ERROR');
+        return node.classList && node.classList.contains("ltx_ERROR");
       },
-      replacement: () => ''
+      replacement: () => "",
     });
-    
+
     // 自定义规则：处理遗留的 ltx_tag 元素（如果预处理未完全清理）
-    turndownService.addRule('arxivTags2', {
+    turndownService.addRule("arxivTags2", {
       filter: (node) => {
-        return node.classList && 
-               (node.classList.contains('ltx_tag_item') ||
-                node.classList.contains('ltx_tag_itemize') ||
-                node.classList.contains('ltx_tag_enumerate'));
+        return (
+          node.classList &&
+          (node.classList.contains("ltx_tag_item") ||
+            node.classList.contains("ltx_tag_itemize") ||
+            node.classList.contains("ltx_tag_enumerate"))
+        );
       },
-      replacement: () => ''  // 移除这些标签，Turndown 会自动处理列表符号
+      replacement: () => "", // 移除这些标签，Turndown 会自动处理列表符号
     });
-    
+
     // 自定义规则：处理 ar5iv 的段落
-    turndownService.addRule('arxivParas', {
+    turndownService.addRule("arxivParas", {
       filter: (node) => {
-        return node.classList && 
-               (node.classList.contains('ltx_para') || node.classList.contains('ltx_p'));
+        return (
+          node.classList &&
+          (node.classList.contains("ltx_para") ||
+            node.classList.contains("ltx_p"))
+        );
       },
       replacement: (content) => {
         const trimmed = content.trim();
-        return trimmed ? `\n\n${trimmed}\n\n` : '';
-      }
+        return trimmed ? `\n\n${trimmed}\n\n` : "";
+      },
     });
-    
+
     // 自定义规则：处理加粗文本 (备用规则，如果预处理未完全转换)
-    turndownService.addRule('arxivBold', {
+    turndownService.addRule("arxivBold", {
       filter: (node) => {
-        return node.classList && 
-               (node.classList.contains('ltx_font_bold') || 
-                node.classList.contains('ltx_text_bold'));
+        return (
+          node.classList &&
+          (node.classList.contains("ltx_font_bold") ||
+            node.classList.contains("ltx_text_bold"))
+        );
       },
       replacement: (content) => {
         const trimmed = content.trim();
-        return trimmed ? `**${trimmed}**` : '';
-      }
+        return trimmed ? `**${trimmed}**` : "";
+      },
     });
-    
+
     // 自定义规则：处理斜体文本 (备用规则)
-    turndownService.addRule('arxivItalic', {
+    turndownService.addRule("arxivItalic", {
       filter: (node) => {
-        return node.classList && 
-               (node.classList.contains('ltx_font_italic') || 
-                node.classList.contains('ltx_emph'));
+        return (
+          node.classList &&
+          (node.classList.contains("ltx_font_italic") ||
+            node.classList.contains("ltx_emph"))
+        );
       },
       replacement: (content) => {
         const trimmed = content.trim();
-        return trimmed ? `*${trimmed}*` : '';
-      }
+        return trimmed ? `*${trimmed}*` : "";
+      },
     });
-    
+
     // 自定义规则：处理 Algorithm 代码块
-    turndownService.addRule('arxivAlgorithm', {
+    turndownService.addRule("arxivAlgorithm", {
       filter: (node) => {
-        return node.classList && node.classList.contains('ltx_algorithm_converted');
+        return (
+          node.classList && node.classList.contains("ltx_algorithm_converted")
+        );
       },
       replacement: (content, node) => {
-        const code = node.querySelector('code');
+        const code = node.querySelector("code");
         const text = code ? code.textContent : content;
         return `\n\n\`\`\`\n${text}\n\`\`\`\n\n`;
-      }
+      },
     });
-    
+
     // 自定义规则：处理 figure 中的表格标题
-    turndownService.addRule('arxivTableCaption', {
+    turndownService.addRule("arxivTableCaption", {
       filter: (node) => {
-        return node.tagName === 'FIGCAPTION' && 
-               node.closest('figure.ltx_table, .ltx_float_table');
+        return (
+          node.tagName === "FIGCAPTION" &&
+          node.closest("figure.ltx_table, .ltx_float_table")
+        );
       },
       replacement: (content) => {
         const trimmed = content.trim();
-        return trimmed ? `\n\n**${trimmed}**\n\n` : '';
-      }
+        return trimmed ? `\n\n**${trimmed}**\n\n` : "";
+      },
     });
-    
+
     // 自定义规则：处理文本格式的复杂表格
-    turndownService.addRule('arxivTextTable', {
+    turndownService.addRule("arxivTextTable", {
       filter: (node) => {
-        return node.classList && node.classList.contains('ltx_table_text');
+        return node.classList && node.classList.contains("ltx_table_text");
       },
       replacement: (content, node) => {
-        const code = node.querySelector('code');
+        const code = node.querySelector("code");
         if (code) {
           return `\n\n\`\`\`\n${code.textContent}\n\`\`\`\n\n`;
         }
         return content;
-      }
+      },
     });
-    
+
     // 执行 Turndown 转换
     let markdown = turndownService.turndown(cleanedDoc.body.innerHTML);
-    
+
     // 后处理
     markdown = restoreMathPlaceholders(markdown, mathMap);
     markdown = postProcessMarkdown(markdown);
-    
-    logger.debug(`Markdown conversion complete: ${markdown.length} bytes, ${mathMap.size} formulas`);
+
+    logger.debug(
+      `Markdown conversion complete: ${markdown.length} bytes, ${mathMap.size} formulas`,
+    );
     sendResponse({ success: true, markdown });
   } catch (error) {
-    logger.error('Markdown conversion failed:', error);
+    logger.error("Markdown conversion failed:", error);
     sendResponse({ success: false, error: error.message });
   }
 }
-

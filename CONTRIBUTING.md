@@ -37,6 +37,7 @@
 ```
 
 **Type 类型：**
+
 - `feat`: 新功能
 - `fix`: Bug 修复
 - `docs`: 文档更新
@@ -46,6 +47,7 @@
 - `chore`: 构建/工具链更新
 
 **示例：**
+
 ```
 feat(converter): 添加对 LaTeX 公式的支持
 
@@ -96,6 +98,7 @@ npm run lint
 ## 🐛 报告 Bug
 
 请在 [Issues](https://github.com/yourusername/arxiv-md/issues) 页面提交，包含：
+
 - 复现步骤
 - 预期行为
 - 实际行为
@@ -108,4 +111,3 @@ npm run lint
 - Email: your.email@example.com
 
 再次感谢你的贡献！ ❤️
-

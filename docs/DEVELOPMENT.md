@@ -70,29 +70,29 @@ Main Converter (决策中心)
 
 ```javascript
 // src/core/converter/new-converter.js
-import logger from '@utils/logger';
+import logger from "@utils/logger";
 
 class NewConverter {
   async convert(paperInfo) {
-    logger.info('Starting new conversion:', paperInfo.arxivId);
-    
+    logger.info("Starting new conversion:", paperInfo.arxivId);
+
     try {
       // 实现转换逻辑
       const markdown = await this.doConvert(paperInfo);
-      
+
       return {
         markdown: markdown,
         metadata: {
           arxivId: paperInfo.arxivId,
-          source: 'new_source'
-        }
+          source: "new_source",
+        },
       };
     } catch (error) {
-      logger.error('New converter failed:', error);
+      logger.error("New converter failed:", error);
       throw error;
     }
   }
-  
+
   async doConvert(paperInfo) {
     // 具体实现
   }
@@ -105,7 +105,7 @@ export default new NewConverter();
 
 ```javascript
 // src/core/converter/index.js
-import newConverter from './new-converter';
+import newConverter from "./new-converter";
 
 // 在 _convertWithTieredStrategy 方法中添加新层级
 // ... existing code ...
@@ -115,7 +115,7 @@ if (someCondition) {
   try {
     return await newConverter.convert(paperInfo);
   } catch (error) {
-    logger.warn('New converter failed, continuing...');
+    logger.warn("New converter failed, continuing...");
   }
 }
 ```
@@ -125,10 +125,10 @@ if (someCondition) {
 ```javascript
 // src/config/constants.js
 export const CONVERSION_TIER = {
-  AR5IV_LOCAL: 'ar5iv_local',
-  MINERU_API: 'mineru_api',
-  NEW_TIER: 'new_tier',  // 添加新类型
-  PDF_FALLBACK: 'pdf_fallback'
+  AR5IV_LOCAL: "ar5iv_local",
+  MINERU_API: "mineru_api",
+  NEW_TIER: "new_tier", // 添加新类型
+  PDF_FALLBACK: "pdf_fallback",
 };
 ```
 
@@ -137,16 +137,19 @@ export const CONVERSION_TIER = {
 ### Chrome DevTools 调试
 
 #### 1. Background Service Worker
+
 ```
 chrome://extensions/ → 扩展详情 → "Service Worker" → 点击 "查看视图"
 ```
 
 #### 2. Content Script
+
 ```
 在 arXiv 页面 → F12 → Console
 ```
 
 #### 3. Popup
+
 ```
 右键点击扩展图标 → "检查弹出内容"
 ```
@@ -154,13 +157,13 @@ chrome://extensions/ → 扩展详情 → "Service Worker" → 点击 "查看视
 ### 日志系统使用
 
 ```javascript
-import logger from '@utils/logger';
+import logger from "@utils/logger";
 
 // 不同级别的日志
-logger.error('Critical error:', error);
-logger.warn('Warning message');
-logger.info('Info message');
-logger.debug('Debug details');
+logger.error("Critical error:", error);
+logger.warn("Warning message");
+logger.info("Info message");
+logger.debug("Debug details");
 
 // 设置日志级别（开发环境自动为 DEBUG）
 logger.setLevel(LOG_LEVELS.DEBUG);
@@ -169,19 +172,22 @@ logger.setLevel(LOG_LEVELS.DEBUG);
 ### 常见问题排查
 
 #### 问题 1: Service Worker 不响应
+
 ```javascript
 // 检查 Service Worker 是否活跃
-chrome.runtime.sendMessage({ type: 'PING' }, (response) => {
-  console.log('Service Worker alive:', response);
+chrome.runtime.sendMessage({ type: "PING" }, (response) => {
+  console.log("Service Worker alive:", response);
 });
 ```
 
 #### 问题 2: Content Script 未注入
+
 - 检查 `manifest.json` 中的 `matches` 规则
 - 确认页面 URL 匹配
 - 尝试刷新页面
 
 #### 问题 3: 模块导入错误
+
 - 确认 Webpack 配置中的 `resolve.alias`
 - 检查相对路径是否正确
 - 重启 `npm run dev`
@@ -196,18 +202,18 @@ chrome.runtime.sendMessage({ type: 'PING' }, (response) => {
   □ 检查 Markdown 格式是否正确
   □ 验证公式是否正确转换
   □ 检查图片链接是否有效
-  
+
 ✅ Tier 2 (MinerU)
   □ 找一篇 ar5iv 不支持的论文
   □ 配置 MinerU Token
   □ 验证转换质量
   □ 检查进度指示器
-  
+
 ✅ Tier 3 (PDF Fallback)
   □ 移除 MinerU Token
   □ 测试 ar5iv 失败场景
   □ 验证 PDF 文件名是否有意义
-  
+
 ✅ UI
   □ Popup 显示正常
   □ Settings 页面配置生效
@@ -219,12 +225,13 @@ chrome.runtime.sendMessage({ type: 'PING' }, (response) => {
 
 ```javascript
 // 示例：单元测试（使用 Jest）
-import { extractArxivId } from '@utils/helpers';
+import { extractArxivId } from "@utils/helpers";
 
-describe('extractArxivId', () => {
-  test('should extract ID from URL', () => {
-    expect(extractArxivId('https://arxiv.org/abs/1706.03762'))
-      .toBe('1706.03762');
+describe("extractArxivId", () => {
+  test("should extract ID from URL", () => {
+    expect(extractArxivId("https://arxiv.org/abs/1706.03762")).toBe(
+      "1706.03762",
+    );
   });
 });
 ```
@@ -240,7 +247,7 @@ async function fetchData() {
     const response = await fetch(url);
     return await response.json();
   } catch (error) {
-    logger.error('Fetch failed:', error);
+    logger.error("Fetch failed:", error);
     throw error;
   }
 }
@@ -248,8 +255,8 @@ async function fetchData() {
 // ❌ Bad
 function fetchData() {
   return fetch(url)
-    .then(r => r.json())
-    .catch(e => console.log(e));
+    .then((r) => r.json())
+    .catch((e) => console.log(e));
 }
 ```
 
@@ -279,14 +286,14 @@ function example(paramName) {
 // metadata-extractor.js
 
 // 类名：PascalCase
-class MetadataExtractor { }
+class MetadataExtractor {}
 
 // 函数/变量：camelCase
-const userName = 'John';
-function getUserData() { }
+const userName = "John";
+function getUserData() {}
 
 // 常量：UPPER_SNAKE_CASE
-const API_BASE_URL = 'https://api.example.com';
+const API_BASE_URL = "https://api.example.com";
 const MAX_RETRY_COUNT = 3;
 ```
 
@@ -298,7 +305,7 @@ const MAX_RETRY_COUNT = 3;
 // 始终验证用户输入
 function sanitizeInput(input) {
   return input
-    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '')
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, "")
     .trim()
     .substring(0, 200);
 }
@@ -311,7 +318,7 @@ function sanitizeInput(input) {
 await storage.setMinerUToken(token);
 
 // ❌ 不要存储在 localStorage
-localStorage.setItem('token', token); // 危险！
+localStorage.setItem("token", token); // 危险！
 ```
 
 ### 3. XSS 防护
@@ -338,7 +345,7 @@ if (!available) {
 // ❌ 直接尝试转换
 try {
   await ar5ivConverter.convert(arxivId);
-} catch { }
+} catch {}
 ```
 
 ### 2. 使用单例模式
@@ -425,4 +432,3 @@ git push origin v1.0.0
 ---
 
 Happy Coding! 🎉
-
