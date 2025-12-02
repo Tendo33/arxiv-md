@@ -205,36 +205,23 @@ class MainConverter {
    * 使用页面标题作为文件名（与参考脚本保持一致）
    */
   async downloadPdf(paperInfo, tabId = null) {
-    const { arxivId, pageTitle } = paperInfo;
+    const { arxivId } = paperInfo;
     logger.info("Direct PDF download requested:", arxivId);
+    logger.debug("Full paperInfo:", paperInfo);
 
     try {
-      // 使用页面标题作为文件名（类似参考脚本）
-      // pageTitle 通常是: "[YYMM.NNNNN] Title"
-      const illegalChars = /[\/\\:*?"<>|\[\]]/g;
-      let filename = '';
+      // 使用与 Markdown 相同的文件名格式: (Year) Title - FirstAuthor.pdf
+      const filename = generateFilename(
+        {
+          title: paperInfo.title,
+          authors: paperInfo.authors,
+          year: paperInfo.year,
+          arxivId: arxivId,
+        },
+        "pdf",
+      );
       
-      if (pageTitle && pageTitle.trim().length > 0) {
-        // 清理非法字符
-        filename = pageTitle.replace(illegalChars, ' ').trim();
-        // 清理多余空格
-        filename = filename.replace(/\s+/g, ' ').trim();
-        // 添加 .pdf 扩展名
-        if (!filename.endsWith('.pdf')) {
-          filename += '.pdf';
-        }
-      } else {
-        // 如果没有页面标题，使用 generateFilename 作为回退
-        filename = generateFilename(
-          {
-            title: paperInfo.title,
-            authors: paperInfo.authors,
-            year: paperInfo.year,
-            arxivId: arxivId,
-          },
-          "pdf",
-        );
-      }
+      logger.debug("Generated filename:", filename);
 
       const pdfUrl = paperInfo.pdfUrl || `${API.ARXIV_PDF}/${arxivId}.pdf`;
       await downloadFile(pdfUrl, filename);

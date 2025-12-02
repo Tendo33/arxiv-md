@@ -75,6 +75,7 @@ function injectConvertButton() {
     display: flex;
     gap: 10px;
     margin-top: 15px;
+    margin-left: 20px;
     padding-top: 10px;
     border-top: 1px solid #e0e0e0;
     align-items: center;
@@ -200,23 +201,23 @@ async function handleConversionTrigger(type = "markdown") {
       progressIndicator.style.display = "flex";
     }
 
+    // PDF 下载：直接在 content script 中处理（参考脚本方式）
+    if (type === "pdf") {
+      await handlePdfDownloadDirect(activeButton, progressIndicator);
+      return;
+    }
+
+    // Markdown 转换：通过 background script 处理
     const metadata = isArxivAbsPage
       ? metadataExtractor.extractFromAbsPage()
       : await fetchMetadataFromAbsPage();
 
-    // 对于 PDF 下载，添加页面标题信息
-    if (type === "pdf") {
-      metadata.pageTitle = document.title;
-    }
-
     logger.debug("Extracted metadata:", metadata);
 
-    const messageType = type === "markdown" ? "CONVERT_PAPER" : "DOWNLOAD_PDF";
-
     chrome.runtime.sendMessage(
-      { type: messageType, data: metadata },
+      { type: "CONVERT_PAPER", data: metadata },
       (response) => {
-        logger.debug(`${type} conversion response:`, response);
+        logger.debug("Markdown conversion response:", response);
 
         if (activeButton) {
           activeButton.disabled = false;
@@ -229,7 +230,7 @@ async function handleConversionTrigger(type = "markdown") {
         }
 
         if (response && response.success) {
-          showSuccessToast(response.data, type);
+          showSuccessToast(response.data, "markdown");
         } else {
           showErrorToast(response?.error || "Unknown error");
         }
@@ -253,6 +254,103 @@ async function handleConversionTrigger(type = "markdown") {
     if (progressIndicator) {
       progressIndicator.style.display = "none";
     }
+  }
+}
+
+/**
+ * 直接在 content script 中下载 PDF（使用页面标题作为文件名）
+ */
+async function handlePdfDownloadDirect(button, progressIndicator) {
+  try {
+    // 使用页面标题作为文件名（参考脚本方式）
+    const pageTitle = document.title;
+    const illegalChars = /[\/\\:*?"<>|\[\]]/g;
+    const cleanTitle = pageTitle.replace(illegalChars, ' ').replace(/\s+/g, ' ').trim();
+    const filename = `${cleanTitle}.pdf`;
+    
+    // 构造 PDF URL
+    const pdfUrl = window.location.href.replace('/abs/', '/pdf/');
+    
+    logger.info("Downloading PDF:", filename);
+    
+    // 更新按钮文本
+    if (button) {
+      button.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: -2px; margin-right: 4px;">
+          <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
+          <path d="M8.5 6.5a.5.5 0 0 0-1 0v3.793L6.354 9.146a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 10.293V6.5z"/>
+        </svg>
+        Downloading...
+      `;
+    }
+    
+    // Fetch PDF
+    const response = await fetch(pdfUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch PDF: ${response.status}`);
+    }
+    
+    const blob = await response.blob();
+    
+    // 创建下载链接
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    
+    // 清理
+    setTimeout(() => {
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }, 100);
+    
+    // 恢复按钮状态
+    if (button) {
+      button.disabled = false;
+      button.style.opacity = "1";
+      button.style.cursor = "pointer";
+      button.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: -2px; margin-right: 4px;">
+          <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
+          <path d="M8.5 6.5a.5.5 0 0 0-1 0v3.793L6.354 9.146a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 10.293V6.5z"/>
+        </svg>
+        Save PDF (Renamed)
+      `;
+    }
+    
+    if (progressIndicator) {
+      progressIndicator.style.display = "none";
+    }
+    
+    logger.info("PDF download complete:", filename);
+    showSuccessToast({ filename }, "pdf");
+    
+  } catch (error) {
+    logger.error("PDF download failed:", error);
+    
+    // 恢复按钮状态
+    if (button) {
+      button.disabled = false;
+      button.style.opacity = "1";
+      button.style.cursor = "pointer";
+      button.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: -2px; margin-right: 4px;">
+          <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
+          <path d="M8.5 6.5a.5.5 0 0 0-1 0v3.793L6.354 9.146a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 10.293V6.5z"/>
+        </svg>
+        Save PDF (Renamed)
+      `;
+    }
+    
+    if (progressIndicator) {
+      progressIndicator.style.display = "none";
+    }
+    
+    showErrorToast(error.message);
+    throw error;
   }
 }
 
