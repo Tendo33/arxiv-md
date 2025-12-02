@@ -5,7 +5,7 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 并且遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-## [1.0.0] - 2025-12-01
+## [1.0.0] - 2025-12-02
 
 ### 🎉 首次发布
 
@@ -55,10 +55,14 @@
 
 #### 文档
 
-- 📖 完整的 README.md
-- 📝 CONTRIBUTING.md 贡献指南
+- 📖 完整的 README.md（新增项目状态和文档导航）
+- 📝 CONTRIBUTING.md 贡献指南（增强 PR 检查清单和首次贡献者指引）
 - 📄 CHANGELOG.md 更新日志
-- 🔧 开发和构建文档
+- 🏗️ ARCHITECTURE.md 架构设计（补充 linkedom 环境适配说明）
+- 🔧 DEVELOPMENT.md 开发指南（增强调试技巧和实战代码示例）
+- ❓ FAQ.md 常见问题（新增实用问题和性能问题分类）
+- 🚀 QUICK_START.md 快速开始（简化为三步流程）
+- 📦 INSTALL.md 安装指南（优化验证步骤和故障排查）
 
 ### 已知限制
 
@@ -83,8 +87,9 @@
 
 - 批量转换模式
 - 图片本地化选项
-- 更多转换模式
+- Firefox 版本支持
+- 更多自定义选项
 
 ---
 
-[1.0.0]: https://github.com/yourusername/arxiv-md/releases/tag/v1.0.0
+[1.0.0]: https://github.com/[你的GitHub用户名]/arxiv-md/releases/tag/v1.0.0

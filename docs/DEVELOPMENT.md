@@ -192,6 +192,47 @@ chrome.runtime.sendMessage({ type: "PING" }, (response) => {
 - 检查相对路径是否正确
 - 重启 `npm run dev`
 
+#### 4. 测试 ar5iv 不可用场景
+
+手动模拟 ar5iv 失败，测试降级逻辑：
+
+```javascript
+// 在 src/core/converter/ar5iv-converter.js 中临时添加
+async checkAvailability(arxivId) {
+  // 强制返回 false 测试降级
+  return false;
+}
+```
+
+然后测试转换流程，应该自动调用 MinerU（如已配置）或下载 PDF。
+
+#### 5. Service Worker 的 DOM 限制
+
+**常见错误**：
+
+```javascript
+// ❌ 在 background/index.js 中直接使用 DOM API
+const div = document.createElement('div'); // Error: document is not defined
+```
+
+**正确做法**：
+
+```javascript
+// ✅ 使用 linkedom
+import { parseHTML } from 'linkedom';
+const { document } = parseHTML('<div></div>');
+```
+
+或者将 DOM 操作委托给 Content Script：
+
+```javascript
+// ✅ 发送消息给 Content Script
+chrome.tabs.sendMessage(tabId, {
+  type: 'CONVERT_HTML_TO_MARKDOWN',
+  data: { html: rawHtml }
+});
+```
+
 ## 🧪 测试
 
 ### 手动测试清单
@@ -295,6 +336,77 @@ function getUserData() {}
 // 常量：UPPER_SNAKE_CASE
 const API_BASE_URL = "https://api.example.com";
 const MAX_RETRY_COUNT = 3;
+```
+
+### 真实代码示例
+
+#### ar5iv-converter.js 核心方法
+
+```javascript
+// {{RIPER-7 Action}}
+// Role: LD | Task_ID: #101 | Time: 2025-12-02T10:30:00+08:00
+// Logic: ar5iv HTML 转 Markdown，提取 LaTeX 公式和图片
+// Principle: SOLID-S (单一职责：仅负责 ar5iv 转换)
+
+async convert(paperInfo) {
+  const arxivId = paperInfo.arxivId;
+  const ar5ivUrl = `https://ar5iv.labs.arxiv.org/html/${arxivId}`;
+  
+  // 1. 获取 ar5iv HTML
+  const response = await fetch(ar5ivUrl);
+  if (!response.ok) {
+    throw new Error(`ar5iv unavailable: ${response.status}`);
+  }
+  
+  const html = await response.text();
+  
+  // 2. 清洗内容（使用 Readability）
+  const cleanHtml = this._cleanContent(html);
+  
+  // 3. 转换为 Markdown（使用 Turndown）
+  const markdown = this._convertToMarkdown(cleanHtml);
+  
+  return {
+    markdown: markdown,
+    metadata: {
+      source: 'ar5iv',
+      arxivId: arxivId
+    }
+  };
+}
+```
+
+#### mineru-client.js 核心方法
+
+```javascript
+// {{RIPER-7 Action}}
+// Role: LD | Task_ID: #102 | Time: 2025-12-02T10:35:00+08:00
+// Logic: MinerU API 客户端，异步任务提交和轮询
+// Principle: SOLID-S (单一职责：仅负责 MinerU API 交互)
+
+async convert(paperInfo, progressCallback) {
+  const pdfUrl = paperInfo.pdfUrl;
+  
+  // 1. 下载 PDF（0-20%）
+  progressCallback({ progress: 0, stage: 'downloading' });
+  const pdfBlob = await this._downloadPDF(pdfUrl);
+  
+  // 2. 提交任务（20-40%）
+  progressCallback({ progress: 20, stage: 'uploading' });
+  const taskId = await this._submitTask(pdfBlob);
+  
+  // 3. 轮询结果（40-100%）
+  progressCallback({ progress: 40, stage: 'processing' });
+  const result = await this._pollResult(taskId, progressCallback);
+  
+  return {
+    markdown: result.markdown,
+    metadata: {
+      source: 'mineru',
+      taskId: taskId
+    }
+  };
+}
 ```
 
 ## 🔒 安全注意事项
@@ -416,6 +528,35 @@ git push origin v1.0.0
 6. **推送**: `git push origin feature/my-feature`
 7. **创建 Pull Request**
 
+## ⚠️ 常见开发陷阱
+
+### 1. Service Worker 生命周期
+
+**问题**：Service Worker 可能随时被停用，导致状态丢失。
+
+**解决**：
+- 不要依赖全局变量存储状态
+- 使用 `chrome.storage` 持久化关键数据
+- 监听 `chrome.runtime.onStartup` 恢复状态
+
+### 2. Content Script 注入时机
+
+**问题**：页面加载时 DOM 可能未完成，导致按钮注入失败。
+
+**解决**：
+- 使用 `run_at: "document_end"` (manifest.json)
+- 添加 MutationObserver 监听 DOM 变化
+- 提供手动重试按钮
+
+### 3. CORS 限制
+
+**问题**：Content Script 中的 fetch 受页面 CORS 限制。
+
+**解决**：
+- 在 Background Worker 中发起跨域请求
+- 使用消息传递转发数据
+- 配置 `host_permissions` (manifest.json)
+
 ## 📚 推荐阅读
 
 - [Chrome Extension 官方文档](https://developer.chrome.com/docs/extensions/)
@@ -427,7 +568,7 @@ git push origin v1.0.0
 
 - **GitHub Issues**: 报告 Bug 或功能请求
 - **Discussions**: 技术讨论和问答
-- **Email**: your.email@example.com
+- **Email**: [项目维护者邮箱]
 
 ---
 

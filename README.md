@@ -3,7 +3,14 @@
 > 🚀 一键将 arXiv 论文转换为 Markdown，支持智能三层降级策略，保证最佳转换质量
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/YOUR_EXTENSION_ID)](https://chrome.google.com/webstore/detail/YOUR_EXTENSION_ID)
+[![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-即将推出-blue)](https://chrome.google.com/webstore)
+
+## 📦 项目状态
+
+- 🚧 开发版本：v1.0.0
+- 📦 Chrome Web Store：即将推出
+- 🔓 开源协议：MIT License
+- 🌟 GitHub Star：欢迎 Star 支持
 
 ## ✨ 特性
 
@@ -33,14 +40,14 @@ Tier 3 (Fallback):
 
 ### 从 Chrome Web Store 安装（推荐）
 
-1. 访问 [Chrome Web Store](https://chrome.google.com/webstore/detail/YOUR_EXTENSION_ID)
+1. 访问 [Chrome Web Store](https://chrome.google.com/webstore)（即将推出）
 2. 点击"添加至 Chrome"
 
 ### 手动安装（开发者）
 
 ```bash
 # 克隆仓库
-git clone https://github.com/yourusername/arxiv-md.git
+git clone https://github.com/[你的GitHub用户名]/arxiv-md.git
 cd arxiv-md
 
 # 安装依赖
@@ -55,6 +62,15 @@ npm run build
 # 3. 点击"加载已解压的扩展程序"
 # 4. 选择 dist 目录
 ```
+
+## 📚 文档导航
+
+- [快速开始](docs/QUICK_START.md) - 5 分钟快速上手
+- [完整安装指南](INSTALL.md) - 详细的安装步骤和故障排查
+- [架构设计](docs/ARCHITECTURE.md) - 技术架构和设计决策
+- [开发指南](docs/DEVELOPMENT.md) - 参与贡献的开发流程
+- [常见问题](docs/FAQ.md) - 使用中的常见问题解答
+- [贡献指南](CONTRIBUTING.md) - 如何为项目做贡献
 
 ## 🚀 使用方法
 
@@ -127,6 +143,7 @@ npm run package
 - **转换引擎**:
   - [Turndown](https://github.com/mixmark-io/turndown) - HTML → Markdown
   - [Mozilla Readability](https://github.com/mozilla/readability) - 内容提取
+  - [linkedom](https://github.com/WebReflection/linkedom) - 轻量级 DOM 解析（Service Worker 环境，仅 200KB vs jsdom 5MB）
 - **API**: MinerU, ar5iv
 - **存储**: Chrome Storage API
 
@@ -187,6 +204,6 @@ A: 目前仅支持 Chrome/Edge（Chromium 内核）。Firefox 版本正在开发
 
 ---
 
-Made with ❤️ by [Jinfeng Sun](https://github.com/yourusername)
+Made with ❤️ by [Jinfeng Sun](https://github.com/[你的GitHub用户名])
 
 如果这个项目对你有帮助，请给个 ⭐️ Star！
