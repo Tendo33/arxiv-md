@@ -41,3 +41,4 @@ temp/
 *.tmp
 
 .history/
+output/
