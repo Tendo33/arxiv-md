@@ -56,122 +56,68 @@ function init() {
 }
 
 /**
- * 注入"保存为 Markdown"按钮和"保存 PDF"按钮到页面
+ * 注入按钮到 Extra Services 板块
  */
 function injectConvertButton() {
   if (!isArxivAbsPage) return; // 只在 Abstract 页面注入
 
-  // 查找 PDF 下载链接位置
-  const pdfLink = document.querySelector('a[href^="/pdf"]');
-  if (!pdfLink) {
-    logger.warn("PDF link not found, cannot inject button");
+  // 查找 Extra Services 板块
+  const extraServicesUl = document.querySelector(".extra-services ul");
+  if (!extraServicesUl) {
+    logger.warn("Extra Services section not found, cannot inject buttons");
     return;
   }
 
-  // 创建按钮容器
-  const container = document.createElement("div");
-  container.className = "arxiv-md-button-container";
-  container.style.cssText = `
-    display: inline-flex;
-    gap: 8px;
-    margin-left: 10px;
-    align-items: center;
+  // 创建 Markdown 按钮列表项
+  const mdListItem = document.createElement("li");
+  const mdLink = document.createElement("a");
+  mdLink.className = "arxiv-md-convert-btn";
+  mdLink.href = "#";
+  mdLink.textContent = "Save as Markdown";
+  mdLink.style.cssText = `
+    text-decoration: none;
+    color: inherit;
   `;
-
-  // 创建 Markdown 按钮
-  const mdButton = document.createElement("button");
-  mdButton.className = "arxiv-md-convert-btn";
-  mdButton.innerHTML = `
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: -2px; margin-right: 4px;">
-      <path d="M8.5 1.5A1.5 1.5 0 0 0 7 0H3.5A1.5 1.5 0 0 0 2 1.5v13A1.5 1.5 0 0 0 3.5 16h9a1.5 1.5 0 0 0 1.5-1.5V7L8.5 1.5z"/>
-      <path d="M8 1v5.5A1.5 1.5 0 0 0 9.5 8H15"/>
-    </svg>
-    保存为 Markdown
-  `;
-  mdButton.style.cssText = `
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.2s;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-  `;
-
-  mdButton.addEventListener("mouseenter", () => {
-    mdButton.style.transform = "translateY(-2px)";
-    mdButton.style.boxShadow = "0 4px 12px rgba(102, 126, 234, 0.4)";
+  mdLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    handleConversionTrigger("markdown");
   });
+  mdListItem.appendChild(mdLink);
 
-  mdButton.addEventListener("mouseleave", () => {
-    mdButton.style.transform = "translateY(0)";
-    mdButton.style.boxShadow = "0 2px 8px rgba(102, 126, 234, 0.3)";
-  });
-
-  mdButton.addEventListener("click", () => handleConversionTrigger("markdown"));
-
-  // 创建 PDF 按钮
-  const pdfButton = document.createElement("button");
-  pdfButton.className = "arxiv-pdf-download-btn";
-  pdfButton.innerHTML = `
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: -2px; margin-right: 4px;">
-      <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
-      <path d="M8.5 6.5a.5.5 0 0 0-1 0v3.793L6.354 9.146a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 10.293V6.5z"/>
-    </svg>
-    保存 PDF
+  // 创建 PDF 按钮列表项
+  const pdfListItem = document.createElement("li");
+  const pdfLink = document.createElement("a");
+  pdfLink.className = "arxiv-pdf-download-btn";
+  pdfLink.href = "#";
+  pdfLink.textContent = "Save PDF (Renamed)";
+  pdfLink.style.cssText = `
+    text-decoration: none;
+    color: inherit;
   `;
-  pdfButton.style.cssText = `
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.2s;
-    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
-  `;
-
-  pdfButton.addEventListener("mouseenter", () => {
-    pdfButton.style.transform = "translateY(-2px)";
-    pdfButton.style.boxShadow = "0 4px 12px rgba(245, 158, 11, 0.4)";
+  pdfLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    handleConversionTrigger("pdf");
   });
+  pdfListItem.appendChild(pdfLink);
 
-  pdfButton.addEventListener("mouseleave", () => {
-    pdfButton.style.transform = "translateY(0)";
-    pdfButton.style.boxShadow = "0 2px 8px rgba(245, 158, 11, 0.3)";
-  });
-
-  pdfButton.addEventListener("click", () => handleConversionTrigger("pdf"));
-
-  // 创建进度指示器（初始隐藏）
-  const progressIndicator = document.createElement("div");
-  progressIndicator.className = "arxiv-md-progress";
-  progressIndicator.style.cssText = `
+  // 创建进度指示器列表项（初始隐藏）
+  const progressListItem = document.createElement("li");
+  progressListItem.className = "arxiv-md-progress";
+  progressListItem.style.cssText = `
     display: none;
-    padding: 8px 16px;
-    background: #f0f0f0;
-    border-radius: 6px;
-    font-size: 13px;
-    color: #555;
+    font-style: italic;
+    color: #888;
   `;
-  progressIndicator.innerHTML = `
-    <span class="progress-text">正在处理...</span>
-    <span class="progress-percent" style="margin-left: 8px; font-weight: 500;">0%</span>
+  progressListItem.innerHTML = `
+    <span class="progress-text">Processing...</span>
   `;
 
-  container.appendChild(mdButton);
-  container.appendChild(pdfButton);
-  container.appendChild(progressIndicator);
+  // 插入到列表中
+  extraServicesUl.appendChild(mdListItem);
+  extraServicesUl.appendChild(pdfListItem);
+  extraServicesUl.appendChild(progressListItem);
 
-  // 插入到 PDF 链接后面
-  pdfLink.parentElement.insertBefore(container, pdfLink.nextSibling);
-
-  logger.info("Convert buttons injected");
+  logger.info("Convert buttons injected into Extra Services");
 }
 
 /**
@@ -187,20 +133,28 @@ async function handleConversionTrigger(type = "markdown") {
     const progressIndicator = document.querySelector(".arxiv-md-progress");
 
     const activeButton = type === "markdown" ? mdButton : pdfButton;
+    const originalText = activeButton ? activeButton.textContent : "";
 
     if (activeButton) {
-      activeButton.disabled = true;
+      activeButton.style.pointerEvents = "none";
       activeButton.style.opacity = "0.5";
-      activeButton.style.cursor = "not-allowed";
+      activeButton.textContent = type === "markdown" ? "Processing..." : "Downloading...";
     }
 
-    if (progressIndicator && type === "markdown") {
-      progressIndicator.style.display = "inline-block";
+    if (progressIndicator) {
+      progressIndicator.style.display = "list-item";
+      progressIndicator.querySelector(".progress-text").textContent = 
+        type === "markdown" ? "Converting..." : "Downloading PDF...";
     }
 
     const metadata = isArxivAbsPage
       ? metadataExtractor.extractFromAbsPage()
       : await fetchMetadataFromAbsPage();
+
+    // 对于 PDF 下载，添加页面标题信息
+    if (type === "pdf") {
+      metadata.pageTitle = document.title;
+    }
 
     logger.debug("Extracted metadata:", metadata);
 
@@ -212,9 +166,9 @@ async function handleConversionTrigger(type = "markdown") {
         logger.debug(`${type} conversion response:`, response);
 
         if (activeButton) {
-          activeButton.disabled = false;
+          activeButton.style.pointerEvents = "auto";
           activeButton.style.opacity = "1";
-          activeButton.style.cursor = "pointer";
+          activeButton.textContent = originalText;
         }
 
         if (progressIndicator) {
@@ -231,6 +185,21 @@ async function handleConversionTrigger(type = "markdown") {
   } catch (error) {
     logger.error("Conversion trigger failed:", error);
     showErrorToast(error.message);
+    
+    // 恢复按钮状态
+    const activeButton = type === "markdown" 
+      ? document.querySelector(".arxiv-md-convert-btn")
+      : document.querySelector(".arxiv-pdf-download-btn");
+    if (activeButton) {
+      activeButton.style.pointerEvents = "auto";
+      activeButton.style.opacity = "1";
+      activeButton.textContent = type === "markdown" ? "Save as Markdown" : "Save PDF (Renamed)";
+    }
+    
+    const progressIndicator = document.querySelector(".arxiv-md-progress");
+    if (progressIndicator) {
+      progressIndicator.style.display = "none";
+    }
   }
 }
 
@@ -256,19 +225,19 @@ function updateProgressUI(progress) {
   if (!progressIndicator) return;
 
   const textEl = progressIndicator.querySelector(".progress-text");
-  const percentEl = progressIndicator.querySelector(".progress-percent");
 
-  if (textEl && percentEl) {
+  if (textEl) {
     const stageText = {
-      checking: "检查 ar5iv...",
-      downloading: "下载 PDF...",
-      uploading: "上传到 MinerU...",
-      processing: "MinerU 解析中...",
-      completed: "完成!",
+      checking: "Checking ar5iv...",
+      downloading: "Downloading PDF...",
+      uploading: "Uploading to MinerU...",
+      processing: "MinerU processing...",
+      completed: "Done!",
     };
 
-    textEl.textContent = stageText[progress.stage] || "处理中...";
-    percentEl.textContent = `${Math.round(progress.progress || 0)}%`;
+    const stage = stageText[progress.stage] || "Processing...";
+    const percent = Math.round(progress.progress || 0);
+    textEl.textContent = `${stage} ${percent}%`;
   }
 }
 
@@ -276,12 +245,11 @@ function updateProgressUI(progress) {
  * 显示成功提示
  */
 function showSuccessToast(result, type = "markdown") {
-  const title = type === "markdown" ? "✅ 转换成功" : "✅ PDF 已保存";
-  const toast = createToast(
-    title,
-    `已保存：${result.filename}`,
-    "success",
-  );
+  const title = type === "markdown" ? "✅ Conversion Successful" : "✅ PDF Saved";
+  const message = type === "markdown" 
+    ? `Saved as: ${result.filename}`
+    : `PDF saved: ${result.filename}`;
+  const toast = createToast(title, message, "success");
   document.body.appendChild(toast);
 
   setTimeout(() => toast.remove(), 5000);
@@ -291,7 +259,7 @@ function showSuccessToast(result, type = "markdown") {
  * 显示错误提示
  */
 function showErrorToast(message) {
-  const toast = createToast("❌ 转换失败", message, "error");
+  const toast = createToast("❌ Failed", message, "error");
   document.body.appendChild(toast);
 
   setTimeout(() => toast.remove(), 5000);

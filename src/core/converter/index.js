@@ -202,21 +202,39 @@ class MainConverter {
 
   /**
    * 下载 PDF 文件（供按钮直接调用）
+   * 使用页面标题作为文件名（与参考脚本保持一致）
    */
   async downloadPdf(paperInfo, tabId = null) {
-    const { arxivId, title } = paperInfo;
+    const { arxivId, pageTitle } = paperInfo;
     logger.info("Direct PDF download requested:", arxivId);
 
     try {
-      const filename = generateFilename(
-        {
-          title: title,
-          authors: paperInfo.authors,
-          year: paperInfo.year,
-          arxivId: arxivId,
-        },
-        "pdf",
-      );
+      // 使用页面标题作为文件名（类似参考脚本）
+      // pageTitle 通常是: "[YYMM.NNNNN] Title"
+      const illegalChars = /[\/\\:*?"<>|\[\]]/g;
+      let filename = '';
+      
+      if (pageTitle && pageTitle.trim().length > 0) {
+        // 清理非法字符
+        filename = pageTitle.replace(illegalChars, ' ').trim();
+        // 清理多余空格
+        filename = filename.replace(/\s+/g, ' ').trim();
+        // 添加 .pdf 扩展名
+        if (!filename.endsWith('.pdf')) {
+          filename += '.pdf';
+        }
+      } else {
+        // 如果没有页面标题，使用 generateFilename 作为回退
+        filename = generateFilename(
+          {
+            title: paperInfo.title,
+            authors: paperInfo.authors,
+            year: paperInfo.year,
+            arxivId: arxivId,
+          },
+          "pdf",
+        );
+      }
 
       const pdfUrl = paperInfo.pdfUrl || `${API.ARXIV_PDF}/${arxivId}.pdf`;
       await downloadFile(pdfUrl, filename);
