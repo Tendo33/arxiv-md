@@ -27,29 +27,25 @@ export function sanitizeFilename(filename) {
 
 /**
  * 生成文件名
- * 格式: (Year) Title - FirstAuthor.ext
+ * 格式: title(年份).ext
  */
 export function generateFilename(metadata, extension = "md") {
-  const { title, authors, year, arxivId } = metadata;
+  const { title, year, arxivId } = metadata;
   let filename = "";
 
-  if (year) {
-    filename += `(${year}) `;
-  }
-
+  // 添加标题
   if (title && typeof title === "string" && title.trim() !== "") {
     filename += sanitizeFilename(title);
   } else {
     filename += `arxiv_${arxivId || "unknown"}`;
   }
 
-  if (authors && Array.isArray(authors) && authors.length > 0) {
-    const firstAuthor = authors[0].split(" ").pop();
-    if (firstAuthor) {
-      filename += ` - ${sanitizeFilename(firstAuthor)}`;
-    }
+  // 添加年份（如果存在）
+  if (year) {
+    filename += `(${year})`;
   }
 
+  // 兜底：如果文件名为空
   if (!filename || filename.trim() === "") {
     filename = `arxiv_${arxivId || Date.now()}`;
   }
