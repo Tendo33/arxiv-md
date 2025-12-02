@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,7 +11,7 @@
       <!-- Header -->
       <div class="header">
         <div class="logo">
-          <!-- Brand Logo (White for Gradient Background) -->
+          <!-- Brand Logo -->
           <svg
             width="28"
             height="28"
@@ -43,50 +43,42 @@
         <div class="version">v1.0.0</div>
       </div>
 
-      <!-- Status Section -->
-      <div class="status-section">
-        <div class="status-item">
-          <div class="status-label">转换模式</div>
-          <div class="status-value" id="currentMode">加载中...</div>
-        </div>
-        <div class="status-item">
-          <div class="status-label">MinerU Token</div>
-          <div class="status-value" id="tokenStatus">未配置</div>
-        </div>
-      </div>
-
-      <!-- Statistics -->
-      <div class="stats-section">
-        <h3>转换统计</h3>
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-number" id="totalConversions">0</div>
-            <div class="stat-label">总转换数</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number" id="ar5ivSuccess">0</div>
-            <div class="stat-label">ar5iv 成功</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number" id="mineruSuccess">0</div>
-            <div class="stat-label">MinerU 成功</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number" id="pdfFallback">0</div>
-            <div class="stat-label">PDF 兜底</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="actions-section">
-        <button class="btn btn-primary" id="convertBtn">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M8 1v6h6" />
+      <!-- Main Content -->
+      <div class="main-content">
+        <div class="info-icon">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
           </svg>
-          转换当前论文
-        </button>
-        <button class="btn btn-secondary" id="settingsBtn">
+        </div>
+        
+        <h2>Welcome!</h2>
+        <p class="description">
+          Visit any arXiv paper page to see the conversion buttons below the submission history.
+        </p>
+
+        <div class="features">
+          <div class="feature-item">
+            <span class="feature-icon">⚡</span>
+            <span>Fast ar5iv conversion</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon">📄</span>
+            <span>Auto-renamed PDFs</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon">🔒</span>
+            <span>100% local processing</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="actions-section">
+        <button class="btn btn-primary" id="settingsBtn">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
             <path
               d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"
@@ -95,22 +87,15 @@
               d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319z"
             />
           </svg>
-          设置
+          Open Settings
         </button>
-      </div>
-
-      <!-- Help Text -->
-      <div class="help-text">
-        <p>💡 提示：在 arXiv 论文页面点击"保存为 Markdown"按钮即可转换</p>
       </div>
 
       <!-- Footer -->
       <div class="footer">
-        <a href="https://github.com/yourusername/arxiv-md" target="_blank"
-          >GitHub</a
-        >
+        <a href="https://github.com/yourusername/arxiv-md" target="_blank">GitHub</a>
         <span>•</span>
-        <a href="#" id="feedbackLink">反馈问题</a>
+        <a href="https://github.com/yourusername/arxiv-md/issues" target="_blank">Report Issue</a>
       </div>
     </div>
 

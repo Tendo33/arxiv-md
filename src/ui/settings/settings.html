@@ -41,7 +41,13 @@
             </svg>
             <h1>arXiv to Markdown</h1>
           </div>
-          <div class="version">v1.0.0</div>
+          <div style="display: flex; align-items: center; gap: 15px;">
+            <button class="btn-lang" id="langToggle" title="Switch Language">
+              <span id="langIcon">🌐</span>
+              <span id="langText">中文</span>
+            </button>
+            <div class="version">v1.0.0</div>
+          </div>
         </div>
       </header>
 
@@ -49,45 +55,33 @@
       <main class="main-content">
         <!-- Welcome Message (shown on first install) -->
         <div class="welcome-banner" id="welcomeBanner" style="display: none">
-          <h2>🎉 欢迎使用 arXiv to Markdown！</h2>
-          <p>
-            一键将 arXiv 论文转换为
-            Markdown，支持智能三层降级策略，保证最佳转换质量。
+          <h2 data-i18n="welcome_title">🎉 Welcome to arXiv to Markdown!</h2>
+          <p data-i18n="welcome_desc">
+            Convert arXiv papers to Markdown with one click. 
+            Fast conversion with ar5iv, automatic PDF fallback.
           </p>
         </div>
 
         <!-- Conversion Mode Section -->
         <section class="settings-section">
-          <h2>转换模式</h2>
-          <p class="section-description">选择论文转换的默认策略</p>
+          <h2 data-i18n="mode_title">Conversion Mode</h2>
+          <p class="section-description" data-i18n="mode_desc">Choose your default conversion strategy</p>
 
           <div class="mode-cards">
-            <label class="mode-card">
-              <input type="radio" name="conversionMode" value="fast" />
-              <div class="mode-content">
-                <div class="mode-icon">⚡</div>
-                <div class="mode-title">快速模式</div>
-                <div class="mode-description">
-                  仅使用 ar5iv + 本地转换，速度最快
-                </div>
-                <div class="mode-badge">推荐：日常使用</div>
-              </div>
-            </label>
-
             <label class="mode-card">
               <input
                 type="radio"
                 name="conversionMode"
-                value="quality"
+                value="fast"
                 checked
               />
               <div class="mode-content">
-                <div class="mode-icon">🔥</div>
-                <div class="mode-title">质量模式</div>
-                <div class="mode-description">
-                  ar5iv 失败时自动调用 MinerU 深度解析
+                <div class="mode-icon">⚡</div>
+                <div class="mode-title" data-i18n="mode_standard_title">Standard Mode</div>
+                <div class="mode-description" data-i18n="mode_standard_desc">
+                  ar5iv + local conversion, PDF fallback
                 </div>
-                <div class="mode-badge mode-badge-recommended">默认推荐</div>
+                <div class="mode-badge mode-badge-recommended" data-i18n="mode_recommended">Recommended</div>
               </div>
             </label>
 
@@ -95,11 +89,11 @@
               <input type="radio" name="conversionMode" value="always" />
               <div class="mode-content">
                 <div class="mode-icon">💎</div>
-                <div class="mode-title">极致模式</div>
-                <div class="mode-description">
-                  始终使用 MinerU，质量最高但速度较慢
+                <div class="mode-title" data-i18n="mode_mineru_title">MinerU Mode</div>
+                <div class="mode-description" data-i18n="mode_mineru_desc">
+                  Always use MinerU (manual, requires token)
                 </div>
-                <div class="mode-badge">需要 Token</div>
+                <div class="mode-badge" data-i18n="mode_requires_token">Requires Token</div>
               </div>
             </label>
           </div>
@@ -107,19 +101,20 @@
 
         <!-- MinerU API Section -->
         <section class="settings-section">
-          <h2>MinerU API 配置</h2>
-          <p class="section-description">配置后可享受高质量 PDF 解析（可选）</p>
+          <h2 data-i18n="mineru_title">MinerU API Configuration</h2>
+          <p class="section-description" data-i18n="mineru_desc">Optional: For manual MinerU mode only</p>
 
           <div class="form-group">
-            <label for="mineruToken">API Token</label>
+            <label for="mineruToken" data-i18n="mineru_token_label">API Token</label>
             <div class="input-group">
               <input
                 type="password"
                 id="mineruToken"
-                placeholder="输入您的 MinerU API Token"
+                data-i18n-placeholder="mineru_token_placeholder"
+                placeholder="Enter your MinerU API Token"
                 class="input-field"
               />
-              <button id="toggleTokenBtn" class="btn-icon" title="显示/隐藏">
+              <button id="toggleTokenBtn" class="btn-icon" title="Show/Hide">
                 <svg
                   width="20"
                   height="20"
@@ -134,82 +129,82 @@
             </div>
             <div class="form-hint">
               🔗
-              <a href="https://mineru.net" target="_blank">访问 mineru.net</a>
-              注册账号并获取 Token
+              <a href="https://mineru.net" target="_blank" data-i18n="mineru_visit">Visit mineru.net</a>
+              <span data-i18n="mineru_hint">to register and get your token</span>
             </div>
             <div class="token-status" id="tokenStatus"></div>
           </div>
 
           <div class="info-box">
-            <div class="info-title">💡 MinerU 的优势</div>
+            <div class="info-title" data-i18n="mineru_about">💡 About MinerU</div>
             <ul>
-              <li>✅ 完美处理复杂 LaTeX 公式</li>
-              <li>✅ 高精度表格识别</li>
-              <li>✅ 图片自动提取</li>
-              <li>✅ 支持所有 PDF（不依赖 ar5iv）</li>
+              <li data-i18n="mineru_feature1">✅ Perfect LaTeX formula handling</li>
+              <li data-i18n="mineru_feature2">✅ High-precision table recognition</li>
+              <li data-i18n="mineru_feature3">✅ Automatic image extraction</li>
+              <li data-i18n="mineru_feature4">✅ Works with all PDFs</li>
             </ul>
-            <div class="info-quota">免费账号：每天 2000 页解析额度</div>
+            <div class="info-quota" data-i18n="mineru_quota">Free tier: 2000 pages/day</div>
           </div>
         </section>
 
         <!-- Advanced Settings -->
         <section class="settings-section">
-          <h2>高级选项</h2>
+          <h2 data-i18n="advanced_title">Advanced Options</h2>
 
           <div class="form-group">
             <label class="checkbox-label">
               <input type="checkbox" id="autoConvert" />
-              <span>自动转换（进入论文页面自动弹出转换提示）</span>
+              <span data-i18n="advanced_auto">Auto-convert (show prompt on paper page load)</span>
             </label>
           </div>
 
           <div class="form-group">
             <label class="checkbox-label">
               <input type="checkbox" id="includeMetadata" checked />
-              <span>在 Markdown 中包含元数据（标题、作者、ID 等）</span>
+              <span data-i18n="advanced_metadata">Include metadata in Markdown (title, authors, ID, etc.)</span>
             </label>
           </div>
 
           <div class="form-group">
             <label class="checkbox-label">
               <input type="checkbox" id="showNotifications" checked />
-              <span>显示桌面通知</span>
+              <span data-i18n="advanced_notifications">Show desktop notifications</span>
             </label>
           </div>
         </section>
 
         <!-- Statistics -->
         <section class="settings-section">
-          <h2>使用统计</h2>
+          <h2 data-i18n="stats_title">Usage Statistics</h2>
 
           <div class="stats-grid">
             <div class="stat-item">
               <div class="stat-number" id="totalConversions">0</div>
-              <div class="stat-label">总转换次数</div>
+              <div class="stat-label" data-i18n="stats_total">Total Conversions</div>
             </div>
             <div class="stat-item">
               <div class="stat-number" id="ar5ivSuccess">0</div>
-              <div class="stat-label">ar5iv 成功</div>
+              <div class="stat-label" data-i18n="stats_ar5iv">ar5iv Success</div>
             </div>
             <div class="stat-item">
               <div class="stat-number" id="mineruSuccess">0</div>
-              <div class="stat-label">MinerU 成功</div>
+              <div class="stat-label" data-i18n="stats_mineru">MinerU Success</div>
             </div>
             <div class="stat-item">
               <div class="stat-number" id="pdfFallback">0</div>
-              <div class="stat-label">PDF 兜底</div>
+              <div class="stat-label" data-i18n="stats_pdf">PDF Fallback</div>
             </div>
           </div>
 
-          <button class="btn btn-secondary" id="resetStatsBtn">
-            重置统计数据
+          <button class="btn btn-secondary" id="resetStatsBtn" data-i18n="stats_reset">
+            Reset Statistics
           </button>
         </section>
 
         <!-- Actions -->
         <div class="actions-bar">
-          <button class="btn btn-primary" id="saveBtn">保存设置</button>
-          <button class="btn btn-secondary" id="resetBtn">恢复默认</button>
+          <button class="btn btn-primary" id="saveBtn" data-i18n="btn_save">Save Settings</button>
+          <button class="btn btn-secondary" id="resetBtn" data-i18n="btn_reset">Reset to Default</button>
         </div>
       </main>
 
