@@ -1,7 +1,4 @@
-// {{RIPER-7 Action}}
-// Role: LD | Task_ID: #4 | Time: 2025-12-01T21:18:25+08:00
-// Logic: 从 arXiv 页面提取论文元数据（标题、作者、年份、ID 等）
-// Principle: SOLID-S (Single Responsibility - 元数据提取)
+// 从 arXiv 页面提取论文元数据（标题、作者、年份、ID 等）
 
 import { extractArxivId } from '@utils/helpers';
 import logger from '@utils/logger';

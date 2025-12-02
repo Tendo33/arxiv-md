@@ -1,7 +1,4 @@
-// {{RIPER-7 Action}}
-// Role: LD | Task_ID: #1 | Time: 2025-12-01T21:18:25+08:00
-// Logic: 通用工具函数集合
-// Principle: SOLID-S (Single Responsibility - 每个函数职责单一)
+// 通用工具函数集合
 
 import { REGEX } from '@config/constants';
 
@@ -30,48 +27,34 @@ export function sanitizeFilename(filename) {
 
 /**
  * 生成文件名
- * @param {Object} metadata - 论文元数据
- * @param {string} extension - 文件扩展名
- * @returns {string} 文件名
+ * 格式: (Year) Title - FirstAuthor.ext
  */
 export function generateFilename(metadata, extension = 'md') {
-  console.log('[FILENAME] 📝 生成文件名, 元数据:', metadata);
-  
   const { title, authors, year, arxivId } = metadata;
-  
-  // 格式: (Year) Title - FirstAuthor.ext
-  // 使用圆括号而非方括号，避免 Windows 文件名问题
   let filename = '';
   
   if (year) {
     filename += `(${year}) `;
   }
   
-  // 确保标题存在且有效
   if (title && typeof title === 'string' && title.trim() !== '') {
     filename += sanitizeFilename(title);
   } else {
-    console.warn('[FILENAME] ⚠️ 标题无效，使用 arXiv ID');
     filename += `arxiv_${arxivId || 'unknown'}`;
   }
   
   if (authors && Array.isArray(authors) && authors.length > 0) {
-    const firstAuthor = authors[0].split(' ').pop(); // 姓氏
+    const firstAuthor = authors[0].split(' ').pop();
     if (firstAuthor) {
       filename += ` - ${sanitizeFilename(firstAuthor)}`;
     }
   }
   
-  // 最终检查：如果文件名仍然为空，使用回退方案
   if (!filename || filename.trim() === '') {
-    console.warn('[FILENAME] ⚠️ 文件名生成失败，使用回退方案');
     filename = `arxiv_${arxivId || Date.now()}`;
   }
   
-  const finalFilename = `${filename.trim()}.${extension}`;
-  console.log('[FILENAME] ✅ 最终文件名:', finalFilename);
-  
-  return finalFilename;
+  return `${filename.trim()}.${extension}`;
 }
 
 /**
@@ -124,114 +107,49 @@ export function downloadFile(url, filename) {
 
 /**
  * 下载 Blob 为文件（Service Worker 兼容版本）
- * @param {Blob} blob - 文件内容
- * @param {string} filename - 文件名
  */
 export function downloadBlob(blob, filename) {
-  console.log('[DOWNLOAD] 📥 准备下载文件:', filename);
-  console.log('[DOWNLOAD] 📦 Blob 大小:', blob.size, 'bytes');
-  
-  // 验证文件名
+  // 验证并清理文件名
   if (!filename || typeof filename !== 'string' || filename.trim() === '') {
-    console.error('[DOWNLOAD] ❌ 无效的文件名:', filename);
-    filename = `arxiv_document_${Date.now()}.md`; // 回退文件名
-    console.log('[DOWNLOAD] 🔄 使用回退文件名:', filename);
+    filename = `arxiv_document_${Date.now()}.md`;
   }
   
-  // 清理文件名中的非法字符
-  // Windows 文件名非法字符: < > : " / \ | ? *
-  // 注意：保留扩展名，确保文件名格式正确
-  const cleanFilename = filename
-    .replace(/[<>:"/\\|?*]/g, '_')  // 替换非法字符为下划线
-    .replace(/[\[\]]/g, '')          // 移除方括号
-    .replace(/\s+/g, ' ')            // 合并多个空格
-    .replace(/^\.+/, '')             // 移除开头的点
-    .trim();
+  // 清理非法字符
+  let cleanFilename = filename
+    .replace(/[<>:"/\\|?*\[\]]/g, '_')
+    .replace(/\s+/g, ' ')
+    .replace(/^\.+/, '')
+    .trim() || `arxiv_${Date.now()}.md`;
   
-  console.log('[DOWNLOAD] 🧹 清理后的文件名:', cleanFilename);
-  
-  // 确保文件名有效且包含扩展名
-  let finalFilename = cleanFilename || `arxiv_${Date.now()}.md`;
-  
-  // 如果没有扩展名，添加 .md
-  if (!finalFilename.includes('.')) {
-    finalFilename += '.md';
+  if (!cleanFilename.includes('.')) {
+    cleanFilename += '.md';
   }
   
-  console.log('[DOWNLOAD] 📄 最终文件名:', finalFilename);
-  
-  // 解决方案：将文件名转换为 ASCII 安全格式
-  // Chrome 在处理 Data URL 时，对非 ASCII 字符的文件名支持不好
-  // 因此我们需要确保文件名只包含 ASCII 字符
-  
-  // 先将中文或特殊字符转为拼音或移除
-  const asciiSafeFilename = finalFilename
-    // 保留 ASCII 字符、数字、空格、点号、连字符、括号、下划线
-    .replace(/[^\x00-\x7F]+/g, '_')  // 非 ASCII 字符 → 下划线
-    .replace(/_+/g, '_')              // 合并多个下划线
-    .replace(/^_+|_+$/g, '');         // 移除首尾下划线
-  
-  console.log('[DOWNLOAD] 🔤 ASCII 安全文件名:', asciiSafeFilename);
+  // 转换为 ASCII 安全格式（Chrome 对非 ASCII 文件名支持不佳）
+  const asciiSafeFilename = cleanFilename
+    .replace(/[^\x00-\x7F]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '');
   
   const reader = new FileReader();
   reader.onloadend = () => {
-    console.log('[DOWNLOAD] 🚀 开始下载...');
-    
-    // 使用 chrome.downloads.download API
-    // 关键：filename 参数必须是纯 ASCII，否则会被忽略
-    chrome.downloads.download(
-      {
-        url: reader.result, // Data URL
-        filename: asciiSafeFilename,  // 使用 ASCII 安全的文件名
-        saveAs: false,  // 直接下载，不显示对话框
-        conflictAction: 'uniquify'  // 自动处理重名文件
-      },
-      (downloadId) => {
-        if (chrome.runtime.lastError) {
-          console.error('[DOWNLOAD] ❌ 下载失败:', chrome.runtime.lastError);
-          console.error('[DOWNLOAD] 错误详情:', chrome.runtime.lastError.message);
-          
-          // 如果失败，尝试使用 saveAs: true 和原始文件名
-          console.log('[DOWNLOAD] 🔄 尝试使用 saveAs: true 和原始文件名...');
-          chrome.downloads.download(
-            {
-              url: reader.result,
-              filename: finalFilename,  // 使用原始文件名
-              saveAs: true,  // 显示保存对话框
-              conflictAction: 'uniquify'
-            },
-            (retryId) => {
-              if (chrome.runtime.lastError) {
-                console.error('[DOWNLOAD] ❌ 重试也失败:', chrome.runtime.lastError);
-              } else {
-                console.log('[DOWNLOAD] ✅ 重试成功! ID:', retryId);
-              }
-            }
-          );
-        } else {
-          console.log('[DOWNLOAD] ✅ 下载成功!');
-          console.log('[DOWNLOAD] 下载 ID:', downloadId);
-          console.log('[DOWNLOAD] ASCII 文件名:', asciiSafeFilename);
-          console.log('[DOWNLOAD] 原始文件名:', finalFilename);
-          
-          // 监听下载完成事件，显示实际保存的文件名
-          const listener = (delta) => {
-            if (delta.id === downloadId && delta.filename) {
-              console.log('[DOWNLOAD] 📂 实际保存文件名:', delta.filename.current);
-              chrome.downloads.onChanged.removeListener(listener);
-            }
-          };
-          chrome.downloads.onChanged.addListener(listener);
-        }
+    chrome.downloads.download({
+      url: reader.result,
+      filename: asciiSafeFilename,
+      saveAs: false,
+      conflictAction: 'uniquify'
+    }, (downloadId) => {
+      if (chrome.runtime.lastError) {
+        // 回退：使用保存对话框
+        chrome.downloads.download({
+          url: reader.result,
+          filename: cleanFilename,
+          saveAs: true,
+          conflictAction: 'uniquify'
+        });
       }
-    );
+    });
   };
-  
-  reader.onerror = () => {
-    console.error('[DOWNLOAD] ❌ FileReader 读取失败:', reader.error);
-  };
-  
-  // 读取 Blob 为 Data URL
   reader.readAsDataURL(blob);
 }
 

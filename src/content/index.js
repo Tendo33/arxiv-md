@@ -1,7 +1,4 @@
-// {{RIPER-7 Action}}
-// Role: LD | Task_ID: #6 | Time: 2025-12-01T21:18:25+08:00
-// Logic: Content Script - 在 arXiv 页面注入功能，提取元数据，触发转换
-// Principle: SOLID-S (Single Responsibility - 页面交互)
+// Content Script - 在 arXiv 页面注入功能，提取元数据，触发转换
 
 import metadataExtractor from '@core/metadata-extractor';
 import logger from '@utils/logger';
@@ -144,11 +141,9 @@ function injectConvertButton() {
  * 处理转换触发
  */
 async function handleConversionTrigger() {
-  console.log('[CONTENT] 🎯 转换触发!');
   logger.info('Conversion triggered');
   
   try {
-    // 更新 UI
     const button = document.querySelector('.arxiv-md-convert-btn');
     const progressIndicator = document.querySelector('.arxiv-md-progress');
     
@@ -162,46 +157,31 @@ async function handleConversionTrigger() {
       progressIndicator.style.display = 'inline-block';
     }
     
-    // 提取元数据
-    console.log('[CONTENT] 📖 提取元数据...');
     const metadata = isArxivAbsPage
       ? metadataExtractor.extractFromAbsPage()
       : await fetchMetadataFromAbsPage();
     
-    console.log('[CONTENT] ✅ 元数据提取完成:', metadata);
     logger.debug('Extracted metadata:', metadata);
     
-    // 发送转换请求到 Background
-    console.log('[CONTENT] 📤 发送转换请求到 Background...');
-    chrome.runtime.sendMessage(
-      {
-        type: 'CONVERT_PAPER',
-        data: metadata
-      },
-      (response) => {
-        console.log('[CONTENT] 📥 收到响应:', response);
-        logger.debug('Conversion response:', response);
-        
-        // 恢复按钮状态
-        if (button) {
-          button.disabled = false;
-          button.style.opacity = '1';
-          button.style.cursor = 'pointer';
-        }
-        
-        if (progressIndicator) {
-          progressIndicator.style.display = 'none';
-        }
-        
-        if (response && response.success) {
-          // 显示成功提示
-          showSuccessToast(response.data);
-        } else {
-          // 显示错误提示
-          showErrorToast(response?.error || 'Unknown error');
-        }
+    chrome.runtime.sendMessage({ type: 'CONVERT_PAPER', data: metadata }, (response) => {
+      logger.debug('Conversion response:', response);
+      
+      if (button) {
+        button.disabled = false;
+        button.style.opacity = '1';
+        button.style.cursor = 'pointer';
       }
-    );
+      
+      if (progressIndicator) {
+        progressIndicator.style.display = 'none';
+      }
+      
+      if (response && response.success) {
+        showSuccessToast(response.data);
+      } else {
+        showErrorToast(response?.error || 'Unknown error');
+      }
+    });
     
   } catch (error) {
     logger.error('Conversion trigger failed:', error);
@@ -227,12 +207,8 @@ async function fetchMetadataFromAbsPage() {
  * 更新进度 UI
  */
 function updateProgressUI(progress) {
-  console.log('[CONTENT] 📊 更新进度 UI:', progress);
   const progressIndicator = document.querySelector('.arxiv-md-progress');
-  if (!progressIndicator) {
-    console.warn('[CONTENT] ⚠️ 未找到进度指示器元素');
-    return;
-  }
+  if (!progressIndicator) return;
   
   const textEl = progressIndicator.querySelector('.progress-text');
   const percentEl = progressIndicator.querySelector('.progress-percent');
@@ -246,14 +222,8 @@ function updateProgressUI(progress) {
       'completed': '完成!'
     };
     
-    const text = stageText[progress.stage] || '处理中...';
-    const percent = Math.round(progress.progress || 0);
-    
-    textEl.textContent = text;
-    percentEl.textContent = `${percent}%`;
-    console.log(`[CONTENT] ✅ UI 更新: ${text} ${percent}%`);
-  } else {
-    console.warn('[CONTENT] ⚠️ 未找到进度文本或百分比元素');
+    textEl.textContent = stageText[progress.stage] || '处理中...';
+    percentEl.textContent = `${Math.round(progress.progress || 0)}%`;
   }
 }
 
@@ -374,51 +344,32 @@ function isBlockFormula(mathEl, latex) {
 
 /**
  * 预处理：提取并替换所有数学公式元素
- * @param {Document} doc - DOM 文档
- * @returns {Object} {doc, mathMap} - 清理后的文档和公式映射
  */
 function preprocessMathElements(doc) {
   const mathMap = new Map();
   let mathCounter = 0;
-  let blockCount = 0;
-  let inlineCount = 0;
   
-  // 使用不会被 Turndown 转义的占位符格式（纯字母数字）
-  // Turndown 会转义下划线，所以使用 MATHPLACEHOLDER 格式
   const createPlaceholder = (id, isBlock) => {
     return isBlock ? `MATHBLOCKSTART${id}MATHBLOCKEND` : `MATHINLINESTART${id}MATHINLINEEND`;
   };
   
-  // 1. 处理所有 <math> 标签（ar5iv 使用 alttext 属性存储 LaTeX）
-  const mathElements = doc.querySelectorAll('math');
-  mathElements.forEach((mathEl) => {
-    // ar5iv 将 LaTeX 存储在 alttext 属性中
+  // 处理所有 <math> 标签
+  doc.querySelectorAll('math').forEach((mathEl) => {
     const alttext = mathEl.getAttribute('alttext');
     
     if (alttext) {
       let latex = alttext.trim();
-      
-      // 判断是否为块级公式
       const isBlock = isBlockFormula(mathEl, latex);
       
-      // 如果是块级公式，移除开头的 \displaystyle（会在块级公式中自动应用）
       if (isBlock && latex.startsWith('\\displaystyle')) {
         latex = latex.replace(/^\\displaystyle\s*/, '');
       }
       
-      // 创建占位符
       const placeholder = createPlaceholder(mathCounter, isBlock);
       mathMap.set(placeholder, { latex, isBlock });
       mathCounter++;
-      
-      if (isBlock) blockCount++;
-      else inlineCount++;
-      
-      // 替换整个 math 元素为占位符
-      const textNode = doc.createTextNode(placeholder);
-      mathEl.replaceWith(textNode);
+      mathEl.replaceWith(doc.createTextNode(placeholder));
     } else {
-      // 没有 alttext 属性，尝试从 annotation 标签获取（兼容其他格式）
       const annotation = mathEl.querySelector('annotation[encoding="application/x-tex"]');
       if (annotation && annotation.textContent) {
         let latex = annotation.textContent.trim();
@@ -431,141 +382,90 @@ function preprocessMathElements(doc) {
         const placeholder = createPlaceholder(mathCounter, isBlock);
         mathMap.set(placeholder, { latex, isBlock });
         mathCounter++;
-        
-        if (isBlock) blockCount++;
-        else inlineCount++;
-        
-        const textNode = doc.createTextNode(placeholder);
-        mathEl.replaceWith(textNode);
+        mathEl.replaceWith(doc.createTextNode(placeholder));
       } else {
-        // 没有 LaTeX 源码，直接移除
         mathEl.remove();
       }
     }
   });
   
-  // 2. 清理残留的 MathML 标签
+  // 清理残留的 MathML 标签
   const mathMLTags = ['semantics', 'mrow', 'mi', 'mo', 'mn', 'msub', 'msup', 'mfrac', 'msqrt', 'mtext', 
                       'annotation-xml', 'annotation', 'apply', 'csymbol', 'ci', 'cn'];
-  mathMLTags.forEach(tag => {
-    doc.querySelectorAll(tag).forEach(el => el.remove());
-  });
+  mathMLTags.forEach(tag => doc.querySelectorAll(tag).forEach(el => el.remove()));
   
-  console.log(`[PREPROCESS] ✅ 提取了 ${mathCounter} 个数学公式 (块级: ${blockCount}, 行内: ${inlineCount})`);
+  logger.debug(`Extracted ${mathCounter} math formulas`);
   return { doc, mathMap };
 }
 
 /**
  * 预处理：清理作者和元数据格式问题
- * @param {Document} doc - DOM 文档
  */
 function preprocessAuthorsAndMetadata(doc) {
-  // 1. 移除 \AND 错误标记
+  // 移除 \AND 错误标记
   doc.querySelectorAll('.ltx_ERROR').forEach(el => {
-    if (el.textContent.includes('\\AND')) {
-      el.remove();
-    }
+    if (el.textContent.includes('\\AND')) el.remove();
   });
   
-  // 2. 清理脚注标记
+  // 清理脚注标记
   doc.querySelectorAll('.ltx_note_mark, sup.ltx_note_mark').forEach(el => {
-    // 保留数字，但移除"footnotemark:"文本
     const text = el.textContent.replace(/footnotemark:\s*/g, '').trim();
-    if (text) {
-      el.textContent = text;
-    }
+    if (text) el.textContent = text;
   });
   
-  // 3. 清理脚注内容（避免重复显示）
-  doc.querySelectorAll('.ltx_note_content').forEach(el => {
-    el.remove();
-  });
+  // 清理脚注内容
+  doc.querySelectorAll('.ltx_note_content').forEach(el => el.remove());
   
-  // 4. 清理作者分隔符（&符号后添加换行）
+  // 清理作者分隔符
   doc.querySelectorAll('.ltx_personname').forEach(el => {
-    const html = el.innerHTML;
-    // 将 &Name 替换为换行 + Name
-    el.innerHTML = html.replace(/&amp;/g, '\n\n');
+    el.innerHTML = el.innerHTML.replace(/&amp;/g, '\n\n');
   });
-  
-  console.log(`[PREPROCESS] ✅ 清理作者和元数据格式`);
 }
 
 /**
  * 预处理：处理 ar5iv 表格
- * ar5iv 表格分为两类：
- * 1. 方程式表格 (.ltx_eqn_table) - 用于排版多行公式
- * 2. 数据表格 (.ltx_tabular) - 实际数据表格
- * @param {Document} doc - DOM 文档
+ * 方程式表格 (.ltx_eqn_table) 用于排版多行公式
+ * 数据表格 (.ltx_tabular) 是实际数据表格
  */
 function preprocessTables(doc) {
-  const tables = doc.querySelectorAll('table');
-  let equationTables = 0;
-  let dataTables = 0;
-  
-  tables.forEach((table) => {
-    // === 1. 检查是否为方程式表格 ===
+  doc.querySelectorAll('table').forEach((table) => {
     const isEquationTable = table.classList.contains('ltx_eqn_table') ||
                             table.classList.contains('ltx_eqn_row') ||
                             table.closest('.ltx_equation, .ltx_equationgroup') !== null;
-    
-    // 检查是否包含数学公式占位符
     const hasMathPlaceholder = table.textContent.includes('MATHBLOCK') || 
                                table.textContent.includes('MATHINLINE');
     
     if (isEquationTable) {
-      equationTables++;
-      
-      // 方程式表格：提取所有公式占位符
       const placeholders = table.textContent.match(/MATHBLOCKSTART\d+MATHBLOCKEND|MATHINLINESTART\d+MATHINLINEEND/g) || [];
-      
       if (placeholders.length > 0) {
-        const text = placeholders.join('\n\n');
-        const textNode = doc.createTextNode(`\n\n${text}\n\n`);
-        table.replaceWith(textNode);
+        table.replaceWith(doc.createTextNode(`\n\n${placeholders.join('\n\n')}\n\n`));
         return;
       }
-      
-      // 没有占位符，提取纯文本
       const text = table.textContent.replace(/\s+/g, ' ').trim();
       if (text) {
-        const textNode = doc.createTextNode(`\n\n${text}\n\n`);
-        table.replaceWith(textNode);
+        table.replaceWith(doc.createTextNode(`\n\n${text}\n\n`));
         return;
       }
-      
       table.remove();
       return;
     }
     
-    // === 2. 检查是否为数据表格 (ltx_tabular) ===
     const isDataTable = table.classList.contains('ltx_tabular') ||
                         table.closest('.ltx_table, figure.ltx_table') !== null;
     
     if (isDataTable || !hasMathPlaceholder) {
-      dataTables++;
-      
-      // 数据表格：清理属性，让 Turndown GFM 插件处理
       table.removeAttribute('id');
       table.removeAttribute('style');
       
-      // 确保表格有 thead 和 tbody 结构（帮助 Turndown 识别）
       const firstRow = table.querySelector('tr');
-      const hasHeader = table.querySelector('thead') || 
-                        (firstRow && firstRow.querySelector('th'));
+      const hasHeader = table.querySelector('thead') || (firstRow && firstRow.querySelector('th'));
       
       if (!hasHeader && firstRow) {
-        // 如果第一行没有 th，检查是否应该是表头
         const firstRowCells = firstRow.querySelectorAll('td');
         const isLikelyHeader = firstRowCells.length > 0 && 
-                               Array.from(firstRowCells).some(cell => {
-                                 const text = cell.textContent.trim();
-                                 // 表头通常是短文本或标签
-                                 return text.length < 50 && !text.includes('.');
-                               });
+          Array.from(firstRowCells).some(cell => cell.textContent.trim().length < 50 && !cell.textContent.includes('.'));
         
         if (isLikelyHeader) {
-          // 将第一行的 td 转换为 th
           firstRowCells.forEach(td => {
             const th = doc.createElement('th');
             th.innerHTML = td.innerHTML;
@@ -574,64 +474,42 @@ function preprocessTables(doc) {
         }
       }
       
-      // 清理所有单元格的属性
       table.querySelectorAll('td, th').forEach(cell => {
         cell.removeAttribute('id');
         cell.removeAttribute('style');
         cell.removeAttribute('class');
-        // 保留 rowspan, colspan
       });
       
-      // 清理所有行的属性
       table.querySelectorAll('tr').forEach(row => {
         row.removeAttribute('id');
         row.removeAttribute('style');
         row.removeAttribute('class');
       });
-      
       return;
     }
     
-    // === 3. 其他小表格（可能是布局用）===
+    // 小表格（可能是布局用）
     const rows = table.querySelectorAll('tr');
     const cells = table.querySelectorAll('td, th');
     if (rows.length <= 3 && cells.length <= 6 && hasMathPlaceholder) {
-      equationTables++;
-      const text = table.textContent.replace(/\s+/g, ' ').trim();
-      const textNode = doc.createTextNode(`\n\n${text}\n\n`);
-      table.replaceWith(textNode);
-      return;
+      table.replaceWith(doc.createTextNode(`\n\n${table.textContent.replace(/\s+/g, ' ').trim()}\n\n`));
     }
-    
-    // 默认：保留表格
-    dataTables++;
   });
-  
-  console.log(`[PREPROCESS] ✅ 处理了 ${tables.length} 个表格 (方程式: ${equationTables}, 数据: ${dataTables})`);
 }
 
 /**
  * 预处理：修复列表格式问题
- * @param {Document} doc - DOM 文档
  */
 function preprocessLists(doc) {
-  // ar5iv 使用 <span class="ltx_tag ltx_tag_item">•</span> 作为列表符号
-  // 这会导致输出中出现 "(•)" 这样的格式，需要移除
+  // 移除列表项中的标签元素
+  doc.querySelectorAll('li .ltx_tag, li .ltx_tag_item, li .ltx_tag_itemize').forEach(tag => tag.remove());
   
-  // 1. 移除列表项中的标签元素（包含 • 或编号）
-  doc.querySelectorAll('li .ltx_tag, li .ltx_tag_item, li .ltx_tag_itemize').forEach(tag => {
-    tag.remove();
-  });
-  
-  // 2. 移除列表项中的孤立 • 符号
+  // 移除列表项中的孤立 • 符号
   doc.querySelectorAll('li').forEach(li => {
-    // 移除开头的文本节点中的 •
     const firstChild = li.firstChild;
     if (firstChild && firstChild.nodeType === Node.TEXT_NODE) {
       firstChild.textContent = firstChild.textContent.replace(/^[\s•]+/, '');
     }
-    
-    // 移除 span 包裹的 •
     li.querySelectorAll('span').forEach(span => {
       if (span.textContent.trim() === '•' || span.textContent.trim() === '–') {
         span.remove();
@@ -639,113 +517,77 @@ function preprocessLists(doc) {
     });
   });
   
-  // 3. 确保列表项内容在同一行（移除 <p> 包裹导致的换行）
+  // 确保列表项内容在同一行
   doc.querySelectorAll('li > .ltx_para, li > .ltx_p, li > p').forEach(para => {
-    // 将 <p> 的内容提升到 li 中
     const parent = para.parentElement;
     if (parent && parent.tagName === 'LI') {
-      // 保留 para 的内容
       while (para.firstChild) {
         parent.insertBefore(para.firstChild, para);
       }
       para.remove();
     }
   });
-  
-  console.log(`[PREPROCESS] ✅ 清理列表格式`);
 }
 
 /**
  * 预处理：清理 ar5iv 特有元素
- * @param {Document} doc - DOM 文档
  */
 function preprocessAr5ivElements(doc) {
-  // 0. 【关键】处理章节标题中的编号标签
-  // ar5iv 使用 <span class="ltx_tag ltx_tag_section">1</span> 来标记章节编号
-  // 需要把编号整合到标题文本中
+  // 处理章节标题中的编号标签
   doc.querySelectorAll('.ltx_title_section, .ltx_title_subsection, .ltx_title_subsubsection, .ltx_title_paragraph').forEach(title => {
     const tagEl = title.querySelector('.ltx_tag');
     if (tagEl) {
       const tagText = tagEl.textContent.trim();
       tagEl.remove();
-      // 在标题开头添加编号
       if (tagText && title.firstChild) {
         title.insertBefore(doc.createTextNode(tagText + ' '), title.firstChild);
       }
     }
   });
   
-  // 1. 移除不需要转换的元素
-  const elementsToRemove = [
-    '.ltx_pagination',      // 分页
-    '.ltx_break',           // 换行标记
-    '.ltx_rule',            // 分隔线
-    '.ltx_dates',           // 日期（如果有）
-    '.ar5iv-feedback',      // ar5iv 反馈按钮
-  ];
+  // 移除不需要转换的元素
+  ['.ltx_pagination', '.ltx_break', '.ltx_rule', '.ltx_dates', '.ar5iv-feedback']
+    .forEach(selector => doc.querySelectorAll(selector).forEach(el => el.remove()));
   
-  elementsToRemove.forEach(selector => {
-    doc.querySelectorAll(selector).forEach(el => el.remove());
-  });
-  
-  // 2. 清理图片的相对路径
+  // 清理图片的相对路径
   doc.querySelectorAll('img').forEach(img => {
     let src = img.getAttribute('src');
     if (src && !src.startsWith('http') && !src.startsWith('data:')) {
-      // 转换为绝对路径
-      if (src.startsWith('/')) {
-        img.setAttribute('src', `https://ar5iv.org${src}`);
-      } else {
-        img.setAttribute('src', `https://ar5iv.org/${src}`);
-      }
+      img.setAttribute('src', src.startsWith('/') ? `https://ar5iv.org${src}` : `https://ar5iv.org/${src}`);
     }
   });
   
-  // 3. 处理参考文献列表
+  // 处理参考文献列表
   doc.querySelectorAll('.ltx_bibitem').forEach(bibitem => {
-    // 获取引用标签（如 [1]）
     const tag = bibitem.querySelector('.ltx_tag');
     const tagText = tag ? tag.textContent.trim() : '';
-    
-    // 获取引用内容
     const bibblocEl = bibitem.querySelector('.ltx_bibblock');
-    
     if (tagText && bibblocEl) {
-      // 格式化为：-   [1] 引用内容
-      // 创建一个简化的结构
-      const content = bibblocEl.innerHTML;
-      bibitem.innerHTML = `<span class="ltx_bib_tag">${tagText}</span> ${content}`;
+      bibitem.innerHTML = `<span class="ltx_bib_tag">${tagText}</span> ${bibblocEl.innerHTML}`;
     }
   });
   
-  // 4. 处理代码块
+  // 处理代码块
   doc.querySelectorAll('.ltx_listing, .ltx_verbatim, pre.ltx_code').forEach(code => {
-    // 确保代码块被 <pre><code> 包裹
     if (!code.querySelector('code')) {
-      const text = code.textContent;
-      code.innerHTML = `<code>${text}</code>`;
+      code.innerHTML = `<code>${code.textContent}</code>`;
     }
   });
   
-  // 5. 处理引用块
+  // 处理引用块
   doc.querySelectorAll('.ltx_quote').forEach(quote => {
-    // 添加 blockquote 标签以便 Turndown 识别
     if (quote.tagName !== 'BLOCKQUOTE') {
       const blockquote = doc.createElement('blockquote');
       blockquote.innerHTML = quote.innerHTML;
       quote.replaceWith(blockquote);
     }
   });
-  
-  console.log(`[PREPROCESS] ✅ 清理 ar5iv 特有元素`);
 }
 
 /**
  * 移除所有 MathML 相关元素
- * @param {Document} doc - DOM 文档
  */
 function removeMathMLArtifacts(doc) {
-  // 移除所有可能残留的 MathML 命名空间元素
   const mathMLSelectors = [
     'math', 'semantics', 'mrow', 'mi', 'mo', 'mn', 'msub', 'msup', 
     'mfrac', 'msqrt', 'mtext', 'annotation-xml', 'annotation'
@@ -753,253 +595,139 @@ function removeMathMLArtifacts(doc) {
   
   mathMLSelectors.forEach(selector => {
     doc.querySelectorAll(selector).forEach(el => {
-      // 保留文本内容（如果有）
       if (el.textContent && !el.querySelector('annotation')) {
         const text = el.textContent.trim();
-        if (text) {
-          el.replaceWith(doc.createTextNode(text));
-        } else {
-          el.remove();
-        }
+        text ? el.replaceWith(doc.createTextNode(text)) : el.remove();
       } else {
         el.remove();
       }
     });
   });
-  
-  console.log(`[PREPROCESS] ✅ 清理 MathML 残留`);
 }
 
 /**
  * 恢复数学公式占位符
- * @param {string} markdown - Markdown 文本
- * @param {Map} mathMap - 公式映射
- * @returns {string} 恢复公式后的 Markdown
  */
 function restoreMathPlaceholders(markdown, mathMap) {
   let result = markdown;
-  let restoredCount = 0;
-  let blockRestoredCount = 0;
-  let inlineRestoredCount = 0;
   
   mathMap.forEach((value, placeholder) => {
     const { latex, isBlock } = value;
-    
-    // 占位符格式: MATHBLOCKSTART{id}MATHBLOCKEND 或 MATHINLINESTART{id}MATHINLINEEND
-    // 这些纯字母数字的占位符不会被 Turndown 转义
     const escapedPlaceholder = placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(escapedPlaceholder, 'g');
     
-    const beforeLength = result.length;
-    
     if (isBlock) {
-      // 块级公式：使用 $$ 包裹
-      // 格式：$$\nlatex\n$$ 确保正确渲染
-      const formattedLatex = latex.trim();
-      result = result.replace(regex, `$$${formattedLatex}$$`);
-      
-      if (result.length !== beforeLength) {
-        blockRestoredCount++;
-      }
+      result = result.replace(regex, `$$${latex.trim()}$$`);
     } else {
-      // 行内公式：使用 $ 包裹
       result = result.replace(regex, `$${latex}$`);
-      
-      if (result.length !== beforeLength) {
-        inlineRestoredCount++;
-      }
-    }
-    
-    if (result.length !== beforeLength) {
-      restoredCount++;
     }
   });
   
-  console.log(`[POSTPROCESS] ✅ 恢复了 ${restoredCount}/${mathMap.size} 个数学公式 (块级: ${blockRestoredCount}, 行内: ${inlineRestoredCount})`);
   return result;
 }
 
 /**
  * 后处理 Markdown - 清理转换问题
- * @param {string} markdown - 原始 Markdown
- * @returns {string} 清理后的 Markdown
  */
 function postProcessMarkdown(markdown) {
   let result = markdown;
   
-  // 1. 【关键】恢复被转义的引用方括号
-  // Turndown 会将 [1, 2, 3] 转义为 \[1, 2, 3\]
-  // 引用格式通常是 [数字] 或 [数字, 数字, ...]
+  // 恢复被转义的引用方括号
   result = result.replace(/\\\[(\d+(?:\s*,\s*\d+)*)\\\]/g, '[$1]');
   
-  // 1.5 【关键】修复章节标题格式
-  // 有时章节标题会变成 " (1) Introduction" 格式，需要转换为 "## 1 Introduction"
-  // 匹配独立行的 " (编号) 标题" 格式
+  // 修复章节标题格式
   result = result.replace(/^\s*\((\d+(?:\.\d+)*)\)\s+(.+)$/gm, (match, num, title) => {
-    // 根据编号的层级确定标题级别
-    const level = num.split('.').length + 1; // 1 -> ##, 1.1 -> ###, etc.
-    const prefix = '#'.repeat(Math.min(level, 6));
-    return `${prefix} ${num} ${title}`;
+    const level = num.split('.').length + 1;
+    return `${'#'.repeat(Math.min(level, 6))} ${num} ${title}`;
   });
   
-  // 1.6 修复列表项格式
-  // 将 "-    (•)\n\n    内容" 转换为 "- 内容"
+  // 修复列表项格式
   result = result.replace(/-\s+\(•\)\s*\n\n\s+/g, '- ');
   result = result.replace(/-\s+\(•\)\s*/g, '- ');
   result = result.replace(/-\s+•\s*/g, '- ');
   
-  // 2. 清理重复的数学表达式（Unicode + LaTeX）
+  // 清理重复的数学表达式
   result = result
     .replace(/([a-zA-Z]+)([\u{1D400}-\u{1D7FF}]+)\1\{([^}]+)\}/gu, '$$1_{$3}$')
     .replace(/([a-zA-Z]+)([\u{1D400}-\u{1D7FF}]+)\1\^\{([^}]+)\}/gu, '$$1^{$3}$');
   
-  // 3. 移除孤立的 Unicode 数学符号（与普通字母重复）
+  // 移除孤立的 Unicode 数学符号
   result = result.replace(/([a-zA-Z])([\u{1D400}-\u{1D7FF}]+)(\d)/gu, '$1$3');
   
-  // 4. 清理错误的脚标文本
-  result = result
-    .replace(/\bsubscript\b/gi, '')
-    .replace(/\bsuperscript\b/gi, '');
+  // 清理脚标文本和脚注标记
+  result = result.replace(/\bsubscript\b/gi, '').replace(/\bsuperscript\b/gi, '');
+  result = result.replace(/\d+footnotemark:\s*\d+/g, '').replace(/footnotemark:\s*/g, '');
   
-  // 5. 清理脚注标记错误
-  result = result
-    .replace(/\d+footnotemark:\s*\d+/g, '')
-    .replace(/footnotemark:\s*/g, '');
-  
-  // 6. 清理重复的项目符号
+  // 清理重复的项目符号
   result = result.replace(/^(\s*-\s*)•\s*/gm, '$1');
   
-  // 7. 修复表格中的空单元格
+  // 修复表格和空格
   result = result.replace(/\|\s*\|\s*\|/g, '| |');
-  
-  // 8. 清理行首行尾空格
   result = result.replace(/[ \t]+$/gm, '');
   
-  // 9. 移除 HTML 实体残留
-  result = result
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"');
+  // 移除 HTML 实体残留
+  result = result.replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+                 .replace(/&amp;/g, '&').replace(/&quot;/g, '"');
   
-  // 10. 清理错误的 LaTeX 命令残留
-  result = result
-    .replace(/\\\\AND/g, '')
-    .replace(/\\AND/g, '');
+  // 清理 LaTeX 命令残留
+  result = result.replace(/\\\\AND/g, '').replace(/\\AND/g, '');
   
-  // 11. 【关键】修复连续的行内公式
-  // 情况: $formula1$$formula2$ 应该变成 $formula1$ $formula2$
-  // 但要避免误伤块级公式 $$...$$
-  // 策略：先保护块级公式，再修复连续行内公式，最后恢复块级公式
-  
-  // 临时替换块级公式分隔符
+  // 修复连续的行内公式
   result = result.replace(/\$\$([^$]+)\$\$/g, 'DOUBLEDOLLARSTART$1DOUBLEDOLLAREND');
-  
-  // 修复连续的行内公式 $a$$b$ -> $a$ $b$
   result = result.replace(/\$([^$]+)\$\$([^$]+)\$/g, '$$$1$ $$$2$');
+  result = result.replace(/DOUBLEDOLLARSTART([^]*?)DOUBLEDOLLAREND/g, (_, content) => `\n\n$$\n${content.trim()}\n$$\n\n`);
   
-  // 恢复块级公式，并确保正确格式化
-  result = result.replace(/DOUBLEDOLLARSTART([^]*?)DOUBLEDOLLAREND/g, (match, content) => {
-    const trimmedContent = content.trim();
-    return `\n\n$$\n${trimmedContent}\n$$\n\n`;
-  });
-  
-  // 12. 清理多余空行
+  // 清理多余空行和 HTML 标签残留
   result = result.replace(/\n{4,}/g, '\n\n\n');
-  
-  // 13. 最终清理：移除明显的 HTML/XML 标签残留
   result = result.replace(/<\/?[a-z][^>]*>/gi, '');
   
   return result;
 }
 
 /**
- * 处理文件下载（使用 <a> download 属性，类似 UserScript）
- * @param {Object} data - {content: string, filename: string, mimeType: string}
- * @param {Function} sendResponse - 响应回调
+ * 处理文件下载（使用 <a> download 属性）
  */
 function handleFileDownload(data, sendResponse) {
-  console.log('[CONTENT] 📥 开始下载文件...');
-  console.log('[CONTENT] 📄 文件名:', data.filename);
-  console.log('[CONTENT] 📦 内容大小:', data.content.length, 'bytes');
-  
   try {
-    // 创建 Blob
     const blob = new Blob([data.content], { type: data.mimeType || 'text/plain' });
-    console.log('[CONTENT] ✅ Blob 创建成功');
-    
-    // 创建 Object URL（这个在页面环境中可以使用）
     const url = window.URL.createObjectURL(blob);
-    console.log('[CONTENT] ✅ Object URL 创建成功');
     
-    // 创建隐藏的 <a> 标签
     const a = document.createElement('a');
     a.href = url;
-    a.download = data.filename;  // 设置下载文件名
+    a.download = data.filename;
     a.style.display = 'none';
-    
-    // 添加到 DOM 并触发点击
     document.body.appendChild(a);
-    console.log('[CONTENT] 🖱️ 触发下载点击...');
     a.click();
     
-    // 清理
     setTimeout(() => {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-      console.log('[CONTENT] 🧹 清理完成');
     }, 100);
     
-    console.log('[CONTENT] ✅ 下载成功触发!');
     sendResponse({ success: true });
-    
   } catch (error) {
-    console.error('[CONTENT] ❌ 下载失败:', error);
+    logger.error('Download failed:', error);
     sendResponse({ success: false, error: error.message });
   }
 }
 
 /**
  * 处理 HTML → Markdown 转换（在真实浏览器环境中）
- * @param {Object} data - {html: string, title: string}
- * @param {Function} sendResponse - 响应回调
  */
 function handleHtmlToMarkdown(data, sendResponse) {
-  console.log('[CONTENT] 🔄 开始 HTML → Markdown 转换...');
-  
   try {
-    // === 第一步：解析 HTML 为 DOM ===
-    console.log('[CONTENT] 📄 解析 HTML 为 DOM...');
     const parser = new DOMParser();
     const doc = parser.parseFromString(data.html, 'text/html');
     
-    // === 第二步：预处理 - 清理作者和元数据 ===
-    console.log('[CONTENT] 👥 预处理：清理作者和元数据...');
+    // 预处理流程
     preprocessAuthorsAndMetadata(doc);
-    
-    // === 第三步：预处理 - 提取数学公式 ===
-    console.log('[CONTENT] 🔢 预处理：提取数学公式...');
     const { doc: cleanedDoc, mathMap } = preprocessMathElements(doc);
-    
-    // === 第四步：预处理 - 修复列表格式 ===
-    console.log('[CONTENT] 📝 预处理：修复列表格式...');
     preprocessLists(cleanedDoc);
-    
-    // === 第 4.5 步：预处理 - 清理 ar5iv 特有元素 ===
-    console.log('[CONTENT] 🎨 预处理：清理 ar5iv 特有元素...');
     preprocessAr5ivElements(cleanedDoc);
-    
-    // === 第五步：预处理 - 简化表格 ===
-    console.log('[CONTENT] 📊 预处理：简化表格...');
     preprocessTables(cleanedDoc);
-    
-    // === 第六步：移除残留的 MathML 标记 ===
-    console.log('[CONTENT] 🧹 清理 MathML 残留...');
     removeMathMLArtifacts(cleanedDoc);
     
-    // === 第七步：初始化 Turndown 并转换 ===
-    console.log('[CONTENT] 📝 Turndown 转换...');
+    // Turndown 转换
     const turndownService = new TurndownService({
       headingStyle: 'atx',
       codeBlockStyle: 'fenced',
@@ -1222,29 +950,15 @@ function handleHtmlToMarkdown(data, sendResponse) {
     // 执行 Turndown 转换
     let markdown = turndownService.turndown(cleanedDoc.body.innerHTML);
     
-    // === 第八步：恢复数学公式占位符 ===
-    console.log('[CONTENT] 🔢 恢复数学公式...');
+    // 后处理
     markdown = restoreMathPlaceholders(markdown, mathMap);
-    
-    // === 第九步：后处理清理 ===
-    console.log('[CONTENT] 🧹 后处理清理...');
     markdown = postProcessMarkdown(markdown);
     
-    console.log('[CONTENT] ✅ Markdown 转换完成:', markdown.length, 'bytes');
-    console.log('[CONTENT] ✅ 处理了', mathMap.size, '个数学公式');
-    
-    sendResponse({
-      success: true,
-      markdown: markdown
-    });
-    
+    logger.debug(`Markdown conversion complete: ${markdown.length} bytes, ${mathMap.size} formulas`);
+    sendResponse({ success: true, markdown });
   } catch (error) {
-    console.error('[CONTENT] ❌ Markdown 转换失败:', error);
-    console.error(error.stack);
-    sendResponse({
-      success: false,
-      error: error.message
-    });
+    logger.error('Markdown conversion failed:', error);
+    sendResponse({ success: false, error: error.message });
   }
 }
 

@@ -1,7 +1,4 @@
-// {{RIPER-7 Action}}
-// Role: LD | Task_ID: #1 | Time: 2025-12-01T21:18:25+08:00
-// Logic: 统一的日志工具，支持不同级别的日志输出和开发/生产环境区分
-// Principle: SOLID-S (Single Responsibility - 日志管理)
+// 统一的日志工具 - 支持不同级别的日志输出
 
 const LOG_LEVELS = {
   ERROR: 0,

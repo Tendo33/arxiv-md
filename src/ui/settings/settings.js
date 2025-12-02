@@ -1,7 +1,4 @@
-// {{RIPER-7 Action}}
-// Role: LD | Task_ID: #5 | Time: 2025-12-01T21:18:25+08:00
-// Logic: Settings 页面逻辑 - 配置管理、Token 验证、统计展示
-// Principle: SOLID-S (Single Responsibility - 设置管理)
+// Settings 页面逻辑 - 配置管理、Token 验证、统计展示
 
 import storage from '@utils/storage';
 import { CONVERSION_MODE } from '@config/constants';
@@ -36,19 +33,13 @@ async function init() {
  */
 async function loadSettings() {
   try {
-    // 加载转换模式
     const mode = await storage.getConversionMode();
     document.querySelector(`input[name="conversionMode"][value="${mode}"]`).checked = true;
     
-    // 加载 MinerU Token
     const token = await storage.getMinerUToken();
     if (token) {
       document.getElementById('mineruToken').value = token;
     }
-    
-    // 加载高级选项（示例，可扩展）
-    // const autoConvert = await storage.get('autoConvert', false);
-    // document.getElementById('autoConvert').checked = autoConvert;
     
     logger.info('Settings loaded');
   } catch (error) {
@@ -97,36 +88,27 @@ function bindEvents() {
  * 保存设置
  */
 async function saveSettings() {
+  const btn = document.getElementById('saveBtn');
   try {
-    const btn = document.getElementById('saveBtn');
     btn.disabled = true;
     btn.textContent = '保存中...';
     
-    // 保存转换模式
     const mode = document.querySelector('input[name="conversionMode"]:checked').value;
     await storage.setConversionMode(mode);
     
-    // 保存 MinerU Token
     const token = document.getElementById('mineruToken').value.trim();
     if (token) {
       await storage.setMinerUToken(token);
     }
     
-    // 保存高级选项（示例）
-    // const autoConvert = document.getElementById('autoConvert').checked;
-    // await storage.set('autoConvert', autoConvert);
-    
     logger.info('Settings saved');
     showToast('✅ 设置已保存', 'success');
-    
-    btn.disabled = false;
-    btn.textContent = '保存设置';
   } catch (error) {
     logger.error('Failed to save settings:', error);
     showToast('保存失败：' + error.message, 'error');
-    
-    document.getElementById('saveBtn').disabled = false;
-    document.getElementById('saveBtn').textContent = '保存设置';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '保存设置';
   }
 }
 

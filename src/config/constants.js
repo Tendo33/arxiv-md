@@ -1,7 +1,4 @@
-// {{RIPER-7 Action}}
-// Role: LD | Task_ID: #1 | Time: 2025-12-01T21:18:25+08:00
-// Logic: 定义项目全局常量，包括 API 端点、配置键、错误消息等
-// Principle: SOLID-S (Single Responsibility - 集中管理配置)
+// 项目全局常量 - API 端点、配置键、错误消息等
 
 /**
  * API 端点配置

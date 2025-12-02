@@ -1,7 +1,4 @@
-// {{RIPER-7 Action}}
-// Role: LD | Task_ID: #5 | Time: 2025-12-01T21:18:25+08:00
-// Logic: Popup UI 逻辑 - 显示状态、统计数据、快捷操作
-// Principle: SOLID-S (Single Responsibility - Popup 交互)
+// Popup UI 逻辑 - 显示状态、统计数据、快捷操作
 
 import storage from '@utils/storage';
 import { CONVERSION_MODE } from '@config/constants';

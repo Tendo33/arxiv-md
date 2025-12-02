@@ -1,7 +1,4 @@
-// {{RIPER-7 Action}}
-// Role: LD | Task_ID: #1 | Time: 2025-12-01T21:18:25+08:00
-// Logic: Chrome Storage 封装，提供类型安全的存储访问
-// Principle: SOLID-S (Single Responsibility - 存储管理)
+// Chrome Storage 封装 - 提供类型安全的存储访问
 
 import { STORAGE_KEYS, DEFAULTS } from '@config/constants';
 import logger from './logger';
