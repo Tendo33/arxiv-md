@@ -2,6 +2,8 @@
 
 > 🚀 一键将 arXiv 论文转换为 Markdown，支持智能三层降级策略，保证最佳转换质量
 
+<img src="./docs/arxiv_md.png" alt="arXiv to Markdown" width="100">
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-即将推出-blue)](https://chrome.google.com/webstore)
 
