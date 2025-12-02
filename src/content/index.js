@@ -335,6 +335,44 @@ function createToast(title, message, type = 'info') {
 }
 
 /**
+ * 判断数学公式是否为块级公式
+ * @param {Element} mathEl - math 元素
+ * @param {string} latex - LaTeX 内容
+ * @returns {boolean}
+ */
+function isBlockFormula(mathEl, latex) {
+  // 1. 显式 display="block" 属性
+  const displayAttr = mathEl.getAttribute('display');
+  if (displayAttr === 'block') return true;
+  
+  // 2. 在方程式容器中（ar5iv 特有的 class）
+  const equationContainer = mathEl.closest('.ltx_equation, .ltx_equationgroup, .ltx_eqn_table, .ltx_eqn_row');
+  if (equationContainer) return true;
+  
+  // 3. LaTeX 内容包含 \displaystyle 命令（说明原本是块级公式）
+  if (latex.includes('\\displaystyle')) return true;
+  
+  // 4. LaTeX 内容是多行公式（包含 \\ 换行或 aligned/array 环境）
+  if (latex.includes('\\\\') || 
+      latex.includes('\\begin{aligned}') || 
+      latex.includes('\\begin{array}') ||
+      latex.includes('\\begin{cases}')) {
+    return true;
+  }
+  
+  // 5. 在独立段落中（父元素是 p 或 div，且只有这一个 math 子元素）
+  const parent = mathEl.parentElement;
+  if (parent && (parent.tagName === 'P' || parent.tagName === 'DIV')) {
+    const childElements = Array.from(parent.children);
+    if (childElements.length === 1 && childElements[0] === mathEl) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+/**
  * 预处理：提取并替换所有数学公式元素
  * @param {Document} doc - DOM 文档
  * @returns {Object} {doc, mathMap} - 清理后的文档和公式映射
@@ -342,6 +380,14 @@ function createToast(title, message, type = 'info') {
 function preprocessMathElements(doc) {
   const mathMap = new Map();
   let mathCounter = 0;
+  let blockCount = 0;
+  let inlineCount = 0;
+  
+  // 使用不会被 Turndown 转义的占位符格式（纯字母数字）
+  // Turndown 会转义下划线，所以使用 MATHPLACEHOLDER 格式
+  const createPlaceholder = (id, isBlock) => {
+    return isBlock ? `MATHBLOCKSTART${id}MATHBLOCKEND` : `MATHINLINESTART${id}MATHINLINEEND`;
+  };
   
   // 1. 处理所有 <math> 标签（ar5iv 使用 alttext 属性存储 LaTeX）
   const mathElements = doc.querySelectorAll('math');
@@ -350,17 +396,23 @@ function preprocessMathElements(doc) {
     const alttext = mathEl.getAttribute('alttext');
     
     if (alttext) {
-      const latex = alttext.trim();
+      let latex = alttext.trim();
       
-      // 判断是否为块级公式（根据 display 属性或父元素）
-      const displayAttr = mathEl.getAttribute('display');
-      const isInTable = mathEl.closest('table, .ltx_equation, .ltx_equationgroup, .ltx_eqn_table') !== null;
-      const isBlock = displayAttr === 'block' || isInTable;
+      // 判断是否为块级公式
+      const isBlock = isBlockFormula(mathEl, latex);
+      
+      // 如果是块级公式，移除开头的 \displaystyle（会在块级公式中自动应用）
+      if (isBlock && latex.startsWith('\\displaystyle')) {
+        latex = latex.replace(/^\\displaystyle\s*/, '');
+      }
       
       // 创建占位符
-      const placeholder = `__MATH_${mathCounter}__`;
+      const placeholder = createPlaceholder(mathCounter, isBlock);
       mathMap.set(placeholder, { latex, isBlock });
       mathCounter++;
+      
+      if (isBlock) blockCount++;
+      else inlineCount++;
       
       // 替换整个 math 元素为占位符
       const textNode = doc.createTextNode(placeholder);
@@ -369,12 +421,19 @@ function preprocessMathElements(doc) {
       // 没有 alttext 属性，尝试从 annotation 标签获取（兼容其他格式）
       const annotation = mathEl.querySelector('annotation[encoding="application/x-tex"]');
       if (annotation && annotation.textContent) {
-        const latex = annotation.textContent.trim();
-        const isBlock = mathEl.getAttribute('display') === 'block';
+        let latex = annotation.textContent.trim();
+        const isBlock = isBlockFormula(mathEl, latex);
         
-        const placeholder = `__MATH_${mathCounter}__`;
+        if (isBlock && latex.startsWith('\\displaystyle')) {
+          latex = latex.replace(/^\\displaystyle\s*/, '');
+        }
+        
+        const placeholder = createPlaceholder(mathCounter, isBlock);
         mathMap.set(placeholder, { latex, isBlock });
         mathCounter++;
+        
+        if (isBlock) blockCount++;
+        else inlineCount++;
         
         const textNode = doc.createTextNode(placeholder);
         mathEl.replaceWith(textNode);
@@ -392,7 +451,7 @@ function preprocessMathElements(doc) {
     doc.querySelectorAll(tag).forEach(el => el.remove());
   });
   
-  console.log(`[PREPROCESS] ✅ 提取了 ${mathCounter} 个数学公式`);
+  console.log(`[PREPROCESS] ✅ 提取了 ${mathCounter} 个数学公式 (块级: ${blockCount}, 行内: ${inlineCount})`);
   return { doc, mathMap };
 }
 
@@ -438,38 +497,73 @@ function preprocessAuthorsAndMetadata(doc) {
  */
 function preprocessTables(doc) {
   const tables = doc.querySelectorAll('table');
+  let equationTables = 0;
+  let dataTables = 0;
   
   tables.forEach((table) => {
-    // 检查是否为数学公式表格（通常只有1-2行，用于排版公式）
-    const rows = table.querySelectorAll('tr');
-    if (rows.length <= 2 && table.querySelectorAll('td, th').length <= 4) {
-      // 检查是否包含公式占位符
-      const hasFormula = table.textContent.includes('__MATH_') || table.textContent.includes('=');
-      if (hasFormula) {
-        // 这是公式表格，提取文本内容
-        const text = table.textContent.replace(/\s+/g, ' ').trim();
+    // 检查是否为方程式表格（ar5iv 使用 table 排版多行公式）
+    const isEquationTable = table.classList.contains('ltx_eqn_table') ||
+                            table.classList.contains('ltx_equation') ||
+                            table.closest('.ltx_equation, .ltx_equationgroup') !== null;
+    
+    // 检查是否包含数学公式占位符
+    const hasMathPlaceholder = table.textContent.includes('MATHBLOCK') || 
+                               table.textContent.includes('MATHINLINE');
+    
+    if (isEquationTable || hasMathPlaceholder) {
+      equationTables++;
+      
+      // 这是方程式表格，提取所有公式占位符，每个独立成行
+      const placeholders = table.textContent.match(/MATHBLOCKSTART\d+MATHBLOCKEND|MATHINLINESTART\d+MATHINLINEEND/g) || [];
+      
+      if (placeholders.length > 0) {
+        // 用换行分隔多个公式
+        const text = placeholders.join('\n\n');
         const textNode = doc.createTextNode(`\n\n${text}\n\n`);
+        table.replaceWith(textNode);
+        return;
+      }
+      
+      // 如果没有占位符但是方程式表格，提取纯文本
+      const text = table.textContent.replace(/\s+/g, ' ').trim();
+      if (text) {
+        const textNode = doc.createTextNode(`\n\n${text}\n\n`);
+        table.replaceWith(textNode);
+        return;
+      }
+      
+      table.remove();
+      return;
+    }
+    
+    // 检查是否为简单的公式布局表格（小表格，主要包含公式）
+    const rows = table.querySelectorAll('tr');
+    const cells = table.querySelectorAll('td, th');
+    if (rows.length <= 3 && cells.length <= 6) {
+      const text = table.textContent.trim();
+      if (text.includes('MATH') || text.includes('=')) {
+        equationTables++;
+        const textNode = doc.createTextNode(`\n\n${text.replace(/\s+/g, ' ')}\n\n`);
         table.replaceWith(textNode);
         return;
       }
     }
     
-    // 对于数据表格，移除复杂属性
+    // 对于数据表格，保留但简化属性
+    dataTables++;
     table.removeAttribute('id');
-    table.removeAttribute('class');
     table.removeAttribute('style');
+    // 保留 class 以便识别表格类型
     
     // 简化单元格
-    const cells = table.querySelectorAll('td, th');
     cells.forEach(cell => {
       cell.removeAttribute('id');
-      cell.removeAttribute('class');
       cell.removeAttribute('style');
-      // 保留 rowspan 和 colspan 以维持表格结构
+      // 保留 class, rowspan, colspan
     });
   });
   
-  console.log(`[PREPROCESS] ✅ 处理了 ${tables.length} 个表格`);
+  console.log(`[PREPROCESS] ✅ 处理了 ${tables.length} 个表格 (方程式表格: ${equationTables}, 数据表格: ${dataTables})`);
 }
 
 /**
@@ -529,26 +623,44 @@ function removeMathMLArtifacts(doc) {
  */
 function restoreMathPlaceholders(markdown, mathMap) {
   let result = markdown;
+  let restoredCount = 0;
+  let blockRestoredCount = 0;
+  let inlineRestoredCount = 0;
   
   mathMap.forEach((value, placeholder) => {
     const { latex, isBlock } = value;
     
+    // 占位符格式: MATHBLOCKSTART{id}MATHBLOCKEND 或 MATHINLINESTART{id}MATHINLINEEND
+    // 这些纯字母数字的占位符不会被 Turndown 转义
+    const escapedPlaceholder = placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escapedPlaceholder, 'g');
+    
+    const beforeLength = result.length;
+    
     if (isBlock) {
-      // 块级公式
-      result = result.replace(
-        new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
-        `\n\n$$\n${latex}\n$$\n\n`
-      );
+      // 块级公式：使用 $$ 包裹
+      // 格式：$$\nlatex\n$$ 确保正确渲染
+      const formattedLatex = latex.trim();
+      result = result.replace(regex, `$$${formattedLatex}$$`);
+      
+      if (result.length !== beforeLength) {
+        blockRestoredCount++;
+      }
     } else {
-      // 行内公式
-      result = result.replace(
-        new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
-        ` $${latex}$ `
-      );
+      // 行内公式：使用 $ 包裹
+      result = result.replace(regex, `$${latex}$`);
+      
+      if (result.length !== beforeLength) {
+        inlineRestoredCount++;
+      }
+    }
+    
+    if (result.length !== beforeLength) {
+      restoredCount++;
     }
   });
   
-  console.log(`[POSTPROCESS] ✅ 恢复了 ${mathMap.size} 个数学公式`);
+  console.log(`[POSTPROCESS] ✅ 恢复了 ${restoredCount}/${mathMap.size} 个数学公式 (块级: ${blockRestoredCount}, 行内: ${inlineRestoredCount})`);
   return result;
 }
 
@@ -558,64 +670,77 @@ function restoreMathPlaceholders(markdown, mathMap) {
  * @returns {string} 清理后的 Markdown
  */
 function postProcessMarkdown(markdown) {
-  return markdown
-    // 1. 清理重复的数学表达式（Unicode + LaTeX）
-    // 例如: "dk𝑑𝑘d_{k}" -> "$d_{k}$"
+  let result = markdown;
+  
+  // 1. 【关键】恢复被转义的引用方括号
+  // Turndown 会将 [1, 2, 3] 转义为 \[1, 2, 3\]
+  // 引用格式通常是 [数字] 或 [数字, 数字, ...]
+  result = result.replace(/\\\[(\d+(?:\s*,\s*\d+)*)\\\]/g, '[$1]');
+  
+  // 2. 清理重复的数学表达式（Unicode + LaTeX）
+  result = result
     .replace(/([a-zA-Z]+)([\u{1D400}-\u{1D7FF}]+)\1\{([^}]+)\}/gu, '$$1_{$3}$')
-    .replace(/([a-zA-Z]+)([\u{1D400}-\u{1D7FF}]+)\1\^\{([^}]+)\}/gu, '$$1^{$3}$')
-    
-    // 2. 移除孤立的 Unicode 数学符号（与普通字母重复）
-    .replace(/([a-zA-Z])([\u{1D400}-\u{1D7FF}]+)(\d)/gu, '$1$3')
-    
-    // 3. 清理残留的 LaTeX 命令文本
-    .replace(/\\text\{([^}]+)\}/g, '$1')
-    .replace(/\\mathbb\{(\w)\}/g, '$1')
-    .replace(/([^\\])\\_(?=\s)/g, '$1_')
-    .replace(/\\in\s/g, '∈ ')
-    .replace(/\\times\s/g, '× ')
-    .replace(/\\cdot\s/g, '· ')
-    
-    // 4. 清理错误的脚标文本
+    .replace(/([a-zA-Z]+)([\u{1D400}-\u{1D7FF}]+)\1\^\{([^}]+)\}/gu, '$$1^{$3}$');
+  
+  // 3. 移除孤立的 Unicode 数学符号（与普通字母重复）
+  result = result.replace(/([a-zA-Z])([\u{1D400}-\u{1D7FF}]+)(\d)/gu, '$1$3');
+  
+  // 4. 清理错误的脚标文本
+  result = result
     .replace(/\bsubscript\b/gi, '')
-    .replace(/\bsuperscript\b/gi, '')
-    
-    // 5. 清理脚注标记错误（如"11footnotemark: 1"）
+    .replace(/\bsuperscript\b/gi, '');
+  
+  // 5. 清理脚注标记错误
+  result = result
     .replace(/\d+footnotemark:\s*\d+/g, '')
-    .replace(/footnotemark:\s*/g, '')
-    
-    // 6. 清理重复的项目符号（如 "- •"）
-    .replace(/^(\s*-\s*)•\s*/gm, '$1')
-    
-    // 7. 修复表格中的空单元格
-    .replace(/\|\s*\|\s*\|/g, '| |')
-    
-    // 8. 清理多余空行（超过2个连续空行）
-    .replace(/\n{4,}/g, '\n\n\n')
-    
-    // 9. 修复公式前后空格
-    .replace(/([^\s\n])\$([^$]+)\$/g, '$1 $$2$')
-    .replace(/\$([^$]+)\$([^\s\n.,;!?])/g, '$$1$ $2')
-    
-    // 10. 清理公式中多余的空格
-    .replace(/\$\s+/g, '$')
-    .replace(/\s+\$/g, '$')
-    
-    // 11. 清理行首行尾空格
-    .replace(/[ \t]+$/gm, '')
-    
-    // 12. 移除 HTML 实体残留
+    .replace(/footnotemark:\s*/g, '');
+  
+  // 6. 清理重复的项目符号
+  result = result.replace(/^(\s*-\s*)•\s*/gm, '$1');
+  
+  // 7. 修复表格中的空单元格
+  result = result.replace(/\|\s*\|\s*\|/g, '| |');
+  
+  // 8. 清理行首行尾空格
+  result = result.replace(/[ \t]+$/gm, '');
+  
+  // 9. 移除 HTML 实体残留
+  result = result
     .replace(/&nbsp;/g, ' ')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    
-    // 13. 清理错误的 LaTeX 命令残留（如 \\AND）
+    .replace(/&quot;/g, '"');
+  
+  // 10. 清理错误的 LaTeX 命令残留
+  result = result
     .replace(/\\\\AND/g, '')
-    .replace(/\\AND/g, '')
-    
-    // 14. 最终清理：移除明显的 HTML/XML 标签残留
-    .replace(/<\/?[a-z][^>]*>/gi, '');
+    .replace(/\\AND/g, '');
+  
+  // 11. 【关键】修复连续的行内公式
+  // 情况: $formula1$$formula2$ 应该变成 $formula1$ $formula2$
+  // 但要避免误伤块级公式 $$...$$
+  // 策略：先保护块级公式，再修复连续行内公式，最后恢复块级公式
+  
+  // 临时替换块级公式分隔符
+  result = result.replace(/\$\$([^$]+)\$\$/g, 'DOUBLEDOLLARSTART$1DOUBLEDOLLAREND');
+  
+  // 修复连续的行内公式 $a$$b$ -> $a$ $b$
+  result = result.replace(/\$([^$]+)\$\$([^$]+)\$/g, '$$$1$ $$$2$');
+  
+  // 恢复块级公式，并确保正确格式化
+  result = result.replace(/DOUBLEDOLLARSTART([^]*?)DOUBLEDOLLAREND/g, (match, content) => {
+    const trimmedContent = content.trim();
+    return `\n\n$$\n${trimmedContent}\n$$\n\n`;
+  });
+  
+  // 12. 清理多余空行
+  result = result.replace(/\n{4,}/g, '\n\n\n');
+  
+  // 13. 最终清理：移除明显的 HTML/XML 标签残留
+  result = result.replace(/<\/?[a-z][^>]*>/gi, '');
+  
+  return result;
 }
 
 /**
@@ -731,28 +856,67 @@ function handleHtmlToMarkdown(data, sendResponse) {
       }
     });
     
-    // 自定义规则：处理引用和链接
+    // 自定义规则：处理 ar5iv 的引用链接
     turndownService.addRule('citations', {
       filter: (node) => {
         if (node.nodeName === 'A') {
           const href = node.getAttribute('href') || '';
+          // 过滤 chrome-extension URL
           if (href.includes('chrome-extension://')) return true;
-          if (node.classList && node.classList.contains('ltx_cite')) return true;
+          // 过滤 ar5iv 引用链接（指向参考文献的内部链接）
+          if (href.startsWith('#bib.')) return true;
+          // 过滤带有 ltx_ref 类的链接（ar5iv 的内部引用）
+          if (node.classList && (node.classList.contains('ltx_ref') || node.classList.contains('ltx_cite'))) {
+            return true;
+          }
         }
         return false;
       },
       replacement: (content, node) => {
         const href = node.getAttribute('href') || '';
         
+        // chrome-extension URL：只保留内容
         if (href.includes('chrome-extension://')) {
           return content;
         }
         
-        if (node.classList && node.classList.contains('ltx_cite')) {
-          return `[${content}]`;
+        // ar5iv 的内部引用链接：转换为 [内容] 格式
+        if (href.startsWith('#bib.') || href.startsWith('#')) {
+          // 清理内容中的多余空白
+          const cleanContent = content.replace(/\s+/g, ' ').trim();
+          return `[${cleanContent}]`;
+        }
+        
+        // ltx_ref 类：保留内容
+        if (node.classList && node.classList.contains('ltx_ref')) {
+          return content;
         }
         
         return `[${content}](${href})`;
+      }
+    });
+    
+    // 自定义规则：处理 ar5iv 的脚注
+    turndownService.addRule('footnotes', {
+      filter: (node) => {
+        if (node.classList) {
+          return node.classList.contains('ltx_note') ||
+                 node.classList.contains('ltx_note_mark') ||
+                 node.classList.contains('ltx_note_content');
+        }
+        return false;
+      },
+      replacement: (content, node) => {
+        // 脚注标记：返回上标数字
+        if (node.classList.contains('ltx_note_mark')) {
+          const num = content.replace(/[^\d]/g, '');
+          return num ? `^${num}` : '';
+        }
+        // 脚注内容：在后处理中会被移除
+        if (node.classList.contains('ltx_note_content')) {
+          return '';
+        }
+        return content;
       }
     });
     
