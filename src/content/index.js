@@ -492,7 +492,10 @@ function preprocessAuthorsAndMetadata(doc) {
 }
 
 /**
- * 预处理：简化复杂表格
+ * 预处理：处理 ar5iv 表格
+ * ar5iv 表格分为两类：
+ * 1. 方程式表格 (.ltx_eqn_table) - 用于排版多行公式
+ * 2. 数据表格 (.ltx_tabular) - 实际数据表格
  * @param {Document} doc - DOM 文档
  */
 function preprocessTables(doc) {
@@ -501,30 +504,29 @@ function preprocessTables(doc) {
   let dataTables = 0;
   
   tables.forEach((table) => {
-    // 检查是否为方程式表格（ar5iv 使用 table 排版多行公式）
+    // === 1. 检查是否为方程式表格 ===
     const isEquationTable = table.classList.contains('ltx_eqn_table') ||
-                            table.classList.contains('ltx_equation') ||
+                            table.classList.contains('ltx_eqn_row') ||
                             table.closest('.ltx_equation, .ltx_equationgroup') !== null;
     
     // 检查是否包含数学公式占位符
     const hasMathPlaceholder = table.textContent.includes('MATHBLOCK') || 
                                table.textContent.includes('MATHINLINE');
     
-    if (isEquationTable || hasMathPlaceholder) {
+    if (isEquationTable) {
       equationTables++;
       
-      // 这是方程式表格，提取所有公式占位符，每个独立成行
+      // 方程式表格：提取所有公式占位符
       const placeholders = table.textContent.match(/MATHBLOCKSTART\d+MATHBLOCKEND|MATHINLINESTART\d+MATHINLINEEND/g) || [];
       
       if (placeholders.length > 0) {
-        // 用换行分隔多个公式
         const text = placeholders.join('\n\n');
         const textNode = doc.createTextNode(`\n\n${text}\n\n`);
         table.replaceWith(textNode);
         return;
       }
       
-      // 如果没有占位符但是方程式表格，提取纯文本
+      // 没有占位符，提取纯文本
       const text = table.textContent.replace(/\s+/g, ' ').trim();
       if (text) {
         const textNode = doc.createTextNode(`\n\n${text}\n\n`);
@@ -536,34 +538,76 @@ function preprocessTables(doc) {
       return;
     }
     
-    // 检查是否为简单的公式布局表格（小表格，主要包含公式）
-    const rows = table.querySelectorAll('tr');
-    const cells = table.querySelectorAll('td, th');
-    if (rows.length <= 3 && cells.length <= 6) {
-      const text = table.textContent.trim();
-      if (text.includes('MATH') || text.includes('=')) {
-        equationTables++;
-        const textNode = doc.createTextNode(`\n\n${text.replace(/\s+/g, ' ')}\n\n`);
-        table.replaceWith(textNode);
-        return;
+    // === 2. 检查是否为数据表格 (ltx_tabular) ===
+    const isDataTable = table.classList.contains('ltx_tabular') ||
+                        table.closest('.ltx_table, figure.ltx_table') !== null;
+    
+    if (isDataTable || !hasMathPlaceholder) {
+      dataTables++;
+      
+      // 数据表格：清理属性，让 Turndown GFM 插件处理
+      table.removeAttribute('id');
+      table.removeAttribute('style');
+      
+      // 确保表格有 thead 和 tbody 结构（帮助 Turndown 识别）
+      const firstRow = table.querySelector('tr');
+      const hasHeader = table.querySelector('thead') || 
+                        (firstRow && firstRow.querySelector('th'));
+      
+      if (!hasHeader && firstRow) {
+        // 如果第一行没有 th，检查是否应该是表头
+        const firstRowCells = firstRow.querySelectorAll('td');
+        const isLikelyHeader = firstRowCells.length > 0 && 
+                               Array.from(firstRowCells).some(cell => {
+                                 const text = cell.textContent.trim();
+                                 // 表头通常是短文本或标签
+                                 return text.length < 50 && !text.includes('.');
+                               });
+        
+        if (isLikelyHeader) {
+          // 将第一行的 td 转换为 th
+          firstRowCells.forEach(td => {
+            const th = doc.createElement('th');
+            th.innerHTML = td.innerHTML;
+            td.replaceWith(th);
+          });
+        }
       }
+      
+      // 清理所有单元格的属性
+      table.querySelectorAll('td, th').forEach(cell => {
+        cell.removeAttribute('id');
+        cell.removeAttribute('style');
+        cell.removeAttribute('class');
+        // 保留 rowspan, colspan
+      });
+      
+      // 清理所有行的属性
+      table.querySelectorAll('tr').forEach(row => {
+        row.removeAttribute('id');
+        row.removeAttribute('style');
+        row.removeAttribute('class');
+      });
+      
+      return;
     }
     
-    // 对于数据表格，保留但简化属性
-    dataTables++;
-    table.removeAttribute('id');
-    table.removeAttribute('style');
-    // 保留 class 以便识别表格类型
+    // === 3. 其他小表格（可能是布局用）===
+    const rows = table.querySelectorAll('tr');
+    const cells = table.querySelectorAll('td, th');
+    if (rows.length <= 3 && cells.length <= 6 && hasMathPlaceholder) {
+      equationTables++;
+      const text = table.textContent.replace(/\s+/g, ' ').trim();
+      const textNode = doc.createTextNode(`\n\n${text}\n\n`);
+      table.replaceWith(textNode);
+      return;
+    }
     
-    // 简化单元格
-    cells.forEach(cell => {
-      cell.removeAttribute('id');
-      cell.removeAttribute('style');
-      // 保留 class, rowspan, colspan
-    });
+    // 默认：保留表格
+    dataTables++;
   });
   
-  console.log(`[PREPROCESS] ✅ 处理了 ${tables.length} 个表格 (方程式表格: ${equationTables}, 数据表格: ${dataTables})`);
+  console.log(`[PREPROCESS] ✅ 处理了 ${tables.length} 个表格 (方程式: ${equationTables}, 数据: ${dataTables})`);
 }
 
 /**
@@ -571,18 +615,129 @@ function preprocessTables(doc) {
  * @param {Document} doc - DOM 文档
  */
 function preprocessLists(doc) {
-  // ar5iv 的列表项可能有重复的项目符号
+  // ar5iv 使用 <span class="ltx_tag ltx_tag_item">•</span> 作为列表符号
+  // 这会导致输出中出现 "(•)" 这样的格式，需要移除
+  
+  // 1. 移除列表项中的标签元素（包含 • 或编号）
+  doc.querySelectorAll('li .ltx_tag, li .ltx_tag_item, li .ltx_tag_itemize').forEach(tag => {
+    tag.remove();
+  });
+  
+  // 2. 移除列表项中的孤立 • 符号
   doc.querySelectorAll('li').forEach(li => {
-    // 移除开头的孤立 • 符号
-    const textNodes = Array.from(li.childNodes).filter(node => node.nodeType === Node.TEXT_NODE);
-    textNodes.forEach(node => {
-      if (node.textContent.trim() === '•') {
-        node.remove();
+    // 移除开头的文本节点中的 •
+    const firstChild = li.firstChild;
+    if (firstChild && firstChild.nodeType === Node.TEXT_NODE) {
+      firstChild.textContent = firstChild.textContent.replace(/^[\s•]+/, '');
+    }
+    
+    // 移除 span 包裹的 •
+    li.querySelectorAll('span').forEach(span => {
+      if (span.textContent.trim() === '•' || span.textContent.trim() === '–') {
+        span.remove();
       }
     });
   });
   
+  // 3. 确保列表项内容在同一行（移除 <p> 包裹导致的换行）
+  doc.querySelectorAll('li > .ltx_para, li > .ltx_p, li > p').forEach(para => {
+    // 将 <p> 的内容提升到 li 中
+    const parent = para.parentElement;
+    if (parent && parent.tagName === 'LI') {
+      // 保留 para 的内容
+      while (para.firstChild) {
+        parent.insertBefore(para.firstChild, para);
+      }
+      para.remove();
+    }
+  });
+  
   console.log(`[PREPROCESS] ✅ 清理列表格式`);
+}
+
+/**
+ * 预处理：清理 ar5iv 特有元素
+ * @param {Document} doc - DOM 文档
+ */
+function preprocessAr5ivElements(doc) {
+  // 0. 【关键】处理章节标题中的编号标签
+  // ar5iv 使用 <span class="ltx_tag ltx_tag_section">1</span> 来标记章节编号
+  // 需要把编号整合到标题文本中
+  doc.querySelectorAll('.ltx_title_section, .ltx_title_subsection, .ltx_title_subsubsection, .ltx_title_paragraph').forEach(title => {
+    const tagEl = title.querySelector('.ltx_tag');
+    if (tagEl) {
+      const tagText = tagEl.textContent.trim();
+      tagEl.remove();
+      // 在标题开头添加编号
+      if (tagText && title.firstChild) {
+        title.insertBefore(doc.createTextNode(tagText + ' '), title.firstChild);
+      }
+    }
+  });
+  
+  // 1. 移除不需要转换的元素
+  const elementsToRemove = [
+    '.ltx_pagination',      // 分页
+    '.ltx_break',           // 换行标记
+    '.ltx_rule',            // 分隔线
+    '.ltx_dates',           // 日期（如果有）
+    '.ar5iv-feedback',      // ar5iv 反馈按钮
+  ];
+  
+  elementsToRemove.forEach(selector => {
+    doc.querySelectorAll(selector).forEach(el => el.remove());
+  });
+  
+  // 2. 清理图片的相对路径
+  doc.querySelectorAll('img').forEach(img => {
+    let src = img.getAttribute('src');
+    if (src && !src.startsWith('http') && !src.startsWith('data:')) {
+      // 转换为绝对路径
+      if (src.startsWith('/')) {
+        img.setAttribute('src', `https://ar5iv.org${src}`);
+      } else {
+        img.setAttribute('src', `https://ar5iv.org/${src}`);
+      }
+    }
+  });
+  
+  // 3. 处理参考文献列表
+  doc.querySelectorAll('.ltx_bibitem').forEach(bibitem => {
+    // 获取引用标签（如 [1]）
+    const tag = bibitem.querySelector('.ltx_tag');
+    const tagText = tag ? tag.textContent.trim() : '';
+    
+    // 获取引用内容
+    const bibblocEl = bibitem.querySelector('.ltx_bibblock');
+    
+    if (tagText && bibblocEl) {
+      // 格式化为：-   [1] 引用内容
+      // 创建一个简化的结构
+      const content = bibblocEl.innerHTML;
+      bibitem.innerHTML = `<span class="ltx_bib_tag">${tagText}</span> ${content}`;
+    }
+  });
+  
+  // 4. 处理代码块
+  doc.querySelectorAll('.ltx_listing, .ltx_verbatim, pre.ltx_code').forEach(code => {
+    // 确保代码块被 <pre><code> 包裹
+    if (!code.querySelector('code')) {
+      const text = code.textContent;
+      code.innerHTML = `<code>${text}</code>`;
+    }
+  });
+  
+  // 5. 处理引用块
+  doc.querySelectorAll('.ltx_quote').forEach(quote => {
+    // 添加 blockquote 标签以便 Turndown 识别
+    if (quote.tagName !== 'BLOCKQUOTE') {
+      const blockquote = doc.createElement('blockquote');
+      blockquote.innerHTML = quote.innerHTML;
+      quote.replaceWith(blockquote);
+    }
+  });
+  
+  console.log(`[PREPROCESS] ✅ 清理 ar5iv 特有元素`);
 }
 
 /**
@@ -676,6 +831,22 @@ function postProcessMarkdown(markdown) {
   // Turndown 会将 [1, 2, 3] 转义为 \[1, 2, 3\]
   // 引用格式通常是 [数字] 或 [数字, 数字, ...]
   result = result.replace(/\\\[(\d+(?:\s*,\s*\d+)*)\\\]/g, '[$1]');
+  
+  // 1.5 【关键】修复章节标题格式
+  // 有时章节标题会变成 " (1) Introduction" 格式，需要转换为 "## 1 Introduction"
+  // 匹配独立行的 " (编号) 标题" 格式
+  result = result.replace(/^\s*\((\d+(?:\.\d+)*)\)\s+(.+)$/gm, (match, num, title) => {
+    // 根据编号的层级确定标题级别
+    const level = num.split('.').length + 1; // 1 -> ##, 1.1 -> ###, etc.
+    const prefix = '#'.repeat(Math.min(level, 6));
+    return `${prefix} ${num} ${title}`;
+  });
+  
+  // 1.6 修复列表项格式
+  // 将 "-    (•)\n\n    内容" 转换为 "- 内容"
+  result = result.replace(/-\s+\(•\)\s*\n\n\s+/g, '- ');
+  result = result.replace(/-\s+\(•\)\s*/g, '- ');
+  result = result.replace(/-\s+•\s*/g, '- ');
   
   // 2. 清理重复的数学表达式（Unicode + LaTeX）
   result = result
@@ -815,6 +986,10 @@ function handleHtmlToMarkdown(data, sendResponse) {
     console.log('[CONTENT] 📝 预处理：修复列表格式...');
     preprocessLists(cleanedDoc);
     
+    // === 第 4.5 步：预处理 - 清理 ar5iv 特有元素 ===
+    console.log('[CONTENT] 🎨 预处理：清理 ar5iv 特有元素...');
+    preprocessAr5ivElements(cleanedDoc);
+    
     // === 第五步：预处理 - 简化表格 ===
     console.log('[CONTENT] 📊 预处理：简化表格...');
     preprocessTables(cleanedDoc);
@@ -917,6 +1092,130 @@ function handleHtmlToMarkdown(data, sendResponse) {
           return '';
         }
         return content;
+      }
+    });
+    
+    // 自定义规则：处理 ar5iv 的图片容器 (figure)
+    turndownService.addRule('arxivFigures', {
+      filter: (node) => {
+        return node.nodeName === 'FIGURE' && 
+               node.classList && 
+               (node.classList.contains('ltx_figure') || node.classList.contains('ltx_table'));
+      },
+      replacement: (content, node) => {
+        // 保留 figure 内容，添加换行
+        return `\n\n${content}\n\n`;
+      }
+    });
+    
+    // 自定义规则：处理图表标题 (figcaption)
+    turndownService.addRule('arxivCaptions', {
+      filter: (node) => {
+        return node.nodeName === 'FIGCAPTION' ||
+               (node.classList && node.classList.contains('ltx_caption'));
+      },
+      replacement: (content, node) => {
+        // 格式化标题
+        const cleanContent = content.replace(/\s+/g, ' ').trim();
+        return cleanContent ? `\n\n${cleanContent}\n\n` : '';
+      }
+    });
+    
+    // 自定义规则：处理 ar5iv 的定理/引理/证明等
+    turndownService.addRule('arxivTheorems', {
+      filter: (node) => {
+        if (node.classList) {
+          return node.classList.contains('ltx_theorem') ||
+                 node.classList.contains('ltx_proof') ||
+                 node.classList.contains('ltx_definition') ||
+                 node.classList.contains('ltx_lemma') ||
+                 node.classList.contains('ltx_corollary');
+        }
+        return false;
+      },
+      replacement: (content, node) => {
+        // 获取定理类型
+        let type = '';
+        if (node.classList.contains('ltx_theorem')) type = '**Theorem**';
+        else if (node.classList.contains('ltx_proof')) type = '**Proof**';
+        else if (node.classList.contains('ltx_definition')) type = '**Definition**';
+        else if (node.classList.contains('ltx_lemma')) type = '**Lemma**';
+        else if (node.classList.contains('ltx_corollary')) type = '**Corollary**';
+        
+        const cleanContent = content.trim();
+        return type ? `\n\n${type}: ${cleanContent}\n\n` : `\n\n${cleanContent}\n\n`;
+      }
+    });
+    
+    // 自定义规则：处理公式编号标签
+    turndownService.addRule('arxivTags', {
+      filter: (node) => {
+        return node.classList && node.classList.contains('ltx_tag');
+      },
+      replacement: (content, node) => {
+        // 公式编号：保留在括号中
+        const cleanContent = content.trim();
+        return cleanContent ? ` (${cleanContent})` : '';
+      }
+    });
+    
+    // 自定义规则：处理 ar5iv 的章节标题
+    turndownService.addRule('arxivSectionTitles', {
+      filter: (node) => {
+        // ar5iv 使用 h2-h6 来表示章节标题，但有特殊的 class
+        if (node.nodeName.match(/^H[1-6]$/)) {
+          return node.classList && 
+                 (node.classList.contains('ltx_title_section') ||
+                  node.classList.contains('ltx_title_subsection') ||
+                  node.classList.contains('ltx_title_subsubsection') ||
+                  node.classList.contains('ltx_title_paragraph') ||
+                  node.classList.contains('ltx_title_subparagraph'));
+        }
+        return false;
+      },
+      replacement: (content, node) => {
+        // 提取标题文本，清理多余空白
+        let text = content.replace(/\s+/g, ' ').trim();
+        
+        // 移除章节编号中的括号格式，如 "(1)" -> "1"
+        text = text.replace(/^\((\d+(?:\.\d+)*)\)\s*/, '$1 ');
+        
+        // 根据标题级别生成 Markdown
+        const level = parseInt(node.nodeName.charAt(1), 10);
+        const prefix = '#'.repeat(Math.min(level, 6));
+        
+        return `\n\n${prefix} ${text}\n\n`;
+      }
+    });
+    
+    // 自定义规则：移除错误元素
+    turndownService.addRule('removeErrors', {
+      filter: (node) => {
+        return node.classList && node.classList.contains('ltx_ERROR');
+      },
+      replacement: () => ''
+    });
+    
+    // 自定义规则：处理遗留的 ltx_tag 元素（如果预处理未完全清理）
+    turndownService.addRule('arxivTags2', {
+      filter: (node) => {
+        return node.classList && 
+               (node.classList.contains('ltx_tag_item') ||
+                node.classList.contains('ltx_tag_itemize') ||
+                node.classList.contains('ltx_tag_enumerate'));
+      },
+      replacement: () => ''  // 移除这些标签，Turndown 会自动处理列表符号
+    });
+    
+    // 自定义规则：处理 ar5iv 的段落
+    turndownService.addRule('arxivParas', {
+      filter: (node) => {
+        return node.classList && 
+               (node.classList.contains('ltx_para') || node.classList.contains('ltx_p'));
+      },
+      replacement: (content) => {
+        const trimmed = content.trim();
+        return trimmed ? `\n\n${trimmed}\n\n` : '';
       }
     });
     

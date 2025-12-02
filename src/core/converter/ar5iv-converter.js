@@ -3,7 +3,8 @@
 // Logic: ar5iv HTML → Markdown 转换器（Plan B: 在 Content Script 中执行 Turndown）
 // Principle: SOLID-S (Single Responsibility - 专注 ar5iv 转换) + 环境适配
 
-import { Readability } from '@mozilla/readability';
+// 不再使用 Readability，因为它会丢失学术论文的复杂内容（表格、公式等）
+// import { Readability } from '@mozilla/readability';
 import { parseHTML } from 'linkedom';
 import { API } from '@config/constants';
 import logger from '@utils/logger';
@@ -96,7 +97,7 @@ class Ar5ivConverter {
   }
 
   /**
-   * 使用 Readability 清洗 HTML
+   * 针对 ar5iv 的 HTML 清洗（不使用 Readability，避免内容丢失）
    * @param {string} html - 原始 HTML
    * @returns {Object} {title, content, excerpt}
    */
@@ -106,24 +107,88 @@ class Ar5ivConverter {
       // 创建 DOM（使用 linkedom 以支持 Service Worker 环境）
       const { document } = parseHTML(html);
       
-      console.log(`[AR5IV] 📖 使用 Readability 提取内容...`);
-      // 使用 Readability 提取主要内容
-      const reader = new Readability(document);
-      const article = reader.parse();
+      // ar5iv 特有的 HTML 结构：
+      // - <article class="ltx_document"> 主文档容器
+      // - <h1 class="ltx_title"> 标题
+      // - <div class="ltx_abstract"> 摘要
+      // - <section class="ltx_section"> 各章节
       
-      if (!article) {
-        throw new Error('Readability failed to parse document');
+      console.log(`[AR5IV] 📖 直接提取 ar5iv 主内容（跳过 Readability）...`);
+      
+      // 1. 提取标题
+      let title = '';
+      const titleEl = document.querySelector('.ltx_title.ltx_title_document, h1.ltx_title, .ltx_title');
+      if (titleEl) {
+        title = titleEl.textContent.trim();
+        console.log(`[AR5IV] 📌 提取到标题:`, title);
       }
       
-      logger.debug('Readability extracted:', {
-        title: article.title,
-        length: article.content.length
+      // 2. 提取摘要（用于 excerpt）
+      let excerpt = '';
+      const abstractEl = document.querySelector('.ltx_abstract');
+      if (abstractEl) {
+        const abstractText = abstractEl.querySelector('.ltx_p');
+        if (abstractText) {
+          excerpt = abstractText.textContent.trim().substring(0, 300);
+        }
+      }
+      
+      // 3. 获取主内容容器
+      let mainContent = document.querySelector('article.ltx_document');
+      if (!mainContent) {
+        mainContent = document.querySelector('.ltx_page_main');
+      }
+      if (!mainContent) {
+        mainContent = document.querySelector('main');
+      }
+      if (!mainContent) {
+        // 回退：使用整个 body
+        mainContent = document.body;
+      }
+      
+      if (!mainContent) {
+        throw new Error('Cannot find main content in ar5iv page');
+      }
+      
+      console.log(`[AR5IV] 📄 找到主内容容器:`, mainContent.tagName, mainContent.className);
+      
+      // 4. 移除不需要的元素（导航、页脚、侧边栏等）
+      const selectorsToRemove = [
+        '.ltx_page_header',     // 页头
+        '.ltx_page_footer',     // 页脚
+        '.ltx_page_logo',       // Logo
+        '.ltx_sidebar',         // 侧边栏
+        '.ltx_TOC',             // 目录（可选保留）
+        'nav',                  // 导航
+        '.ar5iv-footer',        // ar5iv 页脚
+        'script',               // 脚本
+        'style',                // 样式
+        'noscript',             // noscript
+        '.ltx_role_navigation', // 导航角色
+        '[role="navigation"]',  // 导航角色
+        '.ltx_page_navbar',     // 导航栏
+      ];
+      
+      selectorsToRemove.forEach(selector => {
+        mainContent.querySelectorAll(selector).forEach(el => {
+          console.log(`[AR5IV] 🗑️ 移除:`, selector);
+          el.remove();
+        });
+      });
+      
+      // 5. 获取清洗后的 HTML
+      const content = mainContent.innerHTML;
+      
+      console.log(`[AR5IV] ✅ 内容提取完成:`, content.length, 'bytes');
+      logger.debug('ar5iv content extracted:', {
+        title: title,
+        length: content.length
       });
       
       return {
-        title: article.title,
-        content: article.content,
-        excerpt: article.excerpt
+        title: title,
+        content: content,
+        excerpt: excerpt
       };
     } catch (error) {
       logger.error('HTML cleaning failed:', error);
