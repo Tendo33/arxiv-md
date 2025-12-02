@@ -172,6 +172,9 @@ async function loadSettings() {
       document.getElementById("mineruToken").value = token;
     }
 
+    const showNotifications = await storage.getShowNotifications();
+    document.getElementById("showNotifications").checked = showNotifications;
+
     logger.info("Settings loaded");
   } catch (error) {
     logger.error("Failed to load settings:", error);
@@ -249,6 +252,9 @@ async function saveSettings() {
     if (token) {
       await storage.setMinerUToken(token);
     }
+
+    const showNotifications = document.getElementById("showNotifications").checked;
+    await storage.setShowNotifications(showNotifications);
 
     logger.info("Settings saved");
     showToast(t.toast_saved, "success");

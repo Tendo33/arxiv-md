@@ -184,12 +184,20 @@ export function formatDuration(ms) {
 }
 
 /**
- * 创建通知
+ * 创建通知（根据用户设置决定是否显示）
  * @param {string} title - 标题
  * @param {string} message - 消息
  * @param {string} type - 类型 ('basic', 'image', 'list', 'progress')
  */
-export function showNotification(title, message, type = "basic") {
+export async function showNotification(title, message, type = "basic") {
+  // 检查用户是否启用了桌面通知
+  const showNotifications = await chrome.storage.sync.get("showNotifications");
+  
+  // 默认启用通知（向后兼容）
+  if (showNotifications.showNotifications === false) {
+    return; // 用户禁用了通知，直接返回
+  }
+  
   chrome.notifications.create({
     type: type,
     iconUrl: "assets/icon-128.png",

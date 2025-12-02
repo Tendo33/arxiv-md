@@ -184,6 +184,22 @@ class StorageManager {
       lastConversionTime: Date.now(),
     });
   }
+
+  /**
+   * 获取是否显示桌面通知
+   * @returns {Promise<boolean>}
+   */
+  async getShowNotifications() {
+    return this.get("showNotifications", true); // 默认启用
+  }
+
+  /**
+   * 设置是否显示桌面通知
+   * @param {boolean} value
+   */
+  async setShowNotifications(value) {
+    await this.set("showNotifications", value);
+  }
 }
 
 // 导出单例

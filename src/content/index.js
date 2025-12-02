@@ -229,16 +229,11 @@ async function handleConversionTrigger(type = "markdown") {
           progressIndicator.style.display = "none";
         }
 
-        if (response && response.success) {
-          showSuccessToast(response.data, "markdown");
-        } else {
-          showErrorToast(response?.error || "Unknown error");
-        }
+        // 通知已由 background script 处理，不需要在这里显示 Toast
       },
     );
   } catch (error) {
     logger.error("Conversion trigger failed:", error);
-    showErrorToast(error.message);
     
     // 恢复按钮状态
     const activeButton = type === "markdown" 
@@ -326,7 +321,6 @@ async function handlePdfDownloadDirect(button, progressIndicator) {
     }
     
     logger.info("PDF download complete:", filename);
-    showSuccessToast({ filename }, "pdf");
     
   } catch (error) {
     logger.error("PDF download failed:", error);
@@ -349,7 +343,6 @@ async function handlePdfDownloadDirect(button, progressIndicator) {
       progressIndicator.style.display = "none";
     }
     
-    showErrorToast(error.message);
     throw error;
   }
 }
@@ -392,78 +385,7 @@ function updateProgressUI(progress) {
   }
 }
 
-/**
- * 显示成功提示
- */
-function showSuccessToast(result, type = "markdown") {
-  const title = type === "markdown" ? "✅ Conversion Successful" : "✅ PDF Saved";
-  const message = type === "markdown" 
-    ? `Saved as: ${result.filename}`
-    : `PDF saved: ${result.filename}`;
-  const toast = createToast(title, message, "success");
-  document.body.appendChild(toast);
-
-  setTimeout(() => toast.remove(), 5000);
-}
-
-/**
- * 显示错误提示
- */
-function showErrorToast(message) {
-  const toast = createToast("❌ Failed", message, "error");
-  document.body.appendChild(toast);
-
-  setTimeout(() => toast.remove(), 5000);
-}
-
-/**
- * 创建 Toast 通知
- */
-function createToast(title, message, type = "info") {
-  const toast = document.createElement("div");
-  toast.className = `arxiv-md-toast arxiv-md-toast-${type}`;
-  toast.style.cssText = `
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: white;
-    padding: 16px 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    z-index: 10000;
-    max-width: 400px;
-    animation: slideIn 0.3s ease-out;
-  `;
-
-  if (type === "success") {
-    toast.style.borderLeft = "4px solid #10b981";
-  } else if (type === "error") {
-    toast.style.borderLeft = "4px solid #ef4444";
-  }
-
-  toast.innerHTML = `
-    <div style="font-weight: 600; margin-bottom: 4px;">${title}</div>
-    <div style="font-size: 13px; color: #666;">${message}</div>
-  `;
-
-  // 添加动画
-  const style = document.createElement("style");
-  style.textContent = `
-    @keyframes slideIn {
-      from {
-        transform: translateX(400px);
-        opacity: 0;
-      }
-      to {
-        transform: translateX(0);
-        opacity: 1;
-      }
-    }
-  `;
-  document.head.appendChild(style);
-
-  return toast;
-}
+// Toast 通知已被移除，通知由 background script 的系统通知处理
 
 /**
  * 判断数学公式是否为块级公式
