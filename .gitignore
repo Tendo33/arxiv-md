@@ -40,3 +40,4 @@ tmp/
 temp/
 *.tmp
 
+.history/
