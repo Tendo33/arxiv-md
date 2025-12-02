@@ -7,7 +7,8 @@
  * API 端点配置
  */
 export const API = {
-  AR5IV_BASE: 'https://ar5iv.org/html',
+  // ar5iv.org 会重定向到 ar5iv.labs.arxiv.org，直接使用最终域名
+  AR5IV_BASE: 'https://ar5iv.labs.arxiv.org/html',
   MINERU_BASE: 'https://mineru.net/api/v4',
   MINERU_TASK: 'https://mineru.net/api/v4/extract/task',
   MINERU_RESULT: 'https://mineru.net/api/v4/extract/result',

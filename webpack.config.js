@@ -46,6 +46,10 @@ module.exports = {
       '@core': path.resolve(__dirname, 'src/core'),
       '@utils': path.resolve(__dirname, 'src/utils'),
       '@config': path.resolve(__dirname, 'src/config')
+    },
+    fallback: {
+      // linkedom 的可选依赖，我们不需要 canvas
+      'canvas': false
     }
   }
 };

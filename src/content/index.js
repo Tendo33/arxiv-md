@@ -6,6 +6,8 @@
 import metadataExtractor from '@core/metadata-extractor';
 import logger from '@utils/logger';
 import { REGEX } from '@config/constants';
+import TurndownService from 'turndown';
+import { gfm } from 'turndown-plugin-gfm';
 
 logger.info('Content script loaded on:', window.location.href);
 
@@ -40,6 +42,16 @@ function init() {
     case 'CONVERSION_PROGRESS':
       updateProgressUI(message.data);
       break;
+      
+    case 'CONVERT_HTML_TO_MARKDOWN':
+      // 在真实浏览器环境中执行 HTML → Markdown 转换
+      handleHtmlToMarkdown(message.data, sendResponse);
+      return true; // 保持消息通道打开以异步响应
+      
+    case 'DOWNLOAD_FILE':
+      // 在页面环境中执行文件下载（使用 <a> download 属性）
+      handleFileDownload(message.data, sendResponse);
+      return true; // 保持消息通道打开以异步响应
     }
     
     sendResponse({ received: true });
@@ -132,6 +144,7 @@ function injectConvertButton() {
  * 处理转换触发
  */
 async function handleConversionTrigger() {
+  console.log('[CONTENT] 🎯 转换触发!');
   logger.info('Conversion triggered');
   
   try {
@@ -150,19 +163,23 @@ async function handleConversionTrigger() {
     }
     
     // 提取元数据
+    console.log('[CONTENT] 📖 提取元数据...');
     const metadata = isArxivAbsPage
       ? metadataExtractor.extractFromAbsPage()
       : await fetchMetadataFromAbsPage();
     
+    console.log('[CONTENT] ✅ 元数据提取完成:', metadata);
     logger.debug('Extracted metadata:', metadata);
     
     // 发送转换请求到 Background
+    console.log('[CONTENT] 📤 发送转换请求到 Background...');
     chrome.runtime.sendMessage(
       {
         type: 'CONVERT_PAPER',
         data: metadata
       },
       (response) => {
+        console.log('[CONTENT] 📥 收到响应:', response);
         logger.debug('Conversion response:', response);
         
         // 恢复按钮状态
@@ -210,8 +227,12 @@ async function fetchMetadataFromAbsPage() {
  * 更新进度 UI
  */
 function updateProgressUI(progress) {
+  console.log('[CONTENT] 📊 更新进度 UI:', progress);
   const progressIndicator = document.querySelector('.arxiv-md-progress');
-  if (!progressIndicator) return;
+  if (!progressIndicator) {
+    console.warn('[CONTENT] ⚠️ 未找到进度指示器元素');
+    return;
+  }
   
   const textEl = progressIndicator.querySelector('.progress-text');
   const percentEl = progressIndicator.querySelector('.progress-percent');
@@ -225,8 +246,14 @@ function updateProgressUI(progress) {
       'completed': '完成!'
     };
     
-    textEl.textContent = stageText[progress.stage] || '处理中...';
-    percentEl.textContent = `${Math.round(progress.progress || 0)}%`;
+    const text = stageText[progress.stage] || '处理中...';
+    const percent = Math.round(progress.progress || 0);
+    
+    textEl.textContent = text;
+    percentEl.textContent = `${percent}%`;
+    console.log(`[CONTENT] ✅ UI 更新: ${text} ${percent}%`);
+  } else {
+    console.warn('[CONTENT] ⚠️ 未找到进度文本或百分比元素');
   }
 }
 
@@ -305,5 +332,456 @@ function createToast(title, message, type = 'info') {
   document.head.appendChild(style);
   
   return toast;
+}
+
+/**
+ * 预处理：提取并替换所有数学公式元素
+ * @param {Document} doc - DOM 文档
+ * @returns {Object} {doc, mathMap} - 清理后的文档和公式映射
+ */
+function preprocessMathElements(doc) {
+  const mathMap = new Map();
+  let mathCounter = 0;
+  
+  // 1. 处理所有 <math> 标签（ar5iv 使用 alttext 属性存储 LaTeX）
+  const mathElements = doc.querySelectorAll('math');
+  mathElements.forEach((mathEl) => {
+    // ar5iv 将 LaTeX 存储在 alttext 属性中
+    const alttext = mathEl.getAttribute('alttext');
+    
+    if (alttext) {
+      const latex = alttext.trim();
+      
+      // 判断是否为块级公式（根据 display 属性或父元素）
+      const displayAttr = mathEl.getAttribute('display');
+      const isInTable = mathEl.closest('table, .ltx_equation, .ltx_equationgroup, .ltx_eqn_table') !== null;
+      const isBlock = displayAttr === 'block' || isInTable;
+      
+      // 创建占位符
+      const placeholder = `__MATH_${mathCounter}__`;
+      mathMap.set(placeholder, { latex, isBlock });
+      mathCounter++;
+      
+      // 替换整个 math 元素为占位符
+      const textNode = doc.createTextNode(placeholder);
+      mathEl.replaceWith(textNode);
+    } else {
+      // 没有 alttext 属性，尝试从 annotation 标签获取（兼容其他格式）
+      const annotation = mathEl.querySelector('annotation[encoding="application/x-tex"]');
+      if (annotation && annotation.textContent) {
+        const latex = annotation.textContent.trim();
+        const isBlock = mathEl.getAttribute('display') === 'block';
+        
+        const placeholder = `__MATH_${mathCounter}__`;
+        mathMap.set(placeholder, { latex, isBlock });
+        mathCounter++;
+        
+        const textNode = doc.createTextNode(placeholder);
+        mathEl.replaceWith(textNode);
+      } else {
+        // 没有 LaTeX 源码，直接移除
+        mathEl.remove();
+      }
+    }
+  });
+  
+  // 2. 清理残留的 MathML 标签
+  const mathMLTags = ['semantics', 'mrow', 'mi', 'mo', 'mn', 'msub', 'msup', 'mfrac', 'msqrt', 'mtext', 
+                      'annotation-xml', 'annotation', 'apply', 'csymbol', 'ci', 'cn'];
+  mathMLTags.forEach(tag => {
+    doc.querySelectorAll(tag).forEach(el => el.remove());
+  });
+  
+  console.log(`[PREPROCESS] ✅ 提取了 ${mathCounter} 个数学公式`);
+  return { doc, mathMap };
+}
+
+/**
+ * 预处理：清理作者和元数据格式问题
+ * @param {Document} doc - DOM 文档
+ */
+function preprocessAuthorsAndMetadata(doc) {
+  // 1. 移除 \AND 错误标记
+  doc.querySelectorAll('.ltx_ERROR').forEach(el => {
+    if (el.textContent.includes('\\AND')) {
+      el.remove();
+    }
+  });
+  
+  // 2. 清理脚注标记
+  doc.querySelectorAll('.ltx_note_mark, sup.ltx_note_mark').forEach(el => {
+    // 保留数字，但移除"footnotemark:"文本
+    const text = el.textContent.replace(/footnotemark:\s*/g, '').trim();
+    if (text) {
+      el.textContent = text;
+    }
+  });
+  
+  // 3. 清理脚注内容（避免重复显示）
+  doc.querySelectorAll('.ltx_note_content').forEach(el => {
+    el.remove();
+  });
+  
+  // 4. 清理作者分隔符（&符号后添加换行）
+  doc.querySelectorAll('.ltx_personname').forEach(el => {
+    const html = el.innerHTML;
+    // 将 &Name 替换为换行 + Name
+    el.innerHTML = html.replace(/&amp;/g, '\n\n');
+  });
+  
+  console.log(`[PREPROCESS] ✅ 清理作者和元数据格式`);
+}
+
+/**
+ * 预处理：简化复杂表格
+ * @param {Document} doc - DOM 文档
+ */
+function preprocessTables(doc) {
+  const tables = doc.querySelectorAll('table');
+  
+  tables.forEach((table) => {
+    // 检查是否为数学公式表格（通常只有1-2行，用于排版公式）
+    const rows = table.querySelectorAll('tr');
+    if (rows.length <= 2 && table.querySelectorAll('td, th').length <= 4) {
+      // 检查是否包含公式占位符
+      const hasFormula = table.textContent.includes('__MATH_') || table.textContent.includes('=');
+      if (hasFormula) {
+        // 这是公式表格，提取文本内容
+        const text = table.textContent.replace(/\s+/g, ' ').trim();
+        const textNode = doc.createTextNode(`\n\n${text}\n\n`);
+        table.replaceWith(textNode);
+        return;
+      }
+    }
+    
+    // 对于数据表格，移除复杂属性
+    table.removeAttribute('id');
+    table.removeAttribute('class');
+    table.removeAttribute('style');
+    
+    // 简化单元格
+    const cells = table.querySelectorAll('td, th');
+    cells.forEach(cell => {
+      cell.removeAttribute('id');
+      cell.removeAttribute('class');
+      cell.removeAttribute('style');
+      // 保留 rowspan 和 colspan 以维持表格结构
+    });
+  });
+  
+  console.log(`[PREPROCESS] ✅ 处理了 ${tables.length} 个表格`);
+}
+
+/**
+ * 预处理：修复列表格式问题
+ * @param {Document} doc - DOM 文档
+ */
+function preprocessLists(doc) {
+  // ar5iv 的列表项可能有重复的项目符号
+  doc.querySelectorAll('li').forEach(li => {
+    // 移除开头的孤立 • 符号
+    const textNodes = Array.from(li.childNodes).filter(node => node.nodeType === Node.TEXT_NODE);
+    textNodes.forEach(node => {
+      if (node.textContent.trim() === '•') {
+        node.remove();
+      }
+    });
+  });
+  
+  console.log(`[PREPROCESS] ✅ 清理列表格式`);
+}
+
+/**
+ * 移除所有 MathML 相关元素
+ * @param {Document} doc - DOM 文档
+ */
+function removeMathMLArtifacts(doc) {
+  // 移除所有可能残留的 MathML 命名空间元素
+  const mathMLSelectors = [
+    'math', 'semantics', 'mrow', 'mi', 'mo', 'mn', 'msub', 'msup', 
+    'mfrac', 'msqrt', 'mtext', 'annotation-xml', 'annotation'
+  ];
+  
+  mathMLSelectors.forEach(selector => {
+    doc.querySelectorAll(selector).forEach(el => {
+      // 保留文本内容（如果有）
+      if (el.textContent && !el.querySelector('annotation')) {
+        const text = el.textContent.trim();
+        if (text) {
+          el.replaceWith(doc.createTextNode(text));
+        } else {
+          el.remove();
+        }
+      } else {
+        el.remove();
+      }
+    });
+  });
+  
+  console.log(`[PREPROCESS] ✅ 清理 MathML 残留`);
+}
+
+/**
+ * 恢复数学公式占位符
+ * @param {string} markdown - Markdown 文本
+ * @param {Map} mathMap - 公式映射
+ * @returns {string} 恢复公式后的 Markdown
+ */
+function restoreMathPlaceholders(markdown, mathMap) {
+  let result = markdown;
+  
+  mathMap.forEach((value, placeholder) => {
+    const { latex, isBlock } = value;
+    
+    if (isBlock) {
+      // 块级公式
+      result = result.replace(
+        new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
+        `\n\n$$\n${latex}\n$$\n\n`
+      );
+    } else {
+      // 行内公式
+      result = result.replace(
+        new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
+        ` $${latex}$ `
+      );
+    }
+  });
+  
+  console.log(`[POSTPROCESS] ✅ 恢复了 ${mathMap.size} 个数学公式`);
+  return result;
+}
+
+/**
+ * 后处理 Markdown - 清理转换问题
+ * @param {string} markdown - 原始 Markdown
+ * @returns {string} 清理后的 Markdown
+ */
+function postProcessMarkdown(markdown) {
+  return markdown
+    // 1. 清理重复的数学表达式（Unicode + LaTeX）
+    // 例如: "dk𝑑𝑘d_{k}" -> "$d_{k}$"
+    .replace(/([a-zA-Z]+)([\u{1D400}-\u{1D7FF}]+)\1\{([^}]+)\}/gu, '$$1_{$3}$')
+    .replace(/([a-zA-Z]+)([\u{1D400}-\u{1D7FF}]+)\1\^\{([^}]+)\}/gu, '$$1^{$3}$')
+    
+    // 2. 移除孤立的 Unicode 数学符号（与普通字母重复）
+    .replace(/([a-zA-Z])([\u{1D400}-\u{1D7FF}]+)(\d)/gu, '$1$3')
+    
+    // 3. 清理残留的 LaTeX 命令文本
+    .replace(/\\text\{([^}]+)\}/g, '$1')
+    .replace(/\\mathbb\{(\w)\}/g, '$1')
+    .replace(/([^\\])\\_(?=\s)/g, '$1_')
+    .replace(/\\in\s/g, '∈ ')
+    .replace(/\\times\s/g, '× ')
+    .replace(/\\cdot\s/g, '· ')
+    
+    // 4. 清理错误的脚标文本
+    .replace(/\bsubscript\b/gi, '')
+    .replace(/\bsuperscript\b/gi, '')
+    
+    // 5. 清理脚注标记错误（如"11footnotemark: 1"）
+    .replace(/\d+footnotemark:\s*\d+/g, '')
+    .replace(/footnotemark:\s*/g, '')
+    
+    // 6. 清理重复的项目符号（如 "- •"）
+    .replace(/^(\s*-\s*)•\s*/gm, '$1')
+    
+    // 7. 修复表格中的空单元格
+    .replace(/\|\s*\|\s*\|/g, '| |')
+    
+    // 8. 清理多余空行（超过2个连续空行）
+    .replace(/\n{4,}/g, '\n\n\n')
+    
+    // 9. 修复公式前后空格
+    .replace(/([^\s\n])\$([^$]+)\$/g, '$1 $$2$')
+    .replace(/\$([^$]+)\$([^\s\n.,;!?])/g, '$$1$ $2')
+    
+    // 10. 清理公式中多余的空格
+    .replace(/\$\s+/g, '$')
+    .replace(/\s+\$/g, '$')
+    
+    // 11. 清理行首行尾空格
+    .replace(/[ \t]+$/gm, '')
+    
+    // 12. 移除 HTML 实体残留
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    
+    // 13. 清理错误的 LaTeX 命令残留（如 \\AND）
+    .replace(/\\\\AND/g, '')
+    .replace(/\\AND/g, '')
+    
+    // 14. 最终清理：移除明显的 HTML/XML 标签残留
+    .replace(/<\/?[a-z][^>]*>/gi, '');
+}
+
+/**
+ * 处理文件下载（使用 <a> download 属性，类似 UserScript）
+ * @param {Object} data - {content: string, filename: string, mimeType: string}
+ * @param {Function} sendResponse - 响应回调
+ */
+function handleFileDownload(data, sendResponse) {
+  console.log('[CONTENT] 📥 开始下载文件...');
+  console.log('[CONTENT] 📄 文件名:', data.filename);
+  console.log('[CONTENT] 📦 内容大小:', data.content.length, 'bytes');
+  
+  try {
+    // 创建 Blob
+    const blob = new Blob([data.content], { type: data.mimeType || 'text/plain' });
+    console.log('[CONTENT] ✅ Blob 创建成功');
+    
+    // 创建 Object URL（这个在页面环境中可以使用）
+    const url = window.URL.createObjectURL(blob);
+    console.log('[CONTENT] ✅ Object URL 创建成功');
+    
+    // 创建隐藏的 <a> 标签
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = data.filename;  // 设置下载文件名
+    a.style.display = 'none';
+    
+    // 添加到 DOM 并触发点击
+    document.body.appendChild(a);
+    console.log('[CONTENT] 🖱️ 触发下载点击...');
+    a.click();
+    
+    // 清理
+    setTimeout(() => {
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      console.log('[CONTENT] 🧹 清理完成');
+    }, 100);
+    
+    console.log('[CONTENT] ✅ 下载成功触发!');
+    sendResponse({ success: true });
+    
+  } catch (error) {
+    console.error('[CONTENT] ❌ 下载失败:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+/**
+ * 处理 HTML → Markdown 转换（在真实浏览器环境中）
+ * @param {Object} data - {html: string, title: string}
+ * @param {Function} sendResponse - 响应回调
+ */
+function handleHtmlToMarkdown(data, sendResponse) {
+  console.log('[CONTENT] 🔄 开始 HTML → Markdown 转换...');
+  
+  try {
+    // === 第一步：解析 HTML 为 DOM ===
+    console.log('[CONTENT] 📄 解析 HTML 为 DOM...');
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(data.html, 'text/html');
+    
+    // === 第二步：预处理 - 清理作者和元数据 ===
+    console.log('[CONTENT] 👥 预处理：清理作者和元数据...');
+    preprocessAuthorsAndMetadata(doc);
+    
+    // === 第三步：预处理 - 提取数学公式 ===
+    console.log('[CONTENT] 🔢 预处理：提取数学公式...');
+    const { doc: cleanedDoc, mathMap } = preprocessMathElements(doc);
+    
+    // === 第四步：预处理 - 修复列表格式 ===
+    console.log('[CONTENT] 📝 预处理：修复列表格式...');
+    preprocessLists(cleanedDoc);
+    
+    // === 第五步：预处理 - 简化表格 ===
+    console.log('[CONTENT] 📊 预处理：简化表格...');
+    preprocessTables(cleanedDoc);
+    
+    // === 第六步：移除残留的 MathML 标记 ===
+    console.log('[CONTENT] 🧹 清理 MathML 残留...');
+    removeMathMLArtifacts(cleanedDoc);
+    
+    // === 第七步：初始化 Turndown 并转换 ===
+    console.log('[CONTENT] 📝 Turndown 转换...');
+    const turndownService = new TurndownService({
+      headingStyle: 'atx',
+      codeBlockStyle: 'fenced',
+      bulletListMarker: '-',
+      emDelimiter: '*',
+      strongDelimiter: '**'
+    });
+    
+    // 启用 GFM 插件（表格、删除线等）
+    turndownService.use(gfm);
+    
+    // 自定义规则：处理图片
+    turndownService.addRule('arxivImages', {
+      filter: 'img',
+      replacement: (content, node) => {
+        const alt = node.alt || 'image';
+        let src = node.getAttribute('src') || '';
+        
+        // 清理错误的 chrome-extension URL
+        src = src.replace(/chrome-extension:\/\/[^/]+\//, '');
+        
+        // 处理相对路径 - 统一使用 ar5iv.org 域名
+        if (src && !src.startsWith('http')) {
+          const cleanSrc = src.startsWith('/') ? src.substring(1) : src;
+          src = `https://ar5iv.org/${cleanSrc}`;
+        }
+        
+        return src ? `![${alt}](${src})` : '';
+      }
+    });
+    
+    // 自定义规则：处理引用和链接
+    turndownService.addRule('citations', {
+      filter: (node) => {
+        if (node.nodeName === 'A') {
+          const href = node.getAttribute('href') || '';
+          if (href.includes('chrome-extension://')) return true;
+          if (node.classList && node.classList.contains('ltx_cite')) return true;
+        }
+        return false;
+      },
+      replacement: (content, node) => {
+        const href = node.getAttribute('href') || '';
+        
+        if (href.includes('chrome-extension://')) {
+          return content;
+        }
+        
+        if (node.classList && node.classList.contains('ltx_cite')) {
+          return `[${content}]`;
+        }
+        
+        return `[${content}](${href})`;
+      }
+    });
+    
+    // 执行 Turndown 转换
+    let markdown = turndownService.turndown(cleanedDoc.body.innerHTML);
+    
+    // === 第八步：恢复数学公式占位符 ===
+    console.log('[CONTENT] 🔢 恢复数学公式...');
+    markdown = restoreMathPlaceholders(markdown, mathMap);
+    
+    // === 第九步：后处理清理 ===
+    console.log('[CONTENT] 🧹 后处理清理...');
+    markdown = postProcessMarkdown(markdown);
+    
+    console.log('[CONTENT] ✅ Markdown 转换完成:', markdown.length, 'bytes');
+    console.log('[CONTENT] ✅ 处理了', mathMap.size, '个数学公式');
+    
+    sendResponse({
+      success: true,
+      markdown: markdown
+    });
+    
+  } catch (error) {
+    console.error('[CONTENT] ❌ Markdown 转换失败:', error);
+    console.error(error.stack);
+    sendResponse({
+      success: false,
+      error: error.message
+    });
+  }
 }
 

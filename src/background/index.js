@@ -17,7 +17,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   
   switch (message.type) {
   case 'CONVERT_PAPER':
-    handleConvertPaper(message.data, sendResponse);
+    handleConvertPaper(message.data, sendResponse, sender);
     return true; // 异步响应
     
   case 'GET_STATISTICS':
@@ -38,34 +38,44 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 /**
  * 处理论文转换请求
  */
-async function handleConvertPaper(paperInfo, sendResponse) {
+async function handleConvertPaper(paperInfo, sendResponse, sender) {
+  console.log('[BACKGROUND] 🎯 开始处理转换请求:', paperInfo);
   logger.info('Handling convert request:', paperInfo);
+  
+  // 获取当前 Tab ID
+  const tabId = sender?.tab?.id;
+  console.log('[BACKGROUND] 📍 Tab ID:', tabId);
   
   try {
     // 发送进度更新到触发的 Tab
     const progressCallback = (progress) => {
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (tabs[0]) {
-          chrome.tabs.sendMessage(tabs[0].id, {
-            type: 'CONVERSION_PROGRESS',
-            data: progress
-          }).catch(() => {
-            // Tab 可能已关闭
-            logger.debug('Failed to send progress update to tab');
-          });
-        }
-      });
+      console.log('[BACKGROUND] 📊 进度更新:', progress);
+      if (tabId) {
+        chrome.tabs.sendMessage(tabId, {
+          type: 'CONVERSION_PROGRESS',
+          data: progress
+        }).catch((err) => {
+          // Tab 可能已关闭
+          console.warn('[BACKGROUND] ⚠️ 无法发送进度更新:', err);
+          logger.debug('Failed to send progress update to tab');
+        });
+      } else {
+        console.warn('[BACKGROUND] ⚠️ 无 Tab ID，无法发送进度');
+      }
     };
     
-    // 执行转换
-    const result = await converter.convert(paperInfo, progressCallback);
+    console.log('[BACKGROUND] 🚀 调用转换器...');
+    // 执行转换（传入 tabId 用于 Content Script 通信）
+    const result = await converter.convert(paperInfo, progressCallback, tabId);
     
+    console.log('[BACKGROUND] ✅ 转换成功:', result);
     sendResponse({
       success: true,
       data: result
     });
     
   } catch (error) {
+    console.error('[BACKGROUND] ❌ 转换失败:', error);
     logger.error('Conversion failed:', error);
     
     sendResponse({
@@ -107,20 +117,24 @@ chrome.runtime.onInstalled.addListener((details) => {
 /**
  * 监听快捷键
  */
-chrome.commands.onCommand.addListener((command) => {
-  logger.debug('Command received:', command);
-  
-  if (command === 'convert-current-paper') {
-    // 向当前 Tab 发送转换指令
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0]) {
-        chrome.tabs.sendMessage(tabs[0].id, {
-          type: 'TRIGGER_CONVERSION'
-        });
-      }
-    });
-  }
-});
+if (chrome.commands && chrome.commands.onCommand) {
+  chrome.commands.onCommand.addListener((command) => {
+    logger.debug('Command received:', command);
+    
+    if (command === 'convert-current-paper') {
+      // 向当前 Tab 发送转换指令
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs[0]) {
+          chrome.tabs.sendMessage(tabs[0].id, {
+            type: 'TRIGGER_CONVERSION'
+          });
+        }
+      });
+    }
+  });
+} else {
+  logger.warn('chrome.commands API not available');
+}
 
 // 保持 Service Worker 活跃（可选）
 const keepAlive = () => {

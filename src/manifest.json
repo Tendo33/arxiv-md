@@ -18,12 +18,12 @@
   "host_permissions": [
     "https://arxiv.org/*",
     "https://ar5iv.org/*",
+    "https://ar5iv.labs.arxiv.org/*",
     "https://export.arxiv.org/*",
     "https://mineru.net/*"
   ],
   "background": {
-    "service_worker": "background.js",
-    "type": "module"
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {

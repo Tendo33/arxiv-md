@@ -24,12 +24,14 @@ class MinerUClient {
    * @returns {Promise<string>} Task ID
    */
   async createTask(pdfBlob, token, filename = 'paper.pdf') {
+    console.log('[MINERU] 📤 创建任务:', filename, `(${pdfBlob.size} bytes)`);
     logger.info('Creating MinerU task:', filename);
     
     try {
       const formData = new FormData();
       formData.append('file', pdfBlob, filename);
       
+      console.log('[MINERU] 🌐 发送请求到:', this.taskUrl);
       const response = await fetch(this.taskUrl, {
         method: 'POST',
         headers: {
@@ -38,8 +40,11 @@ class MinerUClient {
         body: formData
       });
       
+      console.log('[MINERU] 📡 响应状态:', response.status, response.statusText);
+      
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('[MINERU] ❌ API 错误响应:', errorData);
         
         if (response.status === 401) {
           throw new Error(ERROR_MESSAGES.MINERU_TOKEN_MISSING);
@@ -51,15 +56,19 @@ class MinerUClient {
       }
       
       const result = await response.json();
+      console.log('[MINERU] 📦 API 响应:', result);
       const taskId = result.task_id || result.taskId || result.id;
       
       if (!taskId) {
+        console.error('[MINERU] ❌ 响应中缺少 task_id');
         throw new Error('Invalid API response: missing task_id');
       }
       
+      console.log('[MINERU] ✅ 任务创建成功:', taskId);
       logger.info('MinerU task created:', taskId);
       return taskId;
     } catch (error) {
+      console.error('[MINERU] ❌ 创建任务失败:', error);
       logger.error('Failed to create MinerU task:', error);
       throw error;
     }
@@ -106,18 +115,22 @@ class MinerUClient {
    * @returns {Promise<string>} Markdown 内容
    */
   async pollTask(taskId, token, onProgress = null) {
+    console.log('[MINERU] 🔄 开始轮询任务:', taskId);
     logger.info('Polling MinerU task:', taskId);
     
     let attempts = 0;
     
     while (attempts < this.maxPollAttempts) {
       attempts++;
+      console.log(`[MINERU] 🔍 轮询尝试 ${attempts}/${this.maxPollAttempts}`);
       
       try {
         const status = await this.queryTask(taskId, token);
+        console.log('[MINERU] 📊 任务状态:', status);
         
         // 回调进度
         if (onProgress && typeof onProgress === 'function') {
+          console.log('[MINERU] ➡️ 发送进度更新:', status.progress, '%');
           onProgress({
             progress: status.progress,
             state: status.state,
@@ -127,6 +140,7 @@ class MinerUClient {
         
         // 检查状态
         if (status.state === 'completed' || status.state === 'success') {
+          console.log('[MINERU] ✅ 任务完成!');
           logger.info('MinerU task completed:', taskId);
           
           if (!status.result) {
@@ -137,10 +151,12 @@ class MinerUClient {
         }
         
         if (status.state === 'failed' || status.state === 'error') {
+          console.error('[MINERU] ❌ 任务失败:', status.error);
           throw new Error(status.error || 'Task failed');
         }
         
         // 等待后继续轮询
+        console.log(`[MINERU] ⏳ 等待 ${this.pollInterval}ms 后继续...`);
         await sleep(this.pollInterval);
         
       } catch (error) {
@@ -163,19 +179,25 @@ class MinerUClient {
    * @returns {Promise<Object>} {markdown, metadata}
    */
   async convert(pdfUrl, token, metadata = {}, onProgress = null) {
+    console.log('[MINERU] 🎯 开始 MinerU 转换:', pdfUrl);
     logger.info('Starting MinerU conversion:', pdfUrl);
     
     try {
       // 1. 下载 PDF
+      console.log('[MINERU] ⬇️ 下载 PDF...');
       if (onProgress) onProgress({ stage: 'downloading', progress: 0 });
       const pdfBlob = await this._downloadPdf(pdfUrl);
+      console.log('[MINERU] ✅ PDF 下载完成:', pdfBlob.size, 'bytes');
       
       // 2. 创建任务
+      console.log('[MINERU] 📤 创建任务...');
       if (onProgress) onProgress({ stage: 'uploading', progress: 20 });
       const filename = `${metadata.arxivId || 'paper'}.pdf`;
       const taskId = await this.createTask(pdfBlob, token, filename);
+      console.log('[MINERU] ✅ 任务创建成功:', taskId);
       
       // 3. 轮询结果
+      console.log('[MINERU] 🔄 开始轮询任务状态...');
       if (onProgress) onProgress({ stage: 'processing', progress: 40 });
       
       const markdown = await this.pollTask(taskId, token, (pollStatus) => {
