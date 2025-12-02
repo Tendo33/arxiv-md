@@ -582,6 +582,177 @@ function preprocessAr5ivElements(doc) {
       quote.replaceWith(blockquote);
     }
   });
+  
+  // 【关键】处理 span.ltx_tabular 伪表格
+  // 检测是否有复杂的 colspan/rowspan，如果有则转为纯文本表格
+  doc.querySelectorAll('span.ltx_tabular, div.ltx_tabular').forEach(tabular => {
+    try {
+      const rows = Array.from(tabular.querySelectorAll(':scope > .ltx_tr'));
+      if (rows.length === 0) return;
+      
+      // 检测是否有复杂结构（colspan/rowspan）
+      const hasComplexStructure = tabular.innerHTML.includes('ltx_colspan') || 
+                                   tabular.innerHTML.includes('ltx_rowspan');
+      
+      if (hasComplexStructure) {
+        // 复杂表格：转换为纯文本对齐格式
+        const textRows = [];
+        const colWidths = [];
+        
+        // 第一遍：收集所有单元格内容，计算列宽
+        const allRowsData = rows.map(row => {
+          const cells = Array.from(row.querySelectorAll(':scope > .ltx_td, :scope > .ltx_th'));
+          return cells.map(cell => {
+            // 获取纯文本，处理数学公式占位符
+            let text = cell.textContent.trim().replace(/\s+/g, ' ');
+            // 获取 colspan
+            const colspanMatch = cell.className.match(/ltx_colspan_(\d+)/);
+            const colspan = colspanMatch ? parseInt(colspanMatch[1]) : 1;
+            return { text, colspan };
+          });
+        });
+        
+        // 计算每列最大宽度
+        allRowsData.forEach(rowData => {
+          let colIdx = 0;
+          rowData.forEach(cell => {
+            const cellWidth = Math.ceil(cell.text.length / cell.colspan);
+            for (let i = 0; i < cell.colspan; i++) {
+              colWidths[colIdx + i] = Math.max(colWidths[colIdx + i] || 0, cellWidth);
+            }
+            colIdx += cell.colspan;
+          });
+        });
+        
+        // 第二遍：生成对齐的文本行
+        allRowsData.forEach((rowData, rowIdx) => {
+          const parts = [];
+          let colIdx = 0;
+          rowData.forEach(cell => {
+            // 计算这个单元格应该占用的总宽度
+            let totalWidth = 0;
+            for (let i = 0; i < cell.colspan; i++) {
+              totalWidth += (colWidths[colIdx + i] || 8) + 3; // +3 for padding and separator
+            }
+            totalWidth -= 3; // 减去最后一个的分隔符空间
+            totalWidth = Math.max(totalWidth, cell.text.length);
+            
+            parts.push(cell.text.padEnd(totalWidth));
+            colIdx += cell.colspan;
+          });
+          textRows.push('| ' + parts.join(' | ') + ' |');
+          
+          // 在表头后添加分隔行
+          if (rowIdx === 0 || (rowIdx === 1 && allRowsData[0].some(c => c.colspan > 1))) {
+            const separators = [];
+            colIdx = 0;
+            rowData.forEach(cell => {
+              let totalWidth = 0;
+              for (let i = 0; i < cell.colspan; i++) {
+                totalWidth += (colWidths[colIdx + i] || 8) + 3;
+              }
+              totalWidth -= 3;
+              totalWidth = Math.max(totalWidth, cell.text.length);
+              separators.push('-'.repeat(totalWidth));
+              colIdx += cell.colspan;
+            });
+            textRows.push('| ' + separators.join(' | ') + ' |');
+          }
+        });
+        
+        // 创建文本节点替换
+        const textTable = doc.createElement('div');
+        textTable.className = 'ltx_table_text';
+        textTable.innerHTML = `<pre><code>${textRows.join('\n')}</code></pre>`;
+        tabular.replaceWith(textTable);
+        console.log(`[PREPROCESS] ✅ 复杂表格转为文本格式 (${rows.length} 行)`);
+      } else {
+        // 简单表格：转换为标准 HTML table
+        const table = doc.createElement('table');
+        const tbody = doc.createElement('tbody');
+        
+        rows.forEach((row, rowIdx) => {
+          const tr = doc.createElement('tr');
+          const cells = row.querySelectorAll(':scope > .ltx_td, :scope > .ltx_th');
+          cells.forEach(cell => {
+            const isHeader = cell.classList.contains('ltx_th') || rowIdx === 0;
+            const cellEl = doc.createElement(isHeader ? 'th' : 'td');
+            cellEl.innerHTML = cell.innerHTML;
+            tr.appendChild(cellEl);
+          });
+          if (tr.children.length > 0) {
+            tbody.appendChild(tr);
+          }
+        });
+        
+        if (tbody.children.length > 0) {
+          table.appendChild(tbody);
+          tabular.replaceWith(table);
+          console.log(`[PREPROCESS] ✅ 简单表格转为 HTML table (${rows.length} 行)`);
+        }
+      }
+    } catch (e) {
+      console.error('[PREPROCESS] ❌ 转换伪表格失败:', e);
+    }
+  });
+  
+  // 【关键】处理 Algorithm 伪代码块
+  doc.querySelectorAll('figure.ltx_float_algorithm').forEach(alg => {
+    try {
+      const caption = alg.querySelector('figcaption');
+      const captionText = caption ? caption.textContent.trim() : 'Algorithm';
+      
+      // 提取算法内容
+      const contentDiv = alg.querySelector('.ltx_flex_figure, .ltx_flex_cell');
+      if (contentDiv) {
+        // 收集所有算法步骤
+        const steps = [];
+        contentDiv.querySelectorAll('p, .ltx_p, .ltx_text').forEach(el => {
+          const text = el.textContent.trim();
+          if (text && !el.closest('figcaption')) {
+            steps.push(text);
+          }
+        });
+        
+        if (steps.length > 0) {
+          // 创建代码块
+          const pre = doc.createElement('pre');
+          const code = doc.createElement('code');
+          code.textContent = `${captionText}\n${'─'.repeat(40)}\n${steps.join('\n')}`;
+          pre.appendChild(code);
+          pre.className = 'ltx_algorithm_converted';
+          alg.replaceWith(pre);
+          console.log(`[PREPROCESS] ✅ 转换 Algorithm 为代码块: ${captionText}`);
+        }
+      }
+    } catch (e) {
+      console.error('[PREPROCESS] ❌ 转换 Algorithm 失败:', e);
+    }
+  });
+  
+  // 【关键】处理加粗文本 (ltx_font_bold)
+  doc.querySelectorAll('.ltx_font_bold, .ltx_text_bold').forEach(bold => {
+    // 不处理已经在 strong/b 标签中的
+    if (bold.closest('strong') || bold.closest('b')) return;
+    // 不处理标题中的
+    if (bold.closest('h1, h2, h3, h4, h5, h6, figcaption')) return;
+    
+    const strong = doc.createElement('strong');
+    strong.innerHTML = bold.innerHTML;
+    bold.replaceWith(strong);
+  });
+  
+  // 处理斜体文本 (ltx_font_italic, ltx_emph)
+  doc.querySelectorAll('.ltx_font_italic, .ltx_emph').forEach(italic => {
+    if (italic.closest('em') || italic.closest('i')) return;
+    if (italic.closest('h1, h2, h3, h4, h5, h6')) return;
+    
+    const em = doc.createElement('em');
+    em.innerHTML = italic.innerHTML;
+    italic.replaceWith(em);
+  });
+  
+  console.log(`[PREPROCESS] ✅ ar5iv 元素清理完成`);
 }
 
 /**
@@ -606,13 +777,57 @@ function removeMathMLArtifacts(doc) {
 }
 
 /**
+ * 清理 LaTeX 公式中不支持的命令（颜色、字体大小等）
+ */
+function cleanLatexFormula(latex) {
+  let result = latex;
+  
+  // 1. 移除颜色定义命令 \definecolor[named]{...}{...}{...} 或 \definecolor{...}{...}{...}
+  result = result.replace(/\\definecolor\s*(?:\[[^\]]*\])?\s*\{[^}]*\}\s*\{[^}]*\}(?:\s*\{[^}]*\})?/g, '');
+  
+  // 2. 移除 \color[rgb]{...} 或 \color{...} 命令（保留后续内容）
+  result = result.replace(/\\color\s*(?:\[[^\]]*\])?\s*\{[^}]*\}/g, '');
+  
+  // 3. 移除 \textcolor{...}{content} - 保留 content（处理嵌套大括号）
+  result = result.replace(/\\textcolor\s*\{[^}]*\}\s*\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/g, '$1');
+  
+  // 4. 移除 pgf 相关颜色命令
+  result = result.replace(/\\pgfstrokecolor/g, '');
+  result = result.replace(/\\pgfsetcolor\s*\{[^}]*\}/g, '');
+  result = result.replace(/\\pgfsetfillcolor\s*\{[^}]*\}/g, '');
+  
+  // 5. 移除字体大小命令
+  const fontSizeCommands = [
+    '\\footnotesize', '\\scriptsize', '\\tiny', '\\small', '\\normalsize',
+    '\\large', '\\Large', '\\LARGE', '\\huge', '\\Huge', '\\bigskip', '\\medskip', '\\smallskip'
+  ];
+  fontSizeCommands.forEach(cmd => {
+    result = result.replace(new RegExp(cmd.replace(/\\/g, '\\\\') + '(?:\\s+|(?=\\\\)|(?=[^a-zA-Z]))', 'g'), '');
+  });
+  
+  // 6. 移除其他不常见的格式命令
+  result = result.replace(/\\mbox\s*\{([^}]*)\}/g, '$1');  // \mbox{text} -> text
+  result = result.replace(/\\text\s*\{([^}]*)\}/g, '\\text{$1}');  // 保留 \text
+  
+  // 7. 清理多余空格和空大括号
+  result = result.replace(/\{\s*\}/g, '');  // 移除空大括号 {}
+  result = result.replace(/\s{2,}/g, ' ').trim();
+  
+  return result;
+}
+
+/**
  * 恢复数学公式占位符
  */
 function restoreMathPlaceholders(markdown, mathMap) {
   let result = markdown;
   
   mathMap.forEach((value, placeholder) => {
-    const { latex, isBlock } = value;
+    let { latex, isBlock } = value;
+    
+    // 清理 LaTeX 中不支持的命令
+    latex = cleanLatexFormula(latex);
+    
     const escapedPlaceholder = placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(escapedPlaceholder, 'g');
     
@@ -944,6 +1159,70 @@ function handleHtmlToMarkdown(data, sendResponse) {
       replacement: (content) => {
         const trimmed = content.trim();
         return trimmed ? `\n\n${trimmed}\n\n` : '';
+      }
+    });
+    
+    // 自定义规则：处理加粗文本 (备用规则，如果预处理未完全转换)
+    turndownService.addRule('arxivBold', {
+      filter: (node) => {
+        return node.classList && 
+               (node.classList.contains('ltx_font_bold') || 
+                node.classList.contains('ltx_text_bold'));
+      },
+      replacement: (content) => {
+        const trimmed = content.trim();
+        return trimmed ? `**${trimmed}**` : '';
+      }
+    });
+    
+    // 自定义规则：处理斜体文本 (备用规则)
+    turndownService.addRule('arxivItalic', {
+      filter: (node) => {
+        return node.classList && 
+               (node.classList.contains('ltx_font_italic') || 
+                node.classList.contains('ltx_emph'));
+      },
+      replacement: (content) => {
+        const trimmed = content.trim();
+        return trimmed ? `*${trimmed}*` : '';
+      }
+    });
+    
+    // 自定义规则：处理 Algorithm 代码块
+    turndownService.addRule('arxivAlgorithm', {
+      filter: (node) => {
+        return node.classList && node.classList.contains('ltx_algorithm_converted');
+      },
+      replacement: (content, node) => {
+        const code = node.querySelector('code');
+        const text = code ? code.textContent : content;
+        return `\n\n\`\`\`\n${text}\n\`\`\`\n\n`;
+      }
+    });
+    
+    // 自定义规则：处理 figure 中的表格标题
+    turndownService.addRule('arxivTableCaption', {
+      filter: (node) => {
+        return node.tagName === 'FIGCAPTION' && 
+               node.closest('figure.ltx_table, .ltx_float_table');
+      },
+      replacement: (content) => {
+        const trimmed = content.trim();
+        return trimmed ? `\n\n**${trimmed}**\n\n` : '';
+      }
+    });
+    
+    // 自定义规则：处理文本格式的复杂表格
+    turndownService.addRule('arxivTextTable', {
+      filter: (node) => {
+        return node.classList && node.classList.contains('ltx_table_text');
+      },
+      replacement: (content, node) => {
+        const code = node.querySelector('code');
+        if (code) {
+          return `\n\n\`\`\`\n${code.textContent}\n\`\`\`\n\n`;
+        }
+        return content;
       }
     });
     
