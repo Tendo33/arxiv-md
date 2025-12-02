@@ -357,9 +357,8 @@ function preprocessMathElements(doc) {
       const isInTable = mathEl.closest('table, .ltx_equation, .ltx_equationgroup, .ltx_eqn_table') !== null;
       const isBlock = displayAttr === 'block' || isInTable;
       
-      // 使用更安全的占位符格式（不会被 Markdown 解析器误解）
-      // 使用 Unicode 数学双尖括号，避免被 Turndown 转义
-      const placeholder = `⟪MATH${mathCounter}⟫`;
+      // 创建占位符
+      const placeholder = `__MATH_${mathCounter}__`;
       mathMap.set(placeholder, { latex, isBlock });
       mathCounter++;
       
@@ -373,7 +372,7 @@ function preprocessMathElements(doc) {
         const latex = annotation.textContent.trim();
         const isBlock = mathEl.getAttribute('display') === 'block';
         
-        const placeholder = `⟪MATH${mathCounter}⟫`;
+        const placeholder = `__MATH_${mathCounter}__`;
         mathMap.set(placeholder, { latex, isBlock });
         mathCounter++;
         
@@ -441,44 +440,18 @@ function preprocessTables(doc) {
   const tables = doc.querySelectorAll('table');
   
   tables.forEach((table) => {
-    // 检查是否为数学公式表格（ar5iv 使用表格排版公式）
+    // 检查是否为数学公式表格（通常只有1-2行，用于排版公式）
     const rows = table.querySelectorAll('tr');
-    const hasFormulaClass = table.classList.contains('ltx_equation') || 
-                           table.classList.contains('ltx_equationgroup') ||
-                           table.classList.contains('ltx_eqn_table');
-    
-    // 检查是否包含公式占位符
-    const hasFormula = table.textContent.includes('⟪MATH') || table.textContent.includes('=');
-    
-    if (hasFormulaClass || (rows.length <= 2 && hasFormula)) {
-      // 这是公式表格，需要智能提取
-      const formulaParts = [];
-      
-      rows.forEach(row => {
-        const cells = row.querySelectorAll('td, th');
-        const rowParts = [];
-        
-        cells.forEach(cell => {
-          const text = cell.textContent.trim();
-          if (text) {
-            rowParts.push(text);
-          }
-        });
-        
-        if (rowParts.length > 0) {
-          // 合并同一行的单元格，用空格分隔
-          formulaParts.push(rowParts.join(' '));
-        }
-      });
-      
-      // 如果是多行公式，用换行分隔；单行则直接连接
-      const finalText = formulaParts.length > 1 
-        ? '\n\n' + formulaParts.join('\n') + '\n\n'
-        : '\n\n' + formulaParts.join(' ') + '\n\n';
-      
-      const textNode = doc.createTextNode(finalText);
-      table.replaceWith(textNode);
-      return;
+    if (rows.length <= 2 && table.querySelectorAll('td, th').length <= 4) {
+      // 检查是否包含公式占位符
+      const hasFormula = table.textContent.includes('__MATH_') || table.textContent.includes('=');
+      if (hasFormula) {
+        // 这是公式表格，提取文本内容
+        const text = table.textContent.replace(/\s+/g, ' ').trim();
+        const textNode = doc.createTextNode(`\n\n${text}\n\n`);
+        table.replaceWith(textNode);
+        return;
+      }
     }
     
     // 对于数据表格，移除复杂属性
@@ -586,19 +559,15 @@ function restoreMathPlaceholders(markdown, mathMap) {
  */
 function postProcessMarkdown(markdown) {
   return markdown
-    // 1. 【核心修复】合并连续的美元符号（修复 ar5iv 拆分的行内公式）
-    // "$formula1$$formula2$" → "$formula1 formula2$"
-    .replace(/\$\s*\$\s*/g, ' ')
-    
-    // 2. 清理重复的数学表达式（Unicode + LaTeX）
+    // 1. 清理重复的数学表达式（Unicode + LaTeX）
     // 例如: "dk𝑑𝑘d_{k}" -> "$d_{k}$"
     .replace(/([a-zA-Z]+)([\u{1D400}-\u{1D7FF}]+)\1\{([^}]+)\}/gu, '$$1_{$3}$')
     .replace(/([a-zA-Z]+)([\u{1D400}-\u{1D7FF}]+)\1\^\{([^}]+)\}/gu, '$$1^{$3}$')
     
-    // 3. 移除孤立的 Unicode 数学符号（与普通字母重复）
+    // 2. 移除孤立的 Unicode 数学符号（与普通字母重复）
     .replace(/([a-zA-Z])([\u{1D400}-\u{1D7FF}]+)(\d)/gu, '$1$3')
     
-    // 4. 清理残留的 LaTeX 命令文本
+    // 3. 清理残留的 LaTeX 命令文本
     .replace(/\\text\{([^}]+)\}/g, '$1')
     .replace(/\\mathbb\{(\w)\}/g, '$1')
     .replace(/([^\\])\\_(?=\s)/g, '$1_')
@@ -606,46 +575,46 @@ function postProcessMarkdown(markdown) {
     .replace(/\\times\s/g, '× ')
     .replace(/\\cdot\s/g, '· ')
     
-    // 5. 清理错误的脚标文本
+    // 4. 清理错误的脚标文本
     .replace(/\bsubscript\b/gi, '')
     .replace(/\bsuperscript\b/gi, '')
     
-    // 6. 清理脚注标记错误（如"11footnotemark: 1"）
+    // 5. 清理脚注标记错误（如"11footnotemark: 1"）
     .replace(/\d+footnotemark:\s*\d+/g, '')
     .replace(/footnotemark:\s*/g, '')
     
-    // 7. 清理重复的项目符号（如 "- •"）
+    // 6. 清理重复的项目符号（如 "- •"）
     .replace(/^(\s*-\s*)•\s*/gm, '$1')
     
-    // 8. 修复表格中的空单元格
+    // 7. 修复表格中的空单元格
     .replace(/\|\s*\|\s*\|/g, '| |')
     
-    // 9. 清理多余空行（超过2个连续空行）
+    // 8. 清理多余空行（超过2个连续空行）
     .replace(/\n{4,}/g, '\n\n\n')
     
-    // 10. 修复公式前后空格
+    // 9. 修复公式前后空格
     .replace(/([^\s\n])\$([^$]+)\$/g, '$1 $$2$')
     .replace(/\$([^$]+)\$([^\s\n.,;!?])/g, '$$1$ $2')
     
-    // 11. 清理公式中多余的空格
+    // 10. 清理公式中多余的空格
     .replace(/\$\s+/g, '$')
     .replace(/\s+\$/g, '$')
     
-    // 12. 清理行首行尾空格
+    // 11. 清理行首行尾空格
     .replace(/[ \t]+$/gm, '')
     
-    // 13. 移除 HTML 实体残留
+    // 12. 移除 HTML 实体残留
     .replace(/&nbsp;/g, ' ')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&amp;/g, '&')
     .replace(/&quot;/g, '"')
     
-    // 14. 清理错误的 LaTeX 命令残留（如 \\AND）
+    // 13. 清理错误的 LaTeX 命令残留（如 \\AND）
     .replace(/\\\\AND/g, '')
     .replace(/\\AND/g, '')
     
-    // 15. 最终清理：移除明显的 HTML/XML 标签残留
+    // 14. 最终清理：移除明显的 HTML/XML 标签残留
     .replace(/<\/?[a-z][^>]*>/gi, '');
 }
 
