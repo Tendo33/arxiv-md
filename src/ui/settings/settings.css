@@ -125,13 +125,14 @@ body {
   border-radius: 12px;
   padding: 20px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease-in-out;
+  background: white;
 }
 
 .mode-card:hover {
-  border-color: #667eea;
+  border-color: #a5b4fc;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
 }
 
 .mode-card input[type="radio"] {
@@ -139,13 +140,20 @@ body {
   opacity: 0;
 }
 
+/* Checked State - Full Card Highlight */
+.mode-card:has(input[type="radio"]:checked) {
+  border-color: #667eea;
+  background: #eff6ff;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+/* Fallback for browsers not supporting :has */
 .mode-card input[type="radio"]:checked + .mode-content {
-  border-left: 4px solid #667eea;
-  padding-left: 16px;
+  /* This part is less necessary if :has is supported, but good for safety */
 }
 
 .mode-card input[type="radio"]:checked ~ .mode-content .mode-icon {
-  transform: scale(1.2);
+  transform: scale(1.1);
 }
 
 .mode-icon {

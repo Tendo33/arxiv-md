@@ -35,9 +35,11 @@
 
 ### 2. 完整的用户界面
 
+- **Visual Identity**: 统一的 "Md" 品牌标识，紫色渐变风格
 - **Content Script**: 页面按钮注入、进度反馈、Toast 通知
-- **Popup**: 状态展示、统计数据、快捷操作
+- **Popup**: 卡片式状态展示、统计数据、快捷操作
 - **Settings**: 模式选择、Token 配置、高级选项
+- **Icon Generator**: 内置图标生成器 (`scripts/generate_icons.html`)
 
 ### 3. 强大的转换能力
 
