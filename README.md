@@ -15,24 +15,20 @@
 ## ✨ 特性
 
 - **🚀 极速转换**：85% 的论文在 1 秒内完成转换（ar5iv + 本地 Turndown）
-- **🔥 智能降级**：ar5iv 失败时自动调用 MinerU 深度解析
+- **📄 一键保存 PDF**：支持一键下载按标题命名的 PDF 文件
 - **💎 质量保证**：完美处理 LaTeX 公式、表格、图片
-- **🔒 隐私优先**：默认本地处理，不发送数据到外部（可选 MinerU 增强）
+- **🔒 隐私优先**：100% 本地处理，不发送数据到外部服务器
 - **📊 统计面板**：实时查看转换成功率和使用情况
 
-## 🎯 三层智能降级架构
+## 🎯 两层降级架构
 
 ```
 Tier 1 (Fast Path - 85% 场景):
   ar5iv HTML + 本地 Turndown
   ↓ <1 秒，完全免费，隐私友好
 
-Tier 2 (Quality Path - 15% 场景):
-  MinerU API 解析原始 PDF
-  ↓ 5-15 秒，可能有配额，质量极高
-
-Tier 3 (Fallback):
-  下载重命名的 PDF
+Tier 2 (Fallback):
+  下载按标题重命名的 PDF
   ↓ 始终有效
 ```
 
@@ -77,22 +73,14 @@ npm run build
 ### 快速开始
 
 1. 访问任意 arXiv 论文页面（例如：https://arxiv.org/abs/1706.03762）
-2. 点击页面上的 **"保存为 Markdown"** 按钮
-3. 等待转换完成（1-15 秒，取决于转换方式）
-4. Markdown 文件自动下载到本地
+2. 点击页面上的 **"保存为 Markdown"** 或 **"保存 PDF"** 按钮
+3. 等待处理完成（通常 <1 秒）
+4. 文件自动下载到本地，文件名格式：`(年份) 标题 - 作者.扩展名`
 
-### 配置 MinerU（可选，推荐）
+### 两个按钮的区别
 
-1. 访问 [mineru.net](https://mineru.net) 注册账号
-2. 获取 API Token
-3. 点击插件图标 → 设置
-4. 输入 Token 并保存
-
-**配置后的优势：**
-
-- ar5iv 无法转换的论文自动使用 MinerU 深度解析
-- 完美处理复杂公式、表格、图片
-- 免费账号每天 2000 页解析额度
+- **保存为 Markdown**：将论文转换为 Markdown 格式，便于在 Obsidian/Notion 等工具中阅读和编辑
+- **保存 PDF**：直接下载 PDF，但使用论文标题重命名，方便管理
 
 ## 🛠️ 开发
 
@@ -152,31 +140,34 @@ npm run package
 ### 场景 1：日常论文阅读
 
 - **需求**：快速保存论文到 Obsidian/Notion
-- **方案**：使用默认的"质量模式"
-- **体验**：85% 论文 <1 秒完成，15% 自动深度解析
+- **方案**：点击"保存为 Markdown"
+- **体验**：85% 论文 <1 秒完成，剩余自动保存 PDF
 
-### 场景 2：批量论文处理
+### 场景 2：批量论文整理
 
 - **需求**：整理大量论文到知识库
-- **方案**：配置 MinerU Token
-- **优势**：所有论文都能转换，质量统一
+- **方案**：使用"保存 PDF"按钮批量下载
+- **优势**：所有文件自动按标题命名，易于管理
 
 ### 场景 3：隐私优先
 
 - **需求**：不希望论文数据发送到外部
-- **方案**：使用"快速模式"
-- **体验**：100% 本地处理，ar5iv 失败时下载 PDF
+- **方案**：本插件默认完全本地处理
+- **体验**：100% 隐私保护，无任何数据上传
 
 ## ❓ 常见问题
 
 **Q: 转换失败怎么办？**  
-A: 插件会自动降级。ar5iv 失败时会调用 MinerU（如已配置），否则下载 PDF。
+A: 插件会自动降级。ar5iv 转换失败时会自动保存为 PDF。
 
-**Q: MinerU Token 是必须的吗？**  
-A: 不是。不配置 Token 插件依然可用，只是部分论文可能无法转换为 Markdown。
+**Q: 为什么有两个按钮？**  
+A: "保存为 Markdown" 用于知识管理，"保存 PDF" 用于快速收藏原文。
 
 **Q: 转换的 Markdown 包含图片吗？**  
 A: 包含。图片以 ar5iv CDN 链接形式保存在 Markdown 中（需联网查看）。
+
+**Q: PDF 文件名如何生成？**  
+A: 自动按 `(年份) 标题 - 第一作者姓氏.pdf` 格式命名，方便整理。
 
 **Q: 支持哪些浏览器？**  
 A: 目前仅支持 Chrome/Edge（Chromium 内核）。Firefox 版本正在开发中。
@@ -198,9 +189,9 @@ A: 目前仅支持 Chrome/Edge（Chromium 内核）。Firefox 版本正在开发
 ## 🙏 致谢
 
 - [ar5iv](https://ar5iv.org) - 提供 HTML5 版本的 arXiv 论文
-- [MinerU](https://github.com/opendatalab/mineru) - 强大的 PDF 解析工具
 - [Turndown](https://github.com/mixmark-io/turndown) - HTML → Markdown 转换
 - [Mozilla Readability](https://github.com/mozilla/readability) - 内容提取算法
+- [arXiv](https://arxiv.org) - 开放获取的预印本论文库
 
 ---
 

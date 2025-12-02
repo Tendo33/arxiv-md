@@ -45,7 +45,7 @@ class MainConverter {
   }
 
   /**
-   * 三层降级转换策略
+   * 两层降级转换策略 (ar5iv -> PDF)
    * @private
    */
   async _convertWithTieredStrategy(
@@ -81,7 +81,7 @@ class MainConverter {
         onProgress({ tier: "ar5iv", stage: "completed", progress: 100 });
       showNotification(
         "✅ 转换完成",
-        `已保存：${filename}\n方式：ar5iv (快速模式)`,
+        `已保存：${filename}\n方式：ar5iv`,
         "basic",
       );
       logger.info("Tier 1 success:", filename);
@@ -90,23 +90,7 @@ class MainConverter {
     } catch (ar5ivError) {
       logger.warn("Tier 1 failed:", ar5ivError.message);
 
-      // Tier 2: MinerU API
-      if (mode === CONVERSION_MODE.QUALITY && mineruToken) {
-        try {
-          if (onProgress)
-            onProgress({ tier: "mineru", stage: "starting", progress: 0 });
-          showNotification(
-            "⚠️ ar5iv 转换失败",
-            "正在使用 MinerU 深度解析...",
-            "basic",
-          );
-          return await this._convertWithMinerU(paperInfo, onProgress);
-        } catch (mineruError) {
-          logger.warn("Tier 2 failed:", mineruError.message);
-        }
-      }
-
-      // Tier 3: PDF Fallback
+      // Tier 2: PDF Fallback
       return this._fallbackToPdf(paperInfo, onProgress);
     }
   }
@@ -171,7 +155,7 @@ class MainConverter {
    */
   async _fallbackToPdf(paperInfo, onProgress) {
     const { arxivId, title } = paperInfo;
-    logger.info("Tier 3: Falling back to PDF download...");
+    logger.info("Tier 2: Falling back to PDF download...");
 
     if (onProgress)
       onProgress({ tier: "pdf", stage: "downloading", progress: 0 });
@@ -195,10 +179,10 @@ class MainConverter {
         onProgress({ tier: "pdf", stage: "completed", progress: 100 });
       showNotification(
         "ℹ️ 已保存为 PDF",
-        `文件：${filename}\n建议配置 MinerU Token 以获得 Markdown 转换`,
+        `文件：${filename}`,
         "basic",
       );
-      logger.info("Tier 3 success:", filename);
+      logger.info("Tier 2 success:", filename);
 
       return { success: true, tier: CONVERSION_TIER.PDF_FALLBACK, filename };
     } catch (error) {
@@ -211,6 +195,49 @@ class MainConverter {
       return {
         success: false,
         tier: CONVERSION_TIER.PDF_FALLBACK,
+        error: error.message,
+      };
+    }
+  }
+
+  /**
+   * 下载 PDF 文件（供按钮直接调用）
+   */
+  async downloadPdf(paperInfo, tabId = null) {
+    const { arxivId, title } = paperInfo;
+    logger.info("Direct PDF download requested:", arxivId);
+
+    try {
+      const filename = generateFilename(
+        {
+          title: title,
+          authors: paperInfo.authors,
+          year: paperInfo.year,
+          arxivId: arxivId,
+        },
+        "pdf",
+      );
+
+      const pdfUrl = paperInfo.pdfUrl || `${API.ARXIV_PDF}/${arxivId}.pdf`;
+      await downloadFile(pdfUrl, filename);
+
+      showNotification(
+        "✅ PDF 已保存",
+        `文件：${filename}`,
+        "basic",
+      );
+      logger.info("PDF download success:", filename);
+
+      return { success: true, filename };
+    } catch (error) {
+      logger.error("PDF download failed:", error);
+      showNotification(
+        "❌ 下载失败",
+        error.message || ERROR_MESSAGES.UNKNOWN_ERROR,
+        "basic",
+      );
+      return {
+        success: false,
         error: error.message,
       };
     }

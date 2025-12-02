@@ -17,6 +17,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       handleConvertPaper(message.data, sendResponse, sender);
       return true; // 异步响应
 
+    case "DOWNLOAD_PDF":
+      handleDownloadPdf(message.data, sendResponse, sender);
+      return true; // 异步响应
+
     case "GET_STATISTICS":
       handleGetStatistics(sendResponse);
       return true;
@@ -52,6 +56,22 @@ async function handleConvertPaper(paperInfo, sendResponse, sender) {
     sendResponse({ success: true, data: result });
   } catch (error) {
     logger.error("Conversion failed:", error);
+    sendResponse({ success: false, error: error.message || "Unknown error" });
+  }
+}
+
+/**
+ * 处理 PDF 下载请求
+ */
+async function handleDownloadPdf(paperInfo, sendResponse, sender) {
+  logger.info("Handling PDF download request:", paperInfo);
+  const tabId = sender?.tab?.id;
+
+  try {
+    const result = await converter.downloadPdf(paperInfo, tabId);
+    sendResponse({ success: true, data: result });
+  } catch (error) {
+    logger.error("PDF download failed:", error);
     sendResponse({ success: false, error: error.message || "Unknown error" });
   }
 }

@@ -80,52 +80,62 @@
     </div>
 
     <script>
-      function drawIcon(ctx, size) {
-        // Background - Gradient
-        const gradient = ctx.createLinearGradient(0, 0, size, size);
-        gradient.addColorStop(0, "#667eea");
-        gradient.addColorStop(1, "#764ba2");
+      // {{RIPER-7 Action}}
+      // Role: LD | Task: 修改HTML以支持从图片生成多尺寸图标
+      // Logic: 加载用户自定义icon.png，使用Canvas缩放生成16/48/128尺寸
+      // Principle: SOLID-S (单一职责 - 图片缩放)
 
-        ctx.fillStyle = gradient;
+      let sourceImage = null;
 
-        // Rounded Corners (approx 20% of size)
-        const radius = size * 0.2;
-        ctx.beginPath();
-        ctx.roundRect(0, 0, size, size, radius);
-        ctx.fill();
-
-        // Document Shape (White)
-        const padding = size * 0.25;
-        const docWidth = size - padding * 2;
-        const docHeight = size - padding * 2;
-        const x = padding;
-        const y = padding;
-
-        ctx.fillStyle = "white";
-
-        // Draw "A" stylized
-        ctx.font = `bold ${size * 0.6}px Arial, sans-serif`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        // Slight shadow for depth
-        ctx.shadowColor = "rgba(0,0,0,0.2)";
-        ctx.shadowBlur = size * 0.05;
-        ctx.shadowOffsetY = size * 0.02;
-
-        ctx.fillText("Md", size / 2, size / 2 + size * 0.05);
-
-        // Reset shadow
-        ctx.shadowColor = "transparent";
+      function loadSourceImage() {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => {
+            sourceImage = img;
+            resolve(img);
+          };
+          img.onerror = reject;
+          // 从上级目录的 assets 文件夹加载
+          img.src = "../assets/icon.png";
+        });
       }
 
-      function init() {
-        const sizes = [128, 48, 16];
+      function drawIconFromImage(ctx, size) {
+        if (!sourceImage) {
+          console.error("Source image not loaded");
+          return;
+        }
 
-        sizes.forEach((size) => {
-          const canvas = document.getElementById(`canvas${size}`);
-          const ctx = canvas.getContext("2d");
-          drawIcon(ctx, size);
-        });
+        // 清空画布
+        ctx.clearRect(0, 0, size, size);
+
+        // 使用高质量缩放
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+
+        // 绘制缩放后的图片
+        ctx.drawImage(sourceImage, 0, 0, size, size);
+      }
+
+      async function init() {
+        try {
+          // 加载源图片
+          await loadSourceImage();
+
+          const sizes = [128, 48, 16];
+
+          sizes.forEach((size) => {
+            const canvas = document.getElementById(`canvas${size}`);
+            const ctx = canvas.getContext("2d");
+            drawIconFromImage(ctx, size);
+          });
+        } catch (error) {
+          alert(
+            "无法加载 icon.png，请确保文件位于 ../assets/icon.png\n\n错误: " +
+              error.message,
+          );
+          console.error("Failed to load source image:", error);
+        }
       }
 
       function downloadAll() {

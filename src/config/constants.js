@@ -24,12 +24,12 @@ export const STORAGE_KEYS = {
 };
 
 /**
- * 转换模式
+ * 转换模式（已简化，保留用于向后兼容）
  */
 export const CONVERSION_MODE = {
-  FAST: "fast", // 仅使用 ar5iv + 本地转换
-  QUALITY: "quality", // ar5iv 失败时调用 MinerU
-  ALWAYS_MINERU: "always", // 始终使用 MinerU（高质量模式）
+  FAST: "fast", // ar5iv + 本地转换，失败时下载 PDF
+  QUALITY: "quality", // 与 FAST 相同（已废弃 MinerU 自动调用）
+  ALWAYS_MINERU: "always", // 仅 MinerU（手动模式）
 };
 
 /**
@@ -47,7 +47,7 @@ export const TASK_STATUS = {
  */
 export const CONVERSION_TIER = {
   AR5IV_LOCAL: "ar5iv_local",
-  MINERU_API: "mineru_api",
+  MINERU_API: "mineru_api", // 保留用于手动 MinerU 模式
   PDF_FALLBACK: "pdf_fallback",
 };
 
@@ -78,7 +78,7 @@ export const SUCCESS_MESSAGES = {
  * 配置默认值
  */
 export const DEFAULTS = {
-  CONVERSION_MODE: CONVERSION_MODE.QUALITY,
+  CONVERSION_MODE: CONVERSION_MODE.FAST,
   POLL_INTERVAL: 2000, // MinerU 轮询间隔（毫秒）
   MAX_POLL_ATTEMPTS: 150, // 最大轮询次数（5 分钟）
   REQUEST_TIMEOUT: 30000, // 请求超时（毫秒）
