@@ -39,7 +39,14 @@ class Ar5ivConverter {
     const url = `${API.AR5IV_BASE}/${arxivId}`;
     try {
       const response = await fetch(url, { method: "HEAD" });
-      logger.debug(`ar5iv availability: ${arxivId} -> ${response.ok}`);
+      logger.debug(`ar5iv availability: ${arxivId} -> ${response.ok}, url: ${response.url}`);
+
+      // Check if redirected to Abstract page (meaning ar5iv is missing)
+      if (response.url.includes("/abs/")) {
+        logger.debug("ar5iv redirected to abstract page, considering unavailable");
+        return false;
+      }
+
       return response.ok;
     } catch (error) {
       logger.error("ar5iv availability check failed:", error);
