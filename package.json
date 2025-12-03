@@ -2,7 +2,7 @@
   "name": "arxiv-md",
   "version": "1.0.0",
   "description": "Chrome extension to save arXiv papers as Markdown with intelligent conversion",
-  "author": "Jinfeng Sun",
+  "author": "SimonSun",
   "license": "MIT",
   "scripts": {
     "build": "webpack --mode production",

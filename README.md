@@ -202,6 +202,6 @@ A: 目前仅支持 Chrome/Edge（Chromium 内核）。Firefox 版本正在开发
 
 ---
 
-Made with ❤️ by [Jinfeng Sun](https://github.com/[你的GitHub用户名])
+Made with ❤️ by [SimonSun](https://github.com/[你的GitHub用户名])
 
 如果这个项目对你有帮助，请给个 ⭐️ Star！

@@ -12,7 +12,7 @@ body {
   line-height: 1.5;
   color: #333;
   background: #fff;
-  width: 300px;
+  width: 320px;
   height: auto;
   overflow-x: hidden;
 }
@@ -36,36 +36,40 @@ body {
 .logo {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .logo svg {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
 }
 
 .logo rect {
-  fill: #667eea;
+  fill: #A31F1B;
   fill-opacity: 1;
 }
 
 .logo text {
   fill: white;
+  font-weight: 800;
 }
 
 .logo h1 {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
   margin: 0;
   color: #111827;
+  letter-spacing: -0.02em;
 }
 
 .version {
   font-size: 10px;
-  color: #9ca3af;
-  background: #f3f4f6;
-  padding: 2px 6px;
-  border-radius: 4px;
+  color: #A31F1B;
+  background: #FEF2F2;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+  border: 1px solid #FECACA;
 }
 
 /* Main Content */
@@ -77,36 +81,37 @@ body {
 
 .description {
   font-size: 13px;
-  color: #6b7280;
-  line-height: 1.5;
+  color: #4B5563;
+  line-height: 1.6;
   margin-bottom: 0;
 }
 
 /* Actions */
 .actions-section {
   padding: 16px 20px;
-  background: white;
-  border-top: 1px solid #e5e7eb;
+  background: #FAFAFA;
+  border-top: 1px solid #F3F4F6;
 }
 
 .btn {
   width: 100%;
   padding: 12px 16px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  text-decoration: none;
 }
 
 .btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(163, 31, 27, 0.2);
 }
 
 .btn:active {
@@ -114,13 +119,14 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #A31F1B 0%, #C0392B 100%);
   color: white;
+  box-shadow: 0 2px 4px rgba(163, 31, 27, 0.1);
 }
 
 .btn svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
 }
 
 /* Footer */
@@ -129,30 +135,31 @@ body {
   background: white;
   text-align: center;
   font-size: 12px;
-  color: #6b7280;
-  border-top: 1px solid #f3f4f6;
+  color: #9CA3AF;
+  border-top: 1px solid #F3F4F6;
 }
 
 .footer a {
-  color: #667eea;
+  color: #6B7280;
   text-decoration: none;
   transition: color 0.2s;
+  font-weight: 500;
 }
 
 .footer a:hover {
-  color: #764ba2;
-  text-decoration: underline;
+  color: #A31F1B;
 }
 
 .footer span {
   margin: 0 8px;
+  color: #E5E7EB;
 }
 
 /* Animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-4px);
   }
   to {
     opacity: 1;
