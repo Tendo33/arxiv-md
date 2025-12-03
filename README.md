@@ -2,7 +2,7 @@
 
 > 🚀 一键将 arXiv 论文转换为 Markdown，支持智能三层降级策略，保证最佳转换质量
 
-<img src="./docs/arxiv_md.png" alt="arXiv to Markdown" width="100">
+<img src="./docs/icons/arxiv_md.png" alt="arXiv to Markdown" width="100">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-即将推出-blue)](https://chrome.google.com/webstore)
@@ -79,7 +79,7 @@ npm run build
 1. 访问任意 arXiv 论文页面（例如：https://arxiv.org/abs/1706.03762）
 2. 点击页面上的 **"保存为 Markdown"** 或 **"保存 PDF"** 按钮
 3. 等待处理完成（通常 <1 秒）
-4. 文件自动下载到本地，文件名格式：`(年份) 标题 - 作者.扩展名`
+4. 文件自动下载到本地，文件名格式：`标题(年份).扩展名`
 
 ### 两个按钮的区别
 
@@ -174,20 +174,11 @@ A: "保存为 Markdown" 用于知识管理，"保存 PDF" 用于快速收藏原�
 A: 包含。图片以 ar5iv CDN 链接形式保存在 Markdown 中（需联网查看）。
 
 **Q: PDF 文件名如何生成？**  
-A: 自动按 `(年份) 标题 - 第一作者姓氏.pdf` 格式命名，方便整理。
+A: 自动按 `标题.pdf` 格式命名，方便整理。
 
 **Q: 支持哪些浏览器？**  
 A: 目前仅支持 Chrome/Edge（Chromium 内核）。Firefox 版本正在开发中。
 
-## 🤝 贡献
-
-欢迎提交 Issue 和 Pull Request！
-
-1. Fork 本仓库
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 提交 Pull Request
 
 ## 📄 许可证
 
@@ -202,6 +193,6 @@ A: 目前仅支持 Chrome/Edge（Chromium 内核）。Firefox 版本正在开发
 
 ---
 
-Made with ❤️ by [SimonSun](https://github.com/[你的GitHub用户名])
+Made with ❤️ by [SimonSun](https://github.com/Tendo33)
 
 如果这个项目对你有帮助，请给个 ⭐️ Star！
