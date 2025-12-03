@@ -18,6 +18,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       handleDownloadPdf(message.data, sendResponse, sender);
       return true;
 
+    case "CHECK_AR5IV":
+      handleCheckAr5iv(message.data, sendResponse);
+      return true;
+
     case "GET_STATISTICS":
       handleGetStatistics(sendResponse);
       return true;
@@ -73,6 +77,17 @@ async function handleGetStatistics(sendResponse) {
     sendResponse({ success: true, data: stats });
   } catch (error) {
     logger.error("Failed to get statistics:", error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+async function handleCheckAr5iv(arxivId, sendResponse) {
+  logger.debug("Checking ar5iv availability for:", arxivId);
+  try {
+    const available = await converter.checkAvailability(arxivId);
+    sendResponse({ success: true, available });
+  } catch (error) {
+    logger.error("Failed to check ar5iv availability:", error);
     sendResponse({ success: false, error: error.message });
   }
 }

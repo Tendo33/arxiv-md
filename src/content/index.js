@@ -169,6 +169,43 @@ function injectConvertButton() {
   submissionHistory.parentNode.insertBefore(container, submissionHistory.nextSibling);
 
   logger.info("Convert buttons injected below Submission history");
+
+  // Check ar5iv availability
+  checkAr5ivAvailability(mdButton);
+}
+
+async function checkAr5ivAvailability(button) {
+  try {
+    const arxivId = metadataExtractor._extractIdFromUrl(window.location.href);
+    if (!arxivId) return;
+
+    // Set initial state (optional, maybe loading?)
+    // button.textContent = "Checking..."; 
+
+    chrome.runtime.sendMessage(
+      { type: "CHECK_AR5IV", data: arxivId },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          logger.warn("Failed to check ar5iv:", chrome.runtime.lastError);
+          return;
+        }
+
+        if (response && response.success && response.available === false) {
+          logger.info(`ar5iv not available for ${arxivId}, hiding button`);
+          button.style.display = "none";
+
+          // Also hide the container if only PDF button remains? 
+          // No, PDF button is still useful.
+          // But maybe we should update the container layout if one button is missing?
+          // The container has flex gap, so it should be fine.
+        } else {
+          logger.debug(`ar5iv available for ${arxivId}`);
+        }
+      }
+    );
+  } catch (error) {
+    logger.error("Error checking ar5iv availability:", error);
+  }
 }
 
 async function handleConversionTrigger(type = "markdown") {
