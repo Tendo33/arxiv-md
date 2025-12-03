@@ -1,6 +1,7 @@
 // Background Service Worker
 
 import converter from "@core/converter";
+import ar5ivConverter from "@core/converter/ar5iv-converter";
 import logger from "@utils/logger";
 import storage from "@utils/storage";
 
@@ -84,7 +85,7 @@ async function handleGetStatistics(sendResponse) {
 async function handleCheckAr5iv(arxivId, sendResponse) {
   logger.debug("Checking ar5iv availability for:", arxivId);
   try {
-    const available = await converter.checkAvailability(arxivId);
+    const available = await ar5ivConverter.checkAvailability(arxivId);
     sendResponse({ success: true, available });
   } catch (error) {
     logger.error("Failed to check ar5iv availability:", error);
