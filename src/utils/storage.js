@@ -200,6 +200,22 @@ class StorageManager {
   async setShowNotifications(value) {
     await this.set("showNotifications", value);
   }
+
+  /**
+   * 获取语言设置
+   * @returns {Promise<string>}
+   */
+  async getLanguage() {
+    return this.get("language", "en");
+  }
+
+  /**
+   * 设置语言
+   * @param {string} lang
+   */
+  async setLanguage(lang) {
+    await this.set("language", lang);
+  }
 }
 
 // 导出单例

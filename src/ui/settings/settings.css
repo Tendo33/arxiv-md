@@ -81,7 +81,7 @@ body {
 
 /* Main Content */
 .main-content {
-  padding: 48px;
+  padding: 32px;
 }
 
 /* Welcome Banner */
@@ -90,7 +90,7 @@ body {
   border: 2px solid #fbbf24;
   border-radius: 12px;
   padding: 24px;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
   animation: slideDown 0.5s ease-out;
 }
 
@@ -118,7 +118,7 @@ body {
 
 /* Settings Section */
 .settings-section {
-  margin-bottom: 48px;
+  margin-bottom: 32px;
 }
 
 .settings-section h2 {
@@ -295,36 +295,7 @@ body {
   border: 1px solid #ef4444;
 }
 
-/* Info Box */
-.info-box {
-  background: #f0f9ff;
-  border: 1px solid #bae6fd;
-  border-radius: 8px;
-  padding: 16px;
-  margin-top: 16px;
-}
 
-.info-title {
-  font-weight: 600;
-  margin-bottom: 12px;
-  color: #0369a1;
-}
-
-.info-box ul {
-  margin-left: 20px;
-  margin-bottom: 12px;
-}
-
-.info-box li {
-  color: #0c4a6e;
-  margin-bottom: 6px;
-}
-
-.info-quota {
-  font-size: 12px;
-  color: #0369a1;
-  font-style: italic;
-}
 
 /* Checkbox */
 .checkbox-label {

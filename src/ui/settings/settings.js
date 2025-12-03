@@ -4,97 +4,7 @@ import storage from "@utils/storage";
 import { CONVERSION_MODE } from "@config/constants";
 import logger from "@utils/logger";
 
-// 多语言翻译
-const translations = {
-  en: {
-    welcome_title: "🎉 Welcome to arXiv to Markdown!",
-    welcome_desc: "Convert arXiv papers to Markdown with one click. Fast conversion with ar5iv, automatic PDF fallback.",
-    mode_title: "Conversion Mode",
-    mode_desc: "Choose your default conversion strategy",
-    mode_standard_title: "Standard Mode",
-    mode_standard_desc: "ar5iv + local conversion, PDF fallback",
-    mode_recommended: "Recommended",
-    mode_mineru_title: "MinerU Mode",
-    mode_mineru_desc: "Always use MinerU (manual, requires token)",
-    mode_requires_token: "Requires Token",
-    mineru_title: "MinerU API Configuration",
-    mineru_desc: "Optional: For manual MinerU mode only",
-    mineru_token_label: "API Token",
-    mineru_token_placeholder: "Enter your MinerU API Token",
-    mineru_visit: "Visit mineru.net",
-    mineru_hint: "to register and get your token",
-    mineru_about: "💡 About MinerU",
-    mineru_feature1: "✅ Perfect LaTeX formula handling",
-    mineru_feature2: "✅ High-precision table recognition",
-    mineru_feature3: "✅ Automatic image extraction",
-    mineru_feature4: "✅ Works with all PDFs",
-    mineru_quota: "Free tier: 2000 pages/day",
-    advanced_title: "Advanced Options",
-    advanced_auto: "Auto-convert (show prompt on paper page load)",
-    advanced_metadata: "Include metadata in Markdown (title, authors, ID, etc.)",
-    advanced_notifications: "Show desktop notifications",
-    stats_title: "Usage Statistics",
-    stats_total: "Total Conversions",
-    stats_ar5iv: "ar5iv Success",
-    stats_mineru: "MinerU Success",
-    stats_pdf: "PDF Fallback",
-    stats_reset: "Reset Statistics",
-    btn_save: "Save Settings",
-    btn_reset: "Reset to Default",
-    toast_saved: "✅ Settings saved successfully",
-    toast_reset: "✅ Settings reset to default",
-    toast_stats_reset: "✅ Statistics reset successfully",
-    confirm_reset: "Are you sure you want to reset to default settings?",
-    confirm_stats_reset: "Are you sure you want to reset all statistics?",
-    token_invalid: "❌ Token format invalid (too short)",
-    token_valid: "✅ Token format looks good (test after saving)",
-    saving: "Saving...",
-  },
-  zh: {
-    welcome_title: "🎉 欢迎使用 arXiv to Markdown！",
-    welcome_desc: "一键将 arXiv 论文转换为 Markdown，支持 ar5iv 快速转换和 PDF 自动降级。",
-    mode_title: "转换模式",
-    mode_desc: "选择论文转换的默认策略",
-    mode_standard_title: "标准模式",
-    mode_standard_desc: "ar5iv + 本地转换，失败时下载 PDF",
-    mode_recommended: "推荐",
-    mode_mineru_title: "MinerU 模式",
-    mode_mineru_desc: "始终使用 MinerU（手动模式，需要 Token）",
-    mode_requires_token: "需要 Token",
-    mineru_title: "MinerU API 配置",
-    mineru_desc: "可选：仅用于手动 MinerU 模式",
-    mineru_token_label: "API Token",
-    mineru_token_placeholder: "输入您的 MinerU API Token",
-    mineru_visit: "访问 mineru.net",
-    mineru_hint: "注册账号并获取 Token",
-    mineru_about: "💡 关于 MinerU",
-    mineru_feature1: "✅ 完美处理复杂 LaTeX 公式",
-    mineru_feature2: "✅ 高精度表格识别",
-    mineru_feature3: "✅ 图片自动提取",
-    mineru_feature4: "✅ 支持所有 PDF",
-    mineru_quota: "免费账号：每天 2000 页解析额度",
-    advanced_title: "高级选项",
-    advanced_auto: "自动转换（进入论文页面自动弹出转换提示）",
-    advanced_metadata: "在 Markdown 中包含元数据（标题、作者、ID 等）",
-    advanced_notifications: "显示桌面通知",
-    stats_title: "使用统计",
-    stats_total: "总转换次数",
-    stats_ar5iv: "ar5iv 成功",
-    stats_mineru: "MinerU 成功",
-    stats_pdf: "PDF 兜底",
-    stats_reset: "重置统计数据",
-    btn_save: "保存设置",
-    btn_reset: "恢复默认",
-    toast_saved: "✅ 设置已保存",
-    toast_reset: "✅ 已恢复默认设置",
-    toast_stats_reset: "✅ 统计数据已重置",
-    confirm_reset: "确定要恢复默认设置吗？",
-    confirm_stats_reset: "确定要重置所有统计数据吗？",
-    token_invalid: "❌ Token 格式无效（长度过短）",
-    token_valid: "✅ Token 格式正确（建议保存后测试）",
-    saving: "保存中...",
-  }
-};
+import { translations } from "@config/locales";
 
 let currentLang = "en";
 
@@ -107,7 +17,7 @@ async function init() {
   logger.debug("Settings page initialized");
 
   // 加载语言设置
-  const savedLang = localStorage.getItem("arxiv-md-lang") || "en";
+  const savedLang = await storage.getLanguage();
   currentLang = savedLang;
   updateLanguage(currentLang);
 
@@ -154,7 +64,7 @@ function updateLanguage(lang) {
   document.getElementById("langText").textContent = lang === "en" ? "中文" : "English";
   
   // 保存语言设置
-  localStorage.setItem("arxiv-md-lang", lang);
+  storage.setLanguage(lang);
 }
 
 /**
