@@ -1,4 +1,4 @@
-// MinerU API 客户端 - 处理 PDF 上传、任务轮询、结果获取
+// MinerU API 客户端
 
 import { API, DEFAULTS, ERROR_MESSAGES } from "@config/constants";
 import logger from "@utils/logger";
@@ -12,9 +12,6 @@ class MinerUClient {
     this.maxPollAttempts = DEFAULTS.MAX_POLL_ATTEMPTS;
   }
 
-  /**
-   * 创建解析任务
-   */
   async createTask(pdfBlob, token, filename = "paper.pdf") {
     logger.info("Creating MinerU task:", filename);
 
@@ -54,9 +51,6 @@ class MinerUClient {
     }
   }
 
-  /**
-   * 查询任务状态
-   */
   async queryTask(taskId, token) {
     try {
       const response = await fetch(`${this.resultUrl}/${taskId}`, {
@@ -81,9 +75,6 @@ class MinerUClient {
     }
   }
 
-  /**
-   * 轮询任务直到完成
-   */
   async pollTask(taskId, token, onProgress = null) {
     logger.info("Polling MinerU task:", taskId);
     let attempts = 0;
@@ -126,9 +117,6 @@ class MinerUClient {
     throw new Error("Task polling timeout");
   }
 
-  /**
-   * 完整转换流程：PDF → Markdown
-   */
   async convert(pdfUrl, token, metadata = {}, onProgress = null) {
     logger.info("Starting MinerU conversion:", pdfUrl);
 

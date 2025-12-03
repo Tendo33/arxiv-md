@@ -1,4 +1,4 @@
-// 主转换器 - 协调三层转换策略（ar5iv → MinerU → PDF）
+// 主转换器
 
 import ar5ivConverter from "./ar5iv-converter";
 import mineruClient from "./mineru-client";
@@ -21,9 +21,6 @@ import {
  * 主转换器 - 智能三层降级架构
  */
 class MainConverter {
-  /**
-   * 转换论文为 Markdown
-   */
   async convert(paperInfo, onProgress = null, tabId = null) {
     const { arxivId } = paperInfo;
     logger.info("Starting conversion:", arxivId);
@@ -44,10 +41,6 @@ class MainConverter {
     );
   }
 
-  /**
-   * 两层降级转换策略 (ar5iv -> PDF)
-   * @private
-   */
   async _convertWithTieredStrategy(
     paperInfo,
     mode,
@@ -95,10 +88,6 @@ class MainConverter {
     }
   }
 
-  /**
-   * 使用 MinerU 转换
-   * @private
-   */
   async _convertWithMinerU(paperInfo, onProgress, tabId) {
     const { arxivId, title, pdfUrl } = paperInfo;
     logger.info("Tier 2: Trying MinerU conversion...");
@@ -149,10 +138,6 @@ class MainConverter {
     }
   }
 
-  /**
-   * 兜底：下载 PDF
-   * @private
-   */
   async _fallbackToPdf(paperInfo, onProgress) {
     const { arxivId, title } = paperInfo;
     logger.info("Tier 2: Falling back to PDF download...");
@@ -200,10 +185,6 @@ class MainConverter {
     }
   }
 
-  /**
-   * 下载 PDF 文件（供按钮直接调用）
-   * 使用页面标题作为文件名（与参考脚本保持一致）
-   */
   async downloadPdf(paperInfo, tabId = null) {
     const { arxivId } = paperInfo;
     logger.info("Direct PDF download requested:", arxivId);

@@ -1,4 +1,4 @@
-// Content Script - 在 arXiv 页面注入功能，提取元数据，触发转换
+// Content Script
 
 import metadataExtractor from "@core/metadata-extractor";
 import logger from "@utils/logger";
@@ -18,9 +18,6 @@ if (!isArxivAbsPage && !isArxivPdfPage) {
   init();
 }
 
-/**
- * 初始化
- */
 function init() {
   logger.debug("Initializing content script");
 
@@ -55,9 +52,6 @@ function init() {
   });
 }
 
-/**
- * 注入按钮到 Submission history 下面
- */
 function injectConvertButton() {
   if (!isArxivAbsPage) return; // 只在 Abstract 页面注入
 
@@ -177,10 +171,6 @@ function injectConvertButton() {
   logger.info("Convert buttons injected below Submission history");
 }
 
-/**
- * 处理转换触发
- * @param {string} type - "markdown" 或 "pdf"
- */
 async function handleConversionTrigger(type = "markdown") {
   logger.info(`${type} conversion triggered`);
 
@@ -252,9 +242,6 @@ async function handleConversionTrigger(type = "markdown") {
   }
 }
 
-/**
- * 直接在 content script 中下载 PDF（使用页面标题作为文件名）
- */
 async function handlePdfDownloadDirect(button, progressIndicator) {
   try {
     // 使用页面标题作为文件名（参考脚本方式）
@@ -347,9 +334,6 @@ async function handlePdfDownloadDirect(button, progressIndicator) {
   }
 }
 
-/**
- * 从 Abstract 页面获取完整元数据（用于 PDF 页面）
- */
 async function fetchMetadataFromAbsPage() {
   const arxivId = metadataExtractor._extractIdFromUrl(window.location.href);
 
@@ -361,9 +345,6 @@ async function fetchMetadataFromAbsPage() {
   return await metadataExtractor.fetchMetadataFromApi(arxivId);
 }
 
-/**
- * 更新进度 UI
- */
 function updateProgressUI(progress) {
   const progressIndicator = document.querySelector(".arxiv-md-progress");
   if (!progressIndicator) return;

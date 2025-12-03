@@ -1,4 +1,4 @@
-// Background Service Worker - 处理消息、管理转换任务
+// Background Service Worker
 
 import converter from "@core/converter";
 import logger from "@utils/logger";
@@ -6,20 +6,17 @@ import storage from "@utils/storage";
 
 logger.info("Background service worker initialized");
 
-/**
- * 监听来自 Content Script 或 Popup 的消息
- */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   logger.debug("Received message:", message);
 
   switch (message.type) {
     case "CONVERT_PAPER":
       handleConvertPaper(message.data, sendResponse, sender);
-      return true; // 异步响应
+      return true;
 
     case "DOWNLOAD_PDF":
       handleDownloadPdf(message.data, sendResponse, sender);
-      return true; // 异步响应
+      return true;
 
     case "GET_STATISTICS":
       handleGetStatistics(sendResponse);
@@ -36,9 +33,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-/**
- * 处理论文转换请求
- */
 async function handleConvertPaper(paperInfo, sendResponse, sender) {
   logger.info("Handling convert request:", paperInfo);
   const tabId = sender?.tab?.id;
@@ -60,9 +54,6 @@ async function handleConvertPaper(paperInfo, sendResponse, sender) {
   }
 }
 
-/**
- * 处理 PDF 下载请求
- */
 async function handleDownloadPdf(paperInfo, sendResponse, sender) {
   logger.info("Handling PDF download request:", paperInfo);
   const tabId = sender?.tab?.id;
@@ -76,9 +67,6 @@ async function handleDownloadPdf(paperInfo, sendResponse, sender) {
   }
 }
 
-/**
- * 获取统计数据
- */
 async function handleGetStatistics(sendResponse) {
   try {
     const stats = await storage.getStatistics();
@@ -89,9 +77,6 @@ async function handleGetStatistics(sendResponse) {
   }
 }
 
-/**
- * 监听扩展安装/更新
- */
 chrome.runtime.onInstalled.addListener((details) => {
   logger.info("Extension installed/updated:", details.reason);
 
@@ -105,9 +90,6 @@ chrome.runtime.onInstalled.addListener((details) => {
   }
 });
 
-/**
- * 监听快捷键
- */
 if (chrome.commands && chrome.commands.onCommand) {
   chrome.commands.onCommand.addListener((command) => {
     logger.debug("Command received:", command);

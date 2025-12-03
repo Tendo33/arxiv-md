@@ -1,4 +1,4 @@
-// Popup UI 逻辑 - 简化版，只提供设置入口
+// Popup UI 逻辑
 
 import logger from "@utils/logger";
 
@@ -7,9 +7,6 @@ import { translations } from "@config/locales";
 
 document.addEventListener("DOMContentLoaded", init);
 
-/**
- * 初始化
- */
 async function init() {
   logger.debug("Popup initialized");
 
@@ -24,9 +21,6 @@ async function init() {
   });
 }
 
-/**
- * 更新页面语言
- */
 function updateLanguage(lang) {
   const t = translations[lang];
 

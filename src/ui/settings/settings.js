@@ -1,4 +1,4 @@
-// Settings 页面逻辑 - 配置管理、Token 验证、统计展示
+// Settings 页面逻辑
 
 import storage from "@utils/storage";
 import { CONVERSION_MODE } from "@config/constants";
@@ -10,9 +10,6 @@ let currentLang = "en";
 
 document.addEventListener("DOMContentLoaded", init);
 
-/**
- * 初始化
- */
 async function init() {
   logger.debug("Settings page initialized");
 
@@ -37,9 +34,6 @@ async function init() {
   bindEvents();
 }
 
-/**
- * 更新页面语言
- */
 function updateLanguage(lang) {
   currentLang = lang;
   const t = translations[lang];
@@ -67,9 +61,6 @@ function updateLanguage(lang) {
   storage.setLanguage(lang);
 }
 
-/**
- * 加载设置
- */
 async function loadSettings() {
   try {
     const mode = await storage.getConversionMode();
@@ -92,9 +83,6 @@ async function loadSettings() {
   }
 }
 
-/**
- * 加载统计数据
- */
 async function loadStatistics() {
   try {
     const stats = await storage.getStatistics();
@@ -111,9 +99,6 @@ async function loadStatistics() {
   }
 }
 
-/**
- * 绑定事件
- */
 function bindEvents() {
   // 语言切换
   document.getElementById("langToggle").addEventListener("click", () => {
@@ -143,9 +128,6 @@ function bindEvents() {
     .addEventListener("blur", validateToken);
 }
 
-/**
- * 保存设置
- */
 async function saveSettings() {
   const btn = document.getElementById("saveBtn");
   const t = translations[currentLang];
@@ -177,9 +159,6 @@ async function saveSettings() {
   }
 }
 
-/**
- * 恢复默认设置
- */
 async function resetSettings() {
   const t = translations[currentLang];
   if (!confirm(t.confirm_reset)) return;
@@ -202,9 +181,6 @@ async function resetSettings() {
   }
 }
 
-/**
- * Toggle Token 可见性
- */
 function toggleTokenVisibility() {
   const input = document.getElementById("mineruToken");
   const btn = document.getElementById("toggleTokenBtn");
@@ -228,9 +204,6 @@ function toggleTokenVisibility() {
   }
 }
 
-/**
- * 验证 Token
- */
 async function validateToken() {
   const token = document.getElementById("mineruToken").value.trim();
   const statusEl = document.getElementById("tokenStatus");
@@ -255,9 +228,6 @@ async function validateToken() {
   statusEl.textContent = t.token_valid;
 }
 
-/**
- * 重置统计数据
- */
 async function resetStatistics() {
   const t = translations[currentLang];
   if (!confirm(t.confirm_stats_reset)) return;
@@ -279,9 +249,6 @@ async function resetStatistics() {
   }
 }
 
-/**
- * 显示 Toast 提示
- */
 function showToast(message, type = "info") {
   const toast = document.getElementById("toast");
   const messageEl = toast.querySelector(".toast-message");

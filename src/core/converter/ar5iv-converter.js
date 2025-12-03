@@ -1,5 +1,4 @@
 // ar5iv HTML → Markdown 转换器
-// 在 Content Script 中执行 Turndown 转换（Service Worker 不支持 DOM API）
 
 import { parseHTML } from "linkedom";
 import { API } from "@config/constants";
@@ -36,9 +35,6 @@ class Ar5ivConverter {
     });
   }
 
-  /**
-   * 检查 ar5iv 版本是否存在
-   */
   async checkAvailability(arxivId) {
     const url = `${API.AR5IV_BASE}/${arxivId}`;
     try {
@@ -51,9 +47,6 @@ class Ar5ivConverter {
     }
   }
 
-  /**
-   * 获取 ar5iv HTML 内容
-   */
   async fetchHtml(arxivId) {
     const url = `${API.AR5IV_BASE}/${arxivId}`;
     try {
@@ -70,9 +63,6 @@ class Ar5ivConverter {
     }
   }
 
-  /**
-   * 清洗 ar5iv HTML，提取主要内容
-   */
   cleanHtml(html) {
     try {
       const { document } = parseHTML(html);
@@ -140,9 +130,6 @@ class Ar5ivConverter {
     }
   }
 
-  /**
-   * 将 HTML 转换为 Markdown（委托给 Content Script）
-   */
   async toMarkdown(html, tabId) {
     try {
       const markdown = await this._convertToMarkdownInContentScript(
@@ -157,9 +144,6 @@ class Ar5ivConverter {
     }
   }
 
-  /**
-   * 完整转换流程：ar5iv → Markdown
-   */
   async convert(arxivId, tabId) {
     logger.info(`Starting ar5iv conversion for ${arxivId}`);
 
