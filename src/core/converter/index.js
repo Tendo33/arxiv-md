@@ -162,11 +162,7 @@ class MainConverter {
 
       if (onProgress)
         onProgress({ tier: "pdf", stage: "completed", progress: 100 });
-      showNotification(
-        "ℹ️ 已保存为 PDF",
-        `文件：${filename}`,
-        "basic",
-      );
+      showNotification("ℹ️ 已保存为 PDF", `文件：${filename}`, "basic");
       logger.info("Tier 2 success:", filename);
 
       return { success: true, tier: CONVERSION_TIER.PDF_FALLBACK, filename };
@@ -201,17 +197,13 @@ class MainConverter {
         },
         "pdf",
       );
-      
+
       logger.debug("Generated filename:", filename);
 
       const pdfUrl = paperInfo.pdfUrl || `${API.ARXIV_PDF}/${arxivId}.pdf`;
       await downloadFile(pdfUrl, filename);
 
-      showNotification(
-        "✅ PDF 已保存",
-        `文件：${filename}`,
-        "basic",
-      );
+      showNotification("✅ PDF 已保存", `文件：${filename}`, "basic");
       logger.info("PDF download success:", filename);
 
       return { success: true, filename };

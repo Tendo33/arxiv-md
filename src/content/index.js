@@ -166,7 +166,10 @@ function injectConvertButton() {
   container.appendChild(progressIndicator);
 
   // 插入到 Submission history 后面
-  submissionHistory.parentNode.insertBefore(container, submissionHistory.nextSibling);
+  submissionHistory.parentNode.insertBefore(
+    container,
+    submissionHistory.nextSibling,
+  );
 
   logger.info("Convert buttons injected below Submission history");
 
@@ -180,7 +183,7 @@ async function checkAr5ivAvailability(button) {
     if (!arxivId) return;
 
     // Set initial state (optional, maybe loading?)
-    // button.textContent = "Checking..."; 
+    // button.textContent = "Checking...";
 
     chrome.runtime.sendMessage(
       { type: "CHECK_AR5IV", data: arxivId },
@@ -194,14 +197,14 @@ async function checkAr5ivAvailability(button) {
           logger.info(`ar5iv not available for ${arxivId}, hiding button`);
           button.style.display = "none";
 
-          // Also hide the container if only PDF button remains? 
+          // Also hide the container if only PDF button remains?
           // No, PDF button is still useful.
           // But maybe we should update the container layout if one button is missing?
           // The container has flex gap, so it should be fine.
         } else {
           logger.debug(`ar5iv available for ${arxivId}`);
         }
-      }
+      },
     );
   } catch (error) {
     logger.error("Error checking ar5iv availability:", error);
@@ -261,17 +264,18 @@ async function handleConversionTrigger(type = "markdown") {
     );
   } catch (error) {
     logger.error("Conversion trigger failed:", error);
-    
+
     // 恢复按钮状态
-    const activeButton = type === "markdown" 
-      ? document.querySelector(".arxiv-md-convert-btn")
-      : document.querySelector(".arxiv-pdf-download-btn");
+    const activeButton =
+      type === "markdown"
+        ? document.querySelector(".arxiv-md-convert-btn")
+        : document.querySelector(".arxiv-pdf-download-btn");
     if (activeButton) {
       activeButton.disabled = false;
       activeButton.style.opacity = "1";
       activeButton.style.cursor = "pointer";
     }
-    
+
     const progressIndicator = document.querySelector(".arxiv-md-progress");
     if (progressIndicator) {
       progressIndicator.style.display = "none";
@@ -284,14 +288,17 @@ async function handlePdfDownloadDirect(button, progressIndicator) {
     // 使用页面标题作为文件名（参考脚本方式）
     const pageTitle = document.title;
     const illegalChars = /[\/\\:*?"<>|\[\]]/g;
-    const cleanTitle = pageTitle.replace(illegalChars, ' ').replace(/\s+/g, ' ').trim();
+    const cleanTitle = pageTitle
+      .replace(illegalChars, " ")
+      .replace(/\s+/g, " ")
+      .trim();
     const filename = `${cleanTitle}.pdf`;
-    
+
     // 构造 PDF URL
-    const pdfUrl = window.location.href.replace('/abs/', '/pdf/');
-    
+    const pdfUrl = window.location.href.replace("/abs/", "/pdf/");
+
     logger.info("Downloading PDF:", filename);
-    
+
     // 更新按钮文本
     if (button) {
       button.innerHTML = `
@@ -302,30 +309,30 @@ async function handlePdfDownloadDirect(button, progressIndicator) {
         Downloading...
       `;
     }
-    
+
     // Fetch PDF
     const response = await fetch(pdfUrl);
     if (!response.ok) {
       throw new Error(`Failed to fetch PDF: ${response.status}`);
     }
-    
+
     const blob = await response.blob();
-    
+
     // 创建下载链接
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = filename;
-    a.style.display = 'none';
+    a.style.display = "none";
     document.body.appendChild(a);
     a.click();
-    
+
     // 清理
     setTimeout(() => {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     }, 100);
-    
+
     // 恢复按钮状态
     if (button) {
       button.disabled = false;
@@ -339,16 +346,15 @@ async function handlePdfDownloadDirect(button, progressIndicator) {
         Save PDF (Renamed)
       `;
     }
-    
+
     if (progressIndicator) {
       progressIndicator.style.display = "none";
     }
-    
+
     logger.info("PDF download complete:", filename);
-    
   } catch (error) {
     logger.error("PDF download failed:", error);
-    
+
     // 恢复按钮状态
     if (button) {
       button.disabled = false;
@@ -362,11 +368,11 @@ async function handlePdfDownloadDirect(button, progressIndicator) {
         Save PDF (Renamed)
       `;
     }
-    
+
     if (progressIndicator) {
       progressIndicator.style.display = "none";
     }
-    
+
     throw error;
   }
 }

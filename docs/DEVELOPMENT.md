@@ -212,15 +212,15 @@ async checkAvailability(arxivId) {
 
 ```javascript
 // ❌ 在 background/index.js 中直接使用 DOM API
-const div = document.createElement('div'); // Error: document is not defined
+const div = document.createElement("div"); // Error: document is not defined
 ```
 
 **正确做法**：
 
 ```javascript
 // ✅ 使用 linkedom
-import { parseHTML } from 'linkedom';
-const { document } = parseHTML('<div></div>');
+import { parseHTML } from "linkedom";
+const { document } = parseHTML("<div></div>");
 ```
 
 或者将 DOM 操作委托给 Content Script：
@@ -228,8 +228,8 @@ const { document } = parseHTML('<div></div>');
 ```javascript
 // ✅ 发送消息给 Content Script
 chrome.tabs.sendMessage(tabId, {
-  type: 'CONVERT_HTML_TO_MARKDOWN',
-  data: { html: rawHtml }
+  type: "CONVERT_HTML_TO_MARKDOWN",
+  data: { html: rawHtml },
 });
 ```
 
@@ -351,21 +351,21 @@ const MAX_RETRY_COUNT = 3;
 async convert(paperInfo) {
   const arxivId = paperInfo.arxivId;
   const ar5ivUrl = `https://ar5iv.labs.arxiv.org/html/${arxivId}`;
-  
+
   // 1. 获取 ar5iv HTML
   const response = await fetch(ar5ivUrl);
   if (!response.ok) {
     throw new Error(`ar5iv unavailable: ${response.status}`);
   }
-  
+
   const html = await response.text();
-  
+
   // 2. 清洗内容（使用 Readability）
   const cleanHtml = this._cleanContent(html);
-  
+
   // 3. 转换为 Markdown（使用 Turndown）
   const markdown = this._convertToMarkdown(cleanHtml);
-  
+
   return {
     markdown: markdown,
     metadata: {
@@ -386,19 +386,19 @@ async convert(paperInfo) {
 
 async convert(paperInfo, progressCallback) {
   const pdfUrl = paperInfo.pdfUrl;
-  
+
   // 1. 下载 PDF（0-20%）
   progressCallback({ progress: 0, stage: 'downloading' });
   const pdfBlob = await this._downloadPDF(pdfUrl);
-  
+
   // 2. 提交任务（20-40%）
   progressCallback({ progress: 20, stage: 'uploading' });
   const taskId = await this._submitTask(pdfBlob);
-  
+
   // 3. 轮询结果（40-100%）
   progressCallback({ progress: 40, stage: 'processing' });
   const result = await this._pollResult(taskId, progressCallback);
-  
+
   return {
     markdown: result.markdown,
     metadata: {
@@ -535,6 +535,7 @@ git push origin v1.0.0
 **问题**：Service Worker 可能随时被停用，导致状态丢失。
 
 **解决**：
+
 - 不要依赖全局变量存储状态
 - 使用 `chrome.storage` 持久化关键数据
 - 监听 `chrome.runtime.onStartup` 恢复状态
@@ -544,6 +545,7 @@ git push origin v1.0.0
 **问题**：页面加载时 DOM 可能未完成，导致按钮注入失败。
 
 **解决**：
+
 - 使用 `run_at: "document_end"` (manifest.json)
 - 添加 MutationObserver 监听 DOM 变化
 - 提供手动重试按钮
@@ -553,6 +555,7 @@ git push origin v1.0.0
 **问题**：Content Script 中的 fetch 受页面 CORS 限制。
 
 **解决**：
+
 - 在 Background Worker 中发起跨域请求
 - 使用消息传递转发数据
 - 配置 `host_permissions` (manifest.json)

@@ -41,7 +41,7 @@
             </svg>
             <h1>arXiv to Markdown</h1>
           </div>
-          <div style="display: flex; align-items: center; gap: 15px;">
+          <div style="display: flex; align-items: center; gap: 15px">
             <button class="btn-lang" id="langToggle" title="Switch Language">
               <span id="langIcon">🌐</span>
               <span id="langText">中文</span>
@@ -57,31 +57,35 @@
         <div class="welcome-banner" id="welcomeBanner" style="display: none">
           <h2 data-i18n="welcome_title">🎉 Welcome to arXiv to Markdown!</h2>
           <p data-i18n="welcome_desc">
-            Convert arXiv papers to Markdown with one click. 
-            Fast conversion with ar5iv, automatic PDF fallback.
+            Convert arXiv papers to Markdown with one click. Fast conversion
+            with ar5iv, automatic PDF fallback.
           </p>
         </div>
 
         <!-- Conversion Mode Section -->
         <section class="settings-section">
           <h2 data-i18n="mode_title">Conversion Mode</h2>
-          <p class="section-description" data-i18n="mode_desc">Choose your default conversion strategy</p>
+          <p class="section-description" data-i18n="mode_desc">
+            Choose your default conversion strategy
+          </p>
 
           <div class="mode-cards">
             <label class="mode-card">
-              <input
-                type="radio"
-                name="conversionMode"
-                value="fast"
-                checked
-              />
+              <input type="radio" name="conversionMode" value="fast" checked />
               <div class="mode-content">
                 <div class="mode-icon">⚡</div>
-                <div class="mode-title" data-i18n="mode_standard_title">Standard Mode</div>
+                <div class="mode-title" data-i18n="mode_standard_title">
+                  Standard Mode
+                </div>
                 <div class="mode-description" data-i18n="mode_standard_desc">
                   ar5iv + local conversion, PDF fallback
                 </div>
-                <div class="mode-badge mode-badge-recommended" data-i18n="mode_recommended">Recommended</div>
+                <div
+                  class="mode-badge mode-badge-recommended"
+                  data-i18n="mode_recommended"
+                >
+                  Recommended
+                </div>
               </div>
             </label>
 
@@ -89,11 +93,15 @@
               <input type="radio" name="conversionMode" value="always" />
               <div class="mode-content">
                 <div class="mode-icon">💎</div>
-                <div class="mode-title" data-i18n="mode_mineru_title">MinerU Mode</div>
+                <div class="mode-title" data-i18n="mode_mineru_title">
+                  MinerU Mode
+                </div>
                 <div class="mode-description" data-i18n="mode_mineru_desc">
                   Always use MinerU (manual, requires token)
                 </div>
-                <div class="mode-badge" data-i18n="mode_requires_token">Requires Token</div>
+                <div class="mode-badge" data-i18n="mode_requires_token">
+                  Requires Token
+                </div>
               </div>
             </label>
           </div>
@@ -102,10 +110,14 @@
         <!-- MinerU API Section -->
         <section class="settings-section">
           <h2 data-i18n="mineru_title">MinerU API Configuration</h2>
-          <p class="section-description" data-i18n="mineru_desc">Optional: For manual MinerU mode only</p>
+          <p class="section-description" data-i18n="mineru_desc">
+            Optional: For manual MinerU mode only
+          </p>
 
           <div class="form-group">
-            <label for="mineruToken" data-i18n="mineru_token_label">API Token</label>
+            <label for="mineruToken" data-i18n="mineru_token_label"
+              >API Token</label
+            >
             <div class="input-group">
               <input
                 type="password"
@@ -129,12 +141,18 @@
             </div>
             <div class="form-hint">
               🔗
-              <a href="https://mineru.net" target="_blank" data-i18n="mineru_visit">Visit mineru.net</a>
-              <span data-i18n="mineru_hint">to register and get your token</span>
+              <a
+                href="https://mineru.net"
+                target="_blank"
+                data-i18n="mineru_visit"
+                >Visit mineru.net</a
+              >
+              <span data-i18n="mineru_hint"
+                >to register and get your token</span
+              >
             </div>
             <div class="token-status" id="tokenStatus"></div>
           </div>
-
         </section>
 
         <!-- Advanced Settings -->
@@ -144,21 +162,27 @@
           <div class="form-group">
             <label class="checkbox-label">
               <input type="checkbox" id="autoConvert" />
-              <span data-i18n="advanced_auto">Auto-convert (show prompt on paper page load)</span>
+              <span data-i18n="advanced_auto"
+                >Auto-convert (show prompt on paper page load)</span
+              >
             </label>
           </div>
 
           <div class="form-group">
             <label class="checkbox-label">
               <input type="checkbox" id="includeMetadata" checked />
-              <span data-i18n="advanced_metadata">Include metadata in Markdown (title, authors, ID, etc.)</span>
+              <span data-i18n="advanced_metadata"
+                >Include metadata in Markdown (title, authors, ID, etc.)</span
+              >
             </label>
           </div>
 
           <div class="form-group">
             <label class="checkbox-label">
               <input type="checkbox" id="showNotifications" checked />
-              <span data-i18n="advanced_notifications">Show desktop notifications</span>
+              <span data-i18n="advanced_notifications"
+                >Show desktop notifications</span
+              >
             </label>
           </div>
         </section>
@@ -170,15 +194,21 @@
           <div class="stats-grid">
             <div class="stat-item">
               <div class="stat-number" id="totalConversions">0</div>
-              <div class="stat-label" data-i18n="stats_total">Total Conversions</div>
+              <div class="stat-label" data-i18n="stats_total">
+                Total Conversions
+              </div>
             </div>
             <div class="stat-item">
               <div class="stat-number" id="ar5ivSuccess">0</div>
-              <div class="stat-label" data-i18n="stats_ar5iv">ar5iv Success</div>
+              <div class="stat-label" data-i18n="stats_ar5iv">
+                ar5iv Success
+              </div>
             </div>
             <div class="stat-item">
               <div class="stat-number" id="mineruSuccess">0</div>
-              <div class="stat-label" data-i18n="stats_mineru">MinerU Success</div>
+              <div class="stat-label" data-i18n="stats_mineru">
+                MinerU Success
+              </div>
             </div>
             <div class="stat-item">
               <div class="stat-number" id="pdfFallback">0</div>
@@ -186,15 +216,23 @@
             </div>
           </div>
 
-          <button class="btn btn-secondary" id="resetStatsBtn" data-i18n="stats_reset">
+          <button
+            class="btn btn-secondary"
+            id="resetStatsBtn"
+            data-i18n="stats_reset"
+          >
             Reset Statistics
           </button>
         </section>
 
         <!-- Actions -->
         <div class="actions-bar">
-          <button class="btn btn-primary" id="saveBtn" data-i18n="btn_save">Save Settings</button>
-          <button class="btn btn-secondary" id="resetBtn" data-i18n="btn_reset">Reset to Default</button>
+          <button class="btn btn-primary" id="saveBtn" data-i18n="btn_save">
+            Save Settings
+          </button>
+          <button class="btn btn-secondary" id="resetBtn" data-i18n="btn_reset">
+            Reset to Default
+          </button>
         </div>
       </main>
 

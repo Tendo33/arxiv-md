@@ -1,5 +1,3 @@
-
-
 import { REGEX } from "@config/constants";
 
 export function extractArxivId(text) {
@@ -42,8 +40,6 @@ export function generateFilename(metadata, extension = "md") {
 export function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
-
-
 
 export function downloadFile(url, filename) {
   return new Promise((resolve, reject) => {
@@ -113,17 +109,15 @@ export function downloadBlob(blob, filename) {
   reader.readAsDataURL(blob);
 }
 
-
-
 export async function showNotification(title, message, type = "basic") {
   // 检查用户是否启用了桌面通知
   const showNotifications = await chrome.storage.sync.get("showNotifications");
-  
+
   // 默认启用通知（向后兼容）
   if (showNotifications.showNotifications === false) {
     return; // 用户禁用了通知，直接返回
   }
-  
+
   chrome.notifications.create({
     type: type,
     iconUrl: "assets/icon-128.png",

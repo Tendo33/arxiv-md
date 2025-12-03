@@ -37,7 +37,7 @@ async function init() {
 function updateLanguage(lang) {
   currentLang = lang;
   const t = translations[lang];
-  
+
   // 更新所有带 data-i18n 属性的元素
   document.querySelectorAll("[data-i18n]").forEach((el) => {
     const key = el.getAttribute("data-i18n");
@@ -55,8 +55,9 @@ function updateLanguage(lang) {
   });
 
   // 更新语言按钮文本
-  document.getElementById("langText").textContent = lang === "en" ? "中文" : "English";
-  
+  document.getElementById("langText").textContent =
+    lang === "en" ? "中文" : "English";
+
   // 保存语言设置
   storage.setLanguage(lang);
 }
@@ -145,7 +146,8 @@ async function saveSettings() {
       await storage.setMinerUToken(token);
     }
 
-    const showNotifications = document.getElementById("showNotifications").checked;
+    const showNotifications =
+      document.getElementById("showNotifications").checked;
     await storage.setShowNotifications(showNotifications);
 
     logger.info("Settings saved");
@@ -214,7 +216,7 @@ async function validateToken() {
   }
 
   const t = translations[currentLang];
-  
+
   // 简单的格式验证（实际应该调用 API 验证）
   if (token.length < 10) {
     statusEl.className = "token-status error";

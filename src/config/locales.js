@@ -3,7 +3,8 @@ export const translations = {
     // Popup
     popup_title: "arXiv to Markdown",
     popup_welcome: "Welcome!",
-    popup_desc: "Visit any arXiv paper page to see the conversion buttons below the submission history.",
+    popup_desc:
+      "Visit any arXiv paper page to see the conversion buttons below the submission history.",
     popup_feature_fast: "Fast ar5iv conversion",
     popup_feature_renamed: "Auto-renamed PDFs",
     popup_feature_local: "100% local processing",
@@ -12,7 +13,8 @@ export const translations = {
 
     // Settings
     welcome_title: "🎉 Welcome to arXiv to Markdown!",
-    welcome_desc: "Convert arXiv papers to Markdown with one click. Fast conversion with ar5iv, automatic PDF fallback.",
+    welcome_desc:
+      "Convert arXiv papers to Markdown with one click. Fast conversion with ar5iv, automatic PDF fallback.",
     mode_title: "Conversion Mode",
     mode_desc: "Choose your default conversion strategy",
     mode_standard_title: "Standard Mode",
@@ -35,7 +37,8 @@ export const translations = {
     mineru_quota: "Free tier: 2000 pages/day",
     advanced_title: "Advanced Options",
     advanced_auto: "Auto-convert (show prompt on paper page load)",
-    advanced_metadata: "Include metadata in Markdown (title, authors, ID, etc.)",
+    advanced_metadata:
+      "Include metadata in Markdown (title, authors, ID, etc.)",
     advanced_notifications: "Show desktop notifications",
     stats_title: "Usage Statistics",
     stats_total: "Total Conversions",
@@ -67,7 +70,8 @@ export const translations = {
 
     // Settings
     welcome_title: "🎉 欢迎使用 arXiv to Markdown！",
-    welcome_desc: "一键将 arXiv 论文转换为 Markdown，支持 ar5iv 快速转换和 PDF 自动降级。",
+    welcome_desc:
+      "一键将 arXiv 论文转换为 Markdown，支持 ar5iv 快速转换和 PDF 自动降级。",
     mode_title: "转换模式",
     mode_desc: "选择论文转换的默认策略",
     mode_standard_title: "标准模式",
@@ -108,5 +112,5 @@ export const translations = {
     token_invalid: "❌ Token 格式无效（长度过短）",
     token_valid: "✅ Token 格式正确（建议保存后测试）",
     saving: "保存中...",
-  }
+  },
 };
