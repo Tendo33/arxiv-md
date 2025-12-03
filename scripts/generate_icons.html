@@ -96,7 +96,7 @@
           };
           img.onerror = reject;
           // 从上级目录的 assets 文件夹加载
-          img.src = "../assets/icon.png";
+          img.src = "../assets/icon.svg";
         });
       }
 
@@ -131,7 +131,7 @@
           });
         } catch (error) {
           alert(
-            "无法加载 icon.png，请确保文件位于 ../assets/icon.png\n\n错误: " +
+            "无法加载 icon.svg，请确保文件位于 ../assets/icon.svg\n\n错误: " +
               error.message,
           );
           console.error("Failed to load source image:", error);
