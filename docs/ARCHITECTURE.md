@@ -1,10 +1,14 @@
-# 架构设计文档
+# Architecture Design | 架构设计文档
 
-## 概述
+## Overview | 概述
 
-arXiv to Markdown 采用**三层智能降级架构**，在速度、质量和可用性之间达到最佳平衡。
+arXiv to Markdown uses a **two-tier intelligent fallback architecture** to achieve optimal balance between speed, quality, and availability.
 
-## 核心架构
+arXiv to Markdown 采用**两层智能降级架构**，在速度、质量和可用性之间达到最佳平衡。
+
+---
+
+## Core Architecture | 核心架构
 
 ```
 ┌─────────────────────────────────────────────────┐
@@ -30,209 +34,179 @@ arXiv to Markdown 采用**三层智能降级架构**，在速度、质量和可�
        │               │               │
        ▼               ▼               ▼
 ┌────────────┐  ┌─────────────┐  ┌──────────┐
-│  ar5iv     │  │   MinerU    │  │   PDF    │
-│ Converter  │  │   Client    │  │ Fallback │
-│ (Tier 1)   │  │  (Tier 2)   │  │ (Tier 3) │
+│  ar5iv     │  │   ar5iv     │  │   PDF    │
+│ Converter  │  │   Check     │  │ Fallback │
+│ (Tier 1)   │  │  (HEAD req) │  │ (Tier 2) │
 └────────────┘  └─────────────┘  └──────────┘
 ```
 
-## 模块设计
+---
+
+## Module Design | 模块设计
 
 ### 1. Content Script (`src/content/`)
 
-**职责：**
+**Responsibilities | 职责：**
 
-- 注入"保存为 Markdown"按钮到 arXiv 页面
-- 提取论文元数据（标题、作者、ID）
-- 监听用户交互，触发转换
-- 显示进度和结果反馈
+- Inject "Save as Markdown" button to arXiv pages | 注入"保存为 Markdown"按钮到 arXiv 页面
+- Extract paper metadata (title, authors, ID) | 提取论文元数据（标题、作者、ID）
+- Listen to user interactions, trigger conversion | 监听用户交互，触发转换
+- Display progress and result feedback | 显示进度和结果反馈
 
-**技术亮点：**
+**Technical Highlights | 技术亮点：**
 
-- DOM 操作和 CSS 注入
-- Message Passing 与 Background 通信
-- Toast 通知系统
+- DOM manipulation and CSS injection | DOM 操作和 CSS 注入
+- Message Passing with Background | 与 Background 通信
+- Toast notification system | Toast 通知系统
 
 ### 2. Background Worker (`src/background/`)
 
-**职责：**
+**Responsibilities | 职责：**
 
-- 接收转换请求
-- 协调 Core Converter
-- 管理扩展生命周期
-- 处理快捷键和通知
+- Receive conversion requests | 接收转换请求
+- Coordinate Core Converter | 协调 Core Converter
+- Manage extension lifecycle | 管理扩展生命周期
+- Handle shortcuts and notifications | 处理快捷键和通知
 
-**技术亮点：**
+**Technical Highlights | 技术亮点：**
 
 - Service Worker (Manifest V3)
-- 异步消息处理
-- Keep-alive 机制
+- Async message handling | 异步消息处理
+- Keep-alive mechanism | Keep-alive 机制
 
 ### 3. Core Converter (`src/core/converter/`)
 
 #### 3.1 ar5iv Converter (Tier 1)
 
-**转换流程：**
+**Conversion Flow | 转换流程：**
 
 ```
+ar5iv URL → fetch HTML → Readability cleanup → Turndown convert → Markdown
 ar5iv URL → fetch HTML → Readability 清洗 → Turndown 转换 → Markdown
 ```
 
-**自定义规则：**
+**Custom Rules | 自定义规则：**
 
-- LaTeX 公式：提取 `<annotation encoding="application/x-tex">`
-- 图片：保留 ar5iv CDN 链接
-- 表格：启用 GFM 插件
-- 引用：提取 `.ltx_cite` 节点
+- LaTeX formulas: Extract `<annotation encoding="application/x-tex">` | LaTeX 公式：提取
+- Images: Preserve ar5iv CDN links | 图片：保留 ar5iv CDN 链接
+- Tables: Enable GFM plugin | 表格：启用 GFM 插件
+- Citations: Extract `.ltx_cite` nodes | 引用：提取 `.ltx_cite` 节点
 
-#### 3.2 MinerU Client (Tier 2)
+#### 3.2 Main Controller (`index.js`)
 
-**API 调用流程：**
-
-```
-PDF URL → 下载 Blob → POST /task → 获取 task_id → 轮询 /result → Markdown
-```
-
-**进度反馈：**
-
-- 下载中：0-20%
-- 上传中：20-40%
-- 解析中：40-100%（根据 API 返回进度）
-
-#### 3.3 主控制器 (`index.js`)
-
-**决策逻辑：**
+**Decision Logic | 决策逻辑：**
 
 ```javascript
-if (mode === ALWAYS_MINERU && hasMinerUToken) {
-  return convertWithMinerU();
-}
-
 try {
   return await ar5ivConverter.convert(); // Tier 1
 } catch {
-  if (mode === QUALITY && hasMinerUToken) {
-    return await mineruClient.convert(); // Tier 2
-  }
-  return downloadPDF(); // Tier 3
+  return downloadPDF(); // Tier 2 (Fallback)
 }
 ```
 
 ### 4. Metadata Extractor (`src/core/metadata-extractor.js`)
 
-**提取策略：**
+**Extraction Strategy | 提取策略：**
 
-1. **优先：** 从 Abstract 页面 DOM 提取
-2. **备用：** 调用 arXiv export API
-3. **兜底：** 使用 arXiv ID 生成最小元数据
+1. **Priority | 优先：** Extract from Abstract page DOM | 从 Abstract 页面 DOM 提取
+2. **Backup | 备用：** Call arXiv export API | 调用 arXiv export API
+3. **Fallback | 兜底：** Generate minimal metadata from arXiv ID | 使用 arXiv ID 生成最小元数据
 
-**提取字段：**
+**Extracted Fields | 提取字段：**
 
-- `arxivId` - arXiv 标识符
-- `title` - 论文标题
-- `authors` - 作者列表
-- `abstract` - 摘要
-- `year` - 发表年份
-- `subjects` - 分类标签
-- `pdfUrl` - PDF 下载链接
+- `arxivId` - arXiv identifier | arXiv 标识符
+- `title` - Paper title | 论文标题
+- `authors` - Author list | 作者列表
+- `abstract` - Abstract | 摘要
+- `year` - Publication year | 发表年份
+- `subjects` - Category tags | 分类标签
+- `pdfUrl` - PDF download link | PDF 下载链接
 
 ### 5. UI Layer (`src/ui/`)
 
 #### Popup (`popup/`)
 
-- 状态展示（转换模式、Token 状态）
-- 统计数据（总转换数、成功率）
-- 快捷操作（一键转换当前论文）
+- Status display (conversion mode, Token status) | 状态展示（转换模式、Token 状态）
+- Statistics (total conversions, success rate) | 统计数据（总转换数、成功率）
+- Quick actions (one-click convert current paper) | 快捷操作（一键转换当前论文）
 
 #### Settings (`settings/`)
 
-- 转换模式选择（卡片式选择器）
-- MinerU Token 配置（密码输入 + 可见性切换）
-- 高级选项（通知、元数据等）
-- 统计数据展示和重置
+- Conversion mode selection (card-style selector) | 转换模式选择（卡片式选择器）
+- Advanced options (notifications, metadata, etc.) | 高级选项（通知、元数据等）
+- Statistics display and reset | 统计数据展示和重置
 
 ### 6. Utils Layer (`src/utils/`)
 
 #### Logger (`logger.js`)
 
-- 分级日志（ERROR, WARN, INFO, DEBUG）
-- 时间戳和命名空间
-- 开发/生产环境区分
+- Leveled logging (ERROR, WARN, INFO, DEBUG) | 分级日志
+- Timestamps and namespaces | 时间戳和命名空间
+- Dev/prod environment distinction | 开发/生产环境区分
 
 #### Storage (`storage.js`)
 
-- Chrome Storage API 封装
-- 业务特定方法（`getMinerUToken`, `getStatistics` 等）
-- 类型安全和错误处理
+- Chrome Storage API wrapper | Chrome Storage API 封装
+- Business-specific methods (`getStatistics`, etc.) | 业务特定方法
+- Type safety and error handling | 类型安全和错误处理
 
 #### Helpers (`helpers.js`)
 
-- arXiv ID 提取
-- 文件名清理和生成
-- 下载管理
-- 通知创建
-- 时间/字节格式化
+- arXiv ID extraction | arXiv ID 提取
+- Filename cleanup and generation | 文件名清理和生成
+- Download management | 下载管理
+- Notification creation | 通知创建
+- Time/byte formatting | 时间/字节格式化
 
-### 6. Environment Adaptation（环境适配层）
+---
 
-#### 6.1 DOM 解析策略
+## Environment Adaptation | 环境适配层
+
+### DOM Parsing Strategy | DOM 解析策略
+
+**Challenge**: Chrome Extension Manifest V3's Service Worker environment cannot access browser DOM API.
 
 **挑战**：Chrome Extension Manifest V3 的 Service Worker 环境无法访问浏览器 DOM API。
 
-**解决方案**：
+**Solution | 解决方案**：
 
-- **Content Script**（浏览器环境）：
-  - 直接使用原生 DOM API
-  - 执行 Turndown 转换（CONVERT_HTML_TO_MARKDOWN）
-  - 优势：性能最佳，完全兼容
+- **Content Script** (browser environment | 浏览器环境):
+  - Use native DOM API directly | 直接使用原生 DOM API
+  - Execute Turndown conversion (CONVERT_HTML_TO_MARKDOWN) | 执行 Turndown 转换
+  - Advantage: Best performance, full compatibility | 优势：性能最佳，完全兼容
 
-- **Service Worker**（后台环境）：
-  - 使用 linkedom 提供 DOM 模拟
-  - 轻量级（~200KB），专为 Node.js/Worker 设计
-  - 支持 Readability 和 Turndown 所需的基础 DOM API
+- **Service Worker** (background environment | 后台环境):
+  - Use linkedom for DOM simulation | 使用 linkedom 提供 DOM 模拟
+  - Lightweight (~200KB), designed for Node.js/Worker | 轻量级，专为 Node.js/Worker 设计
+  - Supports basic DOM API needed by Readability and Turndown | 支持 Readability 和 Turndown 所需的基础 DOM API
 
 **Why linkedom?**
 
-对比方案：
+| Solution | Size | Service Worker Compatible | Performance | Decision |
+|----------|------|---------------------------|-------------|----------|
+| jsdom | ~5MB | Partial | Slower | ❌ Too large |
+| linkedom | ~200KB | ✅ Full | Fast | ✅ Best choice |
+| happy-dom | ~300KB | ⚠️ Partial | Fast | ⚠️ Incomplete API |
 
-| 方案      | 体积   | Service Worker 兼容 | 性能 | 决策          |
-| --------- | ------ | ------------------- | ---- | ------------- |
-| jsdom     | ~5MB   | 部分兼容            | 较慢 | ❌ 体积过大   |
-| linkedom  | ~200KB | ✅ 完全兼容         | 快速 | ✅ 最优选择   |
-| happy-dom | ~300KB | ⚠️ 部分兼容         | 快速 | ⚠️ API 不完整 |
-
-#### 6.2 转换流程分工
+### Conversion Flow Division | 转换流程分工
 
 ```
-Content Script（浏览器环境）：
-  ✓ 提取页面元数据
-  ✓ 执行 HTML → Markdown 转换（Turndown）
-  ✓ 处理文件下载
+Content Script (browser environment | 浏览器环境):
+  ✓ Extract page metadata | 提取页面元数据
+  ✓ Execute HTML → Markdown conversion (Turndown) | 执行 HTML → Markdown 转换
+  ✓ Handle file download | 处理文件下载
 
-Service Worker（后台环境）：
-  ✓ 协调转换策略（三层降级）
-  ✓ 调用外部 API（ar5iv、MinerU）
-  ✓ 管理存储和统计
+Service Worker (background environment | 后台环境):
+  ✓ Coordinate conversion strategy (two-tier fallback) | 协调转换策略（两层降级）
+  ✓ Call external APIs (ar5iv) | 调用外部 API
+  ✓ Manage storage and statistics | 管理存储和统计
 ```
 
-**技术细节**：
+---
 
-Content Script 接收 `CONVERT_HTML_TO_MARKDOWN` 消息（src/content/index.js line 43）：
+## Data Flow | 数据流
 
-```javascript
-case "CONVERT_HTML_TO_MARKDOWN":
-  // 在真实浏览器环境中执行转换
-  const turndownService = new TurndownService();
-  const markdown = turndownService.turndown(htmlContent);
-  sendResponse({ success: true, markdown });
-  break;
-```
-
-这种设计确保了 Turndown 始终在拥有完整 DOM API 的环境中运行。
-
-## 数据流
-
-### 转换流程完整数据流
+### Complete Conversion Data Flow | 转换流程完整数据流
 
 ```
 User Click
@@ -242,8 +216,8 @@ Content Script
 Background Worker
     ↓ [Call: converter.convert()]
 Main Converter
-    ↓ [Strategy Decision]
-ar5iv Converter / MinerU Client / PDF Fallback
+    ↓ [Strategy Decision | 策略决策]
+ar5iv Converter / PDF Fallback
     ↓ [Progress Callbacks]
 Background Worker
     ↓ [Message: CONVERSION_PROGRESS]
@@ -256,68 +230,74 @@ Chrome Downloads API
 File Saved
 ```
 
-## 错误处理策略
+---
 
-### 多层容错
+## Error Handling Strategy | 错误处理策略
 
-1. **ar5iv 失败** → 自动切换到 MinerU
-2. **MinerU 失败** → 降级到 PDF 下载
-3. **网络错误** → 重试机制（最多 3 次）
-4. **API 错误** → 友好提示用户
+### Multi-layer Fault Tolerance | 多层容错
 
-### 错误分类
+1. **ar5iv fails** → Auto switch to PDF download | 自动切换到 PDF 下载
+2. **Network error** → Retry mechanism (max 3 times) | 重试机制（最多 3 次）
+3. **API error** → User-friendly prompt | 友好提示用户
 
-- **User-facing**: Toast + 桌面通知
+### Error Classification | 错误分类
+
+- **User-facing**: Toast + desktop notification
 - **Developer**: Console logs (logger)
-- **Analytics**: 统计数据更新
+- **Analytics**: Statistics update | 统计数据更新
 
-## 性能优化
+---
 
-### 1. 并行处理
+## Performance Optimization | 性能优化
 
-- ar5iv 可用性检查（HEAD 请求）与元数据提取并行
-- Webpack 代码分割（按模块懒加载）
+### 1. Parallel Processing | 并行处理
 
-### 2. 缓存策略
+- ar5iv availability check (HEAD request) parallel with metadata extraction | ar5iv 可用性检查与元数据提取并行
+- Webpack code splitting (lazy load by module) | Webpack 代码分割（按模块懒加载）
 
-- Chrome Storage 缓存配置
-- ar5iv HTML 可以考虑缓存（未实现）
+### 2. Caching Strategy | 缓存策略
 
-### 3. 资源优化
+- Chrome Storage caches configuration | Chrome Storage 缓存配置
+- ar5iv HTML could be cached (not implemented) | ar5iv HTML 可以考虑缓存（未实现）
 
-- Turndown/Readability 使用单例模式
-- 避免重复的 DOM 查询
+### 3. Resource Optimization | 资源优化
 
-### 4. 轻量级依赖
+- Turndown/Readability use singleton pattern | Turndown/Readability 使用单例模式
+- Avoid repeated DOM queries | 避免重复的 DOM 查询
 
-- linkedom（200KB）替代 jsdom（5MB），减少 96% 体积
-- Service Worker 启动时间从 ~500ms 降至 ~50ms
-- 内存占用减少约 80%
+### 4. Lightweight Dependencies | 轻量级依赖
 
-## 安全性
+- linkedom (200KB) replaces jsdom (5MB), 96% size reduction | linkedom 替代 jsdom，减少 96% 体积
+- Service Worker startup time from ~500ms to ~50ms | Service Worker 启动时间从 ~500ms 降至 ~50ms
+- Memory usage reduced by ~80% | 内存占用减少约 80%
 
-### 1. 输入验证
+---
 
-- arXiv ID 格式验证（正则表达式）
-- 文件名清理（移除非法字符）
-- URL 验证（防止 XSS）
+## Security | 安全性
 
-### 2. API 安全
+### 1. Input Validation | 输入验证
 
-- MinerU Token 使用 `chrome.storage.sync`（加密存储）
-- HTTPS-only 请求
-- CORS 处理
+- arXiv ID format validation (regex) | arXiv ID 格式验证（正则表达式）
+- Filename cleanup (remove illegal characters) | 文件名清理（移除非法字符）
+- URL validation (prevent XSS) | URL 验证（防止 XSS）
 
-### 3. 权限最小化
+### 2. API Security | API 安全
 
-- 仅请求必要的 `host_permissions`
+- HTTPS-only requests | 仅 HTTPS 请求
+- CORS handling | CORS 处理
+
+### 3. Permission Minimization | 权限最小化
+
+- Only request necessary `host_permissions` | 仅请求必要的 `host_permissions`
 - Content Security Policy (Manifest V3)
 
-## 可扩展性
+---
 
-### 插件化设计
+## Extensibility | 可扩展性
 
-所有转换器实现统一接口：
+### Plugin-based Design | 插件化设计
+
+All converters implement a unified interface | 所有转换器实现统一接口：
 
 ```javascript
 interface Converter {
@@ -326,43 +306,46 @@ interface Converter {
 }
 ```
 
-**新增转换器只需：**
+**Adding a new converter only requires | 新增转换器只需：**
 
-1. 实现接口
-2. 在 Main Converter 中注册
-3. 添加到配置选项
+1. Implement the interface | 实现接口
+2. Register in Main Converter | 在 Main Converter 中注册
+3. Add to configuration options | 添加到配置选项
 
-### 配置驱动
+### Configuration-driven | 配置驱动
 
-- 所有常量集中在 `src/config/constants.js`
-- 用户配置存储在 Chrome Storage
-- 易于添加新选项
-
-## 未来架构演进
-
-### 1. 后端服务（可选）
-
-```
-Chrome Extension → 自建 API 服务 → MinerU/其他工具
-```
-
-**优势：**
-
-- 统一管理 API Keys
-- 批量处理队列
-- 缓存热门论文
-
-### 2. 多浏览器支持
-
-- 使用 WebExtension Polyfill
-- 抽象浏览器特定 API
-
-### 3. 离线模式
-
-- IndexedDB 缓存论文
-- Service Worker 离线策略
+- All constants centralized in `src/config/constants.js` | 所有常量集中在 `src/config/constants.js`
+- User config stored in Chrome Storage | 用户配置存储在 Chrome Storage
+- Easy to add new options | 易于添加新选项
 
 ---
 
-**Last Updated**: 2025-12-02
+## Future Architecture Evolution | 未来架构演进
+
+### 1. Backend Service (Optional) | 后端服务（可选）
+
+```
+Chrome Extension → Self-hosted API Service → Various Tools
+Chrome Extension → 自建 API 服务 → 各种工具
+```
+
+**Advantages | 优势：**
+
+- Unified API key management | 统一管理 API Keys
+- Batch processing queue | 批量处理队列
+- Cache popular papers | 缓存热门论文
+
+### 2. Multi-browser Support | 多浏览器支持
+
+- Use WebExtension Polyfill | 使用 WebExtension Polyfill
+- Abstract browser-specific APIs | 抽象浏览器特定 API
+
+### 3. Offline Mode | 离线模式
+
+- IndexedDB cache papers | IndexedDB 缓存论文
+- Service Worker offline strategy | Service Worker 离线策略
+
+---
+
+**Last Updated**: 2025-12-08  
 **Version**: 1.0.0

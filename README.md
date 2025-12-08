@@ -5,7 +5,7 @@
 <h1 align="center">arXiv to Markdown</h1>
 
 <p align="center">
-  <strong>一键将 arXiv 论文转换为 Markdown，完美保留 LaTeX 公式</strong>
+  <strong>One-click conversion of arXiv papers to Markdown with perfect LaTeX formula preservation</strong>
 </p>
 
 <p align="center">
@@ -16,77 +16,78 @@
 </p>
 
 <p align="center">
-  <a href="#-快速开始">快速开始</a> •
-  <a href="#-功能特性">功能特性</a> •
-  <a href="#-安装方式">安装</a> •
-  <a href="#-使用场景">使用场景</a> •
-  <a href="#-常见问题">FAQ</a>
+  <a href="#-quick-start">Quick Start</a> •
+  <a href="#-features">Features</a> •
+  <a href="#-installation">Installation</a> •
+  <a href="#-use-cases">Use Cases</a> •
+  <a href="#-faq">FAQ</a> •
+  <a href="./README_CN.md">中文文档</a>
 </p>
 
 ---
 
-## 🎯 为什么需要这个插件？
+## 🎯 Why This Extension?
 
-作为研究人员，你是否遇到过这些问题？
+As a researcher, have you encountered these problems?
 
-| 痛点 | 传统方式 | 使用本插件 |
-|------|----------|------------|
-| 📄 论文文件名混乱 | `2312.12345.pdf` | `Attention Is All You Need(2017).md` |
-| 📝 无法在笔记软件中编辑 | PDF 只读，复制公式乱码 | Markdown 直接编辑，公式完美渲染 |
-| 🔍 知识库检索困难 | PDF 全文搜索慢 | Markdown 秒级检索 |
-| ⏱️ 整理论文耗时 | 手动重命名、转换格式 | 一键完成，<1 秒 |
+| Pain Point | Traditional Way | With This Extension |
+|------------|-----------------|---------------------|
+| 📄 Messy filenames | `2312.12345.pdf` | `Attention Is All You Need(2017).md` |
+| 📝 Can't edit in note apps | PDF is read-only, copy formulas become garbled | Markdown directly editable, formulas render perfectly |
+| 🔍 Hard to search knowledge base | PDF full-text search is slow | Markdown instant search |
+| ⏱️ Time-consuming paper organization | Manual renaming, format conversion | One-click, <1 second |
 
-**arXiv to Markdown** 让你专注于研究本身，而非文件管理。
-
----
-
-## ✨ 功能特性
-
-### 核心功能
-
-- **⚡ 极速转换** — 85% 论文在 1 秒内完成转换
-- **🧮 完美公式** — LaTeX 数学公式完整保留，支持行内/块级公式
-- **📊 表格支持** — 自动转换为 Markdown 表格格式
-- **🖼️ 图片保留** — 图片链接指向 ar5iv CDN，无需本地存储
-- **📝 智能命名** — 自动按 `标题(年份).md` 格式命名
-
-### 智能特性
-
-- **🧠 自动检测** — 智能检测 ar5iv 可用性，新论文自动隐藏 Markdown 按钮
-- **🔄 自动降级** — ar5iv 不可用时自动保存为重命名的 PDF
-- **🌍 多语言界面** — 支持中文/英文一键切换
-- **🔔 桌面通知** — 转换完成后系统通知提醒（可关闭）
-
-### 隐私优先
-
-- **🔒 100% 本地处理** — 不上传任何数据到外部服务器
-- **🚫 零追踪** — 不收集用户行为、浏览历史
-- **📦 开源透明** — MIT 协议，代码完全公开
+**arXiv to Markdown** lets you focus on research, not file management.
 
 ---
 
-## 🚀 快速开始
+## ✨ Features
 
-### 三步上手
+### Core Features
+
+- **⚡ Lightning Fast** — 85% of papers convert in under 1 second
+- **🧮 Perfect Formulas** — LaTeX math formulas fully preserved, supports inline/block formulas
+- **📊 Table Support** — Auto-converts to Markdown table format
+- **🖼️ Image Preservation** — Image links point to ar5iv CDN, no local storage needed
+- **📝 Smart Naming** — Auto-names files as `Title(Year).md`
+
+### Smart Features
+
+- **🧠 Auto Detection** — Intelligently detects ar5iv availability, hides Markdown button for new papers
+- **🔄 Auto Fallback** — Automatically downloads renamed PDF when ar5iv unavailable
+- **🌍 Multi-language UI** — Supports Chinese/English one-click switch
+- **🔔 Desktop Notifications** — System notification when conversion completes (can be disabled)
+
+### Privacy First
+
+- **🔒 100% Local Processing** — No data uploaded to external servers
+- **🚫 Zero Tracking** — No user behavior or browsing history collected
+- **📦 Open Source** — MIT license, code fully public
+
+---
+
+## 🚀 Quick Start
+
+### Three Steps to Get Started
 
 ```
-1️⃣ 安装插件 → 2️⃣ 访问 arXiv 论文 → 3️⃣ 点击按钮下载
+1️⃣ Install Extension → 2️⃣ Visit arXiv Paper → 3️⃣ Click Button to Download
 ```
 
 <details>
-<summary><strong>📸 查看操作演示</strong></summary>
+<summary><strong>📸 View Demo</strong></summary>
 
-1. 访问任意 arXiv 论文页面（如 https://arxiv.org/abs/1706.03762）
-2. 在页面的 **Submission history** 下方找到两个按钮：
-   - 🟣 **Save as Markdown** — 转换为 Markdown
-   - 🟠 **Save PDF (Renamed)** — 下载重命名的 PDF
-3. 点击按钮，文件自动下载
+1. Visit any arXiv paper page (e.g., https://arxiv.org/abs/1706.03762)
+2. Find two buttons below **Submission history**:
+   - 🟣 **Save as Markdown** — Convert to Markdown
+   - 🟠 **Save PDF (Renamed)** — Download renamed PDF
+3. Click the button, file downloads automatically
 
 </details>
 
-### 输出示例
+### Output Example
 
-转换后的 Markdown 文件包含：
+The converted Markdown file contains:
 
 ```markdown
 ---
@@ -119,64 +120,64 @@ $$
 
 ---
 
-## 📦 安装方式
+## 📦 Installation
 
-### 方式一：Chrome Web Store（推荐）
+### Method 1: Chrome Web Store (Recommended)
 
-> 🚧 即将上线，敬请期待
+> 🚧 Coming soon, stay tuned
 
-### 方式二：开发者模式安装
+### Method 2: Developer Mode Installation
 
 ```bash
-# 1. 克隆仓库
+# 1. Clone repository
 git clone https://github.com/Tendo33/arxiv-md.git
 cd arxiv-md
 
-# 2. 安装依赖
+# 2. Install dependencies
 npm install
 
-# 3. 构建
+# 3. Build
 npm run build
 ```
 
-然后在 Chrome 中：
+Then in Chrome:
 
-1. 打开 `chrome://extensions/`
-2. 开启右上角 **"开发者模式"**
-3. 点击 **"加载已解压的扩展程序"**
-4. 选择项目中的 `dist` 目录
-
----
-
-## 🎨 使用场景
-
-### 场景 1：Obsidian 知识库
-
-将 Chrome 默认下载路径设为 Obsidian Vault 目录：
-
-```
-Chrome 设置 → 下载内容 → 位置 → 选择你的 Obsidian Vault
-```
-
-点击 **Save as Markdown** 后，论文直接出现在 Obsidian 中，公式自动渲染，立即开始批注。
-
-### 场景 2：Notion 论文管理
-
-1. 下载 Markdown 文件
-2. 拖拽到 Notion 页面
-3. Notion 自动导入（公式需使用 KaTeX 块）
-
-### 场景 3：批量论文整理
-
-使用 **Save PDF (Renamed)** 批量下载论文，所有文件自动按标题命名，告别 `2312.xxxxx.pdf` 的混乱。
-
-### 场景 4：离线阅读
-
-Markdown 文件体积小、加载快，适合在任何文本编辑器中阅读，无需 PDF 阅读器。
+1. Open `chrome://extensions/`
+2. Enable **"Developer mode"** in the top right
+3. Click **"Load unpacked"**
+4. Select the `dist` directory in the project
 
 ---
 
-## 🏗️ 技术架构
+## 🎨 Use Cases
+
+### Scenario 1: Obsidian Knowledge Base
+
+Set Chrome's default download path to your Obsidian Vault directory:
+
+```
+Chrome Settings → Downloads → Location → Select your Obsidian Vault
+```
+
+After clicking **Save as Markdown**, papers appear directly in Obsidian with auto-rendered formulas, ready for annotation.
+
+### Scenario 2: Notion Paper Management
+
+1. Download Markdown file
+2. Drag and drop to Notion page
+3. Notion auto-imports (formulas need KaTeX blocks)
+
+### Scenario 3: Batch Paper Organization
+
+Use **Save PDF (Renamed)** to batch download papers, all files auto-named by title, goodbye to `2312.xxxxx.pdf` chaos.
+
+### Scenario 4: Offline Reading
+
+Markdown files are small and load fast, readable in any text editor, no PDF reader needed.
+
+---
+
+## 🏗️ Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -184,9 +185,10 @@ Markdown 文件体积小、加载快，适合在任何文本编辑器中阅读�
 ├─────────────────────────────────────────────────────────────┤
 │  Content Script          Background Worker       Popup UI   │
 │  ┌─────────────┐        ┌──────────────┐      ┌─────────┐  │
-│  │ 注入按钮     │◄──────►│ 转换调度器    │◄────►│ 设置面板 │  │
-│  │ 提取元数据   │        │ 消息路由     │      │ 统计展示 │  │
-│  │ HTML→MD 转换 │        │ 下载管理     │      └─────────┘  │
+│  │ Inject Btns │◄──────►│ Conversion   │◄────►│ Settings│  │
+│  │ Extract Meta│        │ Scheduler    │      │ Stats   │  │
+│  │ HTML→MD     │        │ Msg Router   │      └─────────┘  │
+│  │ Conversion  │        │ Download Mgr │                   │
 │  └─────────────┘        └──────────────┘                   │
 └─────────────────────────────────────────────────────────────┘
                               │
@@ -198,149 +200,148 @@ Markdown 文件体积小、加载快，适合在任何文本编辑器中阅读�
         └──────────┘   └──────────┘   └──────────────┘
 ```
 
-### 两层降级策略
+### Two-Tier Fallback Strategy
 
 ```
-用户点击 "Save as Markdown"
+User clicks "Save as Markdown"
               │
               ▼
     ┌─────────────────────┐
-    │  Tier 1: ar5iv      │ ← 85% 场景，<1秒，完全本地
+    │  Tier 1: ar5iv      │ ← 85% of cases, <1s, fully local
     │  HTML → Markdown    │
     └─────────────────────┘
-              │ 失败（新论文/ar5iv 未收录）
+              │ Fails (new paper/ar5iv not indexed)
               ▼
     ┌─────────────────────┐
-    │  Tier 2: PDF 降级   │ ← 兜底方案，始终有效
-    │  标题重命名下载      │
+    │  Tier 2: PDF        │ ← Fallback, always works
+    │  Renamed Download   │
     └─────────────────────┘
 ```
 
-### 技术栈
+### Tech Stack
 
-| 层级 | 技术 |
-|------|------|
-| **构建** | Webpack 5 + Babel |
-| **转换引擎** | [Turndown](https://github.com/mixmark-io/turndown) + GFM 插件 |
-| **DOM 解析** | [linkedom](https://github.com/WebReflection/linkedom)（仅 200KB，vs jsdom 5MB） |
-| **数据源** | [ar5iv](https://ar5iv.org) — arXiv 官方 HTML5 渲染服务 |
-| **存储** | Chrome Storage API |
+| Layer | Technology |
+|-------|------------|
+| **Build** | Webpack 5 + Babel |
+| **Conversion Engine** | [Turndown](https://github.com/mixmark-io/turndown) + GFM Plugin |
+| **DOM Parsing** | [linkedom](https://github.com/WebReflection/linkedom) (only 200KB, vs jsdom 5MB) |
+| **Data Source** | [ar5iv](https://ar5iv.org) — arXiv official HTML5 rendering service |
+| **Storage** | Chrome Storage API |
 
 ---
 
-## 📁 项目结构
+## 📁 Project Structure
 
 ```
 arxiv-md/
 ├── src/
 │   ├── background/           # Service Worker
-│   ├── content/              # Content Script（注入 arXiv 页面）
+│   ├── content/              # Content Script (injected into arXiv pages)
 │   ├── core/
-│   │   ├── converter/        # 转换引擎
+│   │   ├── converter/        # Conversion Engine
 │   │   │   ├── ar5iv-converter.js
-│   │   │   └── index.js      # 主控制器（降级策略）
+│   │   │   └── index.js      # Main Controller (fallback strategy)
 │   │   └── metadata-extractor.js
 │   ├── ui/
-│   │   ├── popup/            # 弹出窗口
-│   │   └── settings/         # 设置页面
-│   ├── utils/                # 工具函数
-│   └── config/               # 配置常量
-├── dist/                     # 构建输出
-└── docs/                     # 文档
+│   │   ├── popup/            # Popup Window
+│   │   └── settings/         # Settings Page
+│   ├── utils/                # Utility Functions
+│   └── config/               # Configuration Constants
+├── dist/                     # Build Output
+└── docs/                     # Documentation
 ```
 
 ---
 
-## 🛠️ 开发
+## 🛠️ Development
 
 ```bash
-# 开发模式（热重载）
+# Development mode (hot reload)
 npm run dev
 
-# 生产构建
+# Production build
 npm run build
 
-# 代码检查
+# Code linting
 npm run lint
 
-# 打包扩展（生成 ZIP）
+# Package extension (generate ZIP)
 npm run package
 ```
 
 ---
 
-## ❓ 常见问题
+## ❓ FAQ
 
 <details>
-<summary><strong>Q: 为什么 "Save as Markdown" 按钮有时不显示？</strong></summary>
+<summary><strong>Q: Why does the "Save as Markdown" button sometimes not show?</strong></summary>
 
-插件会自动检测 ar5iv 是否已收录该论文。对于刚发布的新论文（通常需要 1-2 天），ar5iv 尚未生成 HTML 版本，此时按钮会自动隐藏。你可以先使用 **Save PDF (Renamed)** 功能。
+The extension auto-detects if ar5iv has indexed the paper. For newly published papers (usually takes 1-2 days), ar5iv hasn't generated the HTML version yet, so the button auto-hides. You can use **Save PDF (Renamed)** first.
 
 </details>
 
 <details>
-<summary><strong>Q: 转换的 Markdown 公式在 Obsidian 中不显示？</strong></summary>
+<summary><strong>Q: Converted Markdown formulas don't display in Obsidian?</strong></summary>
 
-请确保 Obsidian 已启用 LaTeX 公式渲染。转换后的公式使用标准 LaTeX 语法：
-- 行内公式：`$...$`
-- 块级公式：`$$...$$`
-
-</details>
-
-<details>
-<summary><strong>Q: 图片无法显示？</strong></summary>
-
-图片链接指向 ar5iv CDN，需要联网查看。如需离线使用，可以手动下载图片到本地。
+Make sure Obsidian has LaTeX formula rendering enabled. Converted formulas use standard LaTeX syntax:
+- Inline formulas: `$...$`
+- Block formulas: `$$...$$`
 
 </details>
 
 <details>
-<summary><strong>Q: 支持哪些浏览器？</strong></summary>
+<summary><strong>Q: Images not displaying?</strong></summary>
 
-目前支持：
-- ✅ Chrome（推荐）
-- ✅ Edge（Chromium 内核）
-- 🚧 Firefox（开发中）
+Image links point to ar5iv CDN, requires internet to view. For offline use, manually download images locally.
 
 </details>
 
 <details>
-<summary><strong>Q: 转换失败怎么办？</strong></summary>
+<summary><strong>Q: Which browsers are supported?</strong></summary>
 
-1. 检查网络连接
-2. 刷新页面重试
-3. 使用 **Save PDF (Renamed)** 作为备选
-4. 在 [GitHub Issues](https://github.com/Tendo33/arxiv-md/issues) 反馈问题
+Currently supported:
+- ✅ Chrome (recommended)
+- ✅ Edge (Chromium-based)
+- 🚧 Firefox (in development)
+
+</details>
+
+<details>
+<summary><strong>Q: What to do if conversion fails?</strong></summary>
+
+1. Check network connection
+2. Refresh page and retry
+3. Use **Save PDF (Renamed)** as backup
+4. Report issue on [GitHub Issues](https://github.com/Tendo33/arxiv-md/issues)
 
 </details>
 
 ---
 
-## 📚 文档
+## 📚 Documentation
 
-| 文档 | 描述 |
-|------|------|
-| [快速开始](docs/QUICK_START.md) | 5 分钟上手指南 |
-| [安装指南](INSTALL.md) | 详细安装步骤和故障排查 |
-| [架构设计](docs/ARCHITECTURE.md) | 技术架构和设计决策 |
-| [开发指南](docs/DEVELOPMENT.md) | 参与贡献的开发流程 |
-| [常见问题](docs/FAQ.md) | 50+ 个问题解答 |
-| [隐私政策](PRIVACY.md) | 数据使用说明 |
-
----
-
-## 🙏 致谢
-
-- [ar5iv](https://ar5iv.org) — arXiv 官方 HTML5 渲染服务
-- [Turndown](https://github.com/mixmark-io/turndown) — HTML → Markdown 转换库
-- [linkedom](https://github.com/WebReflection/linkedom) — 轻量级 DOM 解析
-- [arXiv](https://arxiv.org) — 开放获取的预印本论文库
+| Document | Description |
+|----------|-------------|
+| [Quick Start](docs/QUICK_START.md) | 5-minute getting started guide |
+| [Architecture](docs/ARCHITECTURE.md) | Technical architecture and design decisions |
+| [Development Guide](docs/DEVELOPMENT.md) | Development workflow for contributors |
+| [FAQ](docs/FAQ.md) | 50+ questions answered |
+| [Privacy Policy](PRIVACY.md) | Data usage explanation |
 
 ---
 
-## 📄 许可证
+## 🙏 Acknowledgments
 
-本项目采用 [MIT License](LICENSE) 开源。
+- [ar5iv](https://ar5iv.org) — arXiv official HTML5 rendering service
+- [Turndown](https://github.com/mixmark-io/turndown) — HTML → Markdown conversion library
+- [linkedom](https://github.com/WebReflection/linkedom) — Lightweight DOM parsing
+- [arXiv](https://arxiv.org) — Open access preprint repository
+
+---
+
+## 📄 License
+
+This project is open source under the [MIT License](LICENSE).
 
 ---
 
@@ -349,5 +350,5 @@ npm run package
 </p>
 
 <p align="center">
-  如果这个项目对你有帮助，请给个 ⭐ Star！
+  If this project helps you, please give it a ⭐ Star!
 </p>
