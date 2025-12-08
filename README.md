@@ -1,121 +1,260 @@
-# arXiv to Markdown
+<p align="center">
+  <img src="./docs/icons/arxiv_md.png" alt="arXiv to Markdown" width="120">
+</p>
 
-> 🚀 一键将 arXiv 论文转换为 Markdown，支持智能三层降级策略，保证最佳转换质量
+<h1 align="center">arXiv to Markdown</h1>
 
-<img src="./docs/icons/arxiv_md.png" alt="arXiv to Markdown" width="100">
+<p align="center">
+  <strong>一键将 arXiv 论文转换为 Markdown，完美保留 LaTeX 公式</strong>
+</p>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-即将推出-blue)](https://chrome.google.com/webstore)
+<p align="center">
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Chrome-Extension-4285F4?logo=googlechrome&logoColor=white" alt="Chrome Extension"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Manifest-V3-00C853" alt="Manifest V3"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Version-1.0.0-blue" alt="Version"></a>
+</p>
 
-## 📦 项目状态
+<p align="center">
+  <a href="#-快速开始">快速开始</a> •
+  <a href="#-功能特性">功能特性</a> •
+  <a href="#-安装方式">安装</a> •
+  <a href="#-使用场景">使用场景</a> •
+  <a href="#-常见问题">FAQ</a>
+</p>
 
-- 🚧 开发版本：v1.0.0
-- 📦 Chrome Web Store：即将推出
-- 🔓 开源协议：MIT License
-- 🌟 GitHub Star：欢迎 Star 支持
+---
 
-## ✨ 特性
+## 🎯 为什么需要这个插件？
 
-- **🚀 极速转换**：85% 的论文在 1 秒内完成转换（ar5iv + 本地 Turndown）
-- **🧠 智能交互**：自动检测 ar5iv 可用性，智能管理按钮显示状态
-- **🌍 多语言支持**：支持中文/英文界面一键切换
-- **📄 一键保存 PDF**：支持一键下载按标题命名的 PDF 文件
-- **💎 质量保证**：完美处理 LaTeX 公式、表格、图片
-- **🔒 隐私优先**：100% 本地处理，不发送数据到外部服务器
-- **📊 统计面板**：实时查看转换成功率和使用情况
+作为研究人员，你是否遇到过这些问题？
 
-## 🎯 两层降级架构
+| 痛点 | 传统方式 | 使用本插件 |
+|------|----------|------------|
+| 📄 论文文件名混乱 | `2312.12345.pdf` | `Attention Is All You Need(2017).md` |
+| 📝 无法在笔记软件中编辑 | PDF 只读，复制公式乱码 | Markdown 直接编辑，公式完美渲染 |
+| 🔍 知识库检索困难 | PDF 全文搜索慢 | Markdown 秒级检索 |
+| ⏱️ 整理论文耗时 | 手动重命名、转换格式 | 一键完成，<1 秒 |
+
+**arXiv to Markdown** 让你专注于研究本身，而非文件管理。
+
+---
+
+## ✨ 功能特性
+
+### 核心功能
+
+- **⚡ 极速转换** — 85% 论文在 1 秒内完成转换
+- **🧮 完美公式** — LaTeX 数学公式完整保留，支持行内/块级公式
+- **📊 表格支持** — 自动转换为 Markdown 表格格式
+- **🖼️ 图片保留** — 图片链接指向 ar5iv CDN，无需本地存储
+- **📝 智能命名** — 自动按 `标题(年份).md` 格式命名
+
+### 智能特性
+
+- **🧠 自动检测** — 智能检测 ar5iv 可用性，新论文自动隐藏 Markdown 按钮
+- **🔄 自动降级** — ar5iv 不可用时自动保存为重命名的 PDF
+- **🌍 多语言界面** — 支持中文/英文一键切换
+- **🔔 桌面通知** — 转换完成后系统通知提醒（可关闭）
+
+### 隐私优先
+
+- **🔒 100% 本地处理** — 不上传任何数据到外部服务器
+- **🚫 零追踪** — 不收集用户行为、浏览历史
+- **📦 开源透明** — MIT 协议，代码完全公开
+
+---
+
+## 🚀 快速开始
+
+### 三步上手
 
 ```
-Tier 1 (Fast Path - 85% 场景):
-  ar5iv HTML + 本地 Turndown
-  ↓ <1 秒，完全免费，隐私友好
-
-Tier 2 (Fallback):
-  下载按标题重命名的 PDF
-  ↓ 始终有效
+1️⃣ 安装插件 → 2️⃣ 访问 arXiv 论文 → 3️⃣ 点击按钮下载
 ```
 
-## 📦 安装
+<details>
+<summary><strong>📸 查看操作演示</strong></summary>
 
-### 从 Chrome Web Store 安装（推荐）
+1. 访问任意 arXiv 论文页面（如 https://arxiv.org/abs/1706.03762）
+2. 在页面的 **Submission history** 下方找到两个按钮：
+   - 🟣 **Save as Markdown** — 转换为 Markdown
+   - 🟠 **Save PDF (Renamed)** — 下载重命名的 PDF
+3. 点击按钮，文件自动下载
 
-1. 访问 [Chrome Web Store](https://chrome.google.com/webstore)（即将推出）
-2. 点击"添加至 Chrome"
+</details>
 
-### 手动安装（开发者）
+### 输出示例
+
+转换后的 Markdown 文件包含：
+
+```markdown
+---
+title: Attention Is All You Need
+arxiv_id: 1706.03762
+source: ar5iv
+---
+
+# Attention Is All You Need
+
+## Abstract
+
+The dominant sequence transduction models are based on complex recurrent or 
+convolutional neural networks... We propose a new simple network architecture, 
+the Transformer, based solely on attention mechanisms...
+
+## 1 Introduction
+
+Recurrent neural networks, long short-term memory and gated recurrent neural 
+networks in particular, have been firmly established as state of the art...
+
+The Transformer follows this overall architecture using stacked self-attention 
+and point-wise, fully connected layers for both the encoder and decoder, shown 
+in the left and right halves of Figure $1$, respectively.
+
+$$
+\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V
+$$
+```
+
+---
+
+## 📦 安装方式
+
+### 方式一：Chrome Web Store（推荐）
+
+> 🚧 即将上线，敬请期待
+
+### 方式二：开发者模式安装
 
 ```bash
-# 克隆仓库
-git clone https://github.com/[你的GitHub用户名]/arxiv-md.git
+# 1. 克隆仓库
+git clone https://github.com/Tendo33/arxiv-md.git
 cd arxiv-md
 
-# 安装依赖
+# 2. 安装依赖
 npm install
 
-# 构建插件
+# 3. 构建
 npm run build
-
-# 在 Chrome 中加载：
-# 1. 打开 chrome://extensions/
-# 2. 开启"开发者模式"
-# 3. 点击"加载已解压的扩展程序"
-# 4. 选择 dist 目录
 ```
 
-## 📚 文档导航
+然后在 Chrome 中：
 
-- [快速开始](docs/QUICK_START.md) - 5 分钟快速上手
-- [完整安装指南](INSTALL.md) - 详细的安装步骤和故障排查
-- [架构设计](docs/ARCHITECTURE.md) - 技术架构和设计决策
-- [开发指南](docs/DEVELOPMENT.md) - 参与贡献的开发流程
-- [常见问题](docs/FAQ.md) - 使用中的常见问题解答
-- [贡献指南](CONTRIBUTING.md) - 如何为项目做贡献
+1. 打开 `chrome://extensions/`
+2. 开启右上角 **"开发者模式"**
+3. 点击 **"加载已解压的扩展程序"**
+4. 选择项目中的 `dist` 目录
 
-## 🚀 使用方法
+---
 
-### 快速开始
+## 🎨 使用场景
 
-1. 访问任意 arXiv 论文页面（例如：https://arxiv.org/abs/1706.03762）
-2. 点击页面上的 **"保存为 Markdown"** 或 **"保存 PDF"** 按钮
-3. 等待处理完成（通常 <1 秒）
-4. 文件自动下载到本地，文件名格式：`标题(年份).扩展名`
+### 场景 1：Obsidian 知识库
 
-### 两个按钮的区别
+将 Chrome 默认下载路径设为 Obsidian Vault 目录：
 
-- **保存为 Markdown**：将论文转换为 Markdown 格式，便于在 Obsidian/Notion 等工具中阅读和编辑
-- **保存 PDF**：直接下载 PDF，但使用论文标题重命名，方便管理
+```
+Chrome 设置 → 下载内容 → 位置 → 选择你的 Obsidian Vault
+```
 
-## 🛠️ 开发
+点击 **Save as Markdown** 后，论文直接出现在 Obsidian 中，公式自动渲染，立即开始批注。
 
-### 项目结构
+### 场景 2：Notion 论文管理
+
+1. 下载 Markdown 文件
+2. 拖拽到 Notion 页面
+3. Notion 自动导入（公式需使用 KaTeX 块）
+
+### 场景 3：批量论文整理
+
+使用 **Save PDF (Renamed)** 批量下载论文，所有文件自动按标题命名，告别 `2312.xxxxx.pdf` 的混乱。
+
+### 场景 4：离线阅读
+
+Markdown 文件体积小、加载快，适合在任何文本编辑器中阅读，无需 PDF 阅读器。
+
+---
+
+## 🏗️ 技术架构
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Chrome Extension (MV3)                   │
+├─────────────────────────────────────────────────────────────┤
+│  Content Script          Background Worker       Popup UI   │
+│  ┌─────────────┐        ┌──────────────┐      ┌─────────┐  │
+│  │ 注入按钮     │◄──────►│ 转换调度器    │◄────►│ 设置面板 │  │
+│  │ 提取元数据   │        │ 消息路由     │      │ 统计展示 │  │
+│  │ HTML→MD 转换 │        │ 下载管理     │      └─────────┘  │
+│  └─────────────┘        └──────────────┘                   │
+└─────────────────────────────────────────────────────────────┘
+                              │
+              ┌───────────────┼───────────────┐
+              ▼               ▼               ▼
+        ┌──────────┐   ┌──────────┐   ┌──────────────┐
+        │  ar5iv   │   │  arXiv   │   │ Chrome APIs  │
+        │  HTML    │   │  PDF     │   │ Storage/DL   │
+        └──────────┘   └──────────┘   └──────────────┘
+```
+
+### 两层降级策略
+
+```
+用户点击 "Save as Markdown"
+              │
+              ▼
+    ┌─────────────────────┐
+    │  Tier 1: ar5iv      │ ← 85% 场景，<1秒，完全本地
+    │  HTML → Markdown    │
+    └─────────────────────┘
+              │ 失败（新论文/ar5iv 未收录）
+              ▼
+    ┌─────────────────────┐
+    │  Tier 2: PDF 降级   │ ← 兜底方案，始终有效
+    │  标题重命名下载      │
+    └─────────────────────┘
+```
+
+### 技术栈
+
+| 层级 | 技术 |
+|------|------|
+| **构建** | Webpack 5 + Babel |
+| **转换引擎** | [Turndown](https://github.com/mixmark-io/turndown) + GFM 插件 |
+| **DOM 解析** | [linkedom](https://github.com/WebReflection/linkedom)（仅 200KB，vs jsdom 5MB） |
+| **数据源** | [ar5iv](https://ar5iv.org) — arXiv 官方 HTML5 渲染服务 |
+| **存储** | Chrome Storage API |
+
+---
+
+## 📁 项目结构
 
 ```
 arxiv-md/
 ├── src/
-│   ├── background/          # Background Service Worker
-│   ├── content/             # Content Script（注入 arXiv 页面）
+│   ├── background/           # Service Worker
+│   ├── content/              # Content Script（注入 arXiv 页面）
 │   ├── core/
-│   │   ├── converter/       # 核心转换引擎
-│   │   │   ├── ar5iv-converter.js    # ar5iv → Markdown
-│   │   │   ├── mineru-client.js      # MinerU API 客户端
-│   │   │   └── index.js              # 主转换器（三层架构）
-│   │   └── metadata-extractor.js     # 元数据提取
+│   │   ├── converter/        # 转换引擎
+│   │   │   ├── ar5iv-converter.js
+│   │   │   └── index.js      # 主控制器（降级策略）
+│   │   └── metadata-extractor.js
 │   ├── ui/
-│   │   ├── popup/           # 弹出窗口
-│   │   └── settings/        # 设置页面
-│   ├── utils/               # 工具函数
-│   ├── config/              # 配置常量
-│   └── manifest.json        # Chrome Extension 配置
-├── webpack.config.js        # Webpack 配置
-└── package.json
-
+│   │   ├── popup/            # 弹出窗口
+│   │   └── settings/         # 设置页面
+│   ├── utils/                # 工具函数
+│   └── config/               # 配置常量
+├── dist/                     # 构建输出
+└── docs/                     # 文档
 ```
 
-### 开发命令
+---
+
+## 🛠️ 开发
 
 ```bash
-# 开发模式（自动编译）
+# 开发模式（热重载）
 npm run dev
 
 # 生产构建
@@ -124,75 +263,91 @@ npm run build
 # 代码检查
 npm run lint
 
-# 打包扩展
+# 打包扩展（生成 ZIP）
 npm run package
 ```
 
-### 技术栈
-
-- **框架**: Vanilla JavaScript（ES6+）
-- **构建**: Webpack 5 + Babel
-- **转换引擎**:
-  - [Turndown](https://github.com/mixmark-io/turndown) - HTML → Markdown
-  - [Mozilla Readability](https://github.com/mozilla/readability) - 内容提取
-  - [linkedom](https://github.com/WebReflection/linkedom) - 轻量级 DOM 解析（Service Worker 环境，仅 200KB vs jsdom 5MB）
-- **API**: MinerU, ar5iv
-- **存储**: Chrome Storage API
-
-## 📖 使用场景
-
-### 场景 1：日常论文阅读
-
-- **需求**：快速保存论文到 Obsidian/Notion
-- **方案**：点击"保存为 Markdown"
-- **体验**：85% 论文 <1 秒完成，剩余自动保存 PDF
-
-### 场景 2：批量论文整理
-
-- **需求**：整理大量论文到知识库
-- **方案**：使用"保存 PDF"按钮批量下载
-- **优势**：所有文件自动按标题命名，易于管理
-
-### 场景 3：隐私优先
-
-- **需求**：不希望论文数据发送到外部
-- **方案**：本插件默认完全本地处理
-- **体验**：100% 隐私保护，无任何数据上传
+---
 
 ## ❓ 常见问题
 
-**Q: 转换失败怎么办？**  
-A: 插件会自动降级。ar5iv 转换失败时会自动保存为 PDF。
+<details>
+<summary><strong>Q: 为什么 "Save as Markdown" 按钮有时不显示？</strong></summary>
 
-**Q: 为什么"保存为 Markdown"按钮有时候不显示？**  
-A: 插件会自动检测 ar5iv 是否已收录该论文。对于刚刚发布的论文（通常需要 1-2 天生成 HTML），ar5iv 可能尚未准备好。此时插件会自动隐藏 Markdown 按钮，避免转换失败。您可以先使用"保存 PDF"功能。
+插件会自动检测 ar5iv 是否已收录该论文。对于刚发布的新论文（通常需要 1-2 天），ar5iv 尚未生成 HTML 版本，此时按钮会自动隐藏。你可以先使用 **Save PDF (Renamed)** 功能。
 
-**Q: 为什么有两个按钮？**  
-A: "保存为 Markdown" 用于知识管理，"保存 PDF" 用于快速收藏原文。
+</details>
 
-**Q: 转换的 Markdown 包含图片吗？**  
-A: 包含。图片以 ar5iv CDN 链接形式保存在 Markdown 中（需联网查看）。
+<details>
+<summary><strong>Q: 转换的 Markdown 公式在 Obsidian 中不显示？</strong></summary>
 
-**Q: PDF 文件名如何生成？**  
-A: 自动按 `标题.pdf` 格式命名，方便整理。
+请确保 Obsidian 已启用 LaTeX 公式渲染。转换后的公式使用标准 LaTeX 语法：
+- 行内公式：`$...$`
+- 块级公式：`$$...$$`
 
-**Q: 支持哪些浏览器？**  
-A: 目前仅支持 Chrome/Edge（Chromium 内核）。Firefox 版本正在开发中。
+</details>
 
+<details>
+<summary><strong>Q: 图片无法显示？</strong></summary>
+
+图片链接指向 ar5iv CDN，需要联网查看。如需离线使用，可以手动下载图片到本地。
+
+</details>
+
+<details>
+<summary><strong>Q: 支持哪些浏览器？</strong></summary>
+
+目前支持：
+- ✅ Chrome（推荐）
+- ✅ Edge（Chromium 内核）
+- 🚧 Firefox（开发中）
+
+</details>
+
+<details>
+<summary><strong>Q: 转换失败怎么办？</strong></summary>
+
+1. 检查网络连接
+2. 刷新页面重试
+3. 使用 **Save PDF (Renamed)** 作为备选
+4. 在 [GitHub Issues](https://github.com/Tendo33/arxiv-md/issues) 反馈问题
+
+</details>
+
+---
+
+## 📚 文档
+
+| 文档 | 描述 |
+|------|------|
+| [快速开始](docs/QUICK_START.md) | 5 分钟上手指南 |
+| [安装指南](INSTALL.md) | 详细安装步骤和故障排查 |
+| [架构设计](docs/ARCHITECTURE.md) | 技术架构和设计决策 |
+| [开发指南](docs/DEVELOPMENT.md) | 参与贡献的开发流程 |
+| [常见问题](docs/FAQ.md) | 50+ 个问题解答 |
+| [隐私政策](PRIVACY.md) | 数据使用说明 |
+
+---
+
+## 🙏 致谢
+
+- [ar5iv](https://ar5iv.org) — arXiv 官方 HTML5 渲染服务
+- [Turndown](https://github.com/mixmark-io/turndown) — HTML → Markdown 转换库
+- [linkedom](https://github.com/WebReflection/linkedom) — 轻量级 DOM 解析
+- [arXiv](https://arxiv.org) — 开放获取的预印本论文库
+
+---
 
 ## 📄 许可证
 
 本项目采用 [MIT License](LICENSE) 开源。
 
-## 🙏 致谢
-
-- [ar5iv](https://ar5iv.org) - 提供 HTML5 版本的 arXiv 论文
-- [Turndown](https://github.com/mixmark-io/turndown) - HTML → Markdown 转换
-- [Mozilla Readability](https://github.com/mozilla/readability) - 内容提取算法
-- [arXiv](https://arxiv.org) - 开放获取的预印本论文库
-
 ---
 
-Made with ❤️ by [SimonSun](https://github.com/Tendo33)
+<p align="center">
+  Made with ❤️ by <a href="https://github.com/Tendo33">SimonSun</a>
+</p>
 
-如果这个项目对你有帮助，请给个 ⭐️ Star！
+<p align="center">
+  如果这个项目对你有帮助，请给个 ⭐ Star！
+</p>
