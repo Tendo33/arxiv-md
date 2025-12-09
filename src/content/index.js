@@ -598,6 +598,23 @@ function preprocessTables(doc) {
       table.removeAttribute("id");
       table.removeAttribute("style");
 
+      // 检测是否有复杂结构（colspan/rowspan）
+      const hasComplexStructure =
+        table.querySelector("td[colspan], th[colspan], td[rowspan], th[rowspan]") !== null;
+
+      if (hasComplexStructure) {
+        // 复杂表格：转换为干净的 HTML 表格
+        const cleanedHtml = cleanTableToHtml(table, doc);
+        const wrapper = doc.createElement("div");
+        wrapper.className = "ltx_html_table";
+        wrapper.innerHTML = cleanedHtml;
+        table.replaceWith(wrapper);
+        console.log(
+          `[PREPROCESS] ✅ 复杂数据表格转为 HTML 格式 (保留 colspan/rowspan)`,
+        );
+        return;
+      }
+
       const firstRow = table.querySelector("tr");
       const hasHeader =
         table.querySelector("thead") ||
@@ -775,86 +792,14 @@ function preprocessAr5ivElements(doc) {
           tabular.innerHTML.includes("ltx_rowspan");
 
         if (hasComplexStructure) {
-          // 复杂表格：转换为纯文本对齐格式
-          const textRows = [];
-          const colWidths = [];
-
-          // 第一遍：收集所有单元格内容，计算列宽
-          const allRowsData = rows.map((row) => {
-            const cells = Array.from(
-              row.querySelectorAll(":scope > .ltx_td, :scope > .ltx_th"),
-            );
-            return cells.map((cell) => {
-              // 获取纯文本，处理数学公式占位符
-              let text = cell.textContent.trim().replace(/\s+/g, " ");
-              // 获取 colspan
-              const colspanMatch = cell.className.match(/ltx_colspan_(\d+)/);
-              const colspan = colspanMatch ? parseInt(colspanMatch[1]) : 1;
-              return { text, colspan };
-            });
-          });
-
-          // 计算每列最大宽度
-          allRowsData.forEach((rowData) => {
-            let colIdx = 0;
-            rowData.forEach((cell) => {
-              const cellWidth = Math.ceil(cell.text.length / cell.colspan);
-              for (let i = 0; i < cell.colspan; i++) {
-                colWidths[colIdx + i] = Math.max(
-                  colWidths[colIdx + i] || 0,
-                  cellWidth,
-                );
-              }
-              colIdx += cell.colspan;
-            });
-          });
-
-          // 第二遍：生成对齐的文本行
-          allRowsData.forEach((rowData, rowIdx) => {
-            const parts = [];
-            let colIdx = 0;
-            rowData.forEach((cell) => {
-              // 计算这个单元格应该占用的总宽度
-              let totalWidth = 0;
-              for (let i = 0; i < cell.colspan; i++) {
-                totalWidth += (colWidths[colIdx + i] || 8) + 3; // +3 for padding and separator
-              }
-              totalWidth -= 3; // 减去最后一个的分隔符空间
-              totalWidth = Math.max(totalWidth, cell.text.length);
-
-              parts.push(cell.text.padEnd(totalWidth));
-              colIdx += cell.colspan;
-            });
-            textRows.push("| " + parts.join(" | ") + " |");
-
-            // 在表头后添加分隔行
-            if (
-              rowIdx === 0 ||
-              (rowIdx === 1 && allRowsData[0].some((c) => c.colspan > 1))
-            ) {
-              const separators = [];
-              colIdx = 0;
-              rowData.forEach((cell) => {
-                let totalWidth = 0;
-                for (let i = 0; i < cell.colspan; i++) {
-                  totalWidth += (colWidths[colIdx + i] || 8) + 3;
-                }
-                totalWidth -= 3;
-                totalWidth = Math.max(totalWidth, cell.text.length);
-                separators.push("-".repeat(totalWidth));
-                colIdx += cell.colspan;
-              });
-              textRows.push("| " + separators.join(" | ") + " |");
-            }
-          });
-
-          // 创建文本节点替换
-          const textTable = doc.createElement("div");
-          textTable.className = "ltx_table_text";
-          textTable.innerHTML = `<pre><code>${textRows.join("\n")}</code></pre>`;
-          tabular.replaceWith(textTable);
+          // 复杂表格：转换为干净的 HTML 表格（保留 colspan/rowspan）
+          const cleanedHtml = cleanTableToHtml(tabular, doc);
+          const wrapper = doc.createElement("div");
+          wrapper.className = "ltx_html_table";
+          wrapper.innerHTML = cleanedHtml;
+          tabular.replaceWith(wrapper);
           console.log(
-            `[PREPROCESS] ✅ 复杂表格转为文本格式 (${rows.length} 行)`,
+            `[PREPROCESS] ✅ 复杂表格转为 HTML 格式 (${rows.length} 行，保留 colspan/rowspan)`,
           );
         } else {
           // 简单表格：转换为标准 HTML table
@@ -950,6 +895,127 @@ function preprocessAr5ivElements(doc) {
   });
 
   console.log(`[PREPROCESS] ✅ ar5iv 元素清理完成`);
+}
+
+/**
+ * 清理 ar5iv HTML 表格，保留 colspan/rowspan 属性
+ * 输出干净的 HTML 表格，可以在 Markdown 中嵌入
+ * 智能检测双层表头结构（第一行第一列为空 + 其他列有 colspan）
+ * @param {Element} table - 表格元素
+ * @param {Document} doc - 文档对象
+ * @returns {string} 清理后的 HTML 字符串
+ */
+function cleanTableToHtml(table, doc) {
+  // 获取所有行
+  const allRows = Array.from(table.querySelectorAll("tr, .ltx_tr"));
+  if (allRows.length === 0) return "<table></table>";
+
+  // 检测是否为双层表头结构
+  // 特征：第一行第一个单元格为空或缺失，其他单元格有 colspan
+  let hasDoubleHeader = false;
+  let secondRowFirstCellText = "";
+
+  if (allRows.length >= 2) {
+    const firstRowCells = allRows[0].querySelectorAll("td, th, .ltx_td, .ltx_th");
+    const secondRowCells = allRows[1].querySelectorAll("td, th, .ltx_td, .ltx_th");
+
+    if (firstRowCells.length > 0 && secondRowCells.length > 0) {
+      const firstCell = firstRowCells[0];
+      const firstCellText = firstCell.textContent.trim();
+      const hasColspanInFirstRow = Array.from(firstRowCells).some(
+        (cell) => cell.getAttribute("colspan") || cell.className.includes("ltx_colspan")
+      );
+
+      // 第一行第一个单元格为空，且其他单元格有 colspan
+      if (firstCellText === "" && hasColspanInFirstRow) {
+        hasDoubleHeader = true;
+        secondRowFirstCellText = secondRowCells[0].textContent.trim().replace(/\s+/g, " ");
+      }
+    }
+  }
+
+  // 辅助函数：提取单元格纯文本
+  const extractCellText = (cell) => {
+    let text = cell.textContent.trim().replace(/\s+/g, " ");
+    return text;
+  };
+
+  // 辅助函数：获取 colspan 值
+  const getColspan = (cell) => {
+    const attr = cell.getAttribute("colspan");
+    if (attr) return parseInt(attr);
+    const match = cell.className.match(/ltx_colspan_(\d+)/);
+    if (match) return parseInt(match[1]);
+    return 1;
+  };
+
+  // 辅助函数：获取 rowspan 值
+  const getRowspan = (cell) => {
+    const attr = cell.getAttribute("rowspan");
+    if (attr) return parseInt(attr);
+    const match = cell.className.match(/ltx_rowspan_(\d+)/);
+    if (match) return parseInt(match[1]);
+    return 1;
+  };
+
+  // 构建 HTML 字符串
+  let html = "<table>";
+
+  allRows.forEach((row, rowIdx) => {
+    const cells = Array.from(row.querySelectorAll("td, th, .ltx_td, .ltx_th"));
+    html += "<tr>";
+
+    // 双层表头特殊处理
+    if (hasDoubleHeader) {
+      if (rowIdx === 0) {
+        // 第一行：先添加带 rowspan=2 的第一列（从第二行借来的），再添加其余列
+        html += `<td rowspan="2">${secondRowFirstCellText}</td>`;
+
+        // 跳过第一个空单元格，添加其余有 colspan 的单元格
+        cells.forEach((cell, cellIdx) => {
+          if (cellIdx === 0) return; // 跳过空的第一格
+          const text = extractCellText(cell);
+          const colspan = getColspan(cell);
+          let attrs = colspan > 1 ? ` colspan="${colspan}"` : "";
+          html += `<td${attrs}>${text}</td>`;
+        });
+      } else if (rowIdx === 1) {
+        // 第二行：跳过第一个单元格（已经移到第一行了），添加其余列
+        cells.forEach((cell, cellIdx) => {
+          if (cellIdx === 0) return; // 跳过，已在第一行
+          const text = extractCellText(cell);
+          html += `<td>${text}</td>`;
+        });
+      } else {
+        // 数据行：正常处理
+        cells.forEach((cell) => {
+          const text = extractCellText(cell);
+          const colspan = getColspan(cell);
+          const rowspan = getRowspan(cell);
+          let attrs = "";
+          if (colspan > 1) attrs += ` colspan="${colspan}"`;
+          if (rowspan > 1) attrs += ` rowspan="${rowspan}"`;
+          html += `<td${attrs}>${text}</td>`;
+        });
+      }
+    } else {
+      // 无双层表头：正常处理所有单元格
+      cells.forEach((cell) => {
+        const text = extractCellText(cell);
+        const colspan = getColspan(cell);
+        const rowspan = getRowspan(cell);
+        let attrs = "";
+        if (colspan > 1) attrs += ` colspan="${colspan}"`;
+        if (rowspan > 1) attrs += ` rowspan="${rowspan}"`;
+        html += `<td${attrs}>${text}</td>`;
+      });
+    }
+
+    html += "</tr>";
+  });
+
+  html += "</table>";
+  return html;
 }
 
 /**
@@ -1146,9 +1212,45 @@ function postProcessMarkdown(markdown) {
     (_, content) => `\n\n$$\n${content.trim()}\n$$\n\n`,
   );
 
-  // 清理多余空行和 HTML 标签残留
+  // 清理多余空行和非表格 HTML 标签残留
+  // 保留表格相关标签（table, tr, td, th, thead, tbody）以支持复杂表格
   result = result.replace(/\n{4,}/g, "\n\n\n");
-  result = result.replace(/<\/?[a-z][^>]*>/gi, "");
+  result = result.replace(
+    /<\/?(?!table|tr|td|th|thead|tbody)[a-z][^>]*>/gi,
+    "",
+  );
+
+  // 转换 HTML 表格内的 LaTeX 符号为 Unicode
+  // 这一步在 restoreMathPlaceholders 之后执行，所以可以匹配 $..$ 格式
+  result = result.replace(/<table[\s\S]*?<\/table>/gi, (tableHtml) => {
+    // 常见 LaTeX 符号到 Unicode 的映射
+    const replacements = [
+      [/\$\\times\$/g, "×"],
+      [/\$\\cdot\$/g, "·"],
+      [/\$\\pm\$/g, "±"],
+      [/\$\\mp\$/g, "∓"],
+      [/\$\\div\$/g, "÷"],
+      [/\$\\leq\$/g, "≤"],
+      [/\$\\geq\$/g, "≥"],
+      [/\$\\neq\$/g, "≠"],
+      [/\$\\approx\$/g, "≈"],
+      [/\$\\equiv\$/g, "≡"],
+      [/\$\\infty\$/g, "∞"],
+      [/\$\\alpha\$/g, "α"],
+      [/\$\\beta\$/g, "β"],
+      [/\$\\gamma\$/g, "γ"],
+      [/\$\\delta\$/g, "δ"],
+      [/\$\\rightarrow\$/g, "→"],
+      [/\$\\leftarrow\$/g, "←"],
+      [/\$\\checkmark\$/g, "✓"],
+    ];
+
+    let cleaned = tableHtml;
+    for (const [pattern, replacement] of replacements) {
+      cleaned = cleaned.replace(pattern, replacement);
+    }
+    return cleaned;
+  });
 
   return result;
 }
@@ -1500,7 +1602,22 @@ function handleHtmlToMarkdown(data, sendResponse) {
       },
     });
 
-    // 自定义规则：处理文本格式的复杂表格
+    // 自定义规则：处理复杂 HTML 表格（直接输出 HTML）
+    turndownService.addRule("arxivHtmlTable", {
+      filter: (node) => {
+        return node.classList && node.classList.contains("ltx_html_table");
+      },
+      replacement: (content, node) => {
+        // 直接输出内部的 HTML 表格
+        const table = node.querySelector("table");
+        if (table) {
+          return `\n\n${table.outerHTML}\n\n`;
+        }
+        return content;
+      },
+    });
+
+    // 自定义规则：处理文本格式的复杂表格（向后兼容，保留旧逻辑）
     turndownService.addRule("arxivTextTable", {
       filter: (node) => {
         return node.classList && node.classList.contains("ltx_table_text");
