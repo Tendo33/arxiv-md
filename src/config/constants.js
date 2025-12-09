@@ -19,28 +19,18 @@ export const API = {
 export const STORAGE_KEYS = {
   MINERU_TOKEN: "mineruToken",
   CONVERSION_MODE: "conversionMode",
-  DOWNLOAD_FOLDER: "downloadFolder",
   STATISTICS: "statistics",
 };
 
 /**
- * 转换模式（已简化，保留用于向后兼容）
+ * 转换模式
  */
 export const CONVERSION_MODE = {
   FAST: "fast", // ar5iv + 本地转换，失败时下载 PDF
-  QUALITY: "quality", // 与 FAST 相同（已废弃 MinerU 自动调用）
   ALWAYS_MINERU: "always", // 仅 MinerU（手动模式）
 };
 
-/**
- * 任务状态
- */
-export const TASK_STATUS = {
-  PENDING: "pending",
-  PROCESSING: "processing",
-  COMPLETED: "completed",
-  FAILED: "failed",
-};
+
 
 /**
  * 转换层级
@@ -65,14 +55,7 @@ export const ERROR_MESSAGES = {
   UNKNOWN_ERROR: "未知错误",
 };
 
-/**
- * 成功消息
- */
-export const SUCCESS_MESSAGES = {
-  CONVERSION_COMPLETE: "转换完成",
-  SAVED_AS_MARKDOWN: "已保存为 Markdown",
-  SAVED_AS_PDF: "已保存为 PDF",
-};
+
 
 /**
  * 配置默认值

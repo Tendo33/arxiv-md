@@ -39,14 +39,7 @@ class Logger {
   debug(...args) {
     this._log(LOG_LEVELS.DEBUG, "DEBUG", ...args);
   }
-
-  setLevel(level) {
-    this.level = level;
-  }
 }
 
 // 导出单例
 export default new Logger("ArxivMD");
-
-// 导出创建自定义 logger 的工厂函数
-export const createLogger = (namespace) => new Logger(namespace);

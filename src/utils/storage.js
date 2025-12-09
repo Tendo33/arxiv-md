@@ -43,64 +43,6 @@ class StorageManager {
     }
   }
 
-  /**
-   * 批量获取
-   * @param {string[]} keys - 键名数组
-   * @returns {Promise<Object>}
-   */
-  async getMultiple(keys) {
-    try {
-      return await this.storage.get(keys);
-    } catch (error) {
-      logger.error("Storage getMultiple error:", error);
-      return {};
-    }
-  }
-
-  /**
-   * 批量设置
-   * @param {Object} items - 键值对对象
-   * @returns {Promise<void>}
-   */
-  async setMultiple(items) {
-    try {
-      await this.storage.set(items);
-      logger.debug("Storage setMultiple:", Object.keys(items));
-    } catch (error) {
-      logger.error("Storage setMultiple error:", error);
-      throw error;
-    }
-  }
-
-  /**
-   * 删除存储值
-   * @param {string|string[]} keys - 键名或键名数组
-   * @returns {Promise<void>}
-   */
-  async remove(keys) {
-    try {
-      await this.storage.remove(keys);
-      logger.debug("Storage remove:", keys);
-    } catch (error) {
-      logger.error("Storage remove error:", error);
-      throw error;
-    }
-  }
-
-  /**
-   * 清空所有存储
-   * @returns {Promise<void>}
-   */
-  async clear() {
-    try {
-      await this.storage.clear();
-      logger.warn("Storage cleared");
-    } catch (error) {
-      logger.error("Storage clear error:", error);
-      throw error;
-    }
-  }
-
   // === 业务特定方法 ===
 
   /**
@@ -147,16 +89,6 @@ class StorageManager {
       pdfFallback: 0,
       lastConversionTime: null,
     });
-  }
-
-  /**
-   * 更新统计数据
-   * @param {Object} update - 要更新的字段
-   */
-  async updateStatistics(update) {
-    const stats = await this.getStatistics();
-    const newStats = { ...stats, ...update, lastConversionTime: Date.now() };
-    await this.set(STORAGE_KEYS.STATISTICS, newStats);
   }
 
   /**

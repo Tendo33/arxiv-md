@@ -74,27 +74,6 @@ class MetadataExtractor {
   }
 
   /**
-   * 从 arXiv PDF 页面提取元数据（信息有限）
-   * @param {Document} doc - DOM Document
-   * @returns {Object} 论文元数据
-   */
-  extractFromPdfPage(doc = document) {
-    logger.debug("Extracting metadata from PDF page");
-
-    const arxivId = this._extractIdFromUrl(window.location.href);
-    const pdfUrl = window.location.href;
-
-    // PDF 页面信息有限，需要跳转到 Abstract 页获取完整信息
-    return {
-      arxivId,
-      pdfUrl,
-      pageType: "pdf",
-      needsFullMetadata: true,
-      abstractUrl: `https://arxiv.org/abs/${arxivId}`,
-    };
-  }
-
-  /**
    * 通过 API 获取完整元数据（备用方案）
    * @param {string} arxivId - arXiv ID
    * @returns {Promise<Object>}

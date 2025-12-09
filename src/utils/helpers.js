@@ -125,14 +125,3 @@ export async function showNotification(title, message, type = "basic") {
     message: message,
   });
 }
-
-export function asyncErrorHandler(fn) {
-  return async (...args) => {
-    try {
-      return await fn(...args);
-    } catch (error) {
-      console.error("Async error:", error);
-      throw error;
-    }
-  };
-}
