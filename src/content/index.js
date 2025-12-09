@@ -1447,7 +1447,7 @@ function handleHtmlToMarkdown(data, sendResponse) {
       },
       replacement: (content) => {
         const trimmed = content.trim();
-        return trimmed ? `\n\n**${trimmed}**\n\n` : "";
+        return trimmed ? `\n\n${trimmed}\n\n` : "";
       },
     });
 
