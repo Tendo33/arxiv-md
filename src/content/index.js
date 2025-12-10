@@ -759,10 +759,14 @@ function preprocessAr5ivElements(doc) {
     }
   });
 
-  // 处理代码块
+  // 处理代码块（但排除算法块内的 listing，它们需要特殊处理）
   doc
     .querySelectorAll(".ltx_listing, .ltx_verbatim, pre.ltx_code")
     .forEach((code) => {
+      // 跳过算法块内的 listing，稍后会单独处理
+      if (code.closest("figure.ltx_float_algorithm")) {
+        return;
+      }
       if (!code.querySelector("code")) {
         code.innerHTML = `<code>${code.textContent}</code>`;
       }
@@ -848,30 +852,70 @@ function preprocessAr5ivElements(doc) {
       const caption = alg.querySelector("figcaption");
       const captionText = caption ? caption.textContent.trim() : "Algorithm";
 
-      // 提取算法内容
-      const contentDiv = alg.querySelector(".ltx_flex_figure, .ltx_flex_cell");
-      if (contentDiv) {
-        // 收集所有算法步骤
-        const steps = [];
-        contentDiv.querySelectorAll("p, .ltx_p, .ltx_text").forEach((el) => {
-          const text = el.textContent.trim();
-          if (text && !el.closest("figcaption")) {
-            steps.push(text);
+      // 收集所有算法内容（按 DOM 顺序）
+      const steps = [];
+
+      // 1. 首先提取 Input 段落（通常在第一个 ltx_flex_cell 中）
+      const inputParagraphs = alg.querySelectorAll(".ltx_flex_cell > p.ltx_p, .ltx_flex_cell > .ltx_p");
+      inputParagraphs.forEach((p, idx) => {
+        // 只取第一个作为 Input
+        if (idx === 0) {
+          const text = p.textContent.trim();
+          if (text) steps.push(text);
+        }
+      });
+
+      // 2. 提取算法步骤（直接查找所有 ltx_listingline）
+      const listingLines = alg.querySelectorAll(".ltx_listingline");
+      console.log(`[PREPROCESS] 找到 ${listingLines.length} 个 ltx_listingline`);
+
+      listingLines.forEach((line) => {
+        // 提取行号（在 .ltx_tag 或 .ltx_tag_listingline 中）
+        const tagEl = line.querySelector(".ltx_tag_listingline, .ltx_tag");
+        const lineNum = tagEl ? tagEl.textContent.trim() : "";
+
+        // 提取行内容（排除行号标签）
+        let lineContent = "";
+        line.childNodes.forEach((child) => {
+          if (child.nodeType === Node.TEXT_NODE) {
+            lineContent += child.textContent;
+          } else if (child.nodeType === Node.ELEMENT_NODE) {
+            // 跳过行号标签
+            if (child.classList &&
+              (child.classList.contains("ltx_tag") ||
+                child.classList.contains("ltx_tag_listingline"))) {
+              return;
+            }
+            lineContent += child.textContent;
           }
         });
 
-        if (steps.length > 0) {
-          // 创建代码块
-          const pre = doc.createElement("pre");
-          const code = doc.createElement("code");
-          code.textContent = `${captionText}\n${"─".repeat(40)}\n${steps.join("\n")}`;
-          pre.appendChild(code);
-          pre.className = "ltx_algorithm_converted";
-          alg.replaceWith(pre);
-          console.log(
-            `[PREPROCESS] ✅ 转换 Algorithm 为代码块: ${captionText}`,
-          );
+        lineContent = lineContent.trim();
+        if (lineContent || lineNum) {
+          steps.push(lineNum ? `${lineNum} ${lineContent}` : lineContent);
         }
+      });
+
+      // 3. 提取 Output 段落（通常在最后一个 ltx_flex_cell 中）
+      if (inputParagraphs.length > 1) {
+        const lastP = inputParagraphs[inputParagraphs.length - 1];
+        const text = lastP.textContent.trim();
+        if (text) steps.push(text);
+      }
+
+      if (steps.length > 0) {
+        // 创建代码块
+        const pre = doc.createElement("pre");
+        const code = doc.createElement("code");
+        code.textContent = `${captionText}\n${"─".repeat(40)}\n${steps.join("\n")}`;
+        pre.appendChild(code);
+        pre.className = "ltx_algorithm_converted";
+        alg.replaceWith(pre);
+        console.log(
+          `[PREPROCESS] ✅ 转换 Algorithm 为代码块 (${steps.length} 行): ${captionText}`,
+        );
+      } else {
+        console.log("[PREPROCESS] ⚠️ Algorithm 未找到内容:", captionText);
       }
     } catch (e) {
       console.error("[PREPROCESS] ❌ 转换 Algorithm 失败:", e);
