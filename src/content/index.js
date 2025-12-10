@@ -247,6 +247,28 @@ async function handleConversionTrigger(type = "markdown") {
     chrome.runtime.sendMessage(
       { type: "CONVERT_PAPER", data: metadata },
       (response) => {
+        // Check for extension context invalidation (happens when extension reloads)
+        if (chrome.runtime.lastError) {
+          logger.error(
+            "Failed to send message to background:",
+            chrome.runtime.lastError.message,
+          );
+          // Restore button state
+          if (activeButton) {
+            activeButton.disabled = false;
+            activeButton.style.opacity = "1";
+            activeButton.style.cursor = "pointer";
+          }
+          if (progressIndicator) {
+            progressIndicator.style.display = "none";
+          }
+          // Optionally prompt user to reload the page
+          alert(
+            "Extension was updated or reloaded. Please refresh the page and try again.",
+          );
+          return;
+        }
+
         logger.debug("Markdown conversion response:", response);
 
         if (activeButton) {
