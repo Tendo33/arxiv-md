@@ -617,15 +617,32 @@ function preprocessTables(doc) {
           firstRowCells.forEach((td) => {
             const th = doc.createElement("th");
             th.innerHTML = td.innerHTML;
+            // 复制 rowspan 和 colspan 属性
+            const rowspan = td.getAttribute("rowspan");
+            const colspan = td.getAttribute("colspan");
+            if (rowspan) th.setAttribute("rowspan", rowspan);
+            if (colspan) th.setAttribute("colspan", colspan);
             td.replaceWith(th);
           });
         }
       }
 
       table.querySelectorAll("td, th").forEach((cell) => {
+        // 保留 rowspan 和 colspan 属性用于多行/多列合并
+        const rowspan = cell.getAttribute("rowspan");
+        const colspan = cell.getAttribute("colspan");
+
         cell.removeAttribute("id");
         cell.removeAttribute("style");
         cell.removeAttribute("class");
+
+        // 恢复 rowspan 和 colspan 属性
+        if (rowspan && rowspan !== "1") {
+          cell.setAttribute("rowspan", rowspan);
+        }
+        if (colspan && colspan !== "1") {
+          cell.setAttribute("colspan", colspan);
+        }
       });
 
       table.querySelectorAll("tr").forEach((row) => {
@@ -785,15 +802,21 @@ function preprocessAr5ivElements(doc) {
               cell.classList.contains("ltx_th") || rowIdx === 0;
             const cellEl = doc.createElement(isHeader ? "th" : "td");
 
-            // 提取 colspan 属性 (从 class ltx_colspan_N)
+            // 提取 colspan 属性 (优先从 HTML 属性，其次从 class ltx_colspan_N)
+            const colspanAttr = cell.getAttribute("colspan");
             const colspanMatch = cell.className.match(/ltx_colspan_(\d+)/);
-            if (colspanMatch) {
+            if (colspanAttr && colspanAttr !== "1") {
+              cellEl.setAttribute("colspan", colspanAttr);
+            } else if (colspanMatch) {
               cellEl.setAttribute("colspan", colspanMatch[1]);
             }
 
-            // 提取 rowspan 属性 (从 class ltx_rowspan_N)
+            // 提取 rowspan 属性 (优先从 HTML 属性，其次从 class ltx_rowspan_N)
+            const rowspanAttr = cell.getAttribute("rowspan");
             const rowspanMatch = cell.className.match(/ltx_rowspan_(\d+)/);
-            if (rowspanMatch) {
+            if (rowspanAttr && rowspanAttr !== "1") {
+              cellEl.setAttribute("rowspan", rowspanAttr);
+            } else if (rowspanMatch) {
               cellEl.setAttribute("rowspan", rowspanMatch[1]);
             }
 
