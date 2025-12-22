@@ -43,8 +43,13 @@ function init() {
         return true; // 保持消息通道打开以异步响应
 
       case "DOWNLOAD_FILE":
-        // 在页面环境中执行文件下载（使用 <a> download 属性）
+        // 在页面环境中执行文本文件下载（使用 <a> download 属性）
         handleFileDownload(message.data, sendResponse);
+        return true; // 保持消息通道打开以异步响应
+
+      case "DOWNLOAD_BLOB":
+        // 在页面环境中执行 Blob 文件下载（从 base64）
+        handleBlobDownload(message.data, sendResponse);
         return true; // 保持消息通道打开以异步响应
     }
 
@@ -420,9 +425,10 @@ function updateProgressUI(progress) {
   if (textEl && percentEl) {
     const stageText = {
       checking: "Checking ar5iv...",
-      downloading: "Downloading PDF...",
-      uploading: "Uploading to MinerU...",
-      processing: "MinerU processing...",
+      downloading: "Downloading...",
+      submitting: "Submitting to MinerU...",
+      processing: "MinerU parsing...",
+      extracting: "Extracting results...",
       completed: "Done!",
     };
 
@@ -1181,7 +1187,7 @@ function postProcessMarkdown(markdown) {
 }
 
 /**
- * 处理文件下载（使用 <a> download 属性）
+ * 处理文本文件下载（使用 <a> download 属性）
  */
 function handleFileDownload(data, sendResponse) {
   try {
@@ -1205,6 +1211,40 @@ function handleFileDownload(data, sendResponse) {
     sendResponse({ success: true });
   } catch (error) {
     logger.error("Download failed:", error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+/**
+ * 处理 Blob 文件下载（从 base64 数据）
+ */
+function handleBlobDownload(data, sendResponse) {
+  try {
+    // 将 base64 转换为 Blob
+    const binaryString = atob(data.base64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    const blob = new Blob([bytes], { type: data.mimeType || "application/octet-stream" });
+
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = data.filename;
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+
+    setTimeout(() => {
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }, 100);
+
+    sendResponse({ success: true });
+  } catch (error) {
+    logger.error("Blob download failed:", error);
     sendResponse({ success: false, error: error.message });
   }
 }

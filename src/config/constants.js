@@ -6,9 +6,16 @@
 export const API = {
   // ar5iv.org 会重定向到 ar5iv.labs.arxiv.org，直接使用最终域名
   AR5IV_BASE: "https://ar5iv.labs.arxiv.org/html",
+  // MinerU API v4 端点 (官方文档: https://mineru.net/apiManage/docs)
   MINERU_BASE: "https://mineru.net/api/v4",
   MINERU_TASK: "https://mineru.net/api/v4/extract/task",
-  MINERU_RESULT: "https://mineru.net/api/v4/extract/result",
+  // 批量文件上传 URL 获取接口
+  MINERU_FILE_URLS: "https://mineru.net/api/v4/file-urls/batch",
+  // 批量任务提交接口
+  MINERU_BATCH_TASK: "https://mineru.net/api/v4/extract/task/batch",
+  // 批量结果查询接口
+  MINERU_BATCH_RESULT: "https://mineru.net/api/v4/extract-results/batch",
+  // arXiv PDF 端点
   ARXIV_PDF: "https://arxiv.org/pdf",
   ARXIV_EXPORT: "https://export.arxiv.org/pdf",
 };
@@ -50,6 +57,7 @@ export const ERROR_MESSAGES = {
   MINERU_TOKEN_MISSING: "未配置 MinerU API Token",
   MINERU_API_ERROR: "MinerU API 调用失败",
   MINERU_QUOTA_EXCEEDED: "MinerU 配额已用完",
+  MINERU_DOWNLOAD_FAILED: "MinerU 结果下载失败",
   PDF_DOWNLOAD_FAILED: "PDF 下载失败",
   NETWORK_ERROR: "网络连接错误",
   UNKNOWN_ERROR: "未知错误",

@@ -90,7 +90,7 @@ class MainConverter {
 
   async _convertWithMinerU(paperInfo, onProgress, tabId) {
     const { arxivId, title, pdfUrl } = paperInfo;
-    logger.info("Tier 2: Trying MinerU conversion...");
+    logger.info("MinerU conversion requested...");
 
     const mineruToken = await storage.getMinerUToken();
     if (!mineruToken) {
@@ -105,6 +105,7 @@ class MainConverter {
         onProgress,
       );
 
+      // MinerU 返回 ZIP 文件，使用 .zip 后缀
       const filename = generateFilename(
         {
           title: title,
@@ -112,24 +113,25 @@ class MainConverter {
           year: paperInfo.year,
           arxivId: arxivId,
         },
-        "md",
+        "zip",
       );
 
+      // 下载 ZIP 文件
       if (tabId) {
-        await this._downloadViaContentScript(result.markdown, filename, tabId);
+        await this._downloadBlobViaContentScript(result.zipBlob, filename, tabId);
       } else {
-        await this._downloadMarkdown(result.markdown, filename);
+        downloadBlob(result.zipBlob, filename);
       }
 
       await storage.incrementConversion(CONVERSION_TIER.MINERU_API);
       if (onProgress)
         onProgress({ tier: "mineru", stage: "completed", progress: 100 });
       showNotification(
-        "✅ 高质量转换完成",
-        `已保存：${filename}\n方式：MinerU (深度解析)`,
+        "✅ 高质量解析完成",
+        `已保存：${filename}\n方式：MinerU (深度解析)\n结果包含 Markdown 和图片`,
         "basic",
       );
-      logger.info("Tier 2 success:", filename);
+      logger.info("MinerU success:", filename);
 
       return { success: true, tier: CONVERSION_TIER.MINERU_API, filename };
     } catch (error) {
@@ -222,7 +224,7 @@ class MainConverter {
   }
 
   /**
-   * 通过 Content Script 下载文件
+   * 通过 Content Script 下载文本文件
    * @private
    */
   async _downloadViaContentScript(content, filename, tabId) {
@@ -243,6 +245,38 @@ class MainConverter {
           }
         },
       );
+    });
+  }
+
+  /**
+   * 通过 Content Script 下载 Blob 文件
+   * @private
+   */
+  async _downloadBlobViaContentScript(blob, filename, tabId) {
+    return new Promise((resolve, reject) => {
+      // 将 Blob 转换为 base64 以便传输
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result.split(",")[1];
+        chrome.tabs.sendMessage(
+          tabId,
+          {
+            type: "DOWNLOAD_BLOB",
+            data: { base64, filename, mimeType: blob.type || "application/zip" },
+          },
+          (response) => {
+            if (chrome.runtime.lastError) {
+              reject(new Error(chrome.runtime.lastError.message));
+            } else if (response && response.success) {
+              resolve();
+            } else {
+              reject(new Error(response?.error || "下载失败"));
+            }
+          },
+        );
+      };
+      reader.onerror = () => reject(new Error("Failed to read blob"));
+      reader.readAsDataURL(blob);
     });
   }
 
