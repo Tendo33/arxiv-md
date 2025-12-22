@@ -865,12 +865,10 @@ function preprocessAr5ivElements(doc) {
         if (tbody.children.length > 0) {
           table.appendChild(tbody);
           tabular.replaceWith(table);
-          console.log(
-            `[PREPROCESS] ✅ ltx_tabular 转为 HTML table (${rows.length} 行)`,
-          );
+          logger.debug(`ltx_tabular 转为 HTML table (${rows.length} 行)`);
         }
       } catch (e) {
-        console.error("[PREPROCESS] ❌ 转换伪表格失败:", e);
+        logger.error("转换伪表格失败:", e);
       }
     });
 
@@ -895,7 +893,7 @@ function preprocessAr5ivElements(doc) {
 
       // 2. 提取算法步骤（直接查找所有 ltx_listingline）
       const listingLines = alg.querySelectorAll(".ltx_listingline");
-      console.log(`[PREPROCESS] 找到 ${listingLines.length} 个 ltx_listingline`);
+      logger.debug(`找到 ${listingLines.length} 个 ltx_listingline`);
 
       listingLines.forEach((line) => {
         // 提取行号（在 .ltx_tag 或 .ltx_tag_listingline 中）
@@ -939,14 +937,12 @@ function preprocessAr5ivElements(doc) {
         pre.appendChild(code);
         pre.className = "ltx_algorithm_converted";
         alg.replaceWith(pre);
-        console.log(
-          `[PREPROCESS] ✅ 转换 Algorithm 为代码块 (${steps.length} 行): ${captionText}`,
-        );
+        logger.debug(`转换 Algorithm 为代码块 (${steps.length} 行): ${captionText}`);
       } else {
-        console.log("[PREPROCESS] ⚠️ Algorithm 未找到内容:", captionText);
+        logger.warn("Algorithm 未找到内容:", captionText);
       }
     } catch (e) {
-      console.error("[PREPROCESS] ❌ 转换 Algorithm 失败:", e);
+      logger.error("转换 Algorithm 失败:", e);
     }
   });
 
@@ -972,7 +968,7 @@ function preprocessAr5ivElements(doc) {
     italic.replaceWith(em);
   });
 
-  console.log(`[PREPROCESS] ✅ ar5iv 元素清理完成`);
+  logger.debug("ar5iv 元素清理完成");
 }
 
 /**

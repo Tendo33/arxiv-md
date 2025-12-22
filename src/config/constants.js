@@ -9,15 +9,8 @@ export const API = {
   // MinerU API v4 端点 (官方文档: https://mineru.net/apiManage/docs)
   MINERU_BASE: "https://mineru.net/api/v4",
   MINERU_TASK: "https://mineru.net/api/v4/extract/task",
-  // 批量文件上传 URL 获取接口
-  MINERU_FILE_URLS: "https://mineru.net/api/v4/file-urls/batch",
-  // 批量任务提交接口
-  MINERU_BATCH_TASK: "https://mineru.net/api/v4/extract/task/batch",
-  // 批量结果查询接口
-  MINERU_BATCH_RESULT: "https://mineru.net/api/v4/extract-results/batch",
   // arXiv PDF 端点
   ARXIV_PDF: "https://arxiv.org/pdf",
-  ARXIV_EXPORT: "https://export.arxiv.org/pdf",
 };
 
 /**
@@ -36,8 +29,6 @@ export const CONVERSION_MODE = {
   FAST: "fast", // ar5iv + 本地转换，失败时下载 PDF
   ALWAYS_MINERU: "always", // 仅 MinerU（手动模式）
 };
-
-
 
 /**
  * 转换层级
@@ -62,8 +53,6 @@ export const ERROR_MESSAGES = {
   NETWORK_ERROR: "网络连接错误",
   UNKNOWN_ERROR: "未知错误",
 };
-
-
 
 /**
  * 配置默认值

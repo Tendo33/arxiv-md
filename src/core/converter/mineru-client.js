@@ -4,6 +4,7 @@
 // Principle: SOLID-S (单一职责)
 
 import { API, DEFAULTS, ERROR_MESSAGES } from "@config/constants";
+// Note: Batch APIs (MINERU_FILE_URLS, MINERU_BATCH_TASK, MINERU_BATCH_RESULT) removed - not implemented
 import logger from "@utils/logger";
 import { sleep } from "@utils/helpers";
 
@@ -20,9 +21,6 @@ import { sleep } from "@utils/helpers";
 class MinerUClient {
   constructor() {
     this.taskUrl = API.MINERU_TASK;
-    this.fileUrlsEndpoint = API.MINERU_FILE_URLS;
-    this.batchTaskEndpoint = API.MINERU_BATCH_TASK;
-    this.batchResultEndpoint = API.MINERU_BATCH_RESULT;
     this.pollInterval = DEFAULTS.POLL_INTERVAL;
     this.maxPollAttempts = DEFAULTS.MAX_POLL_ATTEMPTS;
   }
