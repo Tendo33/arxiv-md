@@ -30,7 +30,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid #F5F5F5;
 }
 
 .logo {
@@ -45,7 +45,7 @@ body {
 }
 
 .logo rect {
-  fill: #A31F1B;
+  fill: #B91C1C;
   fill-opacity: 1;
 }
 
@@ -64,7 +64,7 @@ body {
 
 .version {
   font-size: 10px;
-  color: #A31F1B;
+  color: #B91C1C;
   background: #FEF2F2;
   padding: 2px 8px;
   border-radius: 12px;
@@ -81,9 +81,10 @@ body {
 
 .description {
   font-size: 13px;
-  color: #4B5563;
+  color: #525252;
   line-height: 1.6;
   margin-bottom: 0;
+  font-weight: 400;
 }
 
 /* Actions */
@@ -99,29 +100,31 @@ body {
   border: none;
   border-radius: 8px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   text-decoration: none;
+  letter-spacing: 0.01em;
 }
 
 .btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(163, 31, 27, 0.2);
+  box-shadow: 0 4px 12px rgba(163, 31, 27, 0.15);
 }
 
 .btn:active {
   transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(163, 31, 27, 0.1);
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #A31F1B 0%, #C0392B 100%);
+  background: linear-gradient(135deg, #B91C1C 0%, #DC2626 100%);
   color: white;
-  box-shadow: 0 2px 4px rgba(163, 31, 27, 0.1);
+  box-shadow: 0 2px 4px rgba(163, 31, 27, 0.08);
 }
 
 .btn svg {
@@ -135,19 +138,19 @@ body {
   background: white;
   text-align: center;
   font-size: 12px;
-  color: #9CA3AF;
-  border-top: 1px solid #F3F4F6;
+  color: #A3A3A3;
+  border-top: 1px solid #F5F5F5;
 }
 
 .footer a {
-  color: #6B7280;
+  color: #737373;
   text-decoration: none;
   transition: color 0.2s;
   font-weight: 500;
 }
 
 .footer a:hover {
-  color: #A31F1B;
+  color: #B91C1C;
 }
 
 .footer span {
