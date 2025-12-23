@@ -15,6 +15,9 @@ async function init() {
   document.getElementById("clearCompletedBtn").addEventListener("click", clearCompleted);
   document.getElementById("refreshBtn").addEventListener("click", loadTasks);
 
+  // 绑定任务操作事件（只绑定一次，使用事件委托）
+  bindTaskActions();
+
   // 加载任务
   await loadTasks();
 
@@ -78,9 +81,6 @@ function renderTaskList(tasks) {
   const sortedTasks = [...tasks].sort((a, b) => b.createdAt - a.createdAt);
 
   listEl.innerHTML = sortedTasks.map(createTaskCard).join("");
-
-  // 绑定卡片操作事件
-  bindTaskActions();
 }
 
 /**
