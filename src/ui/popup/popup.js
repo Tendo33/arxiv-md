@@ -273,10 +273,46 @@ async function handleRetry(taskId) {
 }
 
 /**
+ * 显示自定义确认对话框
+ * @returns {Promise<boolean>}
+ */
+function showConfirm(message) {
+  return new Promise((resolve) => {
+    const overlay = document.getElementById("confirmOverlay");
+    const msgEl = document.getElementById("confirmMessage");
+    const okBtn = document.getElementById("confirmOk");
+    const cancelBtn = document.getElementById("confirmCancel");
+
+    msgEl.textContent = message;
+    overlay.classList.add("show");
+
+    const cleanup = () => {
+      overlay.classList.remove("show");
+      okBtn.removeEventListener("click", onOk);
+      cancelBtn.removeEventListener("click", onCancel);
+    };
+
+    const onOk = () => {
+      cleanup();
+      resolve(true);
+    };
+
+    const onCancel = () => {
+      cleanup();
+      resolve(false);
+    };
+
+    okBtn.addEventListener("click", onOk);
+    cancelBtn.addEventListener("click", onCancel);
+  });
+}
+
+/**
  * 删除任务
  */
 async function handleDelete(taskId) {
-  if (!confirm("确定要删除这个任务吗？")) return;
+  const confirmed = await showConfirm("确定要删除这个任务吗？");
+  if (!confirmed) return;
 
   try {
     const response = await chrome.runtime.sendMessage({
@@ -300,7 +336,8 @@ async function handleDelete(taskId) {
  * 清空已完成的任务
  */
 async function clearCompleted() {
-  if (!confirm("确定要清空所有已完成和失败的任务吗？")) return;
+  const confirmed = await showConfirm("确定要清空已完成和失败的任务吗？");
+  if (!confirmed) return;
 
   try {
     const response = await chrome.runtime.sendMessage({
