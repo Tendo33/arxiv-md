@@ -379,3 +379,6 @@ if (chrome.commands && chrome.commands.onCommand) {
 
 // 保持 Service Worker 活跃
 setInterval(() => logger.debug("Keep alive ping"), 20000);
+
+// 导出函数供其他模块使用
+export { processMinerUTaskInBackground };

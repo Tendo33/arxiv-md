@@ -105,22 +105,22 @@ class MainConverter {
       chrome.runtime.getManifest;
 
     if (isBackgroundContext) {
-    // 在 background 上下文中，直接导入并调用 taskManager
+      // 在 background 上下文中，直接导入并调用 taskManager 和处理函数
       try {
         const taskManager = (await import("@core/task-manager")).default;
         const task = await taskManager.addTask(paperInfo, "mineru");
 
-        // 触发后台处理（不等待结果）
-        // 注意：这里不能直接调用 processMinerUTaskInBackground，因为它在 background/index.js 中
-        // 我们通过 setTimeout 延迟触发，让当前调用栈完成
+        // 直接导入 background 模块并调用处理函数
+        // 注意：不能用 chrome.runtime.sendMessage 给自己发消息，Service Worker 不会收到
+        const backgroundModule = await import("@background/index.js");
+
+        // 使用 setTimeout 确保当前调用栈完成后再处理，避免阻塞响应
         setTimeout(() => {
-          // 发送内部消息触发处理
-          chrome.runtime.sendMessage({
-            type: "_INTERNAL_PROCESS_TASK",
-            taskId: task.id
-          }).catch(() => {
-            // 忽略错误，任务已创建
-          });
+          if (backgroundModule.processMinerUTaskInBackground) {
+            backgroundModule.processMinerUTaskInBackground(task.id);
+          } else {
+            logger.error("processMinerUTaskInBackground not exported from background module");
+          }
         }, 0);
 
         showNotification(
