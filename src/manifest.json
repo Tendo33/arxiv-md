@@ -15,7 +15,8 @@
     "https://ar5iv.org/*",
     "https://ar5iv.labs.arxiv.org/*",
     "https://export.arxiv.org/*",
-    "https://mineru.net/*"
+    "https://mineru.net/*",
+    "https://cdn-mineru.openxlab.org.cn/*"
   ],
   "background": {
     "service_worker": "background.js"

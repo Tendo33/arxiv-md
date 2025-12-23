@@ -188,20 +188,33 @@ class MinerUClient {
   /**
    * 下载 ZIP 文件
    * @param {string} zipUrl - ZIP 文件 URL
-   * @returns {Promise<Blob>} ZIP 文件 Blob
+   * @param {string} filename - 保存的文件名
+   * @returns {Promise<number>} Chrome Download ID
    */
-  async downloadZip(zipUrl) {
+  async downloadZip(zipUrl, filename) {
     logger.info("Downloading ZIP:", zipUrl);
 
     try {
-      const response = await fetch(zipUrl);
-      if (!response.ok) {
-        throw new Error(`Failed to download ZIP: ${response.status}`);
-      }
-
-      const blob = await response.blob();
-      logger.info(`Downloaded ZIP: ${blob.size} bytes`);
-      return blob;
+      // 使用 Chrome Downloads API 绕过 CORS 限制
+      return new Promise((resolve, reject) => {
+        chrome.downloads.download(
+          {
+            url: zipUrl,
+            filename: filename,
+            saveAs: false,
+            conflictAction: "uniquify",
+          },
+          (downloadId) => {
+            if (chrome.runtime.lastError) {
+              logger.error("Download failed:", chrome.runtime.lastError);
+              reject(new Error(chrome.runtime.lastError.message));
+            } else {
+              logger.info(`ZIP download started: ${downloadId}`);
+              resolve(downloadId);
+            }
+          },
+        );
+      });
     } catch (error) {
       logger.error("Failed to download ZIP:", error);
       throw error;
@@ -212,9 +225,9 @@ class MinerUClient {
    * 完整转换流程：提交 PDF URL -> 轮询 -> 返回/下载 ZIP
    * @param {string} pdfUrl - arXiv PDF URL
    * @param {string} token - MinerU API Token
-   * @param {Object} metadata - 元数据
+   * @param {Object} metadata - 元数据 (必须包含 filename)
    * @param {Function} onProgress - 进度回调
-   * @returns {Promise<Object>} 转换结果 (包含 zipUrl 和 zipBlob)
+   * @returns {Promise<Object>} 转换结果 (包含 zipUrl 和 downloadId)
    */
   async convert(pdfUrl, token, metadata = {}, onProgress = null) {
     logger.info("Starting MinerU conversion:", pdfUrl);
@@ -245,15 +258,16 @@ class MinerUClient {
 
       if (onProgress) onProgress({ stage: "downloading", progress: 90 });
 
-      // 下载 ZIP 文件
-      const zipBlob = await this.downloadZip(zipUrl);
+      // 下载 ZIP 文件 (使用 Chrome Downloads API)
+      const filename = metadata.filename || `arxiv_${metadata.arxivId || Date.now()}.zip`;
+      const downloadId = await this.downloadZip(zipUrl, filename);
 
       if (onProgress) onProgress({ stage: "completed", progress: 100 });
       logger.info("MinerU conversion successful");
 
       return {
         zipUrl,
-        zipBlob,
+        downloadId,
         metadata: {
           ...metadata,
           source: "mineru",

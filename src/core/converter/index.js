@@ -98,13 +98,6 @@ class MainConverter {
     }
 
     try {
-      const result = await mineruClient.convert(
-        pdfUrl || `${API.ARXIV_PDF}/${arxivId}.pdf`,
-        mineruToken,
-        paperInfo,
-        onProgress,
-      );
-
       // MinerU 返回 ZIP 文件，使用 .zip 后缀
       const filename = generateFilename(
         {
@@ -116,12 +109,15 @@ class MainConverter {
         "zip",
       );
 
-      // 下载 ZIP 文件
-      if (tabId) {
-        await this._downloadBlobViaContentScript(result.zipBlob, filename, tabId);
-      } else {
-        downloadBlob(result.zipBlob, filename);
-      }
+      const result = await mineruClient.convert(
+        pdfUrl || `${API.ARXIV_PDF}/${arxivId}.pdf`,
+        mineruToken,
+        { ...paperInfo, filename },
+        onProgress,
+      );
+
+      // MinerU 使用 Chrome Downloads API，直接下载到用户指定位置
+      // result.downloadId 是 Chrome Download ID
 
       await storage.incrementConversion(CONVERSION_TIER.MINERU_API);
       if (onProgress)
@@ -133,7 +129,7 @@ class MainConverter {
       );
       logger.info("MinerU success:", filename);
 
-      return { success: true, tier: CONVERSION_TIER.MINERU_API, filename };
+      return { success: true, tier: CONVERSION_TIER.MINERU_API, filename, downloadId: result.downloadId };
     } catch (error) {
       logger.error("MinerU conversion failed:", error);
       throw error;
