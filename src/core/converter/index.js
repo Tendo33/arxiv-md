@@ -88,53 +88,97 @@ class MainConverter {
     }
   }
 
+
+
   async _convertWithMinerU(paperInfo, onProgress, tabId) {
-    const { arxivId, title, pdfUrl } = paperInfo;
-    logger.info("MinerU conversion requested...");
+    const { arxivId, title } = paperInfo;
+    logger.info("MinerU conversion requested, submitting background task...");
 
     const mineruToken = await storage.getMinerUToken();
     if (!mineruToken) {
       throw new Error(ERROR_MESSAGES.MINERU_TOKEN_MISSING);
     }
 
-    try {
-      // MinerU 返回 ZIP 文件，使用 .zip 后缀
-      const filename = generateFilename(
-        {
-          title: title,
-          authors: paperInfo.authors,
-          year: paperInfo.year,
-          arxivId: arxivId,
-        },
-        "zip",
-      );
+    // 检测运行环境：background 还是 content script
+    const isBackgroundContext = typeof chrome !== 'undefined' &&
+      chrome.runtime &&
+      chrome.runtime.getManifest;
 
-      const result = await mineruClient.convert(
-        pdfUrl || `${API.ARXIV_PDF}/${arxivId}.pdf`,
-        mineruToken,
-        { ...paperInfo, filename },
-        onProgress,
-      );
+    if (isBackgroundContext) {
+    // 在 background 上下文中，直接导入并调用 taskManager
+      try {
+        const taskManager = (await import("@core/task-manager")).default;
+        const task = await taskManager.addTask(paperInfo, "mineru");
 
-      // MinerU 使用 Chrome Downloads API，直接下载到用户指定位置
-      // result.downloadId 是 Chrome Download ID
+        // 触发后台处理（不等待结果）
+        // 注意：这里不能直接调用 processMinerUTaskInBackground，因为它在 background/index.js 中
+        // 我们通过 setTimeout 延迟触发，让当前调用栈完成
+        setTimeout(() => {
+          // 发送内部消息触发处理
+          chrome.runtime.sendMessage({
+            type: "_INTERNAL_PROCESS_TASK",
+            taskId: task.id
+          }).catch(() => {
+            // 忽略错误，任务已创建
+          });
+        }, 0);
 
-      await storage.incrementConversion(CONVERSION_TIER.MINERU_API);
-      if (onProgress)
-        onProgress({ tier: "mineru", stage: "completed", progress: 100 });
-      showNotification(
-        "✅ 高质量解析完成",
-        `已保存：${filename}\n方式：MinerU (深度解析)\n结果包含 Markdown 和图片`,
-        "basic",
-      );
-      logger.info("MinerU success:", filename);
+        showNotification(
+          "✅ MinerU 任务已提交",
+          `${title}\n正在后台处理，完成后将通知您\n可点击插件图标查看进度`,
+          "basic"
+        );
 
-      return { success: true, tier: CONVERSION_TIER.MINERU_API, filename, downloadId: result.downloadId };
-    } catch (error) {
-      logger.error("MinerU conversion failed:", error);
-      throw error;
+        logger.info("MinerU task submitted:", task.id);
+
+        return {
+          success: true,
+          tier: CONVERSION_TIER.MINERU_API,
+          taskId: task.id,
+          background: true,
+        };
+      } catch (error) {
+        logger.error("Failed to submit MinerU task:", error);
+        throw error;
+      }
+    } else {
+      // 在 content script 上下文中，发送消息到 background
+      return new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage(
+          {
+            type: "START_MINERU_TASK",
+            data: paperInfo,
+          },
+          (response) => {
+            if (chrome.runtime.lastError) {
+              reject(new Error(chrome.runtime.lastError.message));
+              return;
+            }
+
+            if (response && response.success) {
+              showNotification(
+                "✅ MinerU 任务已提交",
+                `${title}\n正在后台处理，完成后将通知您\n可点击插件图标查看进度`,
+                "basic"
+              );
+              logger.info("MinerU task submitted:", response.taskId);
+
+              resolve({
+                success: true,
+                tier: CONVERSION_TIER.MINERU_API,
+                taskId: response.taskId,
+                background: true,
+              });
+            } else {
+              reject(new Error(response?.error || "提交任务失败"));
+            }
+          }
+        );
+      });
     }
   }
+
+
 
   async _fallbackToPdf(paperInfo, onProgress) {
     const { arxivId, title } = paperInfo;

@@ -20,6 +20,7 @@ export const STORAGE_KEYS = {
   MINERU_TOKEN: "mineruToken",
   CONVERSION_MODE: "conversionMode",
   STATISTICS: "statistics",
+  TASKS: "mineruTasks", // 任务队列存储键
 };
 
 /**
@@ -72,4 +73,21 @@ export const REGEX = {
   ARXIV_ID: /(?:arxiv\.org\/(?:abs|pdf)\/)?(\d{4}\.\d{4,5}(?:v\d+)?)/i,
   ARXIV_ABS_PAGE: /^https?:\/\/arxiv\.org\/abs\//,
   ARXIV_PDF_PAGE: /^https?:\/\/arxiv\.org\/pdf\//,
+};
+
+/**
+ * 任务状态
+ */
+export const TASK_STATUS = {
+  PENDING: "pending",       // 等待处理
+  PROCESSING: "processing", // 处理中
+  COMPLETED: "completed",   // 已完成
+  FAILED: "failed",         // 失败
+};
+
+/**
+ * 任务类型
+ */
+export const TASK_TYPE = {
+  MINERU: "mineru", // MinerU 转换任务
 };

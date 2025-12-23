@@ -1,31 +1,24 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>arXiv to Markdown</title>
+    <title>MinerU 任务中心</title>
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
     <div class="popup-container">
       <!-- Header -->
       <div class="header">
-        <div class="logo">
-          <!-- Brand Logo -->
+        <div class="header-left">
           <svg
-            width="24"
-            height="24"
+            width="20"
+            height="20"
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <rect
-              width="24"
-              height="24"
-              rx="6"
-              fill="white"
-              fill-opacity="0.2"
-            />
+            <rect width="24" height="24" rx="6" fill="white" fill-opacity="0.2" />
             <text
               x="12"
               y="17"
@@ -38,45 +31,63 @@
               Md
             </text>
           </svg>
-          <h1 data-i18n="popup_title">arXiv to Markdown</h1>
+          <h1>MinerU 任务</h1>
         </div>
-        <div class="version">v1.0.0</div>
-      </div>
-
-      <!-- Main Content -->
-      <div class="main-content">
-        <p class="description" data-i18n="popup_desc">
-          Visit any arXiv paper page to see the conversion buttons.
-        </p>
-      </div>
-
-      <!-- Actions -->
-      <div class="actions-section">
-        <button class="btn btn-primary" id="settingsBtn">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-            <path
-              d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"
-            />
-            <path
-              d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319z"
-            />
-          </svg>
-          <span data-i18n="popup_btn_settings">Open Settings</span>
-        </button>
+        <div class="header-actions">
+          <button class="icon-btn" id="settingsBtn" title="打开设置">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path
+                d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z" />
+              <path
+                d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319z" />
+            </svg>
+          </button>
+          <button class="icon-btn" id="clearCompletedBtn" title="清空已完成">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path
+                d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5ZM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H2.506a.58.58 0 0 0-.01 0H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1h-.995a.59.59 0 0 0-.01 0H11Zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5h9.916Z" />
+            </svg>
+          </button>
+        </div>
+        </div>
+        
+        <!-- Stats Summary -->
+        <div class="stats-summary" id="statsSummary">
+          <div class="stat-item">
+            <span class="stat-label">总任务</span>
+            <span class="stat-value" id="statsTotal">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">处理中</span>
+            <span class="stat-value processing" id="statsProcessing">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">已完成</span>
+            <span class="stat-value completed" id="statsCompleted">0</span>
+          </div>
+        </div>
+        
+        <!-- Task List -->
+        <div class="task-list-container">
+          <div class="task-list" id="taskList">
+            <!-- 任务卡片将动态插入 -->
+          </div>
+        
+          <!-- Empty State -->
+          <div class="empty-state" id="emptyState" style="display: none">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="M9 9h6M9 13h6M9 17h3" />
+            </svg>
+            <p>暂无转换任务</p>
+            <small>在 arXiv 论文页面点击 MinerU 转换按钮</small>
+          </div>
       </div>
 
       <!-- Footer -->
       <div class="footer">
-        <a href="https://github.com/yourusername/arxiv-md" target="_blank"
-          >GitHub</a
-        >
-        <span>•</span>
-        <a
-          href="https://github.com/yourusername/arxiv-md/issues"
-          target="_blank"
-          data-i18n="popup_footer_issues"
-          >Report Issue</a
-        >
+        <span class="footer-text">后台任务系统</span>
+        <a href="#" id="refreshBtn" class="footer-link">刷新</a>
       </div>
     </div>
 
