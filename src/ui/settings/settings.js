@@ -30,6 +30,10 @@ async function init() {
   // 加载统计
   await loadStatistics();
 
+  // 设置版本号
+  const manifest = chrome.runtime.getManifest();
+  document.getElementById("versionDisplay").textContent = `v${manifest.version}`;
+
   // 绑定事件
   bindEvents();
 }

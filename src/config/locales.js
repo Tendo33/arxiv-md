@@ -35,6 +35,12 @@ export const translations = {
     popup_toast_clear_failed: "❌ Clear failed",
     popup_confirm_delete: "Are you sure you want to delete this task?",
     popup_confirm_clear: "Are you sure you want to clear all completed and failed tasks?",
+    popup_page_title: "MinerU Task Center",
+    popup_btn_clear_completed: "Clear Completed",
+    popup_btn_refresh: "Refresh",
+    popup_btn_cancel: "Cancel",
+    popup_btn_confirm: "Confirm",
+    footer_report_issue: "Report Issue",
 
     // Settings
     welcome_title: "🎉 Welcome to arXiv to Markdown!",
@@ -123,6 +129,12 @@ export const translations = {
     popup_toast_clear_failed: "❌ 清空失败",
     popup_confirm_delete: "确定要删除这个任务吗？",
     popup_confirm_clear: "确定要清空已完成和失败的任务吗？",
+    popup_page_title: "MinerU 任务中心",
+    popup_btn_clear_completed: "清空已完成",
+    popup_btn_refresh: "刷新",
+    popup_btn_cancel: "取消",
+    popup_btn_confirm: "确定",
+    footer_report_issue: "报告问题",
 
     // Settings
     welcome_title: "🎉 欢迎使用 arXiv to Markdown！",
