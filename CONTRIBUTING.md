@@ -182,7 +182,7 @@ Before submitting a PR, please ensure the following:
 
 ## 🐛 Reporting Bugs
 
-Please submit via [Issues](https://github.com/yourusername/arxiv-md/issues), including:
+Please submit via [Issues](https://github.com/Tendo33/arxiv-md/issues), including:
 
 - Reproduction steps
 - Expected behavior

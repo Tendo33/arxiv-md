@@ -139,7 +139,8 @@ async function handleStartMinerUTask(paperInfo, sendResponse) {
     sendResponse({ success: true, taskId: task.id });
 
     // 立即异步处理任务（不阻塞响应）
-    setImmediate(() => {
+    // 使用 Promise.resolve().then() 而非 setImmediate（浏览器兼容）
+    Promise.resolve().then(() => {
       processMinerUTaskInBackground(task.id);
     });
   } catch (error) {
@@ -162,6 +163,7 @@ async function processMinerUTaskInBackground(taskId) {
 
   const token = await storage.getMinerUToken();
   if (!token) {
+    logger.error("MinerU Token not configured");
     await taskManager.updateTask(taskId, {
       status: TASK_STATUS.FAILED,
       error: "未配置 MinerU API Token",
@@ -171,6 +173,8 @@ async function processMinerUTaskInBackground(taskId) {
   }
 
   try {
+    logger.info("Starting MinerU API call for task:", taskId);
+
     // 更新为处理中
     await taskManager.updateTask(taskId, {
       status: TASK_STATUS.PROCESSING,
@@ -178,17 +182,23 @@ async function processMinerUTaskInBackground(taskId) {
     });
 
     // 调用 MinerU API
+    const pdfUrl = task.paperInfo.pdfUrl || `https://arxiv.org/pdf/${task.paperInfo.arxivId}.pdf`;
+    logger.info("PDF URL:", pdfUrl);
+
     const result = await mineruClient.convert(
-      task.paperInfo.pdfUrl || `https://arxiv.org/pdf/${task.paperInfo.arxivId}.pdf`,
+      pdfUrl,
       token,
       task.paperInfo,
       async (progress) => {
         // 实时更新进度
+        logger.debug(`Task ${taskId} progress:`, progress.progress);
         await taskManager.updateTask(taskId, {
           progress: Math.round(progress.progress || 0),
         });
       }
     );
+
+    logger.info("MinerU API call completed for task:", taskId);
 
     // 标记为完成
     await taskManager.updateTask(taskId, {
@@ -208,6 +218,11 @@ async function processMinerUTaskInBackground(taskId) {
     logger.info("MinerU task completed:", taskId);
   } catch (error) {
     logger.error("MinerU task failed:", taskId, error);
+    logger.error("Error details:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
 
     // 标记为失败
     await taskManager.updateTask(taskId, {
