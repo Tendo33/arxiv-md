@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "arXiv to Markdown",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Save arXiv papers as Markdown",
   "author": "SimonSun",
   "icons": {
