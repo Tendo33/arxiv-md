@@ -309,6 +309,45 @@ body {
   border: 1px solid #EF4444;
 }
 
+.token-status.testing {
+  display: block;
+  background: #FEF9C3;
+  color: #A16207;
+  border: 1px solid #FCD34D;
+}
+
+/* Test Token Button */
+.btn-test {
+  background: linear-gradient(135deg, #059669 0%, #10B981 100%);
+  border: none !important;
+  color: white;
+}
+
+.btn-test:hover {
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.3);
+}
+
+.btn-test:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-test.loading svg {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Checkbox */
 .checkbox-label {
   display: flex;

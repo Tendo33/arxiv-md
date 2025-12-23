@@ -127,6 +127,11 @@ function bindEvents() {
   document
     .getElementById("mineruToken")
     .addEventListener("blur", validateToken);
+
+  // 测试 Token 按钮
+  document
+    .getElementById("testTokenBtn")
+    .addEventListener("click", testMinerUToken);
 }
 
 async function saveSettings() {
@@ -217,17 +222,78 @@ async function validateToken() {
 
   const t = translations[currentLang];
 
-  // 简单的格式验证（实际应该调用 API 验证）
+  // 简单的格式验证
   if (token.length < 10) {
+    statusEl.style.display = "block";
     statusEl.className = "token-status error";
     statusEl.textContent = t.token_invalid;
     return;
   }
 
-  // 这里应该调用 MinerU API 验证 Token
-  // 暂时只做格式检查
+  // 格式检查通过，显示提示
+  statusEl.style.display = "block";
   statusEl.className = "token-status success";
   statusEl.textContent = t.token_valid;
+}
+
+/**
+ * 测试 MinerU API Token 是否有效
+ * 通过调用任务查询接口验证 Token 有效性
+ */
+async function testMinerUToken() {
+  const token = document.getElementById("mineruToken").value.trim();
+  const statusEl = document.getElementById("tokenStatus");
+  const testBtn = document.getElementById("testTokenBtn");
+  const t = translations[currentLang];
+
+  if (!token) {
+    showToast(t.token_empty_error, "error");
+    return;
+  }
+
+  // 显示加载状态
+  testBtn.disabled = true;
+  testBtn.classList.add("loading");
+  statusEl.style.display = "block";
+  statusEl.className = "token-status testing";
+  statusEl.textContent = t.token_testing;
+
+  try {
+    // 调用 MinerU API 查询一个不存在的任务来验证 Token
+    // 如果 Token 有效，会返回 404 或任务不存在的错误
+    // 如果 Token 无效，会返回 401 Unauthorized
+    const response = await fetch(
+      "https://mineru.net/api/v4/extract/task/test-connection-check",
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (response.status === 401 || response.status === 403) {
+      // Token 无效或过期
+      statusEl.className = "token-status error";
+      statusEl.textContent = t.token_api_invalid;
+      showToast(t.token_api_invalid, "error");
+    } else {
+      // Token 有效 (可能返回 404 表示任务不存在，但这说明 Token 是有效的)
+      statusEl.className = "token-status success";
+      statusEl.textContent = t.token_api_valid;
+      showToast(t.token_api_valid, "success");
+    }
+  } catch (error) {
+    logger.error("Token test failed:", error);
+    // 网络错误
+    statusEl.className = "token-status error";
+    statusEl.textContent = t.token_test_error;
+    showToast(t.token_test_error, "error");
+  } finally {
+    testBtn.disabled = false;
+    testBtn.classList.remove("loading");
+  }
 }
 
 async function resetStatistics() {
