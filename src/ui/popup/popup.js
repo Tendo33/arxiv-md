@@ -1,18 +1,26 @@
 // Popup UI - MinerU 任务中心
 
 import logger from "@utils/logger";
+import storage from "@utils/storage";
+import { translations } from "@config/locales";
 import { TASK_STATUS } from "@config/constants";
 
 let currentTasks = [];
+let currentLang = "en";
 
 document.addEventListener("DOMContentLoaded", init);
 
 async function init() {
   logger.debug("Popup task center initialized");
 
+  // 初始化语言
+  await initLanguage();
+
   // 绑定按钮事件
   document.getElementById("settingsBtn").addEventListener("click", openSettings);
-  document.getElementById("clearCompletedBtn").addEventListener("click", clearCompleted);
+  document
+    .getElementById("clearCompletedBtn")
+    .addEventListener("click", clearCompleted);
   document.getElementById("refreshBtn").addEventListener("click", loadTasks);
 
   // 绑定任务操作事件（只绑定一次，使用事件委托）
@@ -26,7 +34,48 @@ async function init() {
     if (area === "local" && changes.mineruTasks) {
       loadTasks();
     }
+    // 监听语言变化
+    if (area === "sync" && changes.language) {
+      updateLanguage(changes.language.newValue);
+    }
   });
+}
+
+/**
+ * 初始化语言
+ */
+async function initLanguage() {
+  const lang = await storage.getLanguage();
+  updateLanguage(lang);
+}
+
+/**
+ * 更新语言
+ */
+function updateLanguage(lang) {
+  currentLang = lang;
+  const t = translations[lang];
+
+  // 更新所有带 data-i18n 属性的元素
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.getAttribute("data-i18n");
+    if (t[key]) {
+      el.textContent = t[key];
+    }
+  });
+
+  // 更新 title 属性
+  document.querySelectorAll("[data-i18n-title]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-title");
+    if (t[key]) {
+      el.title = t[key];
+    }
+  });
+
+  // 重新渲染任务列表以更新翻译
+  if (currentTasks.length > 0) {
+    renderTaskList(currentTasks);
+  }
 }
 
 /**
@@ -58,7 +107,8 @@ async function loadTasks() {
  */
 function updateStats(stats) {
   document.getElementById("statsTotal").textContent = stats.total || 0;
-  document.getElementById("statsProcessing").textContent = stats.processing || 0;
+  document.getElementById("statsProcessing").textContent =
+    stats.processing || 0;
   document.getElementById("statsCompleted").textContent = stats.completed || 0;
 }
 
@@ -98,7 +148,8 @@ function createTaskCard(task) {
   } = task;
 
   const title = paperInfo.title || paperInfo.arxivId;
-  const truncatedTitle = title.length > 50 ? title.substring(0, 50) + "..." : title;
+  const truncatedTitle =
+    title.length > 50 ? title.substring(0, 50) + "..." : title;
   const timeAgo = formatTimeAgo(createdAt);
 
   // 状态显示
@@ -127,7 +178,7 @@ function createTaskCard(task) {
           <span class="status-icon">${statusDisplay.icon}</span>
           <span class="status-text">${statusDisplay.text}</span>
         </div>
-        <button class="delete-btn" data-action="delete" data-task-id="${id}" title="删除">×</button>
+        <button class="delete-btn" data-action="delete" data-task-id="${id}" title="${translations[currentLang].popup_action_delete}">×</button>
       </div>
       
       <div class="task-content">
@@ -152,13 +203,28 @@ function createTaskCard(task) {
  * 获取状态显示信息
  */
 function getStatusDisplay(status) {
+  const t = translations[currentLang];
   const displays = {
-    [TASK_STATUS.PENDING]: { icon: "⏳", text: "等待处理" },
-    [TASK_STATUS.PROCESSING]: { icon: "🔄", text: "处理中" },
-    [TASK_STATUS.COMPLETED]: { icon: "✅", text: "已完成" },
-    [TASK_STATUS.FAILED]: { icon: "❌", text: "失败" },
+    [TASK_STATUS.PENDING]: {
+      icon: "⏳",
+      text: t.popup_status_pending || "Pending",
+    },
+    [TASK_STATUS.PROCESSING]: {
+      icon: "🔄",
+      text: t.popup_status_processing || "Processing",
+    },
+    [TASK_STATUS.COMPLETED]: {
+      icon: "✅",
+      text: t.popup_status_completed || "Completed",
+    },
+    [TASK_STATUS.FAILED]: {
+      icon: "❌",
+      text: t.popup_status_failed || "Failed",
+    },
   };
-  return displays[status] || { icon: "❓", text: "未知" };
+  return (
+    displays[status] || { icon: "❓", text: t.popup_status_unknown || "Unknown" }
+  );
 }
 
 /**
@@ -166,14 +232,15 @@ function getStatusDisplay(status) {
  */
 function getTaskActions(task) {
   const { status, zipUrl } = task;
+  const t = translations[currentLang];
 
   if (status === TASK_STATUS.COMPLETED && zipUrl) {
     return `
       <button class="action-btn download-btn" data-action="download" data-url="${zipUrl}">
-        📥 下载
+        📥 ${t.popup_action_download}
       </button>
       <button class="action-btn secondary-btn" data-action="copy" data-url="${zipUrl}">
-        📋 复制链接
+        📋 ${t.popup_action_copy}
       </button>
     `;
   }
@@ -181,12 +248,12 @@ function getTaskActions(task) {
   if (status === TASK_STATUS.FAILED) {
     return `
       <button class="action-btn retry-btn" data-action="retry" data-task-id="${task.id}">
-        🔄 重试
+        🔄 ${t.popup_action_retry}
       </button>
     `;
   }
 
-  return '<span class="action-placeholder">处理中...</span>';
+  return `<span class="action-placeholder">${t.popup_status_processing}...</span>`;
 }
 
 /**
@@ -241,12 +308,13 @@ function handleDownload(url) {
  * 复制下载链接
  */
 async function handleCopyLink(url) {
+  const t = translations[currentLang];
   try {
     await navigator.clipboard.writeText(url);
-    showToast("✅ 链接已复制");
+    showToast(t.popup_toast_link_copied);
   } catch (error) {
     logger.error("Failed to copy link:", error);
-    showToast("❌ 复制失败");
+    showToast(t.popup_toast_copy_failed);
   }
 }
 
@@ -254,6 +322,7 @@ async function handleCopyLink(url) {
  * 重试任务
  */
 async function handleRetry(taskId) {
+  const t = translations[currentLang];
   try {
     const response = await chrome.runtime.sendMessage({
       type: "RETRY_TASK",
@@ -261,14 +330,14 @@ async function handleRetry(taskId) {
     });
 
     if (response && response.success) {
-      showToast("✅ 任务已重新提交");
+      showToast(t.popup_toast_retry_success);
       await loadTasks();
     } else {
-      showToast("❌ 重试失败");
+      showToast(t.popup_toast_retry_failed);
     }
   } catch (error) {
     logger.error("Failed to retry task:", error);
-    showToast("❌ 重试失败");
+    showToast(t.popup_toast_retry_failed);
   }
 }
 
@@ -311,7 +380,8 @@ function showConfirm(message) {
  * 删除任务
  */
 async function handleDelete(taskId) {
-  const confirmed = await showConfirm("确定要删除这个任务吗？");
+  const t = translations[currentLang];
+  const confirmed = await showConfirm(t.popup_confirm_delete);
   if (!confirmed) return;
 
   try {
@@ -321,14 +391,14 @@ async function handleDelete(taskId) {
     });
 
     if (response && response.success) {
-      showToast("✅ 任务已删除");
+      showToast(t.popup_toast_delete_success);
       await loadTasks();
     } else {
-      showToast("❌ 删除失败");
+      showToast(t.popup_toast_delete_failed);
     }
   } catch (error) {
     logger.error("Failed to delete task:", error);
-    showToast("❌ 删除失败");
+    showToast(t.popup_toast_delete_failed);
   }
 }
 
@@ -336,7 +406,8 @@ async function handleDelete(taskId) {
  * 清空已完成的任务
  */
 async function clearCompleted() {
-  const confirmed = await showConfirm("确定要清空已完成和失败的任务吗？");
+  const t = translations[currentLang];
+  const confirmed = await showConfirm(t.popup_confirm_clear);
   if (!confirmed) return;
 
   try {
@@ -345,14 +416,14 @@ async function clearCompleted() {
     });
 
     if (response && response.success) {
-      showToast(`✅ 已清空 ${response.cleared} 个任务`);
+      showToast(t.popup_toast_clear_success.replace("{n}", response.cleared));
       await loadTasks();
     } else {
-      showToast("❌ 清空失败");
+      showToast(t.popup_toast_clear_failed);
     }
   } catch (error) {
     logger.error("Failed to clear completed tasks:", error);
-    showToast("❌ 清空失败");
+    showToast(t.popup_toast_clear_failed);
   }
 }
 
@@ -368,16 +439,17 @@ function openSettings() {
  * 格式化时间
  */
 function formatTimeAgo(timestamp) {
+  const t = translations[currentLang];
   const now = Date.now();
   const diff = now - timestamp;
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
 
-  if (minutes < 1) return "刚刚";
-  if (minutes < 60) return `${minutes} 分钟前`;
-  if (hours < 24) return `${hours} 小时前`;
-  return `${days} 天前`;
+  if (minutes < 1) return t.popup_time_just_now;
+  if (minutes < 60) return `${minutes}${t.popup_time_mins_ago}`;
+  if (hours < 24) return `${hours}${t.popup_time_hours_ago}`;
+  return `${days}${t.popup_time_days_ago}`;
 }
 
 /**

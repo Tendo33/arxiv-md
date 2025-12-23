@@ -31,15 +31,16 @@
               Md
             </text>
           </svg>
-          <h1>MinerU 任务</h1>
+          <h1 data-i18n="popup_title">MinerU 任务</h1>
         </div>
         <div class="header-actions">
-          <button class="icon-btn" id="settingsBtn" title="打开设置">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <button class="icon-btn settings-btn" id="settingsBtn" data-i18n-title="popup_btn_settings" title="打开设置">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
               <path
-                d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z" />
-              <path
-                d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319z" />
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+              </path>
             </svg>
           </button>
           <button class="icon-btn" id="clearCompletedBtn" title="清空已完成">
@@ -54,15 +55,15 @@
         <!-- Stats Summary -->
         <div class="stats-summary" id="statsSummary">
           <div class="stat-item">
-            <span class="stat-label">总任务</span>
+            <span class="stat-label" data-i18n="stats_total">总任务</span>
             <span class="stat-value" id="statsTotal">0</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">处理中</span>
+            <span class="stat-label" data-i18n="popup_status_processing">处理中</span>
             <span class="stat-value processing" id="statsProcessing">0</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">已完成</span>
+            <span class="stat-label" data-i18n="popup_status_completed">已完成</span>
             <span class="stat-value completed" id="statsCompleted">0</span>
           </div>
         </div>
@@ -79,8 +80,8 @@
               <rect x="3" y="3" width="18" height="18" rx="2" />
               <path d="M9 9h6M9 13h6M9 17h3" />
             </svg>
-            <p>暂无转换任务</p>
-            <small>在 arXiv 论文页面点击 MinerU 转换按钮</small>
+            <p data-i18n="popup_empty_title">暂无转换任务</p>
+            <small data-i18n="popup_empty_desc">在 arXiv 论文页面点击 MinerU 转换按钮</small>
           </div>
       </div>
 
