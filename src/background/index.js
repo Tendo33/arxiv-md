@@ -5,6 +5,7 @@ import ar5ivConverter from "@core/converter/ar5iv-converter";
 import mineruClient from "@core/converter/mineru-client";
 import taskManager from "@core/task-manager";
 import logger from "@utils/logger";
+import { generateFilename } from "@utils/helpers";
 import storage from "@utils/storage";
 import { TASK_STATUS } from "@config/constants";
 
@@ -185,10 +186,22 @@ async function processMinerUTaskInBackground(taskId) {
     const pdfUrl = task.paperInfo.pdfUrl || `https://arxiv.org/pdf/${task.paperInfo.arxivId}.pdf`;
     logger.info("PDF URL:", pdfUrl);
 
+    // 生成统一格式的文件名（与其他功能保持一致）
+    const paperInfo = task.paperInfo;
+    const filename = generateFilename(
+      {
+        title: paperInfo.title,
+        authors: paperInfo.authors,
+        year: paperInfo.year,
+        arxivId: paperInfo.arxivId,
+      },
+      "zip"
+    );
+
     const result = await mineruClient.convert(
       pdfUrl,
       token,
-      task.paperInfo,
+      { ...paperInfo, filename },
       async (progress) => {
         // 实时更新进度
         logger.debug(`Task ${taskId} progress:`, progress.progress);
