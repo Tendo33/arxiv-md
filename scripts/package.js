@@ -8,11 +8,11 @@ const path = require("path");
 const { execSync } = require("child_process");
 
 const archiver = require("archiver");
-const manifest = require("../src/manifest.json");
+const packageJson = require("../package.json");
 
 const DIST_DIR = path.join(__dirname, "../dist");
 const OUTPUT_DIR = path.join(__dirname, "../build");
-const OUTPUT_FILE = `arxiv-md-v${manifest.version}.zip`;
+const OUTPUT_FILE = `arxiv-md-v${packageJson.version}.zip`;
 
 console.log("📦 Starting package process...");
 
