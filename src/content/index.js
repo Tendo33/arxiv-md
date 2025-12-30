@@ -469,11 +469,20 @@ function isBlockFormula(mathEl, latex) {
     return true;
   }
 
-  // 5. 在独立段落中（父元素是 p 或 div，且只有这一个 math 子元素）
+  // 5. 在独立段落中（父元素是 p 或 div，且只有这一个 math 子元素，无其他有效内容）
   const parent = mathEl.parentElement;
   if (parent && (parent.tagName === 'P' || parent.tagName === 'DIV')) {
-    const childElements = Array.from(parent.children);
-    if (childElements.length === 1 && childElements[0] === mathEl) {
+    // 检查 childNodes（包括文本节点），确认除了 math 元素外只有空白文本
+    const hasOnlyMathContent = Array.from(parent.childNodes).every((node) => {
+      if (node === mathEl) return true;
+      if (node.nodeType === Node.TEXT_NODE) {
+        // 只允许空白文本节点
+        return !node.textContent.trim();
+      }
+      // 其他元素节点不允许
+      return false;
+    });
+    if (hasOnlyMathContent) {
       return true;
     }
   }
@@ -527,7 +536,18 @@ function preprocessMathElements(doc) {
         mathCounter++;
         mathEl.replaceWith(doc.createTextNode(placeholder));
       } else {
-        mathEl.remove();
+        // 兜底处理：尝试提取 MathML 的文本内容
+        const textContent = mathEl.textContent.trim();
+        if (textContent) {
+          // 将纯文本作为行内公式处理（可能是变量名或简单表达式）
+          const placeholder = createPlaceholder(mathCounter, false);
+          mathMap.set(placeholder, { latex: textContent, isBlock: false });
+          mathCounter++;
+          mathEl.replaceWith(doc.createTextNode(placeholder));
+          logger.warn('Math element without LaTeX source, using text content:', textContent.substring(0, 50));
+        } else {
+          mathEl.remove();
+        }
       }
     }
   });
@@ -574,8 +594,8 @@ function preprocessAuthorsAndMetadata(doc) {
     if (text) el.textContent = text;
   });
 
-  // 清理脚注内容
-  doc.querySelectorAll('.ltx_note_content').forEach((el) => el.remove());
+  // 脚注内容：保留但标记为特殊格式（后续由 Turndown 规则处理）
+  // 不再直接删除，改为在 Turndown 中转换为 [注: ...] 格式
 
   // 清理作者分隔符
   doc.querySelectorAll('.ltx_personname').forEach((el) => {
@@ -764,15 +784,15 @@ function preprocessAr5ivElements(doc) {
     doc.querySelectorAll(selector).forEach((el) => el.remove()),
   );
 
-  // 清理图片的相对路径
+  // 清理图片的相对路径 - 使用正确的 ar5iv 域名
   doc.querySelectorAll('img').forEach((img) => {
     let src = img.getAttribute('src');
     if (src && !src.startsWith('http') && !src.startsWith('data:')) {
       img.setAttribute(
         'src',
         src.startsWith('/')
-          ? `https://ar5iv.org${src}`
-          : `https://ar5iv.org/${src}`,
+          ? `https://ar5iv.labs.arxiv.org${src}`
+          : `https://ar5iv.labs.arxiv.org/${src}`,
       );
     }
   });
@@ -939,7 +959,19 @@ function preprocessAr5ivElements(doc) {
         alg.replaceWith(pre);
         logger.debug(`转换 Algorithm 为代码块 (${steps.length} 行): ${captionText}`);
       } else {
-        logger.warn('Algorithm 未找到内容:', captionText);
+        // 兜底处理：直接提取所有文本内容
+        const fallbackText = alg.textContent.replace(/\s+/g, ' ').trim();
+        if (fallbackText) {
+          const pre = doc.createElement('pre');
+          const code = doc.createElement('code');
+          code.textContent = `${captionText}\n${'─'.repeat(40)}\n${fallbackText}`;
+          pre.appendChild(code);
+          pre.className = 'ltx_algorithm_converted';
+          alg.replaceWith(pre);
+          logger.warn('Algorithm 使用兜底文本提取:', captionText);
+        } else {
+          logger.warn('Algorithm 未找到内容:', captionText);
+        }
       }
     } catch (e) {
       logger.error('转换 Algorithm 失败:', e);
@@ -1296,10 +1328,11 @@ function handleHtmlToMarkdown(data, sendResponse) {
         // 清理错误的 chrome-extension URL
         src = src.replace(/chrome-extension:\/\/[^/]+\//, '');
 
-        // 处理相对路径 - 统一使用 ar5iv.org 域名
+        // 处理相对路径 - 使用正确的 ar5iv 域名
         if (src && !src.startsWith('http')) {
-          const cleanSrc = src.startsWith('/') ? src.substring(1) : src;
-          src = `https://ar5iv.org/${cleanSrc}`;
+          src = src.startsWith('/')
+            ? `https://ar5iv.labs.arxiv.org${src}`
+            : `https://ar5iv.labs.arxiv.org/${src}`;
         }
 
         return src ? `![${alt}](${src})` : '';
@@ -1368,9 +1401,10 @@ function handleHtmlToMarkdown(data, sendResponse) {
           const num = content.replace(/[^\d]/g, '');
           return num ? `^${num}` : '';
         }
-        // 脚注内容：在后处理中会被移除
+        // 脚注内容：转换为括号注释格式保留
         if (node.classList.contains('ltx_note_content')) {
-          return '';
+          const text = content.replace(/\s+/g, ' ').trim();
+          return text ? ` [注^: ${text}]` : '';
         }
         return content;
       },

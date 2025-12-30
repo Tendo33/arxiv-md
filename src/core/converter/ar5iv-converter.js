@@ -87,13 +87,19 @@ class Ar5ivConverter {
         title = titleEl.textContent.trim();
       }
 
-      // 提取摘要
+      // 提取摘要（完整提取所有段落）
       let excerpt = '';
       const abstractEl = document.querySelector('.ltx_abstract');
       if (abstractEl) {
-        const abstractText = abstractEl.querySelector('.ltx_p');
-        if (abstractText) {
-          excerpt = abstractText.textContent.trim().substring(0, 300);
+        // 提取所有段落，而非仅第一个
+        const abstractParagraphs = abstractEl.querySelectorAll('.ltx_p, p');
+        if (abstractParagraphs.length > 0) {
+          const fullAbstract = Array.from(abstractParagraphs)
+            .map(p => p.textContent.trim())
+            .filter(text => text.length > 0)
+            .join(' ');
+          // 限制在合理长度用于预览（但不会丢失主内容中的完整摘要）
+          excerpt = fullAbstract.substring(0, 500);
         }
       }
 
