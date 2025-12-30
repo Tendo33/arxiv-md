@@ -1,8 +1,8 @@
 // 任务管理器 - 负责 MinerU 后台任务的生命周期管理
 // Role: Task Manager | Feature: Background Task Queue
 
-import logger from "@utils/logger";
-import { STORAGE_KEYS, TASK_STATUS, TASK_TYPE } from "@config/constants";
+import logger from '@utils/logger';
+import { STORAGE_KEYS, TASK_STATUS, TASK_TYPE } from '@config/constants';
 
 /**
  * 任务管理器
@@ -34,7 +34,7 @@ class TaskManager {
       const result = await chrome.storage.local.get(this.storageKey);
       return result[this.storageKey] || [];
     } catch (error) {
-      logger.error("Failed to get tasks:", error);
+      logger.error('Failed to get tasks:', error);
       return [];
     }
   }
@@ -48,7 +48,7 @@ class TaskManager {
       await chrome.storage.local.set({ [this.storageKey]: tasks });
       logger.debug(`Saved ${tasks.length} tasks to storage`);
     } catch (error) {
-      logger.error("Failed to save tasks:", error);
+      logger.error('Failed to save tasks:', error);
       throw error;
     }
   }
@@ -85,7 +85,7 @@ class TaskManager {
     tasks.push(task);
     await this._saveTasks(tasks);
 
-    logger.info("Task added:", task.id, task.paperInfo.title);
+    logger.info('Task added:', task.id, task.paperInfo.title);
     return task;
   }
 
@@ -110,7 +110,7 @@ class TaskManager {
     const index = tasks.findIndex((t) => t.id === taskId);
 
     if (index === -1) {
-      logger.warn("Task not found for update:", taskId);
+      logger.warn('Task not found for update:', taskId);
       return null;
     }
 
@@ -121,7 +121,7 @@ class TaskManager {
     };
 
     await this._saveTasks(tasks);
-    logger.debug("Task updated:", taskId, updates);
+    logger.debug('Task updated:', taskId, updates);
     return tasks[index];
   }
 
@@ -135,12 +135,12 @@ class TaskManager {
     const filteredTasks = tasks.filter((t) => t.id !== taskId);
 
     if (filteredTasks.length === tasks.length) {
-      logger.warn("Task not found for deletion:", taskId);
+      logger.warn('Task not found for deletion:', taskId);
       return false;
     }
 
     await this._saveTasks(filteredTasks);
-    logger.info("Task deleted:", taskId);
+    logger.info('Task deleted:', taskId);
     return true;
   }
 

@@ -1,17 +1,17 @@
 // Settings 页面逻辑
 
-import storage from "@utils/storage";
-import { CONVERSION_MODE } from "@config/constants";
-import logger from "@utils/logger";
+import storage from '@utils/storage';
+import { CONVERSION_MODE } from '@config/constants';
+import logger from '@utils/logger';
 
-import { translations } from "@config/locales";
+import { translations } from '@config/locales';
 
-let currentLang = "en";
+let currentLang = 'en';
 
-document.addEventListener("DOMContentLoaded", init);
+document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
-  logger.debug("Settings page initialized");
+  logger.debug('Settings page initialized');
 
   // 加载语言设置
   const savedLang = await storage.getLanguage();
@@ -20,8 +20,8 @@ async function init() {
 
   // 检查是否是首次安装
   const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get("welcome") === "true") {
-    document.getElementById("welcomeBanner").style.display = "block";
+  if (urlParams.get('welcome') === 'true') {
+    document.getElementById('welcomeBanner').style.display = 'block';
   }
 
   // 加载设置
@@ -32,7 +32,7 @@ async function init() {
 
   // 设置版本号
   const manifest = chrome.runtime.getManifest();
-  document.getElementById("versionDisplay").textContent = `v${manifest.version}`;
+  document.getElementById('versionDisplay').textContent = `v${manifest.version}`;
 
   // 绑定事件
   bindEvents();
@@ -43,24 +43,24 @@ function updateLanguage(lang) {
   const t = translations[lang];
 
   // 更新所有带 data-i18n 属性的元素
-  document.querySelectorAll("[data-i18n]").forEach((el) => {
-    const key = el.getAttribute("data-i18n");
+  document.querySelectorAll('[data-i18n]').forEach((el) => {
+    const key = el.getAttribute('data-i18n');
     if (t[key]) {
       el.textContent = t[key];
     }
   });
 
   // 更新 placeholder
-  document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
-    const key = el.getAttribute("data-i18n-placeholder");
+  document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+    const key = el.getAttribute('data-i18n-placeholder');
     if (t[key]) {
       el.placeholder = t[key];
     }
   });
 
   // 更新语言按钮文本
-  document.getElementById("langText").textContent =
-    lang === "en" ? "中文" : "English";
+  document.getElementById('langText').textContent =
+    lang === 'en' ? '中文' : 'English';
 
   // 保存语言设置
   storage.setLanguage(lang);
@@ -75,16 +75,16 @@ async function loadSettings() {
 
     const token = await storage.getMinerUToken();
     if (token) {
-      document.getElementById("mineruToken").value = token;
+      document.getElementById('mineruToken').value = token;
     }
 
     const showNotifications = await storage.getShowNotifications();
-    document.getElementById("showNotifications").checked = showNotifications;
+    document.getElementById('showNotifications').checked = showNotifications;
 
-    logger.info("Settings loaded");
+    logger.info('Settings loaded');
   } catch (error) {
-    logger.error("Failed to load settings:", error);
-    showToast("Failed to load settings", "error");
+    logger.error('Failed to load settings:', error);
+    showToast('Failed to load settings', 'error');
   }
 }
 
@@ -92,54 +92,54 @@ async function loadStatistics() {
   try {
     const stats = await storage.getStatistics();
 
-    document.getElementById("totalConversions").textContent =
+    document.getElementById('totalConversions').textContent =
       stats.totalConversions || 0;
-    document.getElementById("ar5ivSuccess").textContent =
+    document.getElementById('ar5ivSuccess').textContent =
       stats.ar5ivSuccess || 0;
-    document.getElementById("mineruSuccess").textContent =
+    document.getElementById('mineruSuccess').textContent =
       stats.mineruSuccess || 0;
-    document.getElementById("pdfFallback").textContent = stats.pdfFallback || 0;
+    document.getElementById('pdfFallback').textContent = stats.pdfFallback || 0;
   } catch (error) {
-    logger.error("Failed to load statistics:", error);
+    logger.error('Failed to load statistics:', error);
   }
 }
 
 function bindEvents() {
   // 语言切换
-  document.getElementById("langToggle").addEventListener("click", () => {
-    const newLang = currentLang === "en" ? "zh" : "en";
+  document.getElementById('langToggle').addEventListener('click', () => {
+    const newLang = currentLang === 'en' ? 'zh' : 'en';
     updateLanguage(newLang);
   });
 
   // 保存设置
-  document.getElementById("saveBtn").addEventListener("click", saveSettings);
+  document.getElementById('saveBtn').addEventListener('click', saveSettings);
 
   // 恢复默认
-  document.getElementById("resetBtn").addEventListener("click", resetSettings);
+  document.getElementById('resetBtn').addEventListener('click', resetSettings);
 
   // Toggle Token 可见性
   document
-    .getElementById("toggleTokenBtn")
-    .addEventListener("click", toggleTokenVisibility);
+    .getElementById('toggleTokenBtn')
+    .addEventListener('click', toggleTokenVisibility);
 
   // 重置统计
   document
-    .getElementById("resetStatsBtn")
-    .addEventListener("click", resetStatistics);
+    .getElementById('resetStatsBtn')
+    .addEventListener('click', resetStatistics);
 
   // Token 输入验证
   document
-    .getElementById("mineruToken")
-    .addEventListener("blur", validateToken);
+    .getElementById('mineruToken')
+    .addEventListener('blur', validateToken);
 
   // 测试 Token 按钮
   document
-    .getElementById("testTokenBtn")
-    .addEventListener("click", testMinerUToken);
+    .getElementById('testTokenBtn')
+    .addEventListener('click', testMinerUToken);
 }
 
 async function saveSettings() {
-  const btn = document.getElementById("saveBtn");
+  const btn = document.getElementById('saveBtn');
   const t = translations[currentLang];
   try {
     btn.disabled = true;
@@ -150,20 +150,20 @@ async function saveSettings() {
     ).value;
     await storage.setConversionMode(mode);
 
-    const token = document.getElementById("mineruToken").value.trim();
+    const token = document.getElementById('mineruToken').value.trim();
     if (token) {
       await storage.setMinerUToken(token);
     }
 
     const showNotifications =
-      document.getElementById("showNotifications").checked;
+      document.getElementById('showNotifications').checked;
     await storage.setShowNotifications(showNotifications);
 
-    logger.info("Settings saved");
-    showToast(t.toast_saved, "success");
+    logger.info('Settings saved');
+    showToast(t.toast_saved, 'success');
   } catch (error) {
-    logger.error("Failed to save settings:", error);
-    showToast("Failed to save: " + error.message, "error");
+    logger.error('Failed to save settings:', error);
+    showToast('Failed to save: ' + error.message, 'error');
   } finally {
     btn.disabled = false;
     btn.textContent = t.btn_save;
@@ -182,22 +182,22 @@ async function resetSettings() {
     ).checked = true;
 
     // 清空 Token
-    document.getElementById("mineruToken").value = "";
-    document.getElementById("tokenStatus").style.display = "none";
+    document.getElementById('mineruToken').value = '';
+    document.getElementById('tokenStatus').style.display = 'none';
 
-    showToast(t.toast_reset, "success");
+    showToast(t.toast_reset, 'success');
   } catch (error) {
-    logger.error("Failed to reset settings:", error);
-    showToast("Failed to reset: " + error.message, "error");
+    logger.error('Failed to reset settings:', error);
+    showToast('Failed to reset: ' + error.message, 'error');
   }
 }
 
 function toggleTokenVisibility() {
-  const input = document.getElementById("mineruToken");
-  const btn = document.getElementById("toggleTokenBtn");
+  const input = document.getElementById('mineruToken');
+  const btn = document.getElementById('toggleTokenBtn');
 
-  if (input.type === "password") {
-    input.type = "text";
+  if (input.type === 'password') {
+    input.type = 'text';
     btn.innerHTML = `
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
         <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
@@ -205,7 +205,7 @@ function toggleTokenVisibility() {
       </svg>
     `;
   } else {
-    input.type = "password";
+    input.type = 'password';
     btn.innerHTML = `
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -216,11 +216,11 @@ function toggleTokenVisibility() {
 }
 
 async function validateToken() {
-  const token = document.getElementById("mineruToken").value.trim();
-  const statusEl = document.getElementById("tokenStatus");
+  const token = document.getElementById('mineruToken').value.trim();
+  const statusEl = document.getElementById('tokenStatus');
 
   if (!token) {
-    statusEl.style.display = "none";
+    statusEl.style.display = 'none';
     return;
   }
 
@@ -228,15 +228,15 @@ async function validateToken() {
 
   // 简单的格式验证
   if (token.length < 10) {
-    statusEl.style.display = "block";
-    statusEl.className = "token-status error";
+    statusEl.style.display = 'block';
+    statusEl.className = 'token-status error';
     statusEl.textContent = t.token_invalid;
     return;
   }
 
   // 格式检查通过，显示提示
-  statusEl.style.display = "block";
-  statusEl.className = "token-status success";
+  statusEl.style.display = 'block';
+  statusEl.className = 'token-status success';
   statusEl.textContent = t.token_valid;
 }
 
@@ -245,21 +245,21 @@ async function validateToken() {
  * 通过调用任务查询接口验证 Token 有效性
  */
 async function testMinerUToken() {
-  const token = document.getElementById("mineruToken").value.trim();
-  const statusEl = document.getElementById("tokenStatus");
-  const testBtn = document.getElementById("testTokenBtn");
+  const token = document.getElementById('mineruToken').value.trim();
+  const statusEl = document.getElementById('tokenStatus');
+  const testBtn = document.getElementById('testTokenBtn');
   const t = translations[currentLang];
 
   if (!token) {
-    showToast(t.token_empty_error, "error");
+    showToast(t.token_empty_error, 'error');
     return;
   }
 
   // 显示加载状态
   testBtn.disabled = true;
-  testBtn.classList.add("loading");
-  statusEl.style.display = "block";
-  statusEl.className = "token-status testing";
+  testBtn.classList.add('loading');
+  statusEl.style.display = 'block';
+  statusEl.className = 'token-status testing';
   statusEl.textContent = t.token_testing;
 
   try {
@@ -267,11 +267,11 @@ async function testMinerUToken() {
     // 如果 Token 有效，会返回 404 或任务不存在的错误
     // 如果 Token 无效，会返回 401 Unauthorized
     const response = await fetch(
-      "https://mineru.net/api/v4/extract/task/test-connection-check",
+      'https://mineru.net/api/v4/extract/task/test-connection-check',
       {
-        method: "GET",
+        method: 'GET',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
       }
@@ -279,24 +279,24 @@ async function testMinerUToken() {
 
     if (response.status === 401 || response.status === 403) {
       // Token 无效或过期
-      statusEl.className = "token-status error";
+      statusEl.className = 'token-status error';
       statusEl.textContent = t.token_api_invalid;
-      showToast(t.token_api_invalid, "error");
+      showToast(t.token_api_invalid, 'error');
     } else {
       // Token 有效 (可能返回 404 表示任务不存在，但这说明 Token 是有效的)
-      statusEl.className = "token-status success";
+      statusEl.className = 'token-status success';
       statusEl.textContent = t.token_api_valid;
-      showToast(t.token_api_valid, "success");
+      showToast(t.token_api_valid, 'success');
     }
   } catch (error) {
-    logger.error("Token test failed:", error);
+    logger.error('Token test failed:', error);
     // 网络错误
-    statusEl.className = "token-status error";
+    statusEl.className = 'token-status error';
     statusEl.textContent = t.token_test_error;
-    showToast(t.token_test_error, "error");
+    showToast(t.token_test_error, 'error');
   } finally {
     testBtn.disabled = false;
-    testBtn.classList.remove("loading");
+    testBtn.classList.remove('loading');
   }
 }
 
@@ -305,7 +305,7 @@ async function resetStatistics() {
   if (!confirm(t.confirm_stats_reset)) return;
 
   try {
-    await storage.set("statistics", {
+    await storage.set('statistics', {
       totalConversions: 0,
       ar5ivSuccess: 0,
       mineruSuccess: 0,
@@ -314,21 +314,21 @@ async function resetStatistics() {
     });
 
     await loadStatistics();
-    showToast(t.toast_stats_reset, "success");
+    showToast(t.toast_stats_reset, 'success');
   } catch (error) {
-    logger.error("Failed to reset statistics:", error);
-    showToast("Failed to reset: " + error.message, "error");
+    logger.error('Failed to reset statistics:', error);
+    showToast('Failed to reset: ' + error.message, 'error');
   }
 }
 
-function showToast(message, type = "info") {
-  const toast = document.getElementById("toast");
-  const messageEl = toast.querySelector(".toast-message");
+function showToast(message, type = 'info') {
+  const toast = document.getElementById('toast');
+  const messageEl = toast.querySelector('.toast-message');
 
   messageEl.textContent = message;
-  toast.classList.add("show");
+  toast.classList.add('show');
 
   setTimeout(() => {
-    toast.classList.remove("show");
+    toast.classList.remove('show');
   }, 3000);
 }

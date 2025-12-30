@@ -1,7 +1,7 @@
 // Chrome Storage 封装 - 提供类型安全的存储访问
 
-import { STORAGE_KEYS, DEFAULTS } from "@config/constants";
-import logger from "./logger";
+import { STORAGE_KEYS, DEFAULTS } from '@config/constants';
+import logger from './logger';
 
 /**
  * Storage Manager - 封装 Chrome Storage API
@@ -22,7 +22,7 @@ class StorageManager {
       const result = await this.storage.get(key);
       return result[key] !== undefined ? result[key] : defaultValue;
     } catch (error) {
-      logger.error("Storage get error:", error);
+      logger.error('Storage get error:', error);
       return defaultValue;
     }
   }
@@ -38,7 +38,7 @@ class StorageManager {
       await this.storage.set({ [key]: value });
       logger.debug(`Storage set: ${key}`, value);
     } catch (error) {
-      logger.error("Storage set error:", error);
+      logger.error('Storage set error:', error);
       throw error;
     }
   }
@@ -100,15 +100,15 @@ class StorageManager {
     stats.totalConversions += 1;
 
     switch (tier) {
-      case "ar5iv_local":
-        stats.ar5ivSuccess += 1;
-        break;
-      case "mineru_api":
-        stats.mineruSuccess += 1;
-        break;
-      case "pdf_fallback":
-        stats.pdfFallback += 1;
-        break;
+    case 'ar5iv_local':
+      stats.ar5ivSuccess += 1;
+      break;
+    case 'mineru_api':
+      stats.mineruSuccess += 1;
+      break;
+    case 'pdf_fallback':
+      stats.pdfFallback += 1;
+      break;
     }
 
     await this.set(STORAGE_KEYS.STATISTICS, {
@@ -122,7 +122,7 @@ class StorageManager {
    * @returns {Promise<boolean>}
    */
   async getShowNotifications() {
-    return this.get("showNotifications", true); // 默认启用
+    return this.get('showNotifications', true); // 默认启用
   }
 
   /**
@@ -130,7 +130,7 @@ class StorageManager {
    * @param {boolean} value
    */
   async setShowNotifications(value) {
-    await this.set("showNotifications", value);
+    await this.set('showNotifications', value);
   }
 
   /**
@@ -138,7 +138,7 @@ class StorageManager {
    * @returns {Promise<string>}
    */
   async getLanguage() {
-    return this.get("language", "en");
+    return this.get('language', 'en');
   }
 
   /**
@@ -146,7 +146,7 @@ class StorageManager {
    * @param {string} lang
    */
   async setLanguage(lang) {
-    await this.set("language", lang);
+    await this.set('language', lang);
   }
 }
 

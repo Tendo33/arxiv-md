@@ -8,10 +8,10 @@ const LOG_LEVELS = {
 };
 
 class Logger {
-  constructor(namespace = "ArxivMD") {
+  constructor(namespace = 'ArxivMD') {
     this.namespace = namespace;
     this.level =
-      process.env.NODE_ENV === "production"
+      process.env.NODE_ENV === 'production'
         ? LOG_LEVELS.WARN
         : LOG_LEVELS.DEBUG;
   }
@@ -25,21 +25,21 @@ class Logger {
   }
 
   error(...args) {
-    this._log(LOG_LEVELS.ERROR, "ERROR", ...args);
+    this._log(LOG_LEVELS.ERROR, 'ERROR', ...args);
   }
 
   warn(...args) {
-    this._log(LOG_LEVELS.WARN, "WARN", ...args);
+    this._log(LOG_LEVELS.WARN, 'WARN', ...args);
   }
 
   info(...args) {
-    this._log(LOG_LEVELS.INFO, "INFO", ...args);
+    this._log(LOG_LEVELS.INFO, 'INFO', ...args);
   }
 
   debug(...args) {
-    this._log(LOG_LEVELS.DEBUG, "DEBUG", ...args);
+    this._log(LOG_LEVELS.DEBUG, 'DEBUG', ...args);
   }
 }
 
 // 导出单例
-export default new Logger("ArxivMD");
+export default new Logger('ArxivMD');

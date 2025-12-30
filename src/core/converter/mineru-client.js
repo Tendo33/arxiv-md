@@ -1,12 +1,6 @@
-// {{RIPER-7 Action}}
-// Role: LD | Task_ID: MinerU-Refactor | Time: 2025-12-22
-// Logic: 根据 MinerU 官方 API 文档 (https://mineru.net/apiManage/docs) 重构客户端
-// Principle: SOLID-S (单一职责)
-
-import { API, DEFAULTS, ERROR_MESSAGES } from "@config/constants";
-// Note: Batch APIs (MINERU_FILE_URLS, MINERU_BATCH_TASK, MINERU_BATCH_RESULT) removed - not implemented
-import logger from "@utils/logger";
-import { sleep } from "@utils/helpers";
+import { API, DEFAULTS, ERROR_MESSAGES } from '@config/constants';
+import logger from '@utils/logger';
+import { sleep } from '@utils/helpers';
 
 /**
  * MinerU API 客户端
@@ -33,18 +27,18 @@ class MinerUClient {
    * @returns {Promise<string>} task_id
    */
   async createTask(pdfUrl, token, options = {}) {
-    logger.info("Creating MinerU task:", pdfUrl);
+    logger.info('Creating MinerU task:', pdfUrl);
 
     try {
       const response = await fetch(this.taskUrl, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           url: pdfUrl,
-          model_version: options.modelVersion || "vlm",
+          model_version: options.modelVersion || 'vlm',
           ...(options.dataId && { data_id: options.dataId }),
         }),
       });
@@ -65,18 +59,18 @@ class MinerUClient {
       const result = await response.json();
 
       if (result.code !== 0) {
-        throw new Error(result.msg || "API returned error code: " + result.code);
+        throw new Error(result.msg || 'API returned error code: ' + result.code);
       }
 
       const taskId = result.data?.task_id;
       if (!taskId) {
-        throw new Error("Invalid API response: missing task_id");
+        throw new Error('Invalid API response: missing task_id');
       }
 
-      logger.info("MinerU task created:", taskId);
+      logger.info('MinerU task created:', taskId);
       return taskId;
     } catch (error) {
-      logger.error("Failed to create MinerU task:", error);
+      logger.error('Failed to create MinerU task:', error);
       throw error;
     }
   }
@@ -91,9 +85,9 @@ class MinerUClient {
     try {
       // 官方端点: GET /api/v4/extract/task/{task_id}
       const response = await fetch(`${this.taskUrl}/${taskId}`, {
-        method: "GET",
+        method: 'GET',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
       });
@@ -105,7 +99,7 @@ class MinerUClient {
       const result = await response.json();
 
       if (result.code !== 0) {
-        throw new Error(result.msg || "Query failed");
+        throw new Error(result.msg || 'Query failed');
       }
 
       const data = result.data || {};
@@ -117,7 +111,7 @@ class MinerUClient {
         error: data.err_msg || null,
       };
     } catch (error) {
-      logger.error("Failed to query MinerU task:", error);
+      logger.error('Failed to query MinerU task:', error);
       throw error;
     }
   }
@@ -130,7 +124,7 @@ class MinerUClient {
    * @returns {Promise<string>} ZIP 文件 URL
    */
   async pollTask(taskId, token, onProgress = null) {
-    logger.info("Polling MinerU task:", taskId);
+    logger.info('Polling MinerU task:', taskId);
     let attempts = 0;
 
     while (attempts < this.maxPollAttempts) {
@@ -148,7 +142,7 @@ class MinerUClient {
           }
         }
 
-        if (onProgress && typeof onProgress === "function") {
+        if (onProgress && typeof onProgress === 'function') {
           onProgress({
             progress: progressPercent,
             state: status.state,
@@ -159,16 +153,16 @@ class MinerUClient {
         }
 
         // 官方状态值: "done" | "running" | "failed"
-        if (status.state === "done") {
-          logger.info("MinerU task completed:", taskId);
+        if (status.state === 'done') {
+          logger.info('MinerU task completed:', taskId);
           if (!status.zipUrl) {
-            throw new Error("Completed task has no result URL");
+            throw new Error('Completed task has no result URL');
           }
           return status.zipUrl;
         }
 
-        if (status.state === "failed") {
-          throw new Error(status.error || "Task failed");
+        if (status.state === 'failed') {
+          throw new Error(status.error || 'Task failed');
         }
 
         // 状态为 "running"，继续等待
@@ -182,7 +176,7 @@ class MinerUClient {
       }
     }
 
-    throw new Error("Task polling timeout");
+    throw new Error('Task polling timeout');
   }
 
   /**
@@ -192,7 +186,7 @@ class MinerUClient {
    * @returns {Promise<number>} Chrome Download ID
    */
   async downloadZip(zipUrl, filename) {
-    logger.info("Downloading ZIP:", zipUrl);
+    logger.info('Downloading ZIP:', zipUrl);
 
     try {
       // 使用 Chrome Downloads API 绕过 CORS 限制
@@ -202,11 +196,11 @@ class MinerUClient {
             url: zipUrl,
             filename: filename,
             saveAs: false,
-            conflictAction: "uniquify",
+            conflictAction: 'uniquify',
           },
           (downloadId) => {
             if (chrome.runtime.lastError) {
-              logger.error("Download failed:", chrome.runtime.lastError);
+              logger.error('Download failed:', chrome.runtime.lastError);
               reject(new Error(chrome.runtime.lastError.message));
             } else {
               logger.info(`ZIP download started: ${downloadId}`);
@@ -216,7 +210,7 @@ class MinerUClient {
         );
       });
     } catch (error) {
-      logger.error("Failed to download ZIP:", error);
+      logger.error('Failed to download ZIP:', error);
       throw error;
     }
   }
@@ -230,24 +224,24 @@ class MinerUClient {
    * @returns {Promise<Object>} 转换结果 (包含 zipUrl 和 downloadId)
    */
   async convert(pdfUrl, token, metadata = {}, onProgress = null) {
-    logger.info("Starting MinerU conversion:", pdfUrl);
+    logger.info('Starting MinerU conversion:', pdfUrl);
 
     try {
-      if (onProgress) onProgress({ stage: "submitting", progress: 0 });
+      if (onProgress) onProgress({ stage: 'submitting', progress: 0 });
 
       // 创建任务
       const taskId = await this.createTask(pdfUrl, token, {
         dataId: metadata.arxivId,
-        modelVersion: "vlm",
+        modelVersion: 'vlm',
       });
 
-      if (onProgress) onProgress({ stage: "processing", progress: 10 });
+      if (onProgress) onProgress({ stage: 'processing', progress: 10 });
 
       // 轮询任务状态
       const zipUrl = await this.pollTask(taskId, token, (pollStatus) => {
         if (onProgress) {
           onProgress({
-            stage: "processing",
+            stage: 'processing',
             progress: 10 + (pollStatus.progress || 0) * 0.8,
             state: pollStatus.state,
             extractedPages: pollStatus.extractedPages,
@@ -256,27 +250,27 @@ class MinerUClient {
         }
       });
 
-      if (onProgress) onProgress({ stage: "downloading", progress: 90 });
+      if (onProgress) onProgress({ stage: 'downloading', progress: 90 });
 
       // 下载 ZIP 文件 (使用 Chrome Downloads API)
       const filename = metadata.filename || `arxiv_${metadata.arxivId || Date.now()}.zip`;
       const downloadId = await this.downloadZip(zipUrl, filename);
 
-      if (onProgress) onProgress({ stage: "completed", progress: 100 });
-      logger.info("MinerU conversion successful");
+      if (onProgress) onProgress({ stage: 'completed', progress: 100 });
+      logger.info('MinerU conversion successful');
 
       return {
         zipUrl,
         downloadId,
         metadata: {
           ...metadata,
-          source: "mineru",
+          source: 'mineru',
           taskId,
           conversionTime: new Date().toISOString(),
         },
       };
     } catch (error) {
-      logger.error("MinerU conversion failed:", error);
+      logger.error('MinerU conversion failed:', error);
       throw error;
     }
   }

@@ -5,54 +5,54 @@
  */
 export const API = {
   // ar5iv.org 会重定向到 ar5iv.labs.arxiv.org，直接使用最终域名
-  AR5IV_BASE: "https://ar5iv.labs.arxiv.org/html",
+  AR5IV_BASE: 'https://ar5iv.labs.arxiv.org/html',
   // MinerU API v4 端点 (官方文档: https://mineru.net/apiManage/docs)
-  MINERU_BASE: "https://mineru.net/api/v4",
-  MINERU_TASK: "https://mineru.net/api/v4/extract/task",
+  MINERU_BASE: 'https://mineru.net/api/v4',
+  MINERU_TASK: 'https://mineru.net/api/v4/extract/task',
   // arXiv PDF 端点
-  ARXIV_PDF: "https://arxiv.org/pdf",
+  ARXIV_PDF: 'https://arxiv.org/pdf',
 };
 
 /**
  * Chrome Storage 键名
  */
 export const STORAGE_KEYS = {
-  MINERU_TOKEN: "mineruToken",
-  CONVERSION_MODE: "conversionMode",
-  STATISTICS: "statistics",
-  TASKS: "mineruTasks", // 任务队列存储键
+  MINERU_TOKEN: 'mineruToken',
+  CONVERSION_MODE: 'conversionMode',
+  STATISTICS: 'statistics',
+  TASKS: 'mineruTasks', // 任务队列存储键
 };
 
 /**
  * 转换模式
  */
 export const CONVERSION_MODE = {
-  FAST: "fast", // ar5iv + 本地转换，失败时下载 PDF
-  ALWAYS_MINERU: "always", // 仅 MinerU（手动模式）
+  FAST: 'fast', // ar5iv + 本地转换，失败时下载 PDF
+  ALWAYS_MINERU: 'always', // 仅 MinerU（手动模式）
 };
 
 /**
  * 转换层级
  */
 export const CONVERSION_TIER = {
-  AR5IV_LOCAL: "ar5iv_local",
-  MINERU_API: "mineru_api", // 保留用于手动 MinerU 模式
-  PDF_FALLBACK: "pdf_fallback",
+  AR5IV_LOCAL: 'ar5iv_local',
+  MINERU_API: 'mineru_api', // 保留用于手动 MinerU 模式
+  PDF_FALLBACK: 'pdf_fallback',
 };
 
 /**
  * 错误消息
  */
 export const ERROR_MESSAGES = {
-  AR5IV_NOT_FOUND: "ar5iv 版本不存在",
-  AR5IV_PARSE_FAILED: "ar5iv 解析失败",
-  MINERU_TOKEN_MISSING: "未配置 MinerU API Token",
-  MINERU_API_ERROR: "MinerU API 调用失败",
-  MINERU_QUOTA_EXCEEDED: "MinerU 配额已用完",
-  MINERU_DOWNLOAD_FAILED: "MinerU 结果下载失败",
-  PDF_DOWNLOAD_FAILED: "PDF 下载失败",
-  NETWORK_ERROR: "网络连接错误",
-  UNKNOWN_ERROR: "未知错误",
+  AR5IV_NOT_FOUND: 'ar5iv 版本不存在',
+  AR5IV_PARSE_FAILED: 'ar5iv 解析失败',
+  MINERU_TOKEN_MISSING: '未配置 MinerU API Token',
+  MINERU_API_ERROR: 'MinerU API 调用失败',
+  MINERU_QUOTA_EXCEEDED: 'MinerU 配额已用完',
+  MINERU_DOWNLOAD_FAILED: 'MinerU 结果下载失败',
+  PDF_DOWNLOAD_FAILED: 'PDF 下载失败',
+  NETWORK_ERROR: '网络连接错误',
+  UNKNOWN_ERROR: '未知错误',
 };
 
 /**
@@ -79,15 +79,15 @@ export const REGEX = {
  * 任务状态
  */
 export const TASK_STATUS = {
-  PENDING: "pending",       // 等待处理
-  PROCESSING: "processing", // 处理中
-  COMPLETED: "completed",   // 已完成
-  FAILED: "failed",         // 失败
+  PENDING: 'pending',       // 等待处理
+  PROCESSING: 'processing', // 处理中
+  COMPLETED: 'completed',   // 已完成
+  FAILED: 'failed',         // 失败
 };
 
 /**
  * 任务类型
  */
 export const TASK_TYPE = {
-  MINERU: "mineru", // MinerU 转换任务
+  MINERU: 'mineru', // MinerU 转换任务
 };

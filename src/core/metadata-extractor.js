@@ -1,7 +1,7 @@
 // 从 arXiv 页面提取论文元数据（标题、作者、年份、ID 等）
 
-import { extractArxivId } from "@utils/helpers";
-import logger from "@utils/logger";
+import { extractArxivId } from '@utils/helpers';
+import logger from '@utils/logger';
 
 /**
  * 元数据提取器 - 从 arXiv 页面提取论文信息
@@ -13,41 +13,41 @@ class MetadataExtractor {
    * @returns {Object} 论文元数据
    */
   extractFromAbsPage(doc = document) {
-    logger.debug("Extracting metadata from abstract page");
+    logger.debug('Extracting metadata from abstract page');
 
     try {
       // 提取标题
-      const titleElement = doc.querySelector("h1.title.mathjax");
+      const titleElement = doc.querySelector('h1.title.mathjax');
       const title = titleElement
-        ? titleElement.textContent.replace("Title:", "").trim()
+        ? titleElement.textContent.replace('Title:', '').trim()
         : null;
 
       // 提取作者
-      const authorsElement = doc.querySelector(".authors");
+      const authorsElement = doc.querySelector('.authors');
       const authors = authorsElement
-        ? Array.from(authorsElement.querySelectorAll("a")).map((a) =>
-            a.textContent.trim(),
-          )
+        ? Array.from(authorsElement.querySelectorAll('a')).map((a) =>
+          a.textContent.trim(),
+        )
         : [];
 
       // 提取摘要
-      const abstractElement = doc.querySelector(".abstract.mathjax");
+      const abstractElement = doc.querySelector('.abstract.mathjax');
       const abstract = abstractElement
-        ? abstractElement.textContent.replace("Abstract:", "").trim()
+        ? abstractElement.textContent.replace('Abstract:', '').trim()
         : null;
 
       // 提取 arXiv ID
       const arxivId = this._extractIdFromUrl(window.location.href);
 
       // 提取日期和版本
-      const submissionElement = doc.querySelector(".dateline");
+      const submissionElement = doc.querySelector('.dateline');
       const { year, version } = this._parseSubmissionDate(
         submissionElement?.textContent,
       );
 
       // 提取分类
       const subjects = Array.from(
-        doc.querySelectorAll(".subjects span.primary-subject, .subjects a"),
+        doc.querySelectorAll('.subjects span.primary-subject, .subjects a'),
       ).map((el) => el.textContent.trim());
 
       // 构造 PDF URL
@@ -62,13 +62,13 @@ class MetadataExtractor {
         version,
         subjects,
         pdfUrl,
-        pageType: "abstract",
+        pageType: 'abstract',
       };
 
-      logger.info("Extracted metadata:", metadata);
+      logger.info('Extracted metadata:', metadata);
       return metadata;
     } catch (error) {
-      logger.error("Failed to extract metadata:", error);
+      logger.error('Failed to extract metadata:', error);
       return this._getMinimalMetadata();
     }
   }
@@ -79,7 +79,7 @@ class MetadataExtractor {
    * @returns {Promise<Object>}
    */
   async fetchMetadataFromApi(arxivId) {
-    logger.info("Fetching metadata from arXiv API:", arxivId);
+    logger.info('Fetching metadata from arXiv API:', arxivId);
 
     try {
       // arXiv 提供 export API
@@ -93,7 +93,7 @@ class MetadataExtractor {
       const xmlText = await response.text();
       return this._parseArxivApiXml(xmlText);
     } catch (error) {
-      logger.error("Failed to fetch metadata from API:", error);
+      logger.error('Failed to fetch metadata from API:', error);
       return this._getMinimalMetadata(arxivId);
     }
   }
@@ -105,29 +105,29 @@ class MetadataExtractor {
   _parseArxivApiXml(xmlText) {
     try {
       const parser = new DOMParser();
-      const xml = parser.parseFromString(xmlText, "text/xml");
+      const xml = parser.parseFromString(xmlText, 'text/xml');
 
-      const entry = xml.querySelector("entry");
+      const entry = xml.querySelector('entry');
       if (!entry) {
-        throw new Error("No entry found in API response");
+        throw new Error('No entry found in API response');
       }
 
       // 提取各字段
-      const title = entry.querySelector("title")?.textContent.trim();
-      const summary = entry.querySelector("summary")?.textContent.trim();
+      const title = entry.querySelector('title')?.textContent.trim();
+      const summary = entry.querySelector('summary')?.textContent.trim();
 
-      const authors = Array.from(entry.querySelectorAll("author name")).map(
+      const authors = Array.from(entry.querySelectorAll('author name')).map(
         (name) => name.textContent.trim(),
       );
 
-      const published = entry.querySelector("published")?.textContent;
+      const published = entry.querySelector('published')?.textContent;
       const year = published ? new Date(published).getFullYear() : null;
 
-      const idElement = entry.querySelector("id")?.textContent;
+      const idElement = entry.querySelector('id')?.textContent;
       const arxivId = idElement ? extractArxivId(idElement) : null;
 
-      const categories = Array.from(entry.querySelectorAll("category")).map(
-        (cat) => cat.getAttribute("term"),
+      const categories = Array.from(entry.querySelectorAll('category')).map(
+        (cat) => cat.getAttribute('term'),
       );
 
       return {
@@ -138,10 +138,10 @@ class MetadataExtractor {
         year,
         subjects: categories,
         pdfUrl: `https://arxiv.org/pdf/${arxivId}.pdf`,
-        source: "api",
+        source: 'api',
       };
     } catch (error) {
-      logger.error("Failed to parse API XML:", error);
+      logger.error('Failed to parse API XML:', error);
       throw error;
     }
   }

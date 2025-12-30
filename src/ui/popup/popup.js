@@ -1,27 +1,27 @@
 // Popup UI - MinerU 任务中心
 
-import logger from "@utils/logger";
-import storage from "@utils/storage";
-import { translations } from "@config/locales";
-import { TASK_STATUS } from "@config/constants";
+import logger from '@utils/logger';
+import storage from '@utils/storage';
+import { translations } from '@config/locales';
+import { TASK_STATUS } from '@config/constants';
 
 let currentTasks = [];
-let currentLang = "en";
+let currentLang = 'en';
 
-document.addEventListener("DOMContentLoaded", init);
+document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
-  logger.debug("Popup task center initialized");
+  logger.debug('Popup task center initialized');
 
   // 初始化语言
   await initLanguage();
 
   // 绑定按钮事件
-  document.getElementById("settingsBtn").addEventListener("click", openSettings);
+  document.getElementById('settingsBtn').addEventListener('click', openSettings);
   document
-    .getElementById("clearCompletedBtn")
-    .addEventListener("click", clearCompleted);
-  document.getElementById("refreshBtn").addEventListener("click", loadTasks);
+    .getElementById('clearCompletedBtn')
+    .addEventListener('click', clearCompleted);
+  document.getElementById('refreshBtn').addEventListener('click', loadTasks);
 
   // 绑定任务操作事件（只绑定一次，使用事件委托）
   bindTaskActions();
@@ -31,11 +31,11 @@ async function init() {
 
   // 监听任务变化
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === "local" && changes.mineruTasks) {
+    if (area === 'local' && changes.mineruTasks) {
       loadTasks();
     }
     // 监听语言变化
-    if (area === "sync" && changes.language) {
+    if (area === 'sync' && changes.language) {
       updateLanguage(changes.language.newValue);
     }
   });
@@ -57,16 +57,16 @@ function updateLanguage(lang) {
   const t = translations[lang];
 
   // 更新所有带 data-i18n 属性的元素
-  document.querySelectorAll("[data-i18n]").forEach((el) => {
-    const key = el.getAttribute("data-i18n");
+  document.querySelectorAll('[data-i18n]').forEach((el) => {
+    const key = el.getAttribute('data-i18n');
     if (t[key]) {
       el.textContent = t[key];
     }
   });
 
   // 更新 title 属性
-  document.querySelectorAll("[data-i18n-title]").forEach((el) => {
-    const key = el.getAttribute("data-i18n-title");
+  document.querySelectorAll('[data-i18n-title]').forEach((el) => {
+    const key = el.getAttribute('data-i18n-title');
     if (t[key]) {
       el.title = t[key];
     }
@@ -83,7 +83,7 @@ function updateLanguage(lang) {
  */
 async function loadTasks() {
   try {
-    const response = await chrome.runtime.sendMessage({ type: "GET_TASKS" });
+    const response = await chrome.runtime.sendMessage({ type: 'GET_TASKS' });
 
     if (response && response.success) {
       currentTasks = response.tasks || [];
@@ -95,10 +95,10 @@ async function loadTasks() {
       // 渲染任务列表
       renderTaskList(currentTasks);
     } else {
-      logger.error("Failed to load tasks:", response?.error);
+      logger.error('Failed to load tasks:', response?.error);
     }
   } catch (error) {
-    logger.error("Failed to load tasks:", error);
+    logger.error('Failed to load tasks:', error);
   }
 }
 
@@ -106,31 +106,31 @@ async function loadTasks() {
  * 更新统计信息
  */
 function updateStats(stats) {
-  document.getElementById("statsTotal").textContent = stats.total || 0;
-  document.getElementById("statsProcessing").textContent =
+  document.getElementById('statsTotal').textContent = stats.total || 0;
+  document.getElementById('statsProcessing').textContent =
     stats.processing || 0;
-  document.getElementById("statsCompleted").textContent = stats.completed || 0;
+  document.getElementById('statsCompleted').textContent = stats.completed || 0;
 }
 
 /**
  * 渲染任务列表
  */
 function renderTaskList(tasks) {
-  const listEl = document.getElementById("taskList");
-  const emptyStateEl = document.getElementById("emptyState");
+  const listEl = document.getElementById('taskList');
+  const emptyStateEl = document.getElementById('emptyState');
 
   if (!tasks || tasks.length === 0) {
-    listEl.innerHTML = "";
-    emptyStateEl.style.display = "flex";
+    listEl.innerHTML = '';
+    emptyStateEl.style.display = 'flex';
     return;
   }
 
-  emptyStateEl.style.display = "none";
+  emptyStateEl.style.display = 'none';
 
   // 按创建时间倒序排列（最新的在前）
   const sortedTasks = [...tasks].sort((a, b) => b.createdAt - a.createdAt);
 
-  listEl.innerHTML = sortedTasks.map(createTaskCard).join("");
+  listEl.innerHTML = sortedTasks.map(createTaskCard).join('');
 }
 
 /**
@@ -149,7 +149,7 @@ function createTaskCard(task) {
 
   const title = paperInfo.title || paperInfo.arxivId;
   const truncatedTitle =
-    title.length > 50 ? title.substring(0, 50) + "..." : title;
+    title.length > 50 ? title.substring(0, 50) + '...' : title;
   const timeAgo = formatTimeAgo(createdAt);
 
   // 状态显示
@@ -166,7 +166,7 @@ function createTaskCard(task) {
       <span class="progress-text">${progress}%</span>
     </div>
   `
-      : "";
+      : '';
 
   // 操作按钮
   const actions = getTaskActions(task);
@@ -187,7 +187,7 @@ function createTaskCard(task) {
           <span class="meta-id">${paperInfo.arxivId}</span>
           <span class="meta-time">${timeAgo}</span>
         </div>
-        ${error ? `<div class="task-error">❌ ${error}</div>` : ""}
+        ${error ? `<div class="task-error">❌ ${error}</div>` : ''}
       </div>
       
       ${progressBar}
@@ -206,24 +206,24 @@ function getStatusDisplay(status) {
   const t = translations[currentLang];
   const displays = {
     [TASK_STATUS.PENDING]: {
-      icon: "⏳",
-      text: t.popup_status_pending || "Pending",
+      icon: '⏳',
+      text: t.popup_status_pending || 'Pending',
     },
     [TASK_STATUS.PROCESSING]: {
-      icon: "🔄",
-      text: t.popup_status_processing || "Processing",
+      icon: '🔄',
+      text: t.popup_status_processing || 'Processing',
     },
     [TASK_STATUS.COMPLETED]: {
-      icon: "✅",
-      text: t.popup_status_completed || "Completed",
+      icon: '✅',
+      text: t.popup_status_completed || 'Completed',
     },
     [TASK_STATUS.FAILED]: {
-      icon: "❌",
-      text: t.popup_status_failed || "Failed",
+      icon: '❌',
+      text: t.popup_status_failed || 'Failed',
     },
   };
   return (
-    displays[status] || { icon: "❓", text: t.popup_status_unknown || "Unknown" }
+    displays[status] || { icon: '❓', text: t.popup_status_unknown || 'Unknown' }
   );
 }
 
@@ -261,10 +261,10 @@ function getTaskActions(task) {
  */
 function bindTaskActions() {
   // 使用事件委托
-  const listEl = document.getElementById("taskList");
+  const listEl = document.getElementById('taskList');
 
-  listEl.addEventListener("click", async (e) => {
-    const btn = e.target.closest("[data-action]");
+  listEl.addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-action]');
     if (!btn) return;
 
     const action = btn.dataset.action;
@@ -272,21 +272,21 @@ function bindTaskActions() {
     const url = btn.dataset.url;
 
     switch (action) {
-      case "download":
-        handleDownload(url);
-        break;
+    case 'download':
+      handleDownload(url);
+      break;
 
-      case "copy":
-        handleCopyLink(url);
-        break;
+    case 'copy':
+      handleCopyLink(url);
+      break;
 
-      case "retry":
-        await handleRetry(taskId);
-        break;
+    case 'retry':
+      await handleRetry(taskId);
+      break;
 
-      case "delete":
-        await handleDelete(taskId);
-        break;
+    case 'delete':
+      await handleDelete(taskId);
+      break;
     }
   });
 }
@@ -297,9 +297,9 @@ function bindTaskActions() {
 function handleDownload(url) {
   chrome.downloads.download({ url }, (downloadId) => {
     if (chrome.runtime.lastError) {
-      logger.error("Download failed:", chrome.runtime.lastError);
+      logger.error('Download failed:', chrome.runtime.lastError);
     } else {
-      logger.info("Download started:", downloadId);
+      logger.info('Download started:', downloadId);
     }
   });
 }
@@ -313,7 +313,7 @@ async function handleCopyLink(url) {
     await navigator.clipboard.writeText(url);
     showToast(t.popup_toast_link_copied);
   } catch (error) {
-    logger.error("Failed to copy link:", error);
+    logger.error('Failed to copy link:', error);
     showToast(t.popup_toast_copy_failed);
   }
 }
@@ -325,7 +325,7 @@ async function handleRetry(taskId) {
   const t = translations[currentLang];
   try {
     const response = await chrome.runtime.sendMessage({
-      type: "RETRY_TASK",
+      type: 'RETRY_TASK',
       taskId,
     });
 
@@ -336,7 +336,7 @@ async function handleRetry(taskId) {
       showToast(t.popup_toast_retry_failed);
     }
   } catch (error) {
-    logger.error("Failed to retry task:", error);
+    logger.error('Failed to retry task:', error);
     showToast(t.popup_toast_retry_failed);
   }
 }
@@ -347,18 +347,18 @@ async function handleRetry(taskId) {
  */
 function showConfirm(message) {
   return new Promise((resolve) => {
-    const overlay = document.getElementById("confirmOverlay");
-    const msgEl = document.getElementById("confirmMessage");
-    const okBtn = document.getElementById("confirmOk");
-    const cancelBtn = document.getElementById("confirmCancel");
+    const overlay = document.getElementById('confirmOverlay');
+    const msgEl = document.getElementById('confirmMessage');
+    const okBtn = document.getElementById('confirmOk');
+    const cancelBtn = document.getElementById('confirmCancel');
 
     msgEl.textContent = message;
-    overlay.classList.add("show");
+    overlay.classList.add('show');
 
     const cleanup = () => {
-      overlay.classList.remove("show");
-      okBtn.removeEventListener("click", onOk);
-      cancelBtn.removeEventListener("click", onCancel);
+      overlay.classList.remove('show');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
     };
 
     const onOk = () => {
@@ -371,8 +371,8 @@ function showConfirm(message) {
       resolve(false);
     };
 
-    okBtn.addEventListener("click", onOk);
-    cancelBtn.addEventListener("click", onCancel);
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
   });
 }
 
@@ -386,7 +386,7 @@ async function handleDelete(taskId) {
 
   try {
     const response = await chrome.runtime.sendMessage({
-      type: "DELETE_TASK",
+      type: 'DELETE_TASK',
       taskId,
     });
 
@@ -397,7 +397,7 @@ async function handleDelete(taskId) {
       showToast(t.popup_toast_delete_failed);
     }
   } catch (error) {
-    logger.error("Failed to delete task:", error);
+    logger.error('Failed to delete task:', error);
     showToast(t.popup_toast_delete_failed);
   }
 }
@@ -412,17 +412,17 @@ async function clearCompleted() {
 
   try {
     const response = await chrome.runtime.sendMessage({
-      type: "CLEAR_COMPLETED_TASKS",
+      type: 'CLEAR_COMPLETED_TASKS',
     });
 
     if (response && response.success) {
-      showToast(t.popup_toast_clear_success.replace("{n}", response.cleared));
+      showToast(t.popup_toast_clear_success.replace('{n}', response.cleared));
       await loadTasks();
     } else {
       showToast(t.popup_toast_clear_failed);
     }
   } catch (error) {
-    logger.error("Failed to clear completed tasks:", error);
+    logger.error('Failed to clear completed tasks:', error);
     showToast(t.popup_toast_clear_failed);
   }
 }
@@ -457,17 +457,17 @@ function formatTimeAgo(timestamp) {
  */
 function showToast(message) {
   // 简单实现：使用alert，可以后续优化为自定义toast
-  const toast = document.createElement("div");
-  toast.className = "toast";
+  const toast = document.createElement('div');
+  toast.className = 'toast';
   toast.textContent = message;
   document.body.appendChild(toast);
 
   setTimeout(() => {
-    toast.classList.add("show");
+    toast.classList.add('show');
   }, 10);
 
   setTimeout(() => {
-    toast.classList.remove("show");
+    toast.classList.remove('show');
     setTimeout(() => toast.remove(), 300);
   }, 2000);
 }
