@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-01-04
+
+### 🚀 New Features
+
+- **Math & Abstract Extraction**: Enhanced math element processing and abstract extraction logic in converter.
+- **Build System**: Added automated packaging script for creating versioned release zips.
+
+### 🐛 Bug Fixes
+
+- Minor stability improvements and fixes.
+
 ## [1.1.0] - 2025-12-24
 
 ### 🚀 New Features

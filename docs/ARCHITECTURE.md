@@ -347,5 +347,5 @@ Chrome Extension → 自建 API 服务 → 各种工具
 
 ---
 
-**Last Updated**: 2025-12-08  
-**Version**: 1.0.0
+**Last Updated**: 2026-01-04  
+**Version**: 1.1.0

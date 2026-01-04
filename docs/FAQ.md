@@ -32,7 +32,7 @@
 1. **Check extension status | 检查扩展状态**：
    - Open `chrome://extensions/` | 打开 `chrome://extensions/`
    - Confirm "arXiv to Markdown" shows as enabled | 确认 "arXiv to Markdown" 显示为已启用
-   - Version should be 1.0.0 | 版本号应为 1.0.0
+   - Version should be 1.1.0 | 版本号应为 1.1.0
 
 2. **Test button injection | 测试按钮注入**：
    - Visit test paper: https://arxiv.org/abs/1706.03762 | 访问测试论文

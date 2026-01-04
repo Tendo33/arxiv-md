@@ -221,7 +221,7 @@ Please submit via [Issues](https://github.com/Tendo33/arxiv-md/issues), includin
 
 ### Good First Issue
 
-Look for tasks labeled `good first issue` in [Issues](https://github.com/[YOUR_USERNAME]/arxiv-md/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22):
+Look for tasks labeled `good first issue` in [Issues](https://github.com/Tendo33/arxiv-md/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22):
 
 - Documentation improvements (typos, clarifications)
 - Simple UI adjustments (colors, spacing)
@@ -243,7 +243,6 @@ Look for tasks labeled `good first issue` in [Issues](https://github.com/[YOUR_U
 
 ## 📧 Contact
 
-- GitHub Issues: https://github.com/[YOUR_USERNAME]/arxiv-md/issues
-- Email: [Maintainer Email] (Optional)
+- GitHub Issues: https://github.com/Tendo33/arxiv-md/issues
 
 Thanks again for your contribution! ❤️
