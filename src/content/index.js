@@ -79,110 +79,136 @@ async function injectConvertButton() {
   // 根据模式设置显示标签
   const modeLabel = conversionMode === 'always' ? 'mineru' : 'ar5iv';
 
+  // 注入样式
+  const style = document.createElement('style');
+  style.textContent = `
+    .arxiv-md-btn-container {
+      display: flex;
+      gap: 12px;
+      margin: 16px 0 16px 20px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .arxiv-md-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 38px;
+      padding: 0 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      color: white;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      position: relative;
+      overflow: hidden;
+      text-decoration: none !important;
+      line-height: normal;
+    }
+
+    .arxiv-md-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    .arxiv-md-btn-primary {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    .arxiv-md-btn-primary:not(:disabled):hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+    }
+    .arxiv-md-btn-primary:not(:disabled):active {
+      transform: scale(0.97);
+    }
+
+    .arxiv-md-btn-secondary {
+      background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+    .arxiv-md-btn-secondary:not(:disabled):hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
+    }
+    .arxiv-md-btn-secondary:not(:disabled):active {
+      transform: scale(0.97);
+    }
+
+    .arxiv-md-btn-sub {
+      font-size: 11px;
+      font-weight: 400;
+      opacity: 0.85;
+      margin-left: 6px;
+    }
+
+    .arxiv-md-btn svg {
+      margin-right: 6px;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .animate-spin {
+      animation: spin 1s linear infinite;
+      margin-right: 6px;
+    }
+
+    .arxiv-md-progress {
+      display: none;
+      padding: 6px 12px;
+      background: #f3f4f6;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #4b5563;
+      align-items: center;
+      border: 1px solid #e5e7eb;
+    }
+  `;
+  document.head.appendChild(style);
+
   // 创建按钮容器
   const container = document.createElement('div');
-  container.className = 'arxiv-md-button-container';
-  container.style.cssText = `
-    display: flex;
-    gap: 8px;
-    margin-top: 12px;
-    margin-left: 20px;
-    padding-top: 10px;
-    border-top: 1px solid #e0e0e0;
-    align-items: center;
-    flex-wrap: wrap;
-  `;
+  container.className = 'arxiv-md-btn-container';
 
-  // 创建 Markdown 按钮（更小巧的设计）
+  // 创建 Markdown 按钮
   const mdButton = document.createElement('button');
-  mdButton.className = 'arxiv-md-convert-btn';
+  mdButton.className = 'arxiv-md-convert-btn arxiv-md-btn arxiv-md-btn-primary';
   mdButton.innerHTML = `
-    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: -1px; margin-right: 3px;">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
       <path d="M8.5 1.5A1.5 1.5 0 0 0 7 0H3.5A1.5 1.5 0 0 0 2 1.5v13A1.5 1.5 0 0 0 3.5 16h9a1.5 1.5 0 0 0 1.5-1.5V7L8.5 1.5z"/>
       <path d="M8 1v5.5A1.5 1.5 0 0 0 9.5 8H15"/>
     </svg>
-    Markdown <span style="font-size: 10px; opacity: 0.85; font-weight: 400;">(${modeLabel})</span>
+    Markdown <span class="arxiv-md-btn-sub">(${modeLabel})</span>
   `;
-  mdButton.style.cssText = `
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.25);
-    display: inline-flex;
-    align-items: center;
-    white-space: nowrap;
-  `;
-
-  mdButton.addEventListener('mouseenter', () => {
-    mdButton.style.transform = 'translateY(-1px)';
-    mdButton.style.boxShadow = '0 3px 10px rgba(102, 126, 234, 0.35)';
-  });
-
-  mdButton.addEventListener('mouseleave', () => {
-    mdButton.style.transform = 'translateY(0)';
-    mdButton.style.boxShadow = '0 2px 6px rgba(102, 126, 234, 0.25)';
-  });
-
   mdButton.addEventListener('click', () => handleConversionTrigger('markdown'));
 
-  // 创建 PDF 按钮（更小巧的设计）
+  // 创建 PDF 按钮
   const pdfButton = document.createElement('button');
-  pdfButton.className = 'arxiv-pdf-download-btn';
+  pdfButton.className = 'arxiv-pdf-download-btn arxiv-md-btn arxiv-md-btn-secondary';
   pdfButton.innerHTML = `
-    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: -1px; margin-right: 3px;">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
       <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
       <path d="M8.5 6.5a.5.5 0 0 0-1 0v3.793L6.354 9.146a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 10.293V6.5z"/>
     </svg>
-    PDF <span style="font-size: 10px; opacity: 0.85; font-weight: 400;">(title)</span>
+    PDF <span class="arxiv-md-btn-sub">(title)</span>
   `;
-  pdfButton.style.cssText = `
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.25);
-    display: inline-flex;
-    align-items: center;
-    white-space: nowrap;
-  `;
-
-  pdfButton.addEventListener('mouseenter', () => {
-    pdfButton.style.transform = 'translateY(-1px)';
-    pdfButton.style.boxShadow = '0 3px 10px rgba(245, 158, 11, 0.35)';
-  });
-
-  pdfButton.addEventListener('mouseleave', () => {
-    pdfButton.style.transform = 'translateY(0)';
-    pdfButton.style.boxShadow = '0 2px 6px rgba(245, 158, 11, 0.25)';
-  });
-
   pdfButton.addEventListener('click', () => handleConversionTrigger('pdf'));
 
-  // 创建进度指示器（初始隐藏，更小巧的设计）
+  // 创建进度指示器
   const progressIndicator = document.createElement('div');
   progressIndicator.className = 'arxiv-md-progress';
-  progressIndicator.style.cssText = `
-    display: none;
-    padding: 5px 10px;
-    background: #f5f5f5;
-    border-radius: 5px;
-    font-size: 11px;
-    color: #666;
-  `;
   progressIndicator.innerHTML = `
     <span class="progress-text">Processing...</span>
-    <span class="progress-percent" style="margin-left: 6px; font-weight: 500;">0%</span>
+    <span class="progress-percent" style="margin-left: 6px; font-weight: 600;">0%</span>
   `;
 
   container.appendChild(mdButton);
@@ -348,9 +374,9 @@ async function handlePdfDownloadDirect(button, progressIndicator) {
     // 更新按钮文本
     if (button) {
       button.innerHTML = `
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: -1px; margin-right: 3px;">
-          <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
-          <path d="M8.5 6.5a.5.5 0 0 0-1 0v3.793L6.354 9.146a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 10.293V6.5z"/>
+        <svg class="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" stroke-opacity="0.3"></circle>
+          <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
         Downloading...
       `;
@@ -385,11 +411,11 @@ async function handlePdfDownloadDirect(button, progressIndicator) {
       button.style.opacity = '1';
       button.style.cursor = 'pointer';
       button.innerHTML = `
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: -1px; margin-right: 3px;">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
           <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
           <path d="M8.5 6.5a.5.5 0 0 0-1 0v3.793L6.354 9.146a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 10.293V6.5z"/>
         </svg>
-        PDF <span style="font-size: 10px; opacity: 0.85; font-weight: 400;">(title)</span>
+        PDF <span class="arxiv-md-btn-sub">(title)</span>
       `;
     }
 
@@ -407,11 +433,11 @@ async function handlePdfDownloadDirect(button, progressIndicator) {
       button.style.opacity = '1';
       button.style.cursor = 'pointer';
       button.innerHTML = `
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: -1px; margin-right: 3px;">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
           <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
           <path d="M8.5 6.5a.5.5 0 0 0-1 0v3.793L6.354 9.146a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 10.293V6.5z"/>
         </svg>
-        PDF <span style="font-size: 10px; opacity: 0.85; font-weight: 400;">(title)</span>
+        PDF <span class="arxiv-md-btn-sub">(title)</span>
       `;
     }
 
