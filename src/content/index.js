@@ -57,7 +57,7 @@ function init() {
   });
 }
 
-function injectConvertButton() {
+async function injectConvertButton() {
   if (!isArxivAbsPage) return; // 只在 Abstract 页面注入
 
   // 查找 Submission history 板块
@@ -67,103 +67,122 @@ function injectConvertButton() {
     return;
   }
 
+  // 读取用户设置的转换模式
+  let conversionMode = 'fast'; // 默认模式
+  try {
+    const result = await chrome.storage.sync.get('conversionMode');
+    conversionMode = result.conversionMode || 'fast';
+  } catch (error) {
+    logger.warn('Failed to get conversion mode, using default:', error);
+  }
+
+  // 根据模式设置显示标签
+  const modeLabel = conversionMode === 'always' ? 'mineru' : 'ar5iv';
+
   // 创建按钮容器
   const container = document.createElement('div');
   container.className = 'arxiv-md-button-container';
   container.style.cssText = `
     display: flex;
-    gap: 10px;
-    margin-top: 15px;
+    gap: 8px;
+    margin-top: 12px;
     margin-left: 20px;
     padding-top: 10px;
     border-top: 1px solid #e0e0e0;
     align-items: center;
+    flex-wrap: wrap;
   `;
 
-  // 创建 Markdown 按钮
+  // 创建 Markdown 按钮（更小巧的设计）
   const mdButton = document.createElement('button');
   mdButton.className = 'arxiv-md-convert-btn';
   mdButton.innerHTML = `
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: -2px; margin-right: 4px;">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: -1px; margin-right: 3px;">
       <path d="M8.5 1.5A1.5 1.5 0 0 0 7 0H3.5A1.5 1.5 0 0 0 2 1.5v13A1.5 1.5 0 0 0 3.5 16h9a1.5 1.5 0 0 0 1.5-1.5V7L8.5 1.5z"/>
       <path d="M8 1v5.5A1.5 1.5 0 0 0 9.5 8H15"/>
     </svg>
-    Save as Markdown
+    Markdown <span style="font-size: 10px; opacity: 0.85; font-weight: 400;">(${modeLabel})</span>
   `;
   mdButton.style.cssText = `
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
+    padding: 5px 10px;
+    border-radius: 5px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
-    transition: all 0.2s;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.25);
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
   `;
 
   mdButton.addEventListener('mouseenter', () => {
-    mdButton.style.transform = 'translateY(-2px)';
-    mdButton.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
+    mdButton.style.transform = 'translateY(-1px)';
+    mdButton.style.boxShadow = '0 3px 10px rgba(102, 126, 234, 0.35)';
   });
 
   mdButton.addEventListener('mouseleave', () => {
     mdButton.style.transform = 'translateY(0)';
-    mdButton.style.boxShadow = '0 2px 8px rgba(102, 126, 234, 0.3)';
+    mdButton.style.boxShadow = '0 2px 6px rgba(102, 126, 234, 0.25)';
   });
 
   mdButton.addEventListener('click', () => handleConversionTrigger('markdown'));
 
-  // 创建 PDF 按钮
+  // 创建 PDF 按钮（更小巧的设计）
   const pdfButton = document.createElement('button');
   pdfButton.className = 'arxiv-pdf-download-btn';
   pdfButton.innerHTML = `
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: -2px; margin-right: 4px;">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: -1px; margin-right: 3px;">
       <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
       <path d="M8.5 6.5a.5.5 0 0 0-1 0v3.793L6.354 9.146a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 10.293V6.5z"/>
     </svg>
-    Save PDF (Renamed)
+    PDF <span style="font-size: 10px; opacity: 0.85; font-weight: 400;">(title)</span>
   `;
   pdfButton.style.cssText = `
     background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
     color: white;
     border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
+    padding: 5px 10px;
+    border-radius: 5px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
-    transition: all 0.2s;
-    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.25);
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
   `;
 
   pdfButton.addEventListener('mouseenter', () => {
-    pdfButton.style.transform = 'translateY(-2px)';
-    pdfButton.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.4)';
+    pdfButton.style.transform = 'translateY(-1px)';
+    pdfButton.style.boxShadow = '0 3px 10px rgba(245, 158, 11, 0.35)';
   });
 
   pdfButton.addEventListener('mouseleave', () => {
     pdfButton.style.transform = 'translateY(0)';
-    pdfButton.style.boxShadow = '0 2px 8px rgba(245, 158, 11, 0.3)';
+    pdfButton.style.boxShadow = '0 2px 6px rgba(245, 158, 11, 0.25)';
   });
 
   pdfButton.addEventListener('click', () => handleConversionTrigger('pdf'));
 
-  // 创建进度指示器（初始隐藏）
+  // 创建进度指示器（初始隐藏，更小巧的设计）
   const progressIndicator = document.createElement('div');
   progressIndicator.className = 'arxiv-md-progress';
   progressIndicator.style.cssText = `
     display: none;
-    padding: 8px 16px;
-    background: #f0f0f0;
-    border-radius: 6px;
-    font-size: 13px;
-    color: #555;
+    padding: 5px 10px;
+    background: #f5f5f5;
+    border-radius: 5px;
+    font-size: 11px;
+    color: #666;
   `;
   progressIndicator.innerHTML = `
     <span class="progress-text">Processing...</span>
-    <span class="progress-percent" style="margin-left: 8px; font-weight: 500;">0%</span>
+    <span class="progress-percent" style="margin-left: 6px; font-weight: 500;">0%</span>
   `;
 
   container.appendChild(mdButton);
@@ -329,7 +348,7 @@ async function handlePdfDownloadDirect(button, progressIndicator) {
     // 更新按钮文本
     if (button) {
       button.innerHTML = `
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: -2px; margin-right: 4px;">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: -1px; margin-right: 3px;">
           <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
           <path d="M8.5 6.5a.5.5 0 0 0-1 0v3.793L6.354 9.146a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 10.293V6.5z"/>
         </svg>
@@ -366,11 +385,11 @@ async function handlePdfDownloadDirect(button, progressIndicator) {
       button.style.opacity = '1';
       button.style.cursor = 'pointer';
       button.innerHTML = `
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: -2px; margin-right: 4px;">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: -1px; margin-right: 3px;">
           <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
           <path d="M8.5 6.5a.5.5 0 0 0-1 0v3.793L6.354 9.146a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 10.293V6.5z"/>
         </svg>
-        Save PDF (Renamed)
+        PDF <span style="font-size: 10px; opacity: 0.85; font-weight: 400;">(title)</span>
       `;
     }
 
@@ -388,11 +407,11 @@ async function handlePdfDownloadDirect(button, progressIndicator) {
       button.style.opacity = '1';
       button.style.cursor = 'pointer';
       button.innerHTML = `
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: -2px; margin-right: 4px;">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: -1px; margin-right: 3px;">
           <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
           <path d="M8.5 6.5a.5.5 0 0 0-1 0v3.793L6.354 9.146a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 10.293V6.5z"/>
         </svg>
-        Save PDF (Renamed)
+        PDF <span style="font-size: 10px; opacity: 0.85; font-weight: 400;">(title)</span>
       `;
     }
 
