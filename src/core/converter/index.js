@@ -168,6 +168,13 @@ class MainConverter {
                 taskId: response.taskId,
                 background: true,
               });
+            } else if (response && response.duplicate) {
+              // 返回重复任务信息，让调用方决定如何处理
+              resolve({
+                success: false,
+                duplicate: true,
+                existingTask: response.existingTask,
+              });
             } else {
               reject(new Error(response?.error || '提交任务失败'));
             }

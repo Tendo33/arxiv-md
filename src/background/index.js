@@ -11,6 +11,9 @@ import { TASK_STATUS } from '@config/constants';
 
 logger.info('Background service worker initialized');
 
+// 记录已删除的任务 ID，防止删除后仍然触发下载
+const deletedTaskIds = new Set();
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   logger.debug('Received message:', message);
 
@@ -34,6 +37,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   case 'START_MINERU_TASK':
     handleStartMinerUTask(message.data, sendResponse);
     return true;
+
+    case 'START_MINERU_TASK_FORCE':
+      // 强制创建任务，跳过重复检查
+      handleStartMinerUTaskForce(message.data, sendResponse);
+      return true;
 
   case 'GET_TASKS':
     handleGetTasks(sendResponse);
@@ -83,7 +91,17 @@ async function handleConvertPaper(paperInfo, sendResponse, sender) {
     };
 
     const result = await converter.convert(paperInfo, progressCallback, tabId);
-    sendResponse({ success: true, data: result });
+
+    // 如果返回的是重复任务标志，将其传递给前端
+    if (result && result.duplicate) {
+      sendResponse({
+        success: false,
+        duplicate: true,
+        existingTask: result.existingTask
+      });
+    } else {
+      sendResponse({ success: true, data: result });
+    }
   } catch (error) {
     logger.error('Conversion failed:', error);
     sendResponse({ success: false, error: error.message || 'Unknown error' });
@@ -135,6 +153,23 @@ async function handleStartMinerUTask(paperInfo, sendResponse) {
   logger.info('Starting MinerU background task:', paperInfo.arxivId);
 
   try {
+    // 检查是否存在相同 arXiv ID 的任务
+    const existingTask = await taskManager.findTaskByArxivId(paperInfo.arxivId);
+    if (existingTask) {
+      // 返回重复任务信息，让前端决定是否继续
+      sendResponse({
+        success: false,
+        duplicate: true,
+        existingTask: {
+          id: existingTask.id,
+          status: existingTask.status,
+          arxivId: existingTask.paperInfo.arxivId,
+          title: existingTask.paperInfo.title,
+        }
+      });
+      return;
+    }
+
     // 创建任务
     const task = await taskManager.addTask(paperInfo, 'mineru');
     sendResponse({ success: true, taskId: task.id });
@@ -151,10 +186,38 @@ async function handleStartMinerUTask(paperInfo, sendResponse) {
 }
 
 /**
+ * 强制启动 MinerU 后台任务（跳过重复检查）
+ */
+async function handleStartMinerUTaskForce(paperInfo, sendResponse) {
+  logger.info('Force starting MinerU background task:', paperInfo.arxivId);
+
+  try {
+    // 直接创建任务，不检查重复
+    const task = await taskManager.addTask(paperInfo, 'mineru');
+    sendResponse({ success: true, taskId: task.id });
+
+    // 立即异步处理任务
+    Promise.resolve().then(() => {
+      processMinerUTaskInBackground(task.id);
+    });
+  } catch (error) {
+    logger.error('Failed to force start MinerU task:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+/**
  * 后台处理 MinerU 任务
  */
 async function processMinerUTaskInBackground(taskId) {
   logger.info('Processing MinerU task in background:', taskId);
+
+  // 检查任务是否已被删除
+  if (deletedTaskIds.has(taskId)) {
+    logger.info('Task was deleted before processing, skipping:', taskId);
+    deletedTaskIds.delete(taskId);
+    return;
+  }
 
   const task = await taskManager.getTask(taskId);
   if (!task) {
@@ -212,6 +275,13 @@ async function processMinerUTaskInBackground(taskId) {
     );
 
     logger.info('MinerU API call completed for task:', taskId);
+
+    // 在任务完成前检查是否被删除
+    if (deletedTaskIds.has(taskId)) {
+      logger.info('Task was deleted during processing, skipping download notification:', taskId);
+      deletedTaskIds.delete(taskId);
+      return;
+    }
 
     // 标记为完成
     await taskManager.updateTask(taskId, {
@@ -301,6 +371,9 @@ async function handleGetTasks(sendResponse) {
  */
 async function handleDeleteTask(taskId, sendResponse) {
   try {
+    // 将任务 ID 添加到已删除集合，阻止后续下载操作
+    deletedTaskIds.add(taskId);
+
     const success = await taskManager.deleteTask(taskId);
     sendResponse({ success });
   } catch (error) {

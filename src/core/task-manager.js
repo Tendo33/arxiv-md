@@ -100,6 +100,16 @@ class TaskManager {
   }
 
   /**
+   * 根据 arXiv ID 查找任务
+   * @param {string} arxivId - arXiv ID
+   * @returns {Promise<Object|null>} 找到的任务或 null
+   */
+  async findTaskByArxivId(arxivId) {
+    const tasks = await this.getTasks();
+    return tasks.find((t) => t.paperInfo.arxivId === arxivId) || null;
+  }
+
+  /**
    * 更新任务
    * @param {string} taskId - 任务 ID
    * @param {Object} updates - 要更新的字段

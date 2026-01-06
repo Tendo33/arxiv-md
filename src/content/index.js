@@ -296,7 +296,7 @@ async function handleConversionTrigger(type = 'markdown') {
 
     chrome.runtime.sendMessage(
       { type: 'CONVERT_PAPER', data: metadata },
-      (response) => {
+      async (response) => {
         // Check for extension context invalidation (happens when extension reloads)
         if (chrome.runtime.lastError) {
           logger.error(
@@ -320,6 +320,52 @@ async function handleConversionTrigger(type = 'markdown') {
         }
 
         logger.debug('Markdown conversion response:', response);
+
+        // 处理重复任务的情况
+        if (response && response.duplicate) {
+          const existingTask = response.existingTask;
+          const statusText = {
+            pending: '等待中',
+            processing: '处理中',
+            completed: '已完成',
+            failed: '失败',
+          }[existingTask.status] || existingTask.status;
+
+          const confirmMessage = `该论文的 MinerU 任务已存在（${statusText}）。\n\n是否仍要创建新任务？`;
+
+          if (confirm(confirmMessage)) {
+            // 用户确认，强制创建新任务
+            logger.info('User confirmed to create duplicate task');
+            chrome.runtime.sendMessage(
+              { type: 'START_MINERU_TASK_FORCE', data: metadata },
+              (forceResponse) => {
+                if (activeButton) {
+                  activeButton.disabled = false;
+                  activeButton.style.opacity = '1';
+                  activeButton.style.cursor = 'pointer';
+                }
+                if (progressIndicator) {
+                  progressIndicator.style.display = 'none';
+                }
+                if (forceResponse && forceResponse.success) {
+                  logger.info('Duplicate task created successfully:', forceResponse.taskId);
+                }
+              }
+            );
+          } else {
+            // 用户取消
+            logger.info('User cancelled duplicate task creation');
+            if (activeButton) {
+              activeButton.disabled = false;
+              activeButton.style.opacity = '1';
+              activeButton.style.cursor = 'pointer';
+            }
+            if (progressIndicator) {
+              progressIndicator.style.display = 'none';
+            }
+          }
+          return;
+        }
 
         if (activeButton) {
           activeButton.disabled = false;
