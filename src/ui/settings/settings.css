@@ -27,7 +27,7 @@ body {
 .header {
   background: linear-gradient(135deg, #B91C1C 0%, #DC2626 100%);
   color: white;
-  padding: 32px 48px;
+  padding: 20px 48px;
 }
 
 .header-content {
@@ -87,7 +87,8 @@ body {
 
 /* Main Content */
 .main-content {
-  padding: 40px 48px;
+  padding: 32px 48px;
+  padding-bottom: 0; /* Removing bottom padding to let sticky bar sit flush if needed, but sticky bar has its own padding */
 }
 
 /* Welcome Banner */
@@ -95,8 +96,8 @@ body {
   background: #FEF2F2;
   border: 1px solid #FECACA;
   border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 32px;
+  padding: 20px;
+  margin-bottom: 24px;
   animation: slideDown 0.5s ease-out;
 }
 
@@ -125,7 +126,7 @@ body {
 
 /* Settings Section */
 .settings-section {
-  margin-bottom: 40px;
+  margin-bottom: 32px;
 }
 
 .settings-section h2 {
@@ -152,7 +153,7 @@ body {
   position: relative;
   border: 1px solid #E5E7EB;
   border-radius: 16px;
-  padding: 24px;
+  padding: 20px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: white;
@@ -447,9 +448,20 @@ body {
 .actions-bar {
   display: flex;
   gap: 16px;
-  padding-top: 40px;
+  
+  /* Sticky positioning */
+  position: sticky;
+  bottom: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  
+  /* Full width expansion */
+  margin: 0 -48px; /* Counter main-content padding */
+  padding: 20px 48px;
+  
   border-top: 1px solid #E5E7EB;
-  margin-bottom: 40px;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
 }
 
 /* Footer */
