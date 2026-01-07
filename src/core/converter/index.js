@@ -107,6 +107,23 @@ class MainConverter {
       // 在 background 上下文中，直接导入并调用 taskManager 和处理函数
       try {
         const taskManager = (await import('@core/task-manager')).default;
+
+        // 检查是否存在重复任务
+        const existingTask = await taskManager.findTaskByArxivId(arxivId);
+        if (existingTask) {
+          // 返回重复任务信息，让调用方决定如何处理
+          return {
+            success: false,
+            duplicate: true,
+            existingTask: {
+              id: existingTask.id,
+              status: existingTask.status,
+              arxivId: existingTask.paperInfo.arxivId,
+              title: existingTask.paperInfo.title,
+            }
+          };
+        }
+
         const task = await taskManager.addTask(paperInfo, 'mineru');
 
         // 直接导入 background 模块并调用处理函数
