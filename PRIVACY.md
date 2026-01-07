@@ -12,7 +12,7 @@
 
 This extension operates entirely locally on your device.
 - **Local Processing**: All conversions and downloads happen within your browser.
-- **No External Servers**: No data is sent to our servers. We only interact with official arXiv services (arXiv.org, ar5iv.org) to fetch paper content.
+- **No External Servers**: No data is sent to our servers. We only interact with official arXiv services (arXiv.org, ar5iv.org) and optionally MinerU (if configured) to process content.
 
 ### Local Storage
 

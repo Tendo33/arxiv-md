@@ -37,8 +37,12 @@
 - **⚡ 极速**：绝大多数论文在 1 秒内完成转换。
 - **🧮 LaTeX 支持**：完美保留行内 `$E=mc^2$` 和块级 `$$...$$` 公式。
 - **🖼️ 图片保留**：保留图片（链接至 ar5iv CDN）。
-- **🔄 智能降级**：如果 Markdown 不可用，自动下载重命名好的 PDF。
-- **🔒 隐私**：100% 本地处理，不收集任何数据。
+- **🧠 MinerU**: 高精度 PDF 布局分析与提取（可选）。
+- **🔄 智能降级**：
+    1. **ar5iv**: 基于 HTML5 的快速转换。
+    2. **MinerU**: 智能 PDF 解析（需 API Key）。
+    3. **PDF**: 兜底下载重命名好的 PDF。
+- **🔒 隐私**：100% 本地处理（ar5iv 模式）。不收集任何数据。
 
 ## 🚀 快速开始
 
@@ -67,9 +71,21 @@
 
 ## 🏗️ 工作原理
 
-我们采用 **双层策略**：
-1. **Tier 1 (首选)**：从 [ar5iv.org](https://ar5iv.org) 获取 HTML5 并使用 Turndown 在本地转换为 Markdown。
-2. **Tier 2 (兜底)**：如果 ar5iv 不可用，则下载 PDF 并自动重命名。
+我们采用 **多层策略**：
+1. **Tier 1 (ar5iv)**：从 [ar5iv.org](https://ar5iv.org) 获取 HTML5 并使用 Turndown 在本地转换为 Markdown。追求速度和公式质量的最佳选择。
+2. **Tier 2 (MinerU)**：使用 [MinerU](https://github.com/opendatalab/MinerU) 提取服务进行高精度 PDF 解析。适合复杂布局（需配置）。
+3. **Tier 3 (PDF)**：如果所有转换方式都失败，则下载 PDF 并自动重命名（例如 `(2017) Title - Author.pdf`）。
+
+## 🔌 集成指南
+
+### Obsidian
+1. 将 Chrome 的默认下载路径更改为你的 Obsidian Vault 目录（例如 `D:\Obsidian\Papers`）。
+2. 下载的 Markdown 文件将直接出现在 Obsidian 中，公式自动渲染。
+
+### Notion
+1. 下载 Markdown 文件。
+2. 将其拖放到 Notion 页面中。
+3. Notion 会自动导入内容（数学公式可能需要微调）。
 
 ## 📄 许可证
 

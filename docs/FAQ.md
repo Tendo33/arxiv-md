@@ -57,6 +57,7 @@ If all steps work, installation is successful! | 如果以上步骤都正常，�
 **A:**
 
 - **Daily use | 日常使用**: Quality mode (default) | 质量模式（默认）
+- **Complex Layout | 复杂布局**: MinerU mode (Requires API Key) | MinerU 模式
 - **Speed priority | 追求速度**: Fast mode | 快速模式
 
 ---
@@ -83,8 +84,9 @@ If all steps work, installation is successful! | 如果以上步骤都正常，�
 
 **A:** The extension has two-tier protection | 插件有两层保障：
 
-1. **Tier 1**: ar5iv (15% failure rate | 失败率 15%)
-2. **Tier 2**: PDF download (always works | 始终有效)
+1. **Tier 1**: ar5iv (Fast & Free | 快速且免费)
+2. **Tier 2**: MinerU (High Accuracy | 高精度，需配置)
+3. **Tier 3**: PDF download (Fallback | 兜底)
 
 ### Q: Why do some papers fail to convert? | 为什么有些论文转换失败？
 
@@ -117,8 +119,9 @@ If all steps work, installation is successful! | 如果以上步骤都正常，�
 
 1. **Toast notification (recommended) | Toast 通知（推荐）**：
    - Notification after conversion shows source | 转换完成后的通知会显示来源
-   - "✅ ar5iv" = Tier 1 (fast | 快速)
-   - "📄 PDF" = Tier 2 (fallback | 兜底)
+   - "✅ ar5iv" = Tier 1
+   - "🧠 MinerU" = Tier 2
+   - "📄 PDF" = Tier 3
 
 2. **Markdown file header | Markdown 文件头部**：
    - Open downloaded Markdown file | 打开下载的 Markdown 文件

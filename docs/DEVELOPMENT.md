@@ -67,7 +67,8 @@ Background Worker
 Main Converter (Decision Center | 决策中心)
     ↓
 ├─→ ar5iv Converter (Tier 1)
-└─→ PDF Fallback (Tier 2)
+├─→ MinerU Converter (Tier 2)
+└─→ PDF Fallback (Tier 3)
 ```
 
 ### Adding New Features | 添加新功能的步骤
@@ -133,7 +134,7 @@ if (someCondition) {
 // src/config/constants.js
 export const CONVERSION_TIER = {
   AR5IV_LOCAL: "ar5iv_local",
-  NEW_TIER: "new_tier", // Add new type | 添加新类型
+  MINERU_API: "mineru_api", // MinerU Support
   PDF_FALLBACK: "pdf_fallback",
 };
 ```

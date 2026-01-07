@@ -4,7 +4,7 @@
 
 arXiv to Markdown uses a **two-tier intelligent fallback architecture** to achieve optimal balance between speed, quality, and availability.
 
-arXiv to Markdown 采用**两层智能降级架构**，在速度、质量和可用性之间达到最佳平衡。
+arXiv to Markdown 采用**多层智能降级架构**（Multi-tier Fallback），在速度、质量和可用性之间达到最佳平衡。
 
 ---
 
@@ -33,11 +33,11 @@ arXiv to Markdown 采用**两层智能降级架构**，在速度、质量和可�
        ┌───────────────┼───────────────┐
        │               │               │
        ▼               ▼               ▼
-┌────────────┐  ┌─────────────┐  ┌──────────┐
-│  ar5iv     │  │   ar5iv     │  │   PDF    │
-│ Converter  │  │   Check     │  │ Fallback │
-│ (Tier 1)   │  │  (HEAD req) │  │ (Tier 2) │
-└────────────┘  └─────────────┘  └──────────┘
+┌────────────┐  ┌─────────────┐  ┌──────────┐  ┌──────────┐
+│  ar5iv     │  │   ar5iv     │  │  MinerU  │  │   PDF    │
+│ Converter  │  │   Check     │  │   API    │  │ Fallback │
+│ (Tier 1)   │  │  (HEAD req) │  │ (Tier 2) │  │ (Tier 3) │
+└────────────┘  └─────────────┘  └──────────┘  └──────────┘
 ```
 
 ---
@@ -98,9 +98,10 @@ ar5iv URL → fetch HTML → Readability 清洗 → Turndown 转换 → Markdown
 
 ```javascript
 try {
+  if (useMinerU) return await mineruConverter.convert(); // Tier 2
   return await ar5ivConverter.convert(); // Tier 1
 } catch {
-  return downloadPDF(); // Tier 2 (Fallback)
+  return downloadPDF(); // Tier 3 (Fallback)
 }
 ```
 
@@ -139,10 +140,14 @@ try {
 ### 6. Utils Layer (`src/utils/`)
 
 #### Logger (`logger.js`)
-
 - Leveled logging (ERROR, WARN, INFO, DEBUG) | 分级日志
 - Timestamps and namespaces | 时间戳和命名空间
 - Dev/prod environment distinction | 开发/生产环境区分
+
+### 7. Task Manager (MinerU)
+- **Asynchronous Task Queue**: Handles long-running PDF parsing tasks.
+- **Background Processing**: Runs in Service Worker to avoid blocking UI.
+- **State Management**: Tracks task status (pending, processing, completed) to prevent duplicates.
 
 #### Storage (`storage.js`)
 

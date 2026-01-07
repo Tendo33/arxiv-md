@@ -37,8 +37,12 @@ Stop manually renaming PDFs like `2312.12345.pdf`.
 - **⚡ Fast**: Converts most papers in < 1 second.
 - **🧮 LaTeX Support**: Preserves inline `$E=mc^2$` and block `$$...$$` formulas.
 - **🖼️ Images**: Keeps images (linked to ar5iv CDN).
-- **🔄 Smart Fallback**: If Markdown isn't available, it downloads a properly named PDF.
-- **🔒 Private**: 100% local processing. No data collection.
+- **🧠 MinerU**: High-accuracy PDF layout analysis and extraction (Optional).
+- **🔄 Smart Fallback**:
+    1. **ar5iv**: Fast HTML5 based conversion.
+    2. **MinerU**: Intelligent PDF parsing (requires API key).
+    3. **PDF**: Fallback to properly named PDF.
+- **🔒 Private**: 100% local processing (ar5iv mode). No data collection.
 
 ## 🚀 Quick Start
 
@@ -67,9 +71,21 @@ Stop manually renaming PDFs like `2312.12345.pdf`.
 
 ## 🏗️ How it Works
 
-We use a **Two-Tier Strategy**:
-1. **Tier 1 (Preferred)**: Fetch HTML5 from [ar5iv.org](https://ar5iv.org) and convert to Markdown locally using Turndown.
-2. **Tier 2 (Fallback)**: If ar5iv is unavailable, download the PDF and rename it automatically.
+We use a **Multi-Tier Strategy**:
+1. **Tier 1 (ar5iv)**: Fetch HTML5 from [ar5iv.org](https://ar5iv.org) and convert to Markdown locally using Turndown. Best for speed and formula quality.
+2. **Tier 2 (MinerU)**: Use [MinerU](https://github.com/opendatalab/MinerU) extraction service for high-precision PDF parsing. Best for complex layouts (requires configuration).
+3. **Tier 3 (PDF)**: If all conversion methods fail, download the PDF and rename it automatically (e.g. `(2017) Title - Author.pdf`).
+
+## 🔌 Integrations
+
+### Obsidian
+1. Change Chrome's default download path to your Obsidian Vault (e.g., `D:\Obsidian\Papers`).
+2. Downloaded Markdown files will appear directly in Obsidian with auto-rendered formulas.
+
+### Notion
+1. Download the Markdown file.
+2. Drag and drop it into a Notion page.
+3. Notion will auto-import the content (math formulas may need minor adjustments).
 
 ## 📄 License
 
