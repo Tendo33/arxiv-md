@@ -229,12 +229,26 @@ async function injectConvertButton() {
 
 async function checkAr5ivAvailability(button) {
   try {
+    // 首先检查用户设置的转换模式
+    let conversionMode = 'fast'; // 默认模式
+    try {
+      const result = await chrome.storage.sync.get('conversionMode');
+      conversionMode = result.conversionMode || 'fast';
+    } catch (error) {
+      logger.warn('Failed to get conversion mode:', error);
+    }
+
+    // 如果是 mineru 模式（always），不需要检查 ar5iv 可用性
+    // mineru 直接使用 PDF 进行转换，不依赖 ar5iv 页面
+    if (conversionMode === 'always') {
+      logger.debug('MinerU mode enabled, skipping ar5iv availability check');
+      return;
+    }
+
     const arxivId = metadataExtractor._extractIdFromUrl(window.location.href);
     if (!arxivId) return;
 
-    // Set initial state (optional, maybe loading?)
-    // button.textContent = "Checking...";
-
+    // 只在标准模式（fast）下检查 ar5iv 可用性
     chrome.runtime.sendMessage(
       { type: 'CHECK_AR5IV', data: arxivId },
       (response) => {
@@ -244,13 +258,8 @@ async function checkAr5ivAvailability(button) {
         }
 
         if (response && response.success && response.available === false) {
-          logger.info(`ar5iv not available for ${arxivId}, hiding button`);
+          logger.info(`ar5iv not available for ${arxivId}, hiding button (standard mode)`);
           button.style.display = 'none';
-
-          // Also hide the container if only PDF button remains?
-          // No, PDF button is still useful.
-          // But maybe we should update the container layout if one button is missing?
-          // The container has flex gap, so it should be fine.
         } else {
           logger.debug(`ar5iv available for ${arxivId}`);
         }
