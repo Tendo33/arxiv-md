@@ -38,6 +38,7 @@ Stop manually renaming PDFs like `2312.12345.pdf`.
 - **🧮 LaTeX Support**: Preserves inline `$E=mc^2$` and block `$$...$$` formulas.
 - **🖼️ Images**: Keeps images (linked to ar5iv CDN).
 - **🧠 MinerU**: High-accuracy PDF layout analysis and extraction (Optional).
+- **📋 Task Manager**: Built-in MinerU Task Center to track conversion status, download progress, and retry failed tasks.
 - **🔄 Smart Fallback**:
     1. **ar5iv**: Fast HTML5 based conversion.
     2. **MinerU**: Intelligent PDF parsing (requires API key).
