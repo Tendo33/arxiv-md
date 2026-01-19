@@ -5,59 +5,63 @@
 <h1 align="center">arXiv to Markdown</h1>
 
 <p align="center">
-  <strong>Convert arXiv papers to Markdown in one click. Perfect LaTeX formulas.</strong>
+  <strong>Convert arXiv papers to Markdown in one click. Perfect for Obsidian & Notion.</strong>
 </p>
 
 <p align="center">
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
   <a href="https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd"><img src="https://img.shields.io/badge/Chrome-Extension-4285F4?logo=googlechrome&logoColor=white" alt="Chrome Extension"></a>
-  <a href="#"><img src="https://img.shields.io/badge/Manifest-V3-00C853" alt="Manifest V3"></a>
+  <img src="https://img.shields.io/badge/Manifest-V3-00C853" alt="Manifest V3">
 </p>
 
 <p align="center">
-  <a href="#-quick-start">Quick Start</a> •
   <a href="#-features">Features</a> •
+  <a href="#-how-it-works">How it Works</a> •
   <a href="#-installation">Installation</a> •
+  <a href="#-configuration">Configuration</a> •
   <a href="./README_CN.md">中文文档</a>
 </p>
 
 ---
 
-## 🎯 Why?
+## 🎯 Why this?
 
-Stop manually renaming PDFs like `2312.12345.pdf`.
-**arXiv to Markdown** gives you `Attention Is All You Need(2017).md` instantly.
+Turn `2312.12345.pdf` into `Attention Is All You Need(2017).md` instantly.
 
-- **Readable**: Edit in Obsidian, Notion, or VS Code.
-- **Searchable**: Full-text search works instantly.
-- **Clean**: LaTeX formulas are preserved perfectly.
+- **Readable**: Clean Markdown format for Obsidian, Notion, or VS Code.
+- **Searchable**: Full-text search works perfectly in your notes.
+- **Accurate**: Preserves LaTeX formulas (`$E=mc^2$`) and images.
 
 ## ✨ Features
 
-- **⚡ Fast**: Converts most papers in < 1 second.
-- **🧮 LaTeX Support**: Preserves inline `$E=mc^2$` and block `$$...$$` formulas.
-- **🖼️ Images**: Keeps images (linked to ar5iv CDN).
-- **🧠 MinerU**: High-accuracy PDF layout analysis and extraction (Optional).
-- **📋 Task Manager**: Built-in MinerU Task Center to track conversion status, download progress, and retry failed tasks.
+- **⚡ Fast**: Converts most papers in < 1 second using [ar5iv](https://ar5iv.org).
+- **🧠 MinerU Integration**: Optional high-precision PDF parsing for complex layouts (requires API Key).
 - **🔄 Smart Fallback**:
-    1. **ar5iv**: Fast HTML5 based conversion.
-    2. **MinerU**: Intelligent PDF parsing (requires API key).
-    3. **PDF**: Fallback to properly named PDF.
-- **🔒 Private**: 100% local processing (ar5iv mode). No data collection.
+  1. **ar5iv**: Best speed & formula quality (HTML5 based).
+  2. **MinerU**: Best layout analysis (PDF AI based).
+  3. **PDF**: Fallback to auto-renamed PDF if conversion fails.
+- **📋 Task Manager**: Track background conversion tasks, retries, and downloads.
+- **🔒 Privacy First**: ar5iv conversion happens 100% locally in your browser.
 
-## 🚀 Quick Start
+## 🏗️ How it Works
 
-1. **Install** the extension.
-2. Go to any **arXiv paper page** (e.g., [1706.03762](https://arxiv.org/abs/1706.03762)).
-3. Click **"Save as Markdown"** (purple button) or **"Save PDF"** (orange button).
+We use a **Multi-Tier Strategy** to ensure you always get the best result:
 
-> **Note**: For very new papers (published < 2 days ago), the Markdown button might be hidden if ar5iv hasn't processed them yet. Use "Save PDF" instead.
+1. **Tier 1 (ar5iv)**: Fetches HTML5 from ar5iv.org and converts to Markdown locally.
+   - *Pros*: Instant, editable formulas, perfect for most papers.
+2. **Tier 2 (MinerU)**: Uses MinerU AI service to parse the PDF.
+   - *Pros*: Handles complex double-column layouts and tables better.
+   - *Note*: Requires an API Token in settings.
+3. **Tier 3 (PDF)**: Downloads the original PDF with a clean filename.
+   - *Format*: `(Year) Title - Authors.pdf`
 
 ## 📦 Installation
 
-### Developer Mode (Current)
+### Option 1: Chrome Web Store (Recommended)
+[**Install from Chrome Web Store**](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd)
 
-1. Clone this repo:
+### Option 2: Manual Installation (For Developers)
+1. Clone the repo:
    ```bash
    git clone https://github.com/Tendo33/arxiv-md.git
    cd arxiv-md
@@ -65,28 +69,33 @@ Stop manually renaming PDFs like `2312.12345.pdf`.
    npm run build
    ```
 2. Open Chrome -> `chrome://extensions/`
-3. Enable **Developer mode**.
+3. Enable **Developer mode** (top right).
 4. Click **Load unpacked** and select the `dist` folder.
 
-[**Download from Chrome Web Store**](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd)
+## 🚀 Usage
 
-## 🏗️ How it Works
+1. Open any **arXiv paper page** (e.g., [1706.03762](https://arxiv.org/abs/1706.03762)).
+2. Click the **"Save as Markdown"** (Purple) button.
+   - *Or click "Save PDF" (Orange) for just the PDF.*
+3. The file will download to your default downloads folder.
 
-We use a **Multi-Tier Strategy**:
-1. **Tier 1 (ar5iv)**: Fetch HTML5 from [ar5iv.org](https://ar5iv.org) and convert to Markdown locally using Turndown. Best for speed and formula quality.
-2. **Tier 2 (MinerU)**: Use [MinerU](https://github.com/opendatalab/MinerU) extraction service for high-precision PDF parsing. Best for complex layouts (requires configuration).
-3. **Tier 3 (PDF)**: If all conversion methods fail, download the PDF and rename it automatically (e.g. `(2017) Title - Author.pdf`).
+> **Tip**: For Obsidian users, set your Chrome download location to your Vault's inbox folder.
 
-## 🔌 Integrations
+## ⚙️ Configuration
 
-### Obsidian
-1. Change Chrome's default download path to your Obsidian Vault (e.g., `D:\Obsidian\Papers`).
-2. Downloaded Markdown files will appear directly in Obsidian with auto-rendered formulas.
+Click the extension icon in the toolbar to access settings:
 
-### Notion
-1. Download the Markdown file.
-2. Drag and drop it into a Notion page.
-3. Notion will auto-import the content (math formulas may need minor adjustments).
+- **Conversion Mode**:
+  - `Smart (Default)`: Tries ar5iv first, then PDF.
+  - `MinerU Priority`: Forces MinerU for all papers (slower but more accurate layout).
+- **MinerU Token**:
+  - Get your token from [MinerU Dashboard](https://github.com/opendatalab/MinerU) (or compatible service) and paste it here to enable AI parsing.
+
+## 🛠️ Development
+
+- `npm run dev`: Watch mode for development.
+- `npm run build`: Production build.
+- `npm run package`: Create zip for store publication.
 
 ## 📄 License
 
