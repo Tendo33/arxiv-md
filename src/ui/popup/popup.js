@@ -72,6 +72,14 @@ function updateLanguage(lang) {
     }
   });
 
+  // 更新 aria-label
+  document.querySelectorAll('[data-i18n-aria]').forEach((el) => {
+    const key = el.getAttribute('data-i18n-aria');
+    if (t[key]) {
+      el.setAttribute('aria-label', t[key]);
+    }
+  });
+
   // 重新渲染任务列表以更新翻译
   if (currentTasks.length > 0) {
     renderTaskList(currentTasks);

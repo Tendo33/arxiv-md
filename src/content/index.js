@@ -3,10 +3,15 @@
 import metadataExtractor from '@core/metadata-extractor';
 import logger from '@utils/logger';
 import { REGEX } from '@config/constants';
+import storage from '@utils/storage';
+import { translations } from '@config/locales';
 import TurndownService from 'turndown';
 import { gfm } from 'turndown-plugin-gfm';
 
 logger.info('Content script loaded on:', window.location.href);
+
+let currentLang = 'en';
+let t = translations.en;
 
 // 检查是否在 arXiv 页面
 const isArxivAbsPage = REGEX.ARXIV_ABS_PAGE.test(window.location.href);
@@ -15,14 +20,16 @@ const isArxivPdfPage = REGEX.ARXIV_PDF_PAGE.test(window.location.href);
 if (!isArxivAbsPage && !isArxivPdfPage) {
   logger.warn('Not an arXiv page, exiting');
 } else {
-  init();
+  init().catch((error) => logger.error('Init failed:', error));
 }
 
-function init() {
+async function init() {
   logger.debug('Initializing content script');
 
+  await initLanguage();
+
   // 注入转换按钮
-  injectConvertButton();
+  await injectConvertButton();
 
   // 监听来自 Background 的消息
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -57,6 +64,17 @@ function init() {
   });
 }
 
+async function initLanguage() {
+  try {
+    const lang = await storage.getLanguage();
+    currentLang = lang || 'en';
+  } catch (error) {
+    logger.warn('Failed to load language setting:', error);
+    currentLang = 'en';
+  }
+  t = translations[currentLang] || translations.en;
+}
+
 async function injectConvertButton() {
   if (!isArxivAbsPage) return; // 只在 Abstract 页面注入
 
@@ -77,7 +95,10 @@ async function injectConvertButton() {
   }
 
   // 根据模式设置显示标签
-  const modeLabel = conversionMode === 'always' ? 'mineru' : 'ar5iv';
+  const modeLabel =
+    conversionMode === 'always'
+      ? t.content_mode_mineru
+      : t.content_mode_ar5iv;
 
   // 注入样式
   const style = document.createElement('style');
@@ -94,17 +115,17 @@ async function injectConvertButton() {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      height: 38px;
-      padding: 0 16px;
-      border: none;
+      height: 36px;
+      padding: 0 14px;
+      border: 1px solid transparent;
       border-radius: 8px;
       cursor: pointer;
       font-family: inherit;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       color: white;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
       position: relative;
       overflow: hidden;
       text-decoration: none !important;
@@ -119,24 +140,26 @@ async function injectConvertButton() {
     }
 
     .arxiv-md-btn-primary {
-      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+      background: #7F1D1D;
+      box-shadow: 0 4px 10px rgba(127, 29, 29, 0.25);
     }
     .arxiv-md-btn-primary:not(:disabled):hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+      box-shadow: 0 6px 14px rgba(127, 29, 29, 0.3);
+      background: #991B1B;
     }
     .arxiv-md-btn-primary:not(:disabled):active {
       transform: scale(0.97);
     }
 
     .arxiv-md-btn-secondary {
-      background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
-      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+      background: #92400E;
+      box-shadow: 0 4px 10px rgba(146, 64, 14, 0.2);
     }
     .arxiv-md-btn-secondary:not(:disabled):hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
+      box-shadow: 0 6px 14px rgba(146, 64, 14, 0.28);
+      background: #B45309;
     }
     .arxiv-md-btn-secondary:not(:disabled):active {
       transform: scale(0.97);
@@ -165,12 +188,86 @@ async function injectConvertButton() {
     .arxiv-md-progress {
       display: none;
       padding: 6px 12px;
-      background: #f3f4f6;
+      background: #f9fafb;
       border-radius: 6px;
       font-size: 12px;
       color: #4b5563;
-      align-items: center;
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 4px;
       border: 1px solid #e5e7eb;
+    }
+
+    .arxiv-md-progress.error {
+      background: #fef2f2;
+      border-color: #fecaca;
+      color: #991b1b;
+    }
+
+    .arxiv-md-progress.success {
+      background: #ecfdf5;
+      border-color: #a7f3d0;
+      color: #065f46;
+    }
+
+    .progress-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .progress-detail {
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    .arxiv-md-hint {
+      display: none;
+      font-size: 12px;
+      color: #6b7280;
+      padding: 6px 10px;
+      border-left: 3px solid #d1d5db;
+      background: #f9fafb;
+      border-radius: 6px;
+    }
+
+    .arxiv-md-auto {
+      display: none;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 8px 12px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #374151;
+    }
+
+    .arxiv-md-auto .auto-desc {
+      color: #6b7280;
+      font-size: 11px;
+    }
+
+    .arxiv-md-auto-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .arxiv-md-auto-btn {
+      border: 1px solid #e5e7eb;
+      background: white;
+      color: #111827;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .arxiv-md-auto-btn.primary {
+      background: #7F1D1D;
+      border-color: #7F1D1D;
+      color: white;
     }
   `;
   document.head.appendChild(style);
@@ -182,24 +279,26 @@ async function injectConvertButton() {
   // 创建 Markdown 按钮
   const mdButton = document.createElement('button');
   mdButton.className = 'arxiv-md-convert-btn arxiv-md-btn arxiv-md-btn-primary';
+  mdButton.setAttribute('aria-label', t.content_btn_markdown);
   mdButton.innerHTML = `
     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
       <path d="M8.5 1.5A1.5 1.5 0 0 0 7 0H3.5A1.5 1.5 0 0 0 2 1.5v13A1.5 1.5 0 0 0 3.5 16h9a1.5 1.5 0 0 0 1.5-1.5V7L8.5 1.5z"/>
       <path d="M8 1v5.5A1.5 1.5 0 0 0 9.5 8H15"/>
     </svg>
-    Markdown <span class="arxiv-md-btn-sub">(${modeLabel})</span>
+    ${t.content_btn_markdown} <span class="arxiv-md-btn-sub">(${modeLabel})</span>
   `;
   mdButton.addEventListener('click', () => handleConversionTrigger('markdown'));
 
   // 创建 PDF 按钮
   const pdfButton = document.createElement('button');
   pdfButton.className = 'arxiv-pdf-download-btn arxiv-md-btn arxiv-md-btn-secondary';
+  pdfButton.setAttribute('aria-label', t.content_btn_pdf);
   pdfButton.innerHTML = `
     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
       <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
       <path d="M8.5 6.5a.5.5 0 0 0-1 0v3.793L6.354 9.146a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 10.293V6.5z"/>
     </svg>
-    PDF <span class="arxiv-md-btn-sub">(title)</span>
+    ${t.content_btn_pdf} <span class="arxiv-md-btn-sub">(${t.content_btn_sub_title})</span>
   `;
   pdfButton.addEventListener('click', () => handleConversionTrigger('pdf'));
 
@@ -207,13 +306,32 @@ async function injectConvertButton() {
   const progressIndicator = document.createElement('div');
   progressIndicator.className = 'arxiv-md-progress';
   progressIndicator.innerHTML = `
-    <span class="progress-text">Processing...</span>
-    <span class="progress-percent" style="margin-left: 6px; font-weight: 600;">0%</span>
+    <div class="progress-row">
+      <span class="progress-text">${t.content_progress_processing}</span>
+      <span class="progress-percent" style="margin-left: 6px; font-weight: 600;">0%</span>
+    </div>
+    <div class="progress-detail"></div>
+  `;
+
+  const hintIndicator = document.createElement('div');
+  hintIndicator.className = 'arxiv-md-hint';
+
+  const autoPrompt = document.createElement('div');
+  autoPrompt.className = 'arxiv-md-auto';
+  autoPrompt.innerHTML = `
+    <span class="auto-text">${t.content_auto_prompt_title}</span>
+    <span class="auto-desc">${t.content_auto_prompt_desc}</span>
+    <div class="arxiv-md-auto-actions">
+      <button class="arxiv-md-auto-btn primary" data-action="auto-confirm">${t.content_auto_prompt_confirm}</button>
+      <button class="arxiv-md-auto-btn" data-action="auto-cancel">${t.content_auto_prompt_cancel}</button>
+    </div>
   `;
 
   container.appendChild(mdButton);
   container.appendChild(pdfButton);
   container.appendChild(progressIndicator);
+  container.appendChild(hintIndicator);
+  container.appendChild(autoPrompt);
 
   // 插入到 Submission history 后面
   submissionHistory.parentNode.insertBefore(
@@ -224,10 +342,16 @@ async function injectConvertButton() {
   logger.info('Convert buttons injected below Submission history');
 
   // Check ar5iv availability
-  checkAr5ivAvailability(mdButton);
+  checkAr5ivAvailability(mdButton, hintIndicator);
+
+  // Auto convert prompt (optional)
+  const autoConvert = await storage.getAutoConvert();
+  if (autoConvert) {
+    showAutoConvertPrompt(autoPrompt);
+  }
 }
 
-async function checkAr5ivAvailability(button) {
+async function checkAr5ivAvailability(button, hintEl) {
   try {
     // 首先检查用户设置的转换模式
     let conversionMode = 'fast'; // 默认模式
@@ -258,10 +382,13 @@ async function checkAr5ivAvailability(button) {
         }
 
         if (response && response.success && response.available === false) {
-          logger.info(`ar5iv not available for ${arxivId}, hiding button (standard mode)`);
-          button.style.display = 'none';
+          logger.info(`ar5iv not available for ${arxivId}, showing fallback hint`);
+          setHint(hintEl, t.content_ar5iv_unavailable);
+          button.setAttribute('data-ar5iv-unavailable', 'true');
         } else {
           logger.debug(`ar5iv available for ${arxivId}`);
+          clearHint(hintEl);
+          button.removeAttribute('data-ar5iv-unavailable');
         }
       },
     );
@@ -270,13 +397,46 @@ async function checkAr5ivAvailability(button) {
   }
 }
 
+function setHint(hintEl, message) {
+  if (!hintEl) return;
+  hintEl.textContent = message;
+  hintEl.style.display = message ? 'block' : 'none';
+}
+
+function clearHint(hintEl) {
+  if (!hintEl) return;
+  hintEl.textContent = '';
+  hintEl.style.display = 'none';
+}
+
+function showAutoConvertPrompt(autoPromptEl) {
+  if (!autoPromptEl) return;
+  autoPromptEl.style.display = 'flex';
+
+  if (autoPromptEl.dataset.bound) return;
+  autoPromptEl.dataset.bound = 'true';
+
+  autoPromptEl.addEventListener('click', (event) => {
+    const btn = event.target.closest('[data-action]');
+    if (!btn) return;
+
+    const action = btn.dataset.action;
+    if (action === 'auto-confirm') {
+      autoPromptEl.style.display = 'none';
+      handleConversionTrigger('markdown');
+    } else if (action === 'auto-cancel') {
+      autoPromptEl.style.display = 'none';
+    }
+  });
+}
+
 async function handleConversionTrigger(type = 'markdown') {
   logger.info(`${type} conversion triggered`);
 
   try {
     const mdButton = document.querySelector('.arxiv-md-convert-btn');
     const pdfButton = document.querySelector('.arxiv-pdf-download-btn');
-    const progressIndicator = document.querySelector('.arxiv-md-progress');
+    const hintIndicator = document.querySelector('.arxiv-md-hint');
 
     const activeButton = type === 'markdown' ? mdButton : pdfButton;
 
@@ -286,13 +446,16 @@ async function handleConversionTrigger(type = 'markdown') {
       activeButton.style.cursor = 'not-allowed';
     }
 
-    if (progressIndicator) {
-      progressIndicator.style.display = 'flex';
-    }
+    clearHint(hintIndicator);
+    setProgressState({
+      text: t.content_progress_processing,
+      percent: 0,
+      state: 'processing',
+    });
 
     // PDF 下载：直接在 content script 中处理（参考脚本方式）
     if (type === 'pdf') {
-      await handlePdfDownloadDirect(activeButton, progressIndicator);
+      await handlePdfDownloadDirect(activeButton);
       return;
     }
 
@@ -318,13 +481,7 @@ async function handleConversionTrigger(type = 'markdown') {
             activeButton.style.opacity = '1';
             activeButton.style.cursor = 'pointer';
           }
-          if (progressIndicator) {
-            progressIndicator.style.display = 'none';
-          }
-          // Optionally prompt user to reload the page
-          alert(
-            'Extension was updated or reloaded. Please refresh the page and try again.',
-          );
+          showError(t.content_error_extension_reloaded);
           return;
         }
 
@@ -334,13 +491,16 @@ async function handleConversionTrigger(type = 'markdown') {
         if (response && response.duplicate) {
           const existingTask = response.existingTask;
           const statusText = {
-            pending: '等待中',
-            processing: '处理中',
-            completed: '已完成',
-            failed: '失败',
+            pending: t.popup_status_pending || 'Pending',
+            processing: t.popup_status_processing || 'Processing',
+            completed: t.popup_status_completed || 'Completed',
+            failed: t.popup_status_failed || 'Failed',
           }[existingTask.status] || existingTask.status;
 
-          const confirmMessage = `该论文的 MinerU 任务已存在（${statusText}）。\n\n是否仍要创建新任务？`;
+          const confirmMessage = t.content_confirm_duplicate.replace(
+            '{status}',
+            statusText,
+          );
 
           if (confirm(confirmMessage)) {
             // 用户确认，强制创建新任务
@@ -353,9 +513,7 @@ async function handleConversionTrigger(type = 'markdown') {
                   activeButton.style.opacity = '1';
                   activeButton.style.cursor = 'pointer';
                 }
-                if (progressIndicator) {
-                  progressIndicator.style.display = 'none';
-                }
+                clearProgressState();
                 if (forceResponse && forceResponse.success) {
                   logger.info('Duplicate task created successfully:', forceResponse.taskId);
                 }
@@ -369,9 +527,7 @@ async function handleConversionTrigger(type = 'markdown') {
               activeButton.style.opacity = '1';
               activeButton.style.cursor = 'pointer';
             }
-            if (progressIndicator) {
-              progressIndicator.style.display = 'none';
-            }
+            clearProgressState();
           }
           return;
         }
@@ -382,8 +538,15 @@ async function handleConversionTrigger(type = 'markdown') {
           activeButton.style.cursor = 'pointer';
         }
 
-        if (progressIndicator) {
-          progressIndicator.style.display = 'none';
+        if (response && response.success === false) {
+          showError(response.error || t.content_error_generic);
+          return;
+        }
+
+        if (response?.data?.background) {
+          showSuccess(t.content_progress_submitted);
+        } else {
+          showSuccess(t.content_progress_completed);
         }
 
         // 通知已由 background script 处理，不需要在这里显示 Toast
@@ -404,13 +567,11 @@ async function handleConversionTrigger(type = 'markdown') {
     }
 
     const progressIndicator = document.querySelector('.arxiv-md-progress');
-    if (progressIndicator) {
-      progressIndicator.style.display = 'none';
-    }
+    showError(error.message || t.content_error_generic);
   }
 }
 
-async function handlePdfDownloadDirect(button, progressIndicator) {
+async function handlePdfDownloadDirect(button) {
   try {
     // 使用页面标题作为文件名（参考脚本方式）
     const pageTitle = document.title;
@@ -426,6 +587,12 @@ async function handlePdfDownloadDirect(button, progressIndicator) {
 
     logger.info('Downloading PDF:', filename);
 
+    setProgressState({
+      text: t.content_progress_downloading,
+      percent: 0,
+      state: 'processing',
+    });
+
     // 更新按钮文本
     if (button) {
       button.innerHTML = `
@@ -433,7 +600,7 @@ async function handlePdfDownloadDirect(button, progressIndicator) {
           <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" stroke-opacity="0.3"></circle>
           <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
-        Downloading...
+        ${t.content_progress_downloading}
       `;
     }
 
@@ -470,13 +637,11 @@ async function handlePdfDownloadDirect(button, progressIndicator) {
           <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
           <path d="M8.5 6.5a.5.5 0 0 0-1 0v3.793L6.354 9.146a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 10.293V6.5z"/>
         </svg>
-        PDF <span class="arxiv-md-btn-sub">(title)</span>
+        ${t.content_btn_pdf} <span class="arxiv-md-btn-sub">(${t.content_btn_sub_title})</span>
       `;
     }
 
-    if (progressIndicator) {
-      progressIndicator.style.display = 'none';
-    }
+    showSuccess(t.content_progress_completed);
 
     logger.info('PDF download complete:', filename);
   } catch (error) {
@@ -492,13 +657,11 @@ async function handlePdfDownloadDirect(button, progressIndicator) {
           <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
           <path d="M8.5 6.5a.5.5 0 0 0-1 0v3.793L6.354 9.146a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 10.293V6.5z"/>
         </svg>
-        PDF <span class="arxiv-md-btn-sub">(title)</span>
+        ${t.content_btn_pdf} <span class="arxiv-md-btn-sub">(${t.content_btn_sub_title})</span>
       `;
     }
 
-    if (progressIndicator) {
-      progressIndicator.style.display = 'none';
-    }
+    showError(error.message || t.content_error_generic);
 
     throw error;
   }
@@ -519,25 +682,77 @@ function updateProgressUI(progress) {
   const progressIndicator = document.querySelector('.arxiv-md-progress');
   if (!progressIndicator) return;
 
-  const textEl = progressIndicator.querySelector('.progress-text');
-  const percentEl = progressIndicator.querySelector('.progress-percent');
+  const stageText = {
+    checking: t.content_progress_checking,
+    downloading: t.content_progress_downloading,
+    submitting: t.content_progress_submitting,
+    processing: t.content_progress_processing,
+    extracting: t.content_progress_extracting,
+    completed: t.content_progress_completed,
+  };
 
-  if (textEl && percentEl) {
-    const stageText = {
-      checking: 'Checking ar5iv...',
-      downloading: 'Downloading...',
-      submitting: 'Submitting to MinerU...',
-      processing: 'MinerU parsing...',
-      extracting: 'Extracting results...',
-      completed: 'Done!',
-    };
-
-    textEl.textContent = stageText[progress.stage] || 'Processing...';
-    percentEl.textContent = `${Math.round(progress.progress || 0)}%`;
-  }
+  setProgressState({
+    text: stageText[progress.stage] || t.content_progress_processing,
+    percent: Math.round(progress.progress || 0),
+    state: 'processing',
+  });
 }
 
 // Toast 通知已被移除，通知由 background script 的系统通知处理
+
+function setProgressState({ text, percent = null, detail = '', state = '' }) {
+  const progressIndicator = document.querySelector('.arxiv-md-progress');
+  if (!progressIndicator) return;
+
+  const textEl = progressIndicator.querySelector('.progress-text');
+  const percentEl = progressIndicator.querySelector('.progress-percent');
+  const detailEl = progressIndicator.querySelector('.progress-detail');
+
+  progressIndicator.style.display = 'flex';
+  progressIndicator.classList.remove('error', 'success');
+  if (state === 'error' || state === 'success') {
+    progressIndicator.classList.add(state);
+  }
+
+  if (textEl) textEl.textContent = text || t.content_progress_processing;
+  if (percentEl) {
+    percentEl.textContent =
+      percent === null || Number.isNaN(percent) ? '' : `${percent}%`;
+  }
+  if (detailEl) {
+    detailEl.textContent = detail || '';
+    detailEl.style.display = detail ? 'block' : 'none';
+  }
+}
+
+function clearProgressState() {
+  const progressIndicator = document.querySelector('.arxiv-md-progress');
+  if (!progressIndicator) return;
+  progressIndicator.style.display = 'none';
+  progressIndicator.classList.remove('error', 'success');
+}
+
+function showError(message) {
+  setProgressState({
+    text: t.content_progress_failed,
+    detail: message || t.content_error_generic,
+    percent: null,
+    state: 'error',
+  });
+}
+
+function showSuccess(message) {
+  setProgressState({
+    text: t.content_progress_completed,
+    detail: message || '',
+    percent: 100,
+    state: 'success',
+  });
+
+  setTimeout(() => {
+    clearProgressState();
+  }, 1600);
+}
 
 /**
  * 判断数学公式是否为块级公式

@@ -161,10 +161,13 @@ class Ar5ivConverter {
     }
   }
 
-  async convert(arxivId, tabId) {
+  async convert(arxivId, tabId, options = {}) {
     logger.info(`Starting ar5iv conversion for ${arxivId}`);
 
     try {
+      const includeMetadata = options.includeMetadata !== false;
+      const paperInfo = options.paperInfo || {};
+
       const available = await this.checkAvailability(arxivId);
       if (!available) {
         throw new Error('ar5iv version not available');
@@ -174,11 +177,15 @@ class Ar5ivConverter {
       const cleaned = this.cleanHtml(html);
       const markdown = await this.toMarkdown(cleaned.content, tabId);
 
-      const markdownWithMeta = this._addMetadata(markdown, {
-        title: cleaned.title,
-        arxivId: arxivId,
-        source: 'ar5iv',
-      });
+      const markdownWithMeta = includeMetadata
+        ? this._addMetadata(markdown, {
+          title: cleaned.title,
+          arxivId: arxivId,
+          source: 'ar5iv',
+          authors: paperInfo.authors,
+          year: paperInfo.year,
+        })
+        : markdown;
 
       logger.info(`ar5iv conversion successful for ${arxivId}`);
 
@@ -204,10 +211,18 @@ class Ar5ivConverter {
    * @private
    */
   _addMetadata(markdown, metadata) {
+    const authors =
+      Array.isArray(metadata.authors) && metadata.authors.length > 0
+        ? metadata.authors.join(', ')
+        : '';
+    const year = metadata.year ? metadata.year : '';
+
     return `---
 title: ${metadata.title}
 arxiv_id: ${metadata.arxivId}
 source: ${metadata.source}
+${authors ? `authors: ${authors}` : ''}
+${year ? `year: ${year}` : ''}
 ---
 
 ${markdown}`;

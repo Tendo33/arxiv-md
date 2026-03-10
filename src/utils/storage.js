@@ -70,6 +70,38 @@ class StorageManager {
   }
 
   /**
+   * 获取自动转换开关
+   * @returns {Promise<boolean>}
+   */
+  async getAutoConvert() {
+    return this.get(STORAGE_KEYS.AUTO_CONVERT, DEFAULTS.AUTO_CONVERT);
+  }
+
+  /**
+   * 设置自动转换开关
+   * @param {boolean} value
+   */
+  async setAutoConvert(value) {
+    await this.set(STORAGE_KEYS.AUTO_CONVERT, value);
+  }
+
+  /**
+   * 获取是否包含 Markdown 元数据
+   * @returns {Promise<boolean>}
+   */
+  async getIncludeMetadata() {
+    return this.get(STORAGE_KEYS.INCLUDE_METADATA, DEFAULTS.INCLUDE_METADATA);
+  }
+
+  /**
+   * 设置是否包含 Markdown 元数据
+   * @param {boolean} value
+   */
+  async setIncludeMetadata(value) {
+    await this.set(STORAGE_KEYS.INCLUDE_METADATA, value);
+  }
+
+  /**
    * 设置转换模式
    * @param {string} mode
    */
