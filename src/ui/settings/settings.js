@@ -58,6 +58,22 @@ function updateLanguage(lang) {
     }
   });
 
+  // 更新 title 属性
+  document.querySelectorAll('[data-i18n-title]').forEach((el) => {
+    const key = el.getAttribute('data-i18n-title');
+    if (t[key]) {
+      el.title = t[key];
+    }
+  });
+
+  // 更新 aria-label
+  document.querySelectorAll('[data-i18n-aria]').forEach((el) => {
+    const key = el.getAttribute('data-i18n-aria');
+    if (t[key]) {
+      el.setAttribute('aria-label', t[key]);
+    }
+  });
+
   // 更新语言按钮文本
   document.getElementById('langText').textContent =
     lang === 'en' ? '中文' : 'English';
@@ -80,6 +96,12 @@ async function loadSettings() {
 
     const showNotifications = await storage.getShowNotifications();
     document.getElementById('showNotifications').checked = showNotifications;
+
+    const autoConvert = await storage.getAutoConvert();
+    document.getElementById('autoConvert').checked = autoConvert;
+
+    const includeMetadata = await storage.getIncludeMetadata();
+    document.getElementById('includeMetadata').checked = includeMetadata;
 
     logger.info('Settings loaded');
   } catch (error) {
@@ -159,6 +181,12 @@ async function saveSettings() {
       document.getElementById('showNotifications').checked;
     await storage.setShowNotifications(showNotifications);
 
+    const autoConvert = document.getElementById('autoConvert').checked;
+    await storage.setAutoConvert(autoConvert);
+
+    const includeMetadata = document.getElementById('includeMetadata').checked;
+    await storage.setIncludeMetadata(includeMetadata);
+
     logger.info('Settings saved');
     showToast(t.toast_saved, 'success');
   } catch (error) {
@@ -184,6 +212,13 @@ async function resetSettings() {
     // 清空 Token
     document.getElementById('mineruToken').value = '';
     document.getElementById('tokenStatus').style.display = 'none';
+
+    // 重置高级选项
+    document.getElementById('autoConvert').checked = false;
+    await storage.setAutoConvert(false);
+
+    document.getElementById('includeMetadata').checked = true;
+    await storage.setIncludeMetadata(true);
 
     showToast(t.toast_reset, 'success');
   } catch (error) {

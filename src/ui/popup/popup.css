@@ -1,8 +1,8 @@
 /* Popup Styles */
 :root {
-  --primary-color: #B91C1C;
+  --primary-color: #7F1D1D;
   --primary-hover: #991B1B;
-  --bg-color: #f9fafb;
+  --bg-color: #f8fafc;
   --card-bg: #ffffff;
   --text-primary: #111827;
   --text-secondary: #6b7280;
@@ -36,7 +36,7 @@ body {
 
 /* Header */
 .header {
-  background: linear-gradient(135deg, #B91C1C 0%, #DC2626 100%);
+  background: linear-gradient(135deg, #7F1D1D 0%, #991B1B 100%);
   color: white;
   padding: 16px;
   display: flex;

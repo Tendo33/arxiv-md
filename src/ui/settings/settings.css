@@ -11,7 +11,7 @@ body {
   font-size: 14px;
   line-height: 1.6;
   color: #333;
-  background: #f9fafb;
+  background: #f8fafc;
   min-height: 100vh;
 }
 
@@ -25,7 +25,7 @@ body {
 
 /* Header */
 .header {
-  background: linear-gradient(135deg, #B91C1C 0%, #DC2626 100%);
+  background: linear-gradient(135deg, #7F1D1D 0%, #991B1B 100%);
   color: white;
   padding: 20px 48px;
 }
@@ -173,9 +173,9 @@ body {
 
 /* Checked State - Full Card Highlight */
 .mode-card:has(input[type="radio"]:checked) {
-  border-color: #B91C1C;
+  border-color: #7F1D1D;
   background: #FEF2F2;
-  box-shadow: 0 4px 12px -2px rgba(185, 28, 28, 0.1);
+  box-shadow: 0 4px 12px -2px rgba(127, 29, 29, 0.12);
 }
 
 /* Fallback for browsers not supporting :has */
@@ -220,7 +220,7 @@ body {
 }
 
 .mode-badge-recommended {
-  background: #B91C1C;
+  background: #7F1D1D;
   color: white;
 }
 
@@ -254,8 +254,8 @@ body {
 
 .input-field:focus {
   outline: none;
-  border-color: #B91C1C;
-  box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.1);
+  border-color: #7F1D1D;
+  box-shadow: 0 0 0 3px rgba(127, 29, 29, 0.12);
 }
 
 .btn-icon {
@@ -270,8 +270,8 @@ body {
 
 .btn-icon:hover {
   background: #F9FAFB;
-  border-color: #B91C1C;
-  color: #B91C1C;
+  border-color: #7F1D1D;
+  color: #7F1D1D;
 }
 
 .form-hint {
@@ -281,7 +281,7 @@ body {
 }
 
 .form-hint a {
-  color: #B91C1C;
+  color: #7F1D1D;
   text-decoration: none;
   font-weight: 500;
 }
@@ -309,7 +309,7 @@ body {
 .token-status.error {
   display: block;
   background: #FEF2F2;
-  color: #B91C1C;
+  color: #7F1D1D;
   border: 1px solid #EF4444;
 }
 
@@ -371,7 +371,7 @@ body {
   width: 18px;
   height: 18px;
   cursor: pointer;
-  accent-color: #B91C1C;
+  accent-color: #7F1D1D;
 }
 
 .checkbox-label span {
@@ -398,7 +398,7 @@ body {
 .stat-number {
   font-size: 32px;
   font-weight: 800;
-  color: #B91C1C;
+  color: #7F1D1D;
   margin-bottom: 8px;
   line-height: 1;
 }
@@ -422,14 +422,14 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #B91C1C 0%, #DC2626 100%);
+  background: linear-gradient(135deg, #7F1D1D 0%, #991B1B 100%);
   color: white;
-  box-shadow: 0 4px 6px -1px rgba(185, 28, 28, 0.2);
+  box-shadow: 0 4px 6px -1px rgba(127, 29, 29, 0.2);
 }
 
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 12px -2px rgba(185, 28, 28, 0.25);
+  box-shadow: 0 8px 12px -2px rgba(127, 29, 29, 0.25);
 }
 
 .btn-secondary {
@@ -488,7 +488,7 @@ body {
 }
 
 .footer-links a:hover {
-  color: #B91C1C;
+  color: #7F1D1D;
 }
 
 .footer-links span {

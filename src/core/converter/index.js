@@ -26,6 +26,7 @@ class MainConverter {
 
     const mode = await storage.getConversionMode();
     const mineruToken = await storage.getMinerUToken();
+    const includeMetadata = await storage.getIncludeMetadata();
 
     if (mode === CONVERSION_MODE.ALWAYS_MINERU && mineruToken) {
       return this._convertWithMinerU(paperInfo, onProgress, tabId);
@@ -37,6 +38,7 @@ class MainConverter {
       mineruToken,
       onProgress,
       tabId,
+      includeMetadata,
     );
   }
 
@@ -46,6 +48,7 @@ class MainConverter {
     mineruToken,
     onProgress,
     tabId,
+    includeMetadata,
   ) {
     const { arxivId, title } = paperInfo;
 
@@ -55,7 +58,10 @@ class MainConverter {
         onProgress({ tier: 'ar5iv', stage: 'checking', progress: 0 });
       logger.info('Tier 1: Trying ar5iv conversion...');
 
-      const result = await ar5ivConverter.convert(arxivId, tabId);
+      const result = await ar5ivConverter.convert(arxivId, tabId, {
+        includeMetadata,
+        paperInfo,
+      });
       const filename = generateFilename(
         {
           title: result.title || title,

@@ -17,7 +17,7 @@
             <h1>arXiv to Markdown</h1>
           </div>
           <div style="display: flex; align-items: center; gap: 15px">
-            <button class="btn-lang" id="langToggle" title="Switch Language">
+            <button class="btn-lang" id="langToggle" data-i18n-title="lang_switch" data-i18n-aria="lang_switch" title="Switch Language" aria-label="Switch Language">
               <span id="langIcon">🌐</span>
               <span id="langText">中文</span>
             </button>
@@ -101,7 +101,7 @@
                 placeholder="Enter your MinerU API Token"
                 class="input-field"
               />
-              <button id="toggleTokenBtn" class="btn-icon" title="Show/Hide">
+              <button id="toggleTokenBtn" class="btn-icon" data-i18n-title="token_toggle" data-i18n-aria="token_toggle" title="Show/Hide" aria-label="Show/Hide">
                 <svg
                   width="20"
                   height="20"
@@ -113,7 +113,7 @@
                   <circle cx="12" cy="12" r="3" />
                 </svg>
               </button>
-              <button id="testTokenBtn" class="btn-icon btn-test" data-i18n-title="mineru_test_btn" title="Test Connection">
+              <button id="testTokenBtn" class="btn-icon btn-test" data-i18n-title="mineru_test_btn" data-i18n-aria="mineru_test_btn" title="Test Connection" aria-label="Test Connection">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                   <polyline points="22 4 12 14.01 9 11.01" />
