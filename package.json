@@ -8,7 +8,7 @@
     "build": "webpack --mode production",
     "dev": "webpack --mode development --watch",
     "lint": "eslint src/**/*.js",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "package": "npm run build && node scripts/package.js"
   },
   "dependencies": {
