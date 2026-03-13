@@ -22,3 +22,23 @@ jobs:
 
       - name: Build package
         run: npm run package
+
+      - name: Read version
+        id: pkg
+        shell: bash
+        run: |
+          echo "version=$(node -p \"require('./package.json').version\")" >> "$GITHUB_OUTPUT"
+
+      - name: Verify artifact
+        shell: bash
+        run: |
+          test -f "build/arxiv-md-v${{ steps.pkg.outputs.version }}.zip"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            "build/arxiv-md-v${{ steps.pkg.outputs.version }}.zip" \
+            --generate-notes \
+            --title "${{ github.ref_name }}"
