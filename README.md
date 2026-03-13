@@ -97,6 +97,11 @@ Click the extension icon in the toolbar to access settings:
 - `npm run build`: Production build.
 - `npm run package`: Create zip for store publication.
 
+## Release
+
+Creating a `vX.Y.Z` tag triggers an automated GitHub Release with the packaged zip
+artifact named `build/arxiv-md-v<version>.zip`.
+
 ## 📄 License
 
 MIT License. Made with ❤️ by [SimonSun](https://github.com/Tendo33).
