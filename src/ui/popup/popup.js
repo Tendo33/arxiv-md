@@ -7,6 +7,7 @@ import { TASK_STATUS } from '@config/constants';
 
 let currentTasks = [];
 let currentLang = 'en';
+let reloadTimer = null;
 
 document.addEventListener('DOMContentLoaded', init);
 
@@ -32,13 +33,23 @@ async function init() {
   // 监听任务变化
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'local' && changes.mineruTasks) {
-      loadTasks();
+      scheduleLoadTasks();
     }
     // 监听语言变化
     if (area === 'sync' && changes.language) {
       updateLanguage(changes.language.newValue);
     }
   });
+}
+
+function scheduleLoadTasks() {
+  if (reloadTimer) {
+    clearTimeout(reloadTimer);
+  }
+  reloadTimer = setTimeout(() => {
+    reloadTimer = null;
+    loadTasks();
+  }, 120);
 }
 
 /**
@@ -186,7 +197,7 @@ function createTaskCard(task) {
           <span class="status-icon">${statusDisplay.icon}</span>
           <span class="status-text">${statusDisplay.text}</span>
         </div>
-        <button class="delete-btn" data-action="delete" data-task-id="${id}" title="${translations[currentLang].popup_action_delete}">×</button>
+        <button class="delete-btn" data-action="delete" data-task-id="${id}" title="${translations[currentLang].popup_action_delete}" aria-label="${translations[currentLang].popup_action_delete}">×</button>
       </div>
       
       <div class="task-content">
@@ -359,28 +370,92 @@ function showConfirm(message) {
     const msgEl = document.getElementById('confirmMessage');
     const okBtn = document.getElementById('confirmOk');
     const cancelBtn = document.getElementById('confirmCancel');
+    const dialog = overlay.querySelector('.confirm-dialog');
+    const focusableSelector =
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    const previousFocus = document.activeElement;
+    let resolved = false;
+
+    const getFocusable = () =>
+      Array.from(dialog.querySelectorAll(focusableSelector)).filter(
+        (el) => !el.disabled && el.offsetParent !== null,
+      );
 
     msgEl.textContent = message;
     overlay.classList.add('show');
+    overlay.setAttribute('aria-hidden', 'false');
+
+    const focusFirst = () => {
+      const focusable = getFocusable();
+      if (focusable.length > 0) {
+        focusable[0].focus();
+      } else {
+        dialog.focus();
+      }
+    };
 
     const cleanup = () => {
       overlay.classList.remove('show');
+      overlay.setAttribute('aria-hidden', 'true');
       okBtn.removeEventListener('click', onOk);
       cancelBtn.removeEventListener('click', onCancel);
+      overlay.removeEventListener('click', onOverlayClick);
+      document.removeEventListener('keydown', onKeydown);
+      if (previousFocus && typeof previousFocus.focus === 'function') {
+        previousFocus.focus();
+      }
     };
 
     const onOk = () => {
+      if (resolved) return;
+      resolved = true;
       cleanup();
       resolve(true);
     };
 
     const onCancel = () => {
+      if (resolved) return;
+      resolved = true;
       cleanup();
       resolve(false);
     };
 
+    const onOverlayClick = (event) => {
+      if (event.target === overlay) {
+        onCancel();
+      }
+    };
+
+    const onKeydown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onCancel();
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+      const focusable = getFocusable();
+      if (focusable.length === 0) {
+        event.preventDefault();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
     okBtn.addEventListener('click', onOk);
     cancelBtn.addEventListener('click', onCancel);
+    overlay.addEventListener('click', onOverlayClick);
+    document.addEventListener('keydown', onKeydown);
+    focusFirst();
   });
 }
 
@@ -468,6 +543,9 @@ function showToast(message) {
   const toast = document.createElement('div');
   toast.className = 'toast';
   toast.textContent = message;
+  toast.setAttribute('role', 'status');
+  toast.setAttribute('aria-live', 'polite');
+  toast.setAttribute('aria-atomic', 'true');
   document.body.appendChild(toast);
 
   setTimeout(() => {

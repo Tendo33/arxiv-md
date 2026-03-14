@@ -361,6 +361,14 @@ function showToast(message, type = 'info') {
   const messageEl = toast.querySelector('.toast-message');
 
   messageEl.textContent = message;
+  if (type === 'error') {
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+  } else {
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+  }
+  toast.setAttribute('aria-atomic', 'true');
   toast.classList.add('show');
 
   setTimeout(() => {

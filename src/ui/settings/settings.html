@@ -16,7 +16,7 @@
             <img src="../../assets/icon.svg" alt="Logo" width="36" height="36" />
             <h1>arXiv to Markdown</h1>
           </div>
-          <div style="display: flex; align-items: center; gap: 15px">
+          <div class="header-actions">
             <button class="btn-lang" id="langToggle" data-i18n-title="lang_switch" data-i18n-aria="lang_switch" title="Switch Language" aria-label="Switch Language">
               <span id="langIcon">🌐</span>
               <span id="langText">中文</span>
@@ -205,15 +205,16 @@
             Reset Statistics
           </button>
         </section>
-<!-- Actions -->
-<div class="actions-bar">
-  <button class="btn btn-secondary" id="resetBtn" data-i18n="btn_reset">
-    Reset to Default
-  </button>
-  <button class="btn btn-primary" id="saveBtn" data-i18n="btn_save">
-    Save Settings
-  </button>
-</div>
+
+        <!-- Actions -->
+        <div class="actions-bar">
+          <button class="btn btn-secondary" id="resetBtn" data-i18n="btn_reset">
+            Reset to Default
+          </button>
+          <button class="btn btn-primary" id="saveBtn" data-i18n="btn_save">
+            Save Settings
+          </button>
+        </div>
       </main>
 
       <!-- Footer -->
@@ -239,7 +240,7 @@
     </div>
 
     <!-- Toast Notification -->
-    <div class="toast" id="toast">
+    <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true">
       <span class="toast-message"></span>
     </div>
 

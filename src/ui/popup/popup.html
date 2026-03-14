@@ -69,13 +69,13 @@
       <!-- Footer -->
       <div class="footer">
         <span class="footer-text">© 2025 arXiv to Markdown</span>
-        <a href="#" id="refreshBtn" class="footer-link" data-i18n="popup_btn_refresh" data-i18n-aria="popup_btn_refresh" aria-label="刷新">刷新</a>
+        <button type="button" id="refreshBtn" class="footer-link" data-i18n="popup_btn_refresh" data-i18n-aria="popup_btn_refresh" aria-label="刷新">刷新</button>
       </div>
     </div>
 
     <!-- 确认对话框 -->
-    <div class="confirm-overlay" id="confirmOverlay">
-      <div class="confirm-dialog">
+    <div class="confirm-overlay" id="confirmOverlay" aria-hidden="true">
+      <div class="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirmMessage" tabindex="-1">
         <p class="confirm-message" id="confirmMessage">确定要删除吗？</p>
         <div class="confirm-actions">
           <button class="confirm-btn confirm-cancel" id="confirmCancel" data-i18n="popup_btn_cancel">取消</button>
