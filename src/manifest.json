@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "arXiv to Markdown",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "Save arXiv papers as Markdown",
   "author": "SimonSun",
   "icons": {
@@ -9,7 +9,12 @@
     "48": "assets/icon-48.png",
     "128": "assets/icon-128.png"
   },
-  "permissions": ["storage", "downloads", "activeTab", "notifications"],
+  "permissions": [
+    "storage",
+    "downloads",
+    "activeTab",
+    "notifications"
+  ],
   "host_permissions": [
     "https://arxiv.org/*",
     "https://ar5iv.org/*",
@@ -23,8 +28,13 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://arxiv.org/abs/*", "https://arxiv.org/pdf/*"],
-      "js": ["content.js"],
+      "matches": [
+        "https://arxiv.org/abs/*",
+        "https://arxiv.org/pdf/*"
+      ],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_end"
     }
   ],
@@ -43,8 +53,12 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["assets/*"],
-      "matches": ["https://arxiv.org/*"]
+      "resources": [
+        "assets/*"
+      ],
+      "matches": [
+        "https://arxiv.org/*"
+      ]
     }
   ]
 }

@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.6] - 2026-03-14
+
+### ✨ Improvements
+
+- **Popup & Settings UI**: Refined spacing, typography, focus states, and responsive behavior for a more polished experience.
+- **Accessibility**: Added `:focus-visible` treatments and reduced-motion support across UI elements.
+- **Performance**: Reduced offscreen rendering cost with `content-visibility`/`contain` and debounced task reloads.
+
 ## [1.1.1] - 2026-01-04
 
 ### 🚀 New Features
