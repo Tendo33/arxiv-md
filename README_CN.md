@@ -1,132 +1,44 @@
-<p align="center">
-  <img src="./docs/icons/arxiv_md.png" alt="arXiv to Markdown" width="120">
-</p>
+# arXiv to Markdown
 
-<h1 align="center">arXiv to Markdown</h1>
+直接在 arXiv 摘要页，把论文保存成 Markdown、标题命名的 PDF，或者提交到 MinerU 后台解析。
 
-<p align="center">
-  直接在 arXiv 论文页，把论文保存成干净的 Markdown，或者命名清晰的 PDF。
-</p>
+[Chrome Web Store](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd) · [English README](./README.md) · [FAQ](./docs/FAQ.md) · [架构文档](./docs/ARCHITECTURE.md) · [开发文档](./docs/DEVELOPMENT.md) · [隐私说明](./PRIVACY.md) · [贡献指南](./CONTRIBUTING.md) · [更新日志](./CHANGELOG.md)
 
-<p align="center">
-  适合用 Obsidian、Notion、VS Code，或者单纯想把论文整理得更顺手的人。
-</p>
+## 项目概览
 
-<p align="center">
-  <a href="https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd"><img src="https://img.shields.io/badge/%E5%AE%89%E8%A3%85-Chrome%20Web%20Store-4285F4?logo=googlechrome&logoColor=white" alt="安装 Chrome 扩展"></a>
-  <a href="./README.md"><img src="https://img.shields.io/badge/Docs-English-0F172A" alt="English documentation"></a>
-  <a href="./docs/FAQ.md"><img src="https://img.shields.io/badge/%E6%96%87%E6%A1%A3-FAQ-16A34A" alt="FAQ"></a>
-  <a href="./CHANGELOG.md"><img src="https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Changelog-F59E0B" alt="Changelog"></a>
-  <a href="./CONTRIBUTING.md"><img src="https://img.shields.io/badge/%E6%96%87%E6%A1%A3-Contributing-7C3AED" alt="Contributing"></a>
-</p>
+`arXiv to Markdown` 是一个基于 Manifest V3 的 Chrome/Edge 扩展。
 
-<p align="center">
-  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
-  <img src="https://img.shields.io/badge/Manifest-V3-00C853" alt="Manifest V3">
-  <img src="https://img.shields.io/badge/Version-1.1.6-2563EB" alt="Version 1.1.6">
-  <a href="https://github.com/Tendo33/arxiv-md/releases"><img src="https://img.shields.io/badge/Releases-GitHub-black" alt="GitHub Releases"></a>
-</p>
+它会在 arXiv 摘要页的 `Submission history` 下方注入两个按钮：
 
-<p align="center">
-  <a href="#项目简介">项目简介</a> |
-  <a href="#截图预留">截图预留</a> |
-  <a href="#为什么会做这个工具">为什么会做这个工具</a> |
-  <a href="#功能概览">功能概览</a> |
-  <a href="#工作方式">工作方式</a> |
-  <a href="#快速开始">快速开始</a> |
-  <a href="#使用方法">使用方法</a> |
-  <a href="#设置说明">设置说明</a> |
-  <a href="#常见问题">常见问题</a> |
-  <a href="#开发说明">开发说明</a>
-</p>
+- `Markdown`：按照当前默认模式执行转换
+- `PDF`：直接下载原始 PDF，并使用基于标题的文件名
 
----
+当前代码里的真实工作流一共只有两条：
 
-## 项目简介
+1. `标准模式`
+   `ar5iv HTML -> 页面内本地 Markdown 转换 -> 失败时回退到 PDF`
+2. `MinerU 模式`
+   `提交 arXiv PDF URL 到 MinerU -> 后台轮询任务 -> 完成后下载 ZIP 结果包`
 
-`arXiv to Markdown` 是一个 Chrome 扩展，会在 arXiv 论文页面上直接加入保存按钮。
+## 当前版本能做什么
 
-和下载一堆 `2312.12345.pdf` 这种文件不同，它更适合真实的读论文流程：
+- 在 `https://arxiv.org/abs/*` 页面注入转换按钮
+- 从摘要页提取论文元数据，必要时回退到 arXiv export API
+- 在浏览器内容脚本里用 Turndown 把 ar5iv HTML 转成 Markdown
+- 尽量保留 LaTeX 公式
+- 为了保住合并单元格，复杂表格会保留为 HTML 表格
+- 图片保留为 ar5iv 远程链接，不会本地打包
+- 可选为 Markdown 添加 YAML frontmatter
+- 在 Popup 中管理 MinerU 后台任务
+- Popup、设置页和页面按钮支持中英文切换
 
-- 需要进笔记库时，保存成 Markdown
-- 只想留原文时，保存成命名更清楚的 PDF
-- 遇到某条转换链路不可用时，也尽量给你一个能落地的结果
-
-这个项目解决的不是“能不能下载论文”，而是“下载之后是不是还方便整理、搜索、引用和复用”。
-
-## 截图预留
-
-你提到后面会自己补截图，所以这里先把版位留出来。
-
-### 论文页主界面
-
-![论文页截图](assets/paper-page.png)
-
-### Popup / 任务中心
-
-<img src="assets/popup.png" width="200">
-
-## 为什么会做这个工具
-
-如果你经常看论文，这几个问题应该不陌生：
-
-- PDF 文件名越来越多，但回头找的时候根本记不住
-- 手动复制内容进笔记软件很慢，还容易乱
-- 公式、表格和结构在普通转换里经常丢得厉害
-- 论文是下到了本地，但后续整理和检索还是麻烦
-
-这个扩展想做的事情很直接：在论文页点一下，拿到一个你之后真的愿意继续使用的文件。
-
-## 功能概览
-
-### 面向真实使用场景
-
-- 直接保存成适合 Obsidian、Notion、VS Code 或本地知识库的 Markdown
-- 也可以保存成命名更清楚的 PDF
-- 可选附带元数据，方便后续整理和检索
-
-### 默认优先速度
-
-- 优先走 [ar5iv](https://ar5iv.org) 的 HTML 结果做转换
-- Markdown 转换过程尽量在浏览器本地完成
-- 对大部分常见论文，比手动整理省事很多
-
-### 三层兜底策略
-
-- `Tier 1`: ar5iv，速度快，公式保留更友好
-- `Tier 2`: MinerU，适合更复杂的版式和 PDF 解析
-- `Tier 3`: 直接下载 PDF，并整理好文件名
-
-### 更适合整理论文
-
-- Markdown 中尽量保留 LaTeX 公式
-- 结构保留效果通常好于纯文本提取
-- 很适合配合笔记库收件箱、文献整理目录等工作流
-
-### 自带任务管理
-
-- 在弹窗里查看转换进度
-- 区分已完成、失败和处理中任务
-- MinerU 任务失败后可重试，不用完全从头来
-
-## 工作方式
-
-这个扩展不是只押注在一条转换链路上。
-
-1. 你打开 arXiv 论文页后，扩展会先判断当前能走哪条转换路径。
-2. 如果 ar5iv 已经提供了对应的 HTML 版本，就在本地把它转成 Markdown。
-3. 如果你启用了 MinerU，或者论文版式更复杂，也可以走 MinerU 的 PDF 解析流程。
-4. 如果 Markdown 路线不可用，至少还可以把原始 PDF 以更清楚的名字保存下来。
-
-这套兜底逻辑是它在日常使用里比较稳的一点。
-
-## 快速开始
+## 安装方式
 
 ### 方式一：从 Chrome Web Store 安装
 
-[安装 arXiv to Markdown](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd)
+直接前往 [Chrome Web Store](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd) 安装。
 
-### 方式二：本地安装开发版
+### 方式二：本地开发版
 
 ```bash
 git clone https://github.com/Tendo33/arxiv-md.git
@@ -135,94 +47,90 @@ npm install
 npm run build
 ```
 
-然后：
+然后打开 `chrome://extensions`，启用 `Developer mode`，点击 `Load unpacked`，选择 `dist/`。
 
-1. 打开 `chrome://extensions/`
-2. 打开 `Developer mode`
-3. 点击 `Load unpacked`
-4. 选择 `dist` 目录
+## 如何使用
 
-## 使用方法
+1. 打开任意 arXiv 摘要页，例如 `https://arxiv.org/abs/1706.03762`。
+2. 在 `Submission history` 下方找到 `Markdown` 和 `PDF` 按钮。
+3. 点击 `Markdown`，按照设置页中选定的默认模式执行转换。
+4. 点击 `PDF`，直接下载标题命名的原始论文 PDF。
+5. 如果你在用 MinerU，可以打开 Popup 查看任务进度、重试、删除或再次下载结果。
 
-1. 打开任意 arXiv 论文页，例如 [1706.03762](https://arxiv.org/abs/1706.03762)。
-2. 在页面中找到扩展注入的操作按钮。
-3. 点击 `Markdown` 保存 Markdown，或者点击 `PDF` 保存 PDF。
-4. 如果想查看任务状态、重试或下载结果，可以打开扩展弹窗。
+## 输出行为
 
-如果你用 Obsidian，把 Chrome 下载目录直接设成 Vault 的收件箱，整体体验会顺很多。
+### Markdown 导出
 
-## 设置说明
+- 来源：ar5iv HTML
+- 转换位置：页面内容脚本
+- 元数据：可选 YAML frontmatter，包含 `title`、`arxiv_id`、`source`、`authors`、`year`
+- 表格：复杂表格保留为 HTML
+- 图片：保留为远程链接，不做本地资源打包
 
-设置页尽量保持简单，主要是这些内容：
+### PDF 导出
 
-### 转换模式
+- 由页面上的 `PDF` 按钮直接触发
+- 在页面上下文中下载原始 arXiv PDF
+- 使用基于标题的文件名
 
-- `Standard Mode`：优先使用 ar5iv，需要时再兜底
-- `MinerU Mode`：走 MinerU 解析，需要配置 token
+### MinerU 导出
 
-### 可选控制项
+- 仅在启用 `MinerU 模式` 且已配置 Token 时可用
+- 以后台任务方式执行
+- 下载结果是 ZIP 包，不是 `.md`
+- 任务会出现在 Popup 中
 
-- 是否在 Markdown 中包含元数据
-- 是否启用桌面通知
-- 是否在论文页自动弹出转换提示
-- MinerU token 的填写与连接测试
+## Popup 与设置页
 
-## 常见问题
+### Popup
 
-### 现在只支持 arXiv 吗？
+Popup 是 `MinerU 任务中心`，不是所有转换的历史记录。
 
-是的，当前版本主要面向 `arxiv.org` 的论文页面。
+它会显示：
 
-### 都是本地处理吗？
+- 等待中、处理中、已完成、失败的 MinerU 任务
+- 后台解析进度
+- 重试、删除、复制结果链接、重新下载 ZIP 的操作入口
 
-基于 ar5iv 的 Markdown 转换主要在浏览器本地完成。MinerU 模式不同，它依赖外部解析服务。
+### 设置页
 
-### 为什么有时看不到 Markdown 按钮？
+设置页支持：
 
-通常是因为 ar5iv 还没有处理那篇论文，尤其是新论文更常见。这种情况下，PDF 兜底依然可用。
+- 切换 `标准模式` 和 `MinerU 模式`
+- 保存并测试 MinerU API Token
+- 启用或关闭桌面通知
+- 进入论文页时弹出自动转换提示
+- 打开或关闭 Markdown 元数据
+- 切换中英文界面
+- 重置使用统计
 
-### 公式和表格表现怎么样？
+## 文档索引
 
-这正是这个项目的重点之一。基于 ar5iv 的路线，对公式保留会比普通复制粘贴稳定得多；复杂版式则可以交给 MinerU。
+- [docs/FAQ.md](./docs/FAQ.md)：常见问题和排错说明
+- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)：当前运行架构和模块分工
+- [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md)：本地开发、调试与发布流程
+- [docs/mentor/README.md](./docs/mentor/README.md)：面向维护者的源码导读包
 
-### 更详细的排错说明在哪看？
+## 开发命令
 
-可以继续看 [FAQ](./docs/FAQ.md) 和 [PRIVACY.md](./PRIVACY.md)。
-
-## 开发说明
-
-### 常用命令
-
-- `npm run dev`：启动 webpack watch
-- `npm run build`：生成生产构建
-- `npm run lint`：运行 ESLint
-- `npm test`：运行 Jest
-- `npm run package`：构建并生成发布 zip
-
-### 项目结构
-
-```text
-src/
-|-- background/   # service worker
-|-- content/      # 注入 arXiv 页面的 content script
-|-- core/         # 转换与任务逻辑
-|-- ui/           # popup 和 settings 页面
-|-- utils/        # 工具函数、日志、存储
-`-- config/       # 常量与多语言配置
+```bash
+npm run dev
+npm run build
+npm run lint
+npm test
+npm run package
 ```
 
-### 发布
+Webpack 会输出到 `dist/`，`npm run package` 会生成 `build/arxiv-md-v<version>.zip`。
 
-打 `vX.Y.Z` 标签后，会触发 GitHub Release 工作流，并在 `build/` 中生成扩展压缩包。
+## 当前限制
 
-## 参与贡献
-
-欢迎提 Issue，也欢迎提 Pull Request。
-
-- 贡献说明：[CONTRIBUTING.md](./CONTRIBUTING.md)
-- 更新记录：[CHANGELOG.md](./CHANGELOG.md)
-- 问题反馈：[GitHub Issues](https://github.com/Tendo33/arxiv-md/issues)
+- 按钮注入只面向 arXiv 摘要页
+- 标准模式不会自动回退到 MinerU，只会回退到 PDF
+- Popup 只管理 MinerU 任务
+- Markdown 中的图片仍然依赖远程链接
+- MinerU 是可选外部服务
 
 ## 许可证
 
-MIT。项目维护者为 [SimonSun](https://github.com/Tendo33)。
+MIT。

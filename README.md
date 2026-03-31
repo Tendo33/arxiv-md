@@ -1,132 +1,44 @@
-<p align="center">
-  <img src="./docs/icons/arxiv_md.png" alt="arXiv to Markdown" width="120">
-</p>
+# arXiv to Markdown
 
-<h1 align="center">arXiv to Markdown</h1>
+Save arXiv papers from the abstract page as clean Markdown, title-based PDFs, or MinerU result packages.
 
-<p align="center">
-  Save arXiv papers as clean Markdown or well-named PDFs, directly from the paper page.
-</p>
-
-<p align="center">
-  For people who read and organize papers in Obsidian, Notion, VS Code, or plain folders.
-</p>
-
-<p align="center">
-  <a href="https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd"><img src="https://img.shields.io/badge/Install-Chrome%20Web%20Store-4285F4?logo=googlechrome&logoColor=white" alt="Install from Chrome Web Store"></a>
-  <a href="./README_CN.md"><img src="https://img.shields.io/badge/Docs-%E4%B8%AD%E6%96%87-0F172A" alt="Chinese documentation"></a>
-  <a href="./docs/FAQ.md"><img src="https://img.shields.io/badge/Docs-FAQ-16A34A" alt="FAQ"></a>
-  <a href="./CHANGELOG.md"><img src="https://img.shields.io/badge/Docs-Changelog-F59E0B" alt="Changelog"></a>
-  <a href="./CONTRIBUTING.md"><img src="https://img.shields.io/badge/Docs-Contributing-7C3AED" alt="Contributing"></a>
-</p>
-
-<p align="center">
-  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
-  <img src="https://img.shields.io/badge/Manifest-V3-00C853" alt="Manifest V3">
-  <img src="https://img.shields.io/badge/Version-1.1.6-2563EB" alt="Version 1.1.6">
-  <a href="https://github.com/Tendo33/arxiv-md/releases"><img src="https://img.shields.io/badge/Releases-GitHub-black" alt="GitHub Releases"></a>
-</p>
-
-<p align="center">
-  <a href="#overview">Overview</a> |
-  <a href="#screenshots">Screenshots</a> |
-  <a href="#why-use-it">Why use it</a> |
-  <a href="#features">Features</a> |
-  <a href="#how-it-works">How it works</a> |
-  <a href="#quick-start">Quick start</a> |
-  <a href="#usage">Usage</a> |
-  <a href="#settings">Settings</a> |
-  <a href="#faq">FAQ</a> |
-  <a href="#development">Development</a>
-</p>
-
----
+[Chrome Web Store](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd) · [中文说明](./README_CN.md) · [FAQ](./docs/FAQ.md) · [Architecture](./docs/ARCHITECTURE.md) · [Development](./docs/DEVELOPMENT.md) · [Privacy](./PRIVACY.md) · [Contributing](./CONTRIBUTING.md) · [Changelog](./CHANGELOG.md)
 
 ## Overview
 
-`arXiv to Markdown` is a Chrome extension that adds save buttons to arXiv paper pages.
+`arXiv to Markdown` is a Manifest V3 browser extension for Chrome and Edge.
 
-Instead of downloading another file named `2312.12345.pdf`, you can save a paper as:
+On an arXiv abstract page, it injects two buttons below the submission history:
 
-- a Markdown file with a readable filename
-- a PDF with cleaned-up naming
-- a fallback result even when the preferred conversion path is unavailable
+- `Markdown`: convert the paper through `ar5iv` or submit a MinerU task, depending on your default mode
+- `PDF`: download the original paper with a title-based filename
 
-The extension is built around a simple idea: papers are easier to search, quote, annotate, and reuse when they are not trapped inside unnamed PDFs.
+The current codebase supports two real workflows:
 
-## Screenshots
+1. `Standard Mode`
+   ar5iv HTML -> local Markdown conversion in the page -> PDF fallback if ar5iv is unavailable or fails
+2. `MinerU Mode`
+   submit the paper PDF URL to MinerU -> poll in the background -> download a ZIP package when the task finishes
 
-You said you want room for screenshots later, so the README now includes dedicated slots.
+## What It Does Today
 
-### Main paper page
+- Injects controls on `https://arxiv.org/abs/*`
+- Extracts paper metadata from the abstract page, with arXiv export API as fallback
+- Converts ar5iv HTML to Markdown in the browser with custom Turndown rules
+- Preserves formulas as LaTeX where possible
+- Keeps complex tables as raw HTML tables to avoid losing merged cells
+- Leaves images as remote ar5iv asset links
+- Adds optional YAML frontmatter to Markdown exports
+- Tracks MinerU background tasks in the popup
+- Supports English and Chinese in the popup, settings page, and content UI
 
-![Main paper page screenshot](assets/paper-page.png)
+## Install
 
-### Popup / task center
+### Option 1: Chrome Web Store
 
-<img src="assets/popup.png" width="200">
+Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd).
 
-## Why use it
-
-If you regularly read papers, the problem is familiar:
-
-- PDFs pile up with filenames that mean nothing at a glance
-- copying content into notes is slow and messy
-- formulas and tables often get mangled during manual conversion
-- new papers are easy to download, but hard to reuse later
-
-This extension keeps the workflow short. Open a paper, click once, and save something you can actually work with.
-
-## Features
-
-### Made for real reading workflows
-
-- Save papers as Markdown for Obsidian, Notion imports, VS Code, or local note systems
-- Save PDFs with cleaner filenames when Markdown is not what you need
-- Keep metadata with the exported file when enabled in settings
-
-### Fast by default
-
-- Uses [ar5iv](https://ar5iv.org) when available for quick HTML-to-Markdown conversion
-- Runs the Markdown conversion locally in the browser
-- Usually finishes much faster than copy-paste or manual cleanup
-
-### Reliable fallback strategy
-
-- `Tier 1`: ar5iv for speed and editable formulas
-- `Tier 2`: MinerU for more difficult layouts and PDF parsing
-- `Tier 3`: direct PDF download with a readable filename
-
-### Better for paper organization
-
-- Keeps LaTeX-style formulas in Markdown
-- Preserves structure better than plain-text extraction
-- Works well with note inbox folders and literature review workflows
-
-### Built-in task handling
-
-- Track conversion progress from the popup
-- Review completed and failed tasks
-- Retry failed MinerU jobs without starting from scratch
-
-## How it works
-
-The extension does not rely on a single conversion path.
-
-1. On an arXiv paper page, it checks what conversion route is available.
-2. If ar5iv has an HTML version, the extension converts that HTML to Markdown locally.
-3. If you choose MinerU mode, or if you need a better PDF parser for a harder layout, it can submit the PDF to MinerU.
-4. If Markdown conversion is not available, the extension can still save the original PDF with a cleaner filename.
-
-That fallback chain is the main reason the tool feels dependable in everyday use.
-
-## Quick start
-
-### Option 1: install from Chrome Web Store
-
-[Install arXiv to Markdown](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd)
-
-### Option 2: install locally for development
+### Option 2: Local Development Build
 
 ```bash
 git clone https://github.com/Tendo33/arxiv-md.git
@@ -135,94 +47,91 @@ npm install
 npm run build
 ```
 
-Then:
+Then open `chrome://extensions`, enable `Developer mode`, click `Load unpacked`, and choose `dist/`.
 
-1. Open `chrome://extensions/`
-2. Turn on `Developer mode`
-3. Click `Load unpacked`
-4. Select the `dist` folder
+## How To Use It
 
-## Usage
+1. Open an arXiv abstract page such as `https://arxiv.org/abs/1706.03762`.
+2. Find the injected `Markdown` and `PDF` buttons below `Submission history`.
+3. Click `Markdown` for the default conversion route configured in settings.
+4. Click `PDF` if you only want the original paper with a readable filename.
+5. Open the popup if you want to inspect, retry, delete, or download MinerU task results.
 
-1. Open any arXiv paper page, for example [1706.03762](https://arxiv.org/abs/1706.03762).
-2. Find the injected action buttons on the paper page.
-3. Click `Markdown` to save a Markdown version, or `PDF` to save the paper as PDF.
-4. Open the popup if you want to check task status, retry, or download completed results.
+## Output Behavior
 
-If you use Obsidian, setting Chrome's download folder to your vault inbox is usually enough to make the workflow feel seamless.
+### Markdown output
 
-## Settings
+- Source: ar5iv HTML
+- Conversion runtime: browser content script
+- Metadata: optional YAML frontmatter with `title`, `arxiv_id`, `source`, `authors`, and `year`
+- Tables: preserved as HTML when necessary
+- Images: stored as remote links, not bundled locally
 
-The settings page keeps things simple.
+### PDF output
 
-### Conversion mode
+- Triggered by the dedicated `PDF` button
+- Downloads the original arXiv PDF directly from the page context
+- Uses a title-based filename
 
-- `Standard Mode`: uses ar5iv first and falls back when needed
-- `MinerU Mode`: routes conversion through MinerU and requires a token
+### MinerU output
 
-### Optional controls
+- Available only when `MinerU Mode` is enabled and a token is configured
+- Runs as an async background task
+- Downloads a ZIP package, not a Markdown file
+- Appears in the popup task center
 
-- include metadata in Markdown output
-- enable desktop notifications
-- enable auto-convert prompts on paper pages
-- manage MinerU token and connection testing
+## Popup And Settings
 
-## FAQ
+### Popup
 
-### Does it only work on arXiv?
+The popup is a MinerU task center, not a universal conversion history.
 
-Yes. The current version is built for `arxiv.org` paper pages.
+It shows:
 
-### Is everything local?
+- pending, processing, completed, and failed MinerU tasks
+- progress for background parsing jobs
+- actions to retry, delete, copy result links, or re-download ZIP files
 
-The ar5iv-based Markdown conversion runs locally in your browser. MinerU mode is different because it depends on an external parsing service.
+### Settings
 
-### Why does the Markdown button sometimes not appear?
+The settings page lets you:
 
-Because ar5iv may not have processed that paper yet, especially for newer papers. In that case, PDF fallback is still useful.
+- switch between `Standard Mode` and `MinerU Mode`
+- save and test a MinerU API token
+- enable or disable desktop notifications
+- show the auto-convert prompt when a paper page loads
+- include or exclude Markdown metadata
+- switch UI language between English and Chinese
+- reset usage statistics
 
-### Does it work with formulas and tables?
+## Repository Docs
 
-That is one of the main reasons this extension exists. ar5iv-based conversion keeps formulas much better than quick copy-paste workflows, and MinerU can help with more difficult layouts.
-
-### Where can I find more troubleshooting details?
-
-See [FAQ](./docs/FAQ.md) and [PRIVACY.md](./PRIVACY.md).
+- [README_CN.md](./README_CN.md): Chinese product overview
+- [docs/FAQ.md](./docs/FAQ.md): usage questions and troubleshooting
+- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md): current runtime and module design
+- [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md): local setup, debugging, and release flow
+- [docs/mentor/README.md](./docs/mentor/README.md): guided codebase reading pack for maintainers
 
 ## Development
 
-### Scripts
-
-- `npm run dev` starts webpack in watch mode
-- `npm run build` creates a production build
-- `npm run lint` runs ESLint
-- `npm test` runs Jest
-- `npm run package` builds and creates the release zip
-
-### Project structure
-
-```text
-src/
-|-- background/   # service worker
-|-- content/      # content script injected into arXiv pages
-|-- core/         # conversion and task logic
-|-- ui/           # popup and settings pages
-|-- utils/        # helpers, logging, storage
-`-- config/       # constants and locales
+```bash
+npm run dev
+npm run build
+npm run lint
+npm test
+npm run package
 ```
 
-### Release
+The webpack build emits `dist/`, and `npm run package` creates `build/arxiv-md-v<version>.zip`.
 
-Tagging a release as `vX.Y.Z` triggers the GitHub release workflow and packages the extension zip into `build/`.
+## Current Limitations
 
-## Contributing
-
-Issues and pull requests are welcome.
-
-- Contribution guide: [CONTRIBUTING.md](./CONTRIBUTING.md)
-- Changelog: [CHANGELOG.md](./CHANGELOG.md)
-- Issue tracker: [GitHub Issues](https://github.com/Tendo33/arxiv-md/issues)
+- Buttons are injected on arXiv abstract pages, not on unrelated sites
+- Standard mode does not auto-fallback to MinerU; it falls back to PDF
+- Popup task management is only for MinerU jobs
+- Images in Markdown stay remote
+- MinerU is optional and depends on a third-party service
 
 ## License
 
-MIT. Maintained by [SimonSun](https://github.com/Tendo33).
+MIT.
