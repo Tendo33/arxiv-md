@@ -207,18 +207,33 @@ class Ar5ivConverter {
   }
 
   /**
+   * 对 YAML 字符串值做安全转义
+   * 如果值包含 YAML 特殊字符，用双引号包裹并转义内部双引号和反斜杠
+   * @private
+   */
+  _escapeYamlString(str) {
+    if (!str) return str;
+    if (/[:#\[\]{}&*!|>'"%@`]/.test(str) || str.includes('\n')) {
+      return `"${str.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+    }
+    return str;
+  }
+
+  /**
    * 添加 YAML frontmatter 元数据
    * @private
    */
   _addMetadata(markdown, metadata) {
-    const authors =
+    const authorsRaw =
       Array.isArray(metadata.authors) && metadata.authors.length > 0
         ? metadata.authors.join(', ')
         : '';
+    const authors = authorsRaw ? this._escapeYamlString(authorsRaw) : '';
+    const title = this._escapeYamlString(metadata.title);
     const year = metadata.year ? metadata.year : '';
 
     return `---
-title: ${metadata.title}
+title: ${title}
 arxiv_id: ${metadata.arxivId}
 source: ${metadata.source}
 ${authors ? `authors: ${authors}` : ''}

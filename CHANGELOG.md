@@ -17,6 +17,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - MinerU is a separate token-based background workflow
   - the popup is a MinerU task center, not a universal conversion history
 
+## [1.1.7] - 2026-04-26
+
+### Fixes
+
+- Fixed YAML frontmatter corruption when paper titles contain `:`, `#`, or other YAML special characters — values are now safely quoted.
+- Fixed PDF button filename format to match Markdown output: now uses `Title (Year).pdf` via `generateFilename()` instead of the raw page title.
+- Replaced `setInterval` keep-alive with `chrome.alarms` (`alarms` permission added to manifest), which is the correct MV3 approach.
+- Fixed PDF download error propagation: content script now correctly detects and surfaces failures returned by the background handler.
+- Fixed incorrect progress indicator showing "Completed" on PDF download failure.
+
+### Improvements
+
+- Unified PDF download path through the background `DOWNLOAD_PDF` handler, removing an in-memory `fetch + createObjectURL` that loaded the entire PDF into the renderer process.
+- Merged duplicate `handleStartMinerUTask` / `handleStartMinerUTaskForce` into a shared internal implementation.
+- Added `SHOW_NOTIFICATIONS` and `LANGUAGE` to the `STORAGE_KEYS` constant object, eliminating hardcoded storage key strings in `storage.js` and `helpers.js`.
+- Removed two dead private methods (`_downloadBlobViaContentScript`, `_downloadMarkdown`) from the main converter.
+- Fixed year parenthesis spacing in generated filenames: `Title(Year)` → `Title (Year)`.
+- Replaced deprecated `String.prototype.substr` with `substring`.
+- Upgraded Babel target from Chrome 88 to Chrome 109, reducing generated polyfill code.
+- Webpack config now explicitly controls `process.env.NODE_ENV` injection via `DefinePlugin` with `optimization.nodeEnv: false`, removing reliance on Webpack's implicit behavior.
+- MinerU: explicitly set `language: 'en'` in API requests to improve OCR accuracy on English arXiv papers.
+- MinerU: added handling for the `converting` task state (format-export phase) with debug logging; updated full state enum in comments.
+- MinerU: updated free-tier quota text to reflect current limits (1000 pages/day, priority queue).
+
 ## [1.1.6] - 2026-03-14
 
 ### Improvements

@@ -1,4 +1,4 @@
-import { REGEX } from '@config/constants';
+import { REGEX, STORAGE_KEYS } from '@config/constants';
 
 export function extractArxivId(text) {
   const match = text.match(REGEX.ARXIV_ID);
@@ -26,7 +26,7 @@ export function generateFilename(metadata, extension = 'md') {
 
   // 添加年份（如果存在）
   if (year) {
-    filename += `(${year})`;
+    filename += ` (${year})`;
   }
 
   // 兜底：如果文件名为空
@@ -110,12 +110,10 @@ export function downloadBlob(blob, filename) {
 }
 
 export async function showNotification(title, message, type = 'basic') {
-  // 检查用户是否启用了桌面通知
-  const showNotifications = await chrome.storage.sync.get('showNotifications');
+  const showNotifications = await chrome.storage.sync.get(STORAGE_KEYS.SHOW_NOTIFICATIONS);
 
-  // 默认启用通知（向后兼容）
-  if (showNotifications.showNotifications === false) {
-    return; // 用户禁用了通知，直接返回
+  if (showNotifications[STORAGE_KEYS.SHOW_NOTIFICATIONS] === false) {
+    return;
   }
 
   chrome.notifications.create({

@@ -572,28 +572,29 @@ async function handleConversionTrigger(type = 'markdown') {
 }
 
 async function handlePdfDownloadDirect(button) {
+  const pdfIconSvg = `
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+      <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
+      <path d="M8.5 6.5a.5.5 0 0 0-1 0v3.793L6.354 9.146a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 10.293V6.5z"/>
+    </svg>
+  `;
+
+  const restoreButton = () => {
+    if (button) {
+      button.disabled = false;
+      button.style.opacity = '1';
+      button.style.cursor = 'pointer';
+      button.innerHTML = `${pdfIconSvg}${t.content_btn_pdf} <span class="arxiv-md-btn-sub">(${t.content_btn_sub_title})</span>`;
+    }
+  };
+
   try {
-    // 使用页面标题作为文件名（参考脚本方式）
-    const pageTitle = document.title;
-    const illegalChars = /[\/\\:*?"<>|\[\]]/g;
-    const cleanTitle = pageTitle
-      .replace(illegalChars, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-    const filename = `${cleanTitle}.pdf`;
-
-    // 构造 PDF URL
-    const pdfUrl = window.location.href.replace('/abs/', '/pdf/');
-
-    logger.info('Downloading PDF:', filename);
-
     setProgressState({
       text: t.content_progress_downloading,
       percent: 0,
       state: 'processing',
     });
 
-    // 更新按钮文本
     if (button) {
       button.innerHTML = `
         <svg class="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -604,66 +605,34 @@ async function handlePdfDownloadDirect(button) {
       `;
     }
 
-    // Fetch PDF
-    const response = await fetch(pdfUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch PDF: ${response.status}`);
-    }
+    const metadata = isArxivAbsPage
+      ? metadataExtractor.extractFromAbsPage()
+      : await fetchMetadataFromAbsPage();
 
-    const blob = await response.blob();
+    chrome.runtime.sendMessage(
+      { type: 'DOWNLOAD_PDF', data: metadata },
+      (response) => {
+        restoreButton();
 
-    // 创建下载链接
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
+        if (chrome.runtime.lastError) {
+          logger.error('PDF download message failed:', chrome.runtime.lastError.message);
+          showError(t.content_error_extension_reloaded);
+          return;
+        }
 
-    // 清理
-    setTimeout(() => {
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-    }, 100);
+        if (response && (response.success === false || response.data?.success === false)) {
+          showError(response.error || response.data?.error || t.content_error_generic);
+          return;
+        }
 
-    // 恢复按钮状态
-    if (button) {
-      button.disabled = false;
-      button.style.opacity = '1';
-      button.style.cursor = 'pointer';
-      button.innerHTML = `
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
-          <path d="M8.5 6.5a.5.5 0 0 0-1 0v3.793L6.354 9.146a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 10.293V6.5z"/>
-        </svg>
-        ${t.content_btn_pdf} <span class="arxiv-md-btn-sub">(${t.content_btn_sub_title})</span>
-      `;
-    }
-
-    showSuccess(t.content_progress_completed);
-
-    logger.info('PDF download complete:', filename);
+        showSuccess(t.content_progress_completed);
+        logger.info('PDF download initiated via background');
+      }
+    );
   } catch (error) {
     logger.error('PDF download failed:', error);
-
-    // 恢复按钮状态
-    if (button) {
-      button.disabled = false;
-      button.style.opacity = '1';
-      button.style.cursor = 'pointer';
-      button.innerHTML = `
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
-          <path d="M8.5 6.5a.5.5 0 0 0-1 0v3.793L6.354 9.146a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 10.293V6.5z"/>
-        </svg>
-        ${t.content_btn_pdf} <span class="arxiv-md-btn-sub">(${t.content_btn_sub_title})</span>
-      `;
-    }
-
+    restoreButton();
     showError(error.message || t.content_error_generic);
-
-    throw error;
   }
 }
 

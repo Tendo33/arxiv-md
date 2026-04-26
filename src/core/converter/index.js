@@ -11,7 +11,6 @@ import {
 } from '@config/constants';
 import {
   generateFilename,
-  downloadBlob,
   downloadFile,
   showNotification,
 } from '@utils/helpers';
@@ -317,46 +316,6 @@ class MainConverter {
     });
   }
 
-  /**
-   * 通过 Content Script 下载 Blob 文件
-   * @private
-   */
-  async _downloadBlobViaContentScript(blob, filename, tabId) {
-    return new Promise((resolve, reject) => {
-      // 将 Blob 转换为 base64 以便传输
-      const reader = new FileReader();
-      reader.onload = () => {
-        const base64 = reader.result.split(',')[1];
-        chrome.tabs.sendMessage(
-          tabId,
-          {
-            type: 'DOWNLOAD_BLOB',
-            data: { base64, filename, mimeType: blob.type || 'application/zip' },
-          },
-          (response) => {
-            if (chrome.runtime.lastError) {
-              reject(new Error(chrome.runtime.lastError.message));
-            } else if (response && response.success) {
-              resolve();
-            } else {
-              reject(new Error(response?.error || '下载失败'));
-            }
-          },
-        );
-      };
-      reader.onerror = () => reject(new Error('Failed to read blob'));
-      reader.readAsDataURL(blob);
-    });
-  }
-
-  /**
-   * 下载 Markdown 文件（回退方案）
-   * @private
-   */
-  async _downloadMarkdown(content, filename) {
-    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
-    downloadBlob(blob, filename);
-  }
 }
 
 // 导出单例

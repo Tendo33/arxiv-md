@@ -1,7 +1,8 @@
 const path = require("path");
+const webpack = require("webpack");
 const CopyPlugin = require("copy-webpack-plugin");
 
-module.exports = {
+module.exports = (env, argv) => ({
   entry: {
     background: "./src/background/index.js",
     content: "./src/content/index.js",
@@ -27,7 +28,14 @@ module.exports = {
       },
     ],
   },
+  optimization: {
+    // 禁用 Webpack 自动注入 process.env.NODE_ENV，改由下方 DefinePlugin 显式控制
+    nodeEnv: false,
+  },
   plugins: [
+    new webpack.DefinePlugin({
+      "process.env.NODE_ENV": JSON.stringify(argv.mode || "development"),
+    }),
     new CopyPlugin({
       patterns: [
         { from: "src/manifest.json", to: "manifest.json" },
@@ -53,4 +61,4 @@ module.exports = {
       canvas: false,
     },
   },
-};
+});

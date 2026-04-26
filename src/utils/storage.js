@@ -154,31 +154,19 @@ class StorageManager {
    * @returns {Promise<boolean>}
    */
   async getShowNotifications() {
-    return this.get('showNotifications', true); // 默认启用
+    return this.get(STORAGE_KEYS.SHOW_NOTIFICATIONS, true);
   }
 
-  /**
-   * 设置是否显示桌面通知
-   * @param {boolean} value
-   */
   async setShowNotifications(value) {
-    await this.set('showNotifications', value);
+    await this.set(STORAGE_KEYS.SHOW_NOTIFICATIONS, value);
   }
 
-  /**
-   * 获取语言设置
-   * @returns {Promise<string>}
-   */
   async getLanguage() {
-    return this.get('language', 'en');
+    return this.get(STORAGE_KEYS.LANGUAGE, 'en');
   }
 
-  /**
-   * 设置语言
-   * @param {string} lang
-   */
   async setLanguage(lang) {
-    await this.set('language', lang);
+    await this.set(STORAGE_KEYS.LANGUAGE, lang);
   }
 }
 

@@ -23,6 +23,8 @@ export const STORAGE_KEYS = {
   TASKS: 'mineruTasks', // 任务队列存储键
   AUTO_CONVERT: 'autoConvert',
   INCLUDE_METADATA: 'includeMetadata',
+  SHOW_NOTIFICATIONS: 'showNotifications',
+  LANGUAGE: 'language',
 };
 
 /**

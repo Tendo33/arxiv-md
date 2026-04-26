@@ -39,6 +39,7 @@ class MinerUClient {
         body: JSON.stringify({
           url: pdfUrl,
           model_version: options.modelVersion || 'vlm',
+          language: 'en', // arXiv 论文为英文，明确指定避免默认 'ch' 影响 OCR
           ...(options.dataId && { data_id: options.dataId }),
         }),
       });
@@ -105,7 +106,7 @@ class MinerUClient {
       const data = result.data || {};
       return {
         taskId: data.task_id,
-        state: data.state, // "done" | "running" | "failed"
+        state: data.state, // "pending" | "running" | "converting" | "done" | "failed"
         progress: data.extract_progress || null,
         zipUrl: data.full_zip_url || null,
         error: data.err_msg || null,
@@ -152,7 +153,7 @@ class MinerUClient {
           });
         }
 
-        // 官方状态值: "done" | "running" | "failed"
+        // 官方状态值: "pending" | "running" | "converting" | "done" | "failed"
         if (status.state === 'done') {
           logger.info('MinerU task completed:', taskId);
           if (!status.zipUrl) {
@@ -165,7 +166,10 @@ class MinerUClient {
           throw new Error(status.error || 'Task failed');
         }
 
-        // 状态为 "running"，继续等待
+        // "pending" / "running" / "converting" 均继续等待
+        if (status.state === 'converting') {
+          logger.debug('MinerU task converting (format export):', taskId);
+        }
         await sleep(this.pollInterval);
       } catch (error) {
         if (attempts >= this.maxPollAttempts) {

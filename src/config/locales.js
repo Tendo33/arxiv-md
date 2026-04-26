@@ -66,7 +66,7 @@ export const translations = {
     mineru_feature2: '✅ High-precision table recognition',
     mineru_feature3: '✅ Automatic image extraction',
     mineru_feature4: '✅ Works with all PDFs',
-    mineru_quota: 'Free tier: 2000 pages/day',
+    mineru_quota: 'Free tier: 1000 pages/day (priority queue)',
     advanced_title: 'Advanced Options',
     advanced_auto: 'Auto-convert (show prompt on paper page load)',
     advanced_metadata:
@@ -189,7 +189,7 @@ export const translations = {
     mineru_feature2: '✅ 高精度表格识别',
     mineru_feature3: '✅ 图片自动提取',
     mineru_feature4: '✅ 支持所有 PDF',
-    mineru_quota: '免费账号：每天 2000 页解析额度',
+    mineru_quota: '免费账号：每天 1000 页（优先级队列）',
     advanced_title: '高级选项',
     advanced_auto: '自动转换（进入论文页面自动弹出转换提示）',
     advanced_metadata: '在 Markdown 中包含元数据（标题、作者、ID 等）',

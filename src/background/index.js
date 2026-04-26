@@ -38,10 +38,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     handleStartMinerUTask(message.data, sendResponse);
     return true;
 
-    case 'START_MINERU_TASK_FORCE':
-      // 强制创建任务，跳过重复检查
-      handleStartMinerUTaskForce(message.data, sendResponse);
-      return true;
+  case 'START_MINERU_TASK_FORCE':
+    // 强制创建任务，跳过重复检查
+    handleStartMinerUTaskForce(message.data, sendResponse);
+    return true;
 
   case 'GET_TASKS':
     handleGetTasks(sendResponse);
@@ -147,30 +147,30 @@ async function handleCheckAr5iv(arxivId, sendResponse) {
 // ============================================
 
 /**
- * 启动 MinerU 后台任务
+ * MinerU 后台任务创建的内部实现
+ * @param {Object} paperInfo - 论文信息
+ * @param {Function} sendResponse - 消息响应函数
+ * @param {boolean} skipDuplicateCheck - 是否跳过重复任务检查
  */
-async function handleStartMinerUTask(paperInfo, sendResponse) {
-  logger.info('Starting MinerU background task:', paperInfo.arxivId);
-
+async function _doStartMinerUTask(paperInfo, sendResponse, skipDuplicateCheck) {
   try {
-    // 检查是否存在相同 arXiv ID 的任务
-    const existingTask = await taskManager.findTaskByArxivId(paperInfo.arxivId);
-    if (existingTask) {
-      // 返回重复任务信息，让前端决定是否继续
-      sendResponse({
-        success: false,
-        duplicate: true,
-        existingTask: {
-          id: existingTask.id,
-          status: existingTask.status,
-          arxivId: existingTask.paperInfo.arxivId,
-          title: existingTask.paperInfo.title,
-        }
-      });
-      return;
+    if (!skipDuplicateCheck) {
+      const existingTask = await taskManager.findTaskByArxivId(paperInfo.arxivId);
+      if (existingTask) {
+        sendResponse({
+          success: false,
+          duplicate: true,
+          existingTask: {
+            id: existingTask.id,
+            status: existingTask.status,
+            arxivId: existingTask.paperInfo.arxivId,
+            title: existingTask.paperInfo.title,
+          }
+        });
+        return;
+      }
     }
 
-    // 创建任务
     const task = await taskManager.addTask(paperInfo, 'mineru');
     sendResponse({ success: true, taskId: task.id });
 
@@ -186,24 +186,19 @@ async function handleStartMinerUTask(paperInfo, sendResponse) {
 }
 
 /**
+ * 启动 MinerU 后台任务
+ */
+async function handleStartMinerUTask(paperInfo, sendResponse) {
+  logger.info('Starting MinerU background task:', paperInfo.arxivId);
+  return _doStartMinerUTask(paperInfo, sendResponse, false);
+}
+
+/**
  * 强制启动 MinerU 后台任务（跳过重复检查）
  */
 async function handleStartMinerUTaskForce(paperInfo, sendResponse) {
   logger.info('Force starting MinerU background task:', paperInfo.arxivId);
-
-  try {
-    // 直接创建任务，不检查重复
-    const task = await taskManager.addTask(paperInfo, 'mineru');
-    sendResponse({ success: true, taskId: task.id });
-
-    // 立即异步处理任务
-    Promise.resolve().then(() => {
-      processMinerUTaskInBackground(task.id);
-    });
-  } catch (error) {
-    logger.error('Failed to force start MinerU task:', error);
-    sendResponse({ success: false, error: error.message });
-  }
+  return _doStartMinerUTask(paperInfo, sendResponse, true);
 }
 
 /**
@@ -463,8 +458,13 @@ if (chrome.commands && chrome.commands.onCommand) {
   logger.warn('chrome.commands API not available');
 }
 
-// 保持 Service Worker 活跃
-setInterval(() => logger.debug('Keep alive ping'), 20000);
+// 保持 Service Worker 活跃（使用 chrome.alarms，符合 MV3 规范）
+chrome.alarms.create('keepAlive', { periodInMinutes: 0.4 });
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'keepAlive') {
+    logger.debug('Keep alive alarm');
+  }
+});
 
 // 导出函数供其他模块使用
 export { processMinerUTaskInBackground };
