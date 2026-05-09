@@ -4,7 +4,8 @@ on:
   workflow_dispatch:
   push:
     tags:
-      - "v*.*.*"
+      # 兼容 v1.0、v1.0.0、v1.0.0-beta.1 等发版标签（原先仅 v*.*.* 会漏掉两段式版本）
+      - "v*"
 
 permissions:
   contents: write
