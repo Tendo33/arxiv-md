@@ -166,7 +166,7 @@ async function injectConvertButton() {
     }
 
     .arxiv-md-btn-sub {
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 400;
       opacity: 0.85;
       margin-left: 6px;
@@ -217,7 +217,7 @@ async function injectConvertButton() {
     }
 
     .progress-detail {
-      font-size: 11px;
+      font-size: 12px;
       color: #6b7280;
     }
 
@@ -246,7 +246,7 @@ async function injectConvertButton() {
 
     .arxiv-md-auto .auto-desc {
       color: #6b7280;
-      font-size: 11px;
+      font-size: 12px;
     }
 
     .arxiv-md-auto-actions {

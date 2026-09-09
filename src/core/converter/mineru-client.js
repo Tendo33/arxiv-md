@@ -2,6 +2,12 @@ import { API, DEFAULTS, ERROR_MESSAGES } from '@config/constants';
 import logger from '@utils/logger';
 import { sleep } from '@utils/helpers';
 
+const fetchWithTimeout = (url, options = {}, timeout = DEFAULTS.REQUEST_TIMEOUT) => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
+};
+
 /**
  * MinerU API 客户端
  * 
@@ -30,7 +36,7 @@ class MinerUClient {
     logger.info('Creating MinerU task:', pdfUrl);
 
     try {
-      const response = await fetch(this.taskUrl, {
+      const response = await fetchWithTimeout(this.taskUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -59,7 +65,7 @@ class MinerUClient {
 
       const result = await response.json();
 
-      if (result.code !== 0) {
+      if (Number(result.code) !== 0) {
         throw new Error(result.msg || 'API returned error code: ' + result.code);
       }
 
@@ -71,6 +77,7 @@ class MinerUClient {
       logger.info('MinerU task created:', taskId);
       return taskId;
     } catch (error) {
+      if (error.name === 'AbortError') throw new Error('MinerU 请求超时');
       logger.error('Failed to create MinerU task:', error);
       throw error;
     }
@@ -85,7 +92,7 @@ class MinerUClient {
   async queryTask(taskId, token) {
     try {
       // 官方端点: GET /api/v4/extract/task/{task_id}
-      const response = await fetch(`${this.taskUrl}/${taskId}`, {
+      const response = await fetchWithTimeout(`${this.taskUrl}/${taskId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -99,19 +106,23 @@ class MinerUClient {
 
       const result = await response.json();
 
-      if (result.code !== 0) {
+      if (Number(result.code) !== 0) {
         throw new Error(result.msg || 'Query failed');
       }
 
       const data = result.data || {};
+      // MinerU v4 returns task state and result under data.extract_result.
+      // Keep the flat fallback for older compatible responses.
+      const extractResult = data.extract_result || data;
       return {
-        taskId: data.task_id,
-        state: data.state, // "pending" | "running" | "converting" | "done" | "failed"
-        progress: data.extract_progress || null,
-        zipUrl: data.full_zip_url || null,
-        error: data.err_msg || null,
+        taskId: data.task_id || extractResult.task_id,
+        state: extractResult.state, // "pending" | "running" | "converting" | "done" | "failed"
+        progress: extractResult.extract_progress || null,
+        zipUrl: extractResult.full_zip_url || null,
+        error: extractResult.err_msg || null,
       };
     } catch (error) {
+      if (error.name === 'AbortError') throw new Error('MinerU 查询超时');
       logger.error('Failed to query MinerU task:', error);
       throw error;
     }

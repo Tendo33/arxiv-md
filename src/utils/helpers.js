@@ -1,13 +1,19 @@
 import { REGEX, STORAGE_KEYS } from '@config/constants';
 
 export function extractArxivId(text) {
-  const match = text.match(REGEX.ARXIV_ID);
-  return match ? match[1] : null;
+  if (typeof text !== 'string') return null;
+  const normalized = text.trim();
+  const match = normalized.match(REGEX.ARXIV_ID);
+  if (match) return match[1];
+  // Accept bare modern/legacy identifiers and strip version suffix safely.
+  const bare = normalized.match(/^((?:\d{4}\.\d{4,5}|[a-z-]+\/[0-9]{7})(?:v\d+)?)$/i);
+  return bare ? bare[1] : null;
 }
 
 export function sanitizeFilename(filename) {
-  return filename
-    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '') // 移除非法字符
+  const withoutInvalidChars = Array.from(filename, (char) => char.charCodeAt(0) < 32 ? '' : char).join('');
+  return withoutInvalidChars
+    .replace(/[<>:"/\\|?*]/g, '') // 移除非法字符
     .replace(/\s+/g, ' ') // 合并多个空格
     .trim()
     .substring(0, 200); // 限制长度
@@ -69,7 +75,7 @@ export function downloadBlob(blob, filename) {
   // 清理非法字符
   let cleanFilename =
     filename
-      .replace(/[<>:"/\\|?*\[\]]/g, '_')
+      .replace(/[<>:"/\\|?*[\]]/g, '_')
       .replace(/\s+/g, ' ')
       .replace(/^\.+/, '')
       .trim() || `arxiv_${Date.now()}.md`;
@@ -80,7 +86,7 @@ export function downloadBlob(blob, filename) {
 
   // 转换为 ASCII 安全格式（Chrome 对非 ASCII 文件名支持不佳）
   const asciiSafeFilename = cleanFilename
-    .replace(/[^\x00-\x7F]+/g, '_')
+    .replace(/[^ -~]+/g, '_')
     .replace(/_+/g, '_')
     .replace(/^_+|_+$/g, '');
 

@@ -10,8 +10,9 @@ const LOG_LEVELS = {
 class Logger {
   constructor(namespace = 'ArxivMD') {
     this.namespace = namespace;
+    const isProduction = globalThis.process?.env?.NODE_ENV === 'production';
     this.level =
-      process.env.NODE_ENV === 'production'
+      isProduction
         ? LOG_LEVELS.WARN
         : LOG_LEVELS.DEBUG;
   }

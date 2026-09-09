@@ -185,7 +185,7 @@ class MetadataExtractor {
       abstract: null,
       year: null,
       subjects: [],
-      pdfUrl: `https://arxiv.org/pdf/${arxivId}.pdf`,
+      pdfUrl: arxivId ? `https://arxiv.org/pdf/${arxivId}.pdf` : null,
       isMinimal: true,
     };
   }

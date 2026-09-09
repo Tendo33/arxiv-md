@@ -223,26 +223,32 @@ function createTaskCard(task) {
  */
 function getStatusDisplay(status) {
   const t = translations[currentLang];
+  const icons = {
+    [TASK_STATUS.PENDING]: '<svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+    [TASK_STATUS.PROCESSING]: '<svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>',
+    [TASK_STATUS.COMPLETED]: '<svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg>',
+    [TASK_STATUS.FAILED]: '<svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/></svg>',
+  };
   const displays = {
     [TASK_STATUS.PENDING]: {
-      icon: '⏳',
+      icon: icons[TASK_STATUS.PENDING],
       text: t.popup_status_pending || 'Pending',
     },
     [TASK_STATUS.PROCESSING]: {
-      icon: '🔄',
+      icon: icons[TASK_STATUS.PROCESSING],
       text: t.popup_status_processing || 'Processing',
     },
     [TASK_STATUS.COMPLETED]: {
-      icon: '✅',
+      icon: icons[TASK_STATUS.COMPLETED],
       text: t.popup_status_completed || 'Completed',
     },
     [TASK_STATUS.FAILED]: {
-      icon: '❌',
+      icon: icons[TASK_STATUS.FAILED],
       text: t.popup_status_failed || 'Failed',
     },
   };
   return (
-    displays[status] || { icon: '❓', text: t.popup_status_unknown || 'Unknown' }
+    displays[status] || { icon: '<svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 4 2c-1 .7-1.5 1.1-1.5 2"/><path d="M12 17h.01"/></svg>', text: t.popup_status_unknown || 'Unknown' }
   );
 }
 
@@ -256,10 +262,10 @@ function getTaskActions(task) {
   if (status === TASK_STATUS.COMPLETED && zipUrl) {
     return `
       <button class="action-btn download-btn" data-action="download" data-url="${zipUrl}">
-        📥 ${t.popup_action_download}
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg> ${t.popup_action_download}
       </button>
       <button class="action-btn secondary-btn" data-action="copy" data-url="${zipUrl}">
-        📋 ${t.popup_action_copy}
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> ${t.popup_action_copy}
       </button>
     `;
   }
@@ -267,7 +273,7 @@ function getTaskActions(task) {
   if (status === TASK_STATUS.FAILED) {
     return `
       <button class="action-btn retry-btn" data-action="retry" data-task-id="${task.id}">
-        🔄 ${t.popup_action_retry}
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 11a8 8 0 0 0-14.9-3M4 4v4h4M4 13a8 8 0 0 0 14.9 3M20 20v-4h-4"/></svg> ${t.popup_action_retry}
       </button>
     `;
   }

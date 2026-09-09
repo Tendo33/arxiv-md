@@ -9,14 +9,14 @@
   <body>
     <div class="popup-container">
       <!-- Header -->
-      <div class="header">
+      <header class="header">
         <div class="header-left">
           <img src="../../assets/icon.svg" alt="Logo" width="24" height="24" />
           <h1 data-i18n="popup_title">MinerU 任务</h1>
         </div>
         <div class="header-actions">
           <button class="icon-btn settings-btn" id="settingsBtn" data-i18n-title="popup_btn_settings" data-i18n-aria="popup_btn_settings" title="打开设置" aria-label="打开设置">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="3"></circle>
               <path
@@ -25,13 +25,13 @@
             </svg>
           </button>
           <button class="icon-btn" id="clearCompletedBtn" data-i18n-title="popup_btn_clear_completed" data-i18n-aria="popup_btn_clear_completed" title="清空已完成" aria-label="清空已完成">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
               <path
                 d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5ZM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H2.506a.58.58 0 0 0-.01 0H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1h-.995a.59.59 0 0 0-.01 0H11Zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5h9.916Z" />
             </svg>
           </button>
         </div>
-        </div>
+      </header>
         
         <!-- Stats Summary -->
         <div class="stats-summary" id="statsSummary">
@@ -50,27 +50,27 @@
         </div>
         
         <!-- Task List -->
-        <div class="task-list-container">
-          <div class="task-list" id="taskList">
+        <main class="task-list-container" aria-label="任务列表">
+          <div class="task-list" id="taskList" aria-live="polite" aria-busy="false">
             <!-- 任务卡片将动态插入 -->
           </div>
         
           <!-- Empty State -->
           <div class="empty-state" id="emptyState" style="display: none">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <svg aria-hidden="true" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <rect x="3" y="3" width="18" height="18" rx="2" />
               <path d="M9 9h6M9 13h6M9 17h3" />
             </svg>
             <p data-i18n="popup_empty_title">暂无转换任务</p>
             <small data-i18n="popup_empty_desc">在 arXiv 论文页面点击 MinerU 转换按钮</small>
           </div>
-      </div>
+      </main>
 
       <!-- Footer -->
-      <div class="footer">
-        <span class="footer-text">© 2025 arXiv to Markdown</span>
+      <footer class="footer">
+        <span class="footer-text">arXiv to Markdown</span>
         <button type="button" id="refreshBtn" class="footer-link" data-i18n="popup_btn_refresh" data-i18n-aria="popup_btn_refresh" aria-label="刷新">刷新</button>
-      </div>
+      </footer>
     </div>
 
     <!-- 确认对话框 -->
