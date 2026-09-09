@@ -61,3 +61,7 @@
 - 使用 SVGO 优化 `assets/icon.svg`，体积由约 593KB 降至约 209KB，视觉内容保持不变。
 
 补充验证：`npm run build`、`npm run lint -- --quiet`、`npm test -- --runInBand` 均通过；build 仅保留 background.js 体积告警。
+
+## 发布
+
+本轮翻修版本：1.1.8。
