@@ -6,6 +6,13 @@ For current product behavior, prefer `README.md`, `README_CN.md`, and the files 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.10] - 2026-09-28
+
+### Changed
+
+- `npm run build` writes the unpacked extension to `dist/`. `npm run package` writes `build/arxiv-md-v<version>.zip`.
+- Guides now point at the split content-script modules and the shared documentation order.
+
 ## [1.1.9] - 2026-09-28
 
 ### Added
