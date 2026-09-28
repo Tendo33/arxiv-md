@@ -27,10 +27,11 @@ src/
 └── config/       # constants and translations
 
 docs/
+├── README.md          # same reading order as zhihu-md
 ├── ARCHITECTURE.md
 ├── DEVELOPMENT.md
 ├── FAQ.md
-└── mentor/       # guided maintainer docs
+└── mentor/
 ```
 
 ## Before You Open A PR

@@ -107,11 +107,13 @@ The settings page lets you:
 
 ## Repository Docs
 
-- [README_CN.md](./README_CN.md): Chinese product overview
-- [docs/FAQ.md](./docs/FAQ.md): usage questions and troubleshooting
-- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md): current runtime and module design
-- [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md): local setup, debugging, and release flow
-- [docs/mentor/README.md](./docs/mentor/README.md): guided codebase reading pack for maintainers
+Start at [docs/README.md](./docs/README.md). The same reading order is used in Zhihu to Markdown: usage, architecture, one request, then build and release.
+
+- [docs/FAQ.md](./docs/FAQ.md): usage and troubleshooting
+- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md): current modules
+- [docs/mentor/02-request-lifecycle.md](./docs/mentor/02-request-lifecycle.md): one click through to download
+- [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md): local setup, `dist/`, and `build/*.zip`
+- [CHANGELOG.md](./CHANGELOG.md), [PRIVACY.md](./PRIVACY.md), [README_CN.md](./README_CN.md)
 
 ## Development
 

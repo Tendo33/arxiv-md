@@ -107,10 +107,13 @@ Popup 是 `MinerU 任务中心`，不是所有转换的历史记录。
 
 ## 文档索引
 
-- [docs/FAQ.md](./docs/FAQ.md)：常见问题和排错说明
-- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)：当前运行架构和模块分工
-- [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md)：本地开发、调试与发布流程
-- [docs/mentor/README.md](./docs/mentor/README.md)：面向维护者的源码导读包
+从 [docs/README.md](./docs/README.md) 进入。阅读顺序和知乎扩展一样：使用、架构、一次点击、然后是构建和发版。
+
+- [docs/FAQ.md](./docs/FAQ.md)：使用和排错
+- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)：当前模块
+- [docs/mentor/02-request-lifecycle.md](./docs/mentor/02-request-lifecycle.md)：从点击到下载
+- [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md)：本地开发、`dist/` 和 `build/*.zip`
+- [CHANGELOG.md](./CHANGELOG.md)、[PRIVACY.md](./PRIVACY.md)
 
 ## 开发命令
 
