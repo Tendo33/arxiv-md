@@ -6,6 +6,12 @@ For current product behavior, prefer `README.md`, `README_CN.md`, and the files 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.11] - 2026-09-28
+
+### Fixed
+
+- The action popup stays 360 by 500 pixels. Viewport units made Chrome collapse it into a strip, so the title, stats, and footer wrapped.
+
 ## [1.1.10] - 2026-09-28
 
 ### Changed
