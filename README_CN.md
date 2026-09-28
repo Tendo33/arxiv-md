@@ -8,10 +8,11 @@
 
 `arXiv to Markdown` 是一个基于 Manifest V3 的 Chrome/Edge 扩展。
 
-它会在 arXiv 摘要页的 `Submission history` 下方注入两个按钮：
+它会在 arXiv 摘要页的 `Submission history` 下方注入按钮，并把浏览器标签改成论文标题：
 
 - `Markdown`：按照当前默认模式执行转换
 - `PDF`：直接下载原始 PDF，并使用基于标题的文件名
+- `BibTeX`：复制 arXiv 官方引用；请求失败时用当前页面的标题、作者和年份生成一条记录
 
 当前代码里的真实工作流一共只有两条：
 

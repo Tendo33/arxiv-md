@@ -6,6 +6,22 @@ For current product behavior, prefer `README.md`, `README_CN.md`, and the files 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.9] - 2026-09-28
+
+### Added
+
+- Copy BibTeX from the abstract page. The extension prefers arXiv's `/bibtex` record and falls back to the title, authors, and year on the page.
+- Abstract tabs now use the paper title, so tab search and bookmarks are readable.
+
+### Fixed
+
+- Block formulas are kept as `$$...$$`. `String.replace` was treating `$$` as a single dollar.
+- A deleted MinerU task stays deleted after the service worker restarts.
+
+### Changed
+
+- Split the content script, popup, and MinerU background worker into smaller modules, and added fixture tests for conversion, filenames, ar5iv availability, and MinerU responses.
+
 ## [Unreleased]
 
 ### Documentation

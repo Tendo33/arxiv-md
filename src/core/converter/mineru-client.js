@@ -1,6 +1,7 @@
 import { API, DEFAULTS, ERROR_MESSAGES } from '@config/constants';
 import logger from '@utils/logger';
 import { sleep } from '@utils/helpers';
+import { isMinerUSuccessCode, readMinerUTaskStatus } from '../mineru-response';
 
 const fetchWithTimeout = (url, options = {}, timeout = DEFAULTS.REQUEST_TIMEOUT) => {
   const controller = new AbortController();
@@ -65,7 +66,7 @@ class MinerUClient {
 
       const result = await response.json();
 
-      if (Number(result.code) !== 0) {
+      if (!isMinerUSuccessCode(result.code)) {
         throw new Error(result.msg || 'API returned error code: ' + result.code);
       }
 
@@ -106,21 +107,12 @@ class MinerUClient {
 
       const result = await response.json();
 
-      if (Number(result.code) !== 0) {
+      if (!isMinerUSuccessCode(result.code)) {
         throw new Error(result.msg || 'Query failed');
       }
 
-      const data = result.data || {};
-      // MinerU v4 returns task state and result under data.extract_result.
-      // Keep the flat fallback for older compatible responses.
-      const extractResult = data.extract_result || data;
-      return {
-        taskId: data.task_id || extractResult.task_id,
-        state: extractResult.state, // "pending" | "running" | "converting" | "done" | "failed"
-        progress: extractResult.extract_progress || null,
-        zipUrl: extractResult.full_zip_url || null,
-        error: extractResult.err_msg || null,
-      };
+      // MinerU v4 nests state under data.extract_result; flat data remains the fallback.
+      return readMinerUTaskStatus(result.data || {});
     } catch (error) {
       if (error.name === 'AbortError') throw new Error('MinerU 查询超时');
       logger.error('Failed to query MinerU task:', error);

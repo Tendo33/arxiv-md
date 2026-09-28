@@ -8,10 +8,11 @@ Save arXiv papers from the abstract page as clean Markdown, title-based PDFs, or
 
 `arXiv to Markdown` is a Manifest V3 browser extension for Chrome and Edge.
 
-On an arXiv abstract page, it injects two buttons below the submission history:
+On an arXiv abstract page, it injects buttons below the submission history and sets the tab title to the paper title:
 
 - `Markdown`: convert the paper through `ar5iv` or submit a MinerU task, depending on your default mode
 - `PDF`: download the original paper with a title-based filename
+- `BibTeX`: copy arXiv's citation, or a page-built record if that request fails
 
 The current codebase supports two real workflows:
 

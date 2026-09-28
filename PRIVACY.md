@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Last updated: March 31, 2026**
+**Last updated: September 28, 2026**
 
 ## Overview
 
@@ -34,8 +34,11 @@ Used for MinerU task state, including:
 - result ZIP URLs
 - download IDs
 - error messages
+- ids of MinerU tasks you deleted, so a restarted background worker does not download them
 
 This data is local to the browser profile that created the tasks.
+
+Copying BibTeX writes that citation to your device clipboard. The extension requests it from arXiv and does not send it to a project server.
 
 ## Network Requests
 

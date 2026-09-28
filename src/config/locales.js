@@ -100,6 +100,9 @@ export const translations = {
     // Content Script
     content_btn_markdown: 'Markdown',
     content_btn_pdf: 'PDF',
+    content_btn_bibtex: 'BibTeX',
+    content_bibtex_copied: 'BibTeX copied',
+    content_bibtex_failed: 'Could not copy BibTeX',
     content_mode_ar5iv: 'ar5iv',
     content_mode_mineru: 'MinerU',
     content_btn_sub_title: 'title',
@@ -222,6 +225,9 @@ export const translations = {
     // Content Script
     content_btn_markdown: 'Markdown',
     content_btn_pdf: 'PDF',
+    content_btn_bibtex: 'BibTeX',
+    content_bibtex_copied: '已复制 BibTeX',
+    content_bibtex_failed: 'BibTeX 复制失败',
     content_mode_ar5iv: 'ar5iv',
     content_mode_mineru: 'MinerU',
     content_btn_sub_title: '标题',

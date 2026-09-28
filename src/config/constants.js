@@ -21,6 +21,7 @@ export const STORAGE_KEYS = {
   CONVERSION_MODE: 'conversionMode',
   STATISTICS: 'statistics',
   TASKS: 'mineruTasks', // 任务队列存储键
+  DELETED_TASK_IDS: 'deletedMinerUTaskIds',
   AUTO_CONVERT: 'autoConvert',
   INCLUDE_METADATA: 'includeMetadata',
   SHOW_NOTIFICATIONS: 'showNotifications',

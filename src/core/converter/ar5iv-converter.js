@@ -3,6 +3,7 @@
 import { parseHTML } from 'linkedom';
 import { API } from '@config/constants';
 import logger from '@utils/logger';
+import { isAr5ivHtmlAvailable } from '../ar5iv-availability';
 
 class Ar5ivConverter {
   constructor() {}
@@ -45,8 +46,11 @@ class Ar5ivConverter {
       }
       const finalUrl = response.url || url;
       const contentType = response.headers.get('content-type') || '';
-      const available = response.ok && !/\/abs\//i.test(finalUrl) &&
-        (!contentType || /text\/html/i.test(contentType));
+      const available = isAr5ivHtmlAvailable({
+        ok: response.ok,
+        finalUrl,
+        contentType,
+      });
       logger.debug(`ar5iv availability: ${arxivId} -> ${available}, status ${response.status}, url: ${finalUrl}`);
       return available;
     } catch (error) {
@@ -210,7 +214,7 @@ class Ar5ivConverter {
    */
   _escapeYamlString(str) {
     if (!str) return str;
-    if (/[:#\[\]{}&*!|>'"%@`]/.test(str) || str.includes('\n')) {
+    if (/[:#[\]{}&*!|>'"%@`]/.test(str) || str.includes('\n')) {
       return `"${str.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
     }
     return str;

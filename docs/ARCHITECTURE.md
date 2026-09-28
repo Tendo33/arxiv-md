@@ -97,7 +97,11 @@
 
 | 模块 | 关键文件 | 作用 |
 | --- | --- | --- |
-| 页面入口 | `src/content/index.js` | 注入按钮、处理进度、执行 Markdown 转换 |
+| 页面入口 | `src/content/index.js` | 注入按钮、处理进度、接收后台消息 |
+| ar5iv 转 Markdown | `src/content/ar5iv-math.js`、`ar5iv-structure.js`、`ar5iv-elements.js`、`ar5iv-turndown-rules.js`、`markdown-convert.js` | 公式、版面清理和 Turndown 规则 |
+| 页面按钮 | `src/content/page-buttons.js`、`progress-ui.js` | 摘要页按钮、提示和进度 |
+| 页面内下载 | `src/content/page-download.js` | 文本和 Blob 下载 |
+| 删除守卫 | `src/core/deleted-task-guard.js` | 把已删除的 MinerU 任务 id 记在 `chrome.storage.local` |
 | 后台协调 | `src/background/index.js` | 接消息、调度转换、管理 MinerU 任务 |
 | 标准模式 | `src/core/converter/ar5iv-converter.js` | ar5iv 可用性检查、HTML 获取与清洗 |
 | MinerU 集成 | `src/core/converter/mineru-client.js` | 任务创建、轮询、ZIP 下载 |

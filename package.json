@@ -1,6 +1,6 @@
 {
   "name": "arxiv-md",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "description": "Chrome extension to save arXiv papers as Markdown",
   "author": "SimonSun",
   "license": "MIT",
@@ -8,7 +8,7 @@
     "build": "webpack --mode production",
     "dev": "webpack --mode development --watch",
     "lint": "eslint src/**/*.js",
-    "test": "jest --passWithNoTests",
+    "test": "jest --runInBand",
     "package": "npm run build && node scripts/package.js"
   },
   "dependencies": {
@@ -20,6 +20,7 @@
     "@babel/core": "^7.24.0",
     "@babel/preset-env": "^7.24.0",
     "archiver": "^7.0.1",
+    "babel-jest": "^29.7.0",
     "babel-loader": "^9.1.3",
     "copy-webpack-plugin": "^12.0.2",
     "eslint": "^8.57.0",
