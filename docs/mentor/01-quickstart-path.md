@@ -32,8 +32,8 @@ npm run dev
 
 对应代码入口：
 
-- `src/content/index.js -> injectConvertButton()`
-- `src/content/index.js -> updateProgressUI()`
+- `src/content/page-buttons.js -> injectConvertButton()`
+- `src/content/progress-ui.js -> updateProgressUI()`
 - `src/core/converter/index.js -> _downloadViaContentScript()`
 
 ## 第 3 步：看一次模式读取
@@ -46,7 +46,7 @@ npm run dev
 
 - `src/ui/settings/settings.js -> saveSettings()`
 - `src/utils/storage.js -> setConversionMode()`
-- `src/content/index.js -> injectConvertButton()`
+- `src/content/page-buttons.js -> injectConvertButton()`
 
 这能帮你建立“设置页写状态，页面层读状态”的最基本心智模型。
 
@@ -61,7 +61,7 @@ npm run dev
 
 关键代码：
 
-- `src/background/index.js -> processMinerUTaskInBackground()`
+- `src/background/mineru-task-runner.js -> processMinerUTaskInBackground()`
 - `src/core/task-manager.js -> updateTask()`
 - `src/ui/popup/popup.js -> loadTasks()`
 

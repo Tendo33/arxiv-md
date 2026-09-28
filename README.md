@@ -123,7 +123,7 @@ npm test
 npm run package
 ```
 
-The webpack build emits `dist/`, and `npm run package` creates `build/arxiv-md-v<version>.zip`.
+`npm run build` writes the unpacked extension to `dist/`. `npm run package` writes `build/arxiv-md-v<version>.zip` for the Chrome Web Store.
 
 ## Current Limitations
 

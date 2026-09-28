@@ -41,7 +41,7 @@ npm run package
 - `build`：单次构建生产包
 - `dev`：watch 模式
 - `lint`：检查 `src/**/*.js`
-- `test`：运行 Jest，当前仓库允许没有测试文件
+- `test`：运行 Jest。覆盖论文 ID、文件名、ar5iv 可用性、MinerU 响应、删除守卫、BibTeX 和一段 HTML 夹具
 - `package`：先构建，再生成 `build/arxiv-md-v<version>.zip`
 
 ## 推荐开发顺序
@@ -139,13 +139,13 @@ npm run package
 建议按这个顺序阅读：
 
 1. `src/manifest.json`
-2. `src/content/index.js`
-3. `src/background/index.js`
+2. `src/content/index.js`、`page-buttons.js`、`markdown-convert.js`
+3. `src/background/index.js`、`mineru-task-runner.js`
 4. `src/core/converter/index.js`
 5. `src/core/converter/ar5iv-converter.js`
 6. `src/core/converter/mineru-client.js`
 7. `src/core/task-manager.js`
-8. `src/ui/popup/popup.js`
+8. `src/ui/popup/popup.js`、`task-list.js`
 9. `src/ui/settings/settings.js`
 
 如果你想系统入门，继续看 [docs/mentor/README.md](./mentor/README.md)。

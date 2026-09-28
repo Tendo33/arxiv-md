@@ -28,12 +28,12 @@
 
 - `src/core/converter/ar5iv-converter.js -> cleanHtml()`
 - `src/core/converter/ar5iv-converter.js -> toMarkdown()`
-- `src/content/index.js -> handleHtmlToMarkdown()`
+- `src/content/markdown-convert.js -> handleHtmlToMarkdown()`
 
 调试提示：
 
 - 如果拿到的 HTML 很怪，先看 `cleanHtml()`
-- 如果 Markdown 结构坏了，优先查 `handleHtmlToMarkdown()`
+- 如果 Markdown 结构坏了，优先查 `markdown-convert.js` 和 `ar5iv-turndown-rules.js`
 
 ## 2. 表格不是“尽量转 GFM”，而是“必要时保留 HTML”
 
@@ -41,7 +41,7 @@
 
 关键位置：
 
-- `src/content/index.js -> keepHtmlTables`
+- `src/content/ar5iv-turndown-rules.js` 里的表格规则
 
 这意味着：
 
@@ -101,8 +101,8 @@
 
 选一个专题深挖：
 
-1. 在 `handleHtmlToMarkdown()` 里追一遍公式恢复流程
-2. 在 `processMinerUTaskInBackground()` 里追一遍任务状态流转
+1. 在 `src/content/ar5iv-math.js` 里追一遍公式恢复流程
+2. 在 `src/background/mineru-task-runner.js` 里追一遍任务状态流转
 3. 在 `storage.js` 和 `task-manager.js` 里对比 sync/local 的职责边界
 
 目标不是记住所有实现细节，而是形成“问题该去哪一层找”的感觉。

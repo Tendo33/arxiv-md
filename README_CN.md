@@ -122,7 +122,7 @@ npm test
 npm run package
 ```
 
-Webpack 会输出到 `dist/`，`npm run package` 会生成 `build/arxiv-md-v<version>.zip`。
+`npm run build` 把未打包扩展输出到 `dist/`。`npm run package` 生成 `build/arxiv-md-v<version>.zip`，这个文件上传到 Chrome Web Store。
 
 ## 当前限制
 

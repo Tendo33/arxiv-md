@@ -62,7 +62,7 @@
 
 入口：
 
-- `src/content/index.js -> handleHtmlToMarkdown()`
+- `src/content/markdown-convert.js -> handleHtmlToMarkdown()`
 
 这里会：
 
@@ -77,7 +77,7 @@
 入口：
 
 - `src/core/converter/index.js -> _downloadViaContentScript()`
-- `src/content/index.js -> handleFileDownload()`
+- `src/content/page-download.js -> handleFileDownload()`
 
 这里不是直接走 `chrome.downloads`，而是让内容脚本创建 `<a download>` 来发起下载。
 
@@ -123,7 +123,7 @@
 
 入口：
 
-- `src/background/index.js -> processMinerUTaskInBackground()`
+- `src/background/mineru-task-runner.js -> processMinerUTaskInBackground()`
 
 这里会：
 

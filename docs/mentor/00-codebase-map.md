@@ -52,6 +52,8 @@ docs/
 再读：
 
 - `src/content/index.js`
+- `src/content/page-buttons.js`
+- `src/content/markdown-convert.js`
 
 这里承担了三件大事：
 
@@ -59,12 +61,12 @@ docs/
 2. 页面元数据提取和进度展示
 3. HTML -> Markdown 的最终转换
 
-第一次读的时候不要试图一口气看完整个文件。先只追这几个函数：
+第一次读的时候先只追这几个函数：
 
-- `init()`
-- `injectConvertButton()`
-- `handleConversionTrigger()`
-- `handleHtmlToMarkdown()`
+- `src/content/index.js` 的 `init()`
+- `src/content/page-buttons.js` 的 `injectConvertButton()`
+- `src/content/index.js` 的 `handleConversionTrigger()`
+- `src/content/markdown-convert.js` 的 `handleHtmlToMarkdown()`
 
 ### 3. 后台层
 
@@ -77,7 +79,7 @@ docs/
 - `chrome.runtime.onMessage.addListener(...)`
 - `handleConvertPaper()`
 - `handleStartMinerUTask()`
-- `processMinerUTaskInBackground()`
+- `src/background/mineru-task-runner.js` 的 `processMinerUTaskInBackground()`
 
 这里是整个扩展的调度中心。
 

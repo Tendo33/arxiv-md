@@ -25,16 +25,20 @@
 
 ### 2. 内容脚本层
 
-- `src/content/index.js`
+- `src/content/index.js` 负责初始化、语言和消息
+- `src/content/page-buttons.js` 注入 `Markdown`、`PDF`、`BibTeX`
+- `src/content/progress-ui.js` 显示进度
+- `src/content/markdown-convert.js` 在页面里把 HTML 转成 Markdown
+- `src/content/page-download.js` 触发文本或 Blob 下载
 
 职责：
 
-- 判断当前是否为 arXiv 页面
-- 在摘要页的 `Submission history` 下方注入 `Markdown` / `PDF` 按钮
+- 判断当前是否为 arXiv 摘要页，并把标签标题改成论文标题
+- 在 `Submission history` 下方注入按钮
 - 提取页面元数据
 - 显示进度、提示和错误状态
 - 在真实浏览器 DOM 环境中执行 HTML -> Markdown 转换
-- 在页面环境中触发文本或 Blob 下载
+- 复制 BibTeX，请求失败时用页面元数据生成一条记录
 
 为什么这层很重要：
 
@@ -209,7 +213,7 @@
 如果后续要继续迭代，最安全的切入点通常有这些：
 
 - 在 `src/core/converter/index.js` 增加新的转换分支
-- 在 `src/content/index.js` 增加新的预处理或 Turndown 规则
+- 在 `src/content/ar5iv-turndown-rules.js` 或 `ar5iv-math.js` 增加预处理和 Turndown 规则
 - 在 `src/ui/popup/` 扩展 MinerU 任务操作
 - 在 `src/utils/storage.js` 和 `src/ui/settings/` 增加新的设置项
 
