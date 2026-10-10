@@ -45,18 +45,19 @@
 
 - `_convertWithTieredStrategy()`
 
-### Step 4：ar5iv 分支执行
+### Step 4：HTML 来源选择和清洗
 
 入口：
 
+- `src/core/html-paper.js -> loadHtmlPaper()`
 - `src/core/converter/ar5iv-converter.js -> convert()`
 
 内部顺序：
 
-1. `checkAvailability()` 做 ar5iv HEAD 检查
-2. `fetchHtml()` 拉取 HTML
-3. `cleanHtml()` 用 `linkedom` 清洗主内容
-4. `toMarkdown()` 把 HTML 发回内容脚本
+1. 用 GET 先请求 `https://arxiv.org/html/{id}`，不可用时再请求 ar5iv
+2. 可用页面必须返回 HTML，最终 URL 不是摘要页，并且包含 `article.ltx_document`
+3. `cleanHtml()` 用 `linkedom` 清洗主内容，并把标题换行收成一行
+4. `toMarkdown()` 把 HTML 和最终页面 URL 发回内容脚本
 
 ### Step 5：内容脚本生成 Markdown
 
@@ -83,7 +84,7 @@
 
 ### Step 7：失败时回退
 
-如果 ar5iv 检查或转换失败，主转换器会进入：
+如果两份 HTML 都不可用，或转换失败，主转换器会进入：
 
 - `src/core/converter/index.js -> _fallbackToPdf()`
 

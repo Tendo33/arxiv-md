@@ -17,7 +17,7 @@
 当前代码里的真实工作流一共只有两条：
 
 1. `标准模式`
-   `ar5iv HTML -> 页面内本地 Markdown 转换 -> 失败时回退到 PDF`
+   `官方 arXiv HTML -> ar5iv HTML -> 页面内本地 Markdown 转换 -> 两者都不可用时回退到 PDF`
 2. `MinerU 模式`
    `提交 arXiv PDF URL 到 MinerU -> 后台轮询任务 -> 完成后下载 ZIP 结果包`
 
@@ -25,10 +25,10 @@
 
 - 在 `https://arxiv.org/abs/*` 页面注入转换按钮
 - 从摘要页提取论文元数据，必要时回退到 arXiv export API
-- 在浏览器内容脚本里用 Turndown 把 ar5iv HTML 转成 Markdown
+- 在浏览器内容脚本里用 Turndown 把官方 arXiv HTML 转成 Markdown；官方页面没有论文时再用 ar5iv
 - 尽量保留 LaTeX 公式
 - 为了保住合并单元格，复杂表格会保留为 HTML 表格
-- 图片保留为 ar5iv 远程链接，不会本地打包
+- 图片保留为来源页面上的远程链接，不会本地打包
 - 可选为 Markdown 添加 YAML frontmatter
 - 在 Popup 中管理 MinerU 后台任务
 - Popup、设置页和页面按钮支持中英文切换
@@ -62,11 +62,11 @@ npm run build
 
 ### Markdown 导出
 
-- 来源：ar5iv HTML
+- 来源：有可转换正文时用官方 arXiv HTML，否则用 ar5iv。frontmatter 的 `source` 为 `arxiv-html` 或 `ar5iv`
 - 转换位置：页面内容脚本
 - 元数据：可选 YAML frontmatter，包含 `title`、`arxiv_id`、`source`、`authors`、`year`
 - 表格：复杂表格保留为 HTML
-- 图片：保留为远程链接，不做本地资源打包
+- 图片：按实际抓到的 HTML 页面解析成远程链接，不做本地资源打包
 
 ### PDF 导出
 

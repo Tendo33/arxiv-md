@@ -15,7 +15,7 @@ npm run dev
 
 ## 第 2 步：用一个老论文跑标准模式
 
-选择一篇大概率已有 ar5iv HTML 的论文，例如比较老的热门论文。
+选择一篇已有官方 HTML 的论文。新提交的 TeX 论文通常当天就有 `https://arxiv.org/html/{id}`。
 
 操作：
 
@@ -40,7 +40,7 @@ npm run dev
 
 去设置页切换成 `MinerU Mode`，再回到论文页刷新。
 
-你会发现 Markdown 按钮副标题从 `ar5iv` 变成 `MinerU`。
+你会发现 Markdown 按钮副标题从 `HTML` 变成 `MinerU`。
 
 关键代码：
 
@@ -84,7 +84,7 @@ npm run dev
 
 ### 2. 误以为标准模式会自动走 MinerU
 
-不会。标准模式只会走 `ar5iv -> PDF fallback`。
+不会。标准模式只会走 `官方 HTML -> ar5iv -> PDF fallback`。
 
 ### 3. 误以为后台直接把 Markdown 转完
 

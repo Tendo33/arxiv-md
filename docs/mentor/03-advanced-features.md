@@ -2,7 +2,9 @@
 
 这页只讲最值得深挖的四个点。
 
-## 1. ar5iv 清洗和浏览器内 Markdown 转换是分阶段完成的
+## 1. HTML 清洗和浏览器内 Markdown 转换是分阶段完成的
+
+官方 `arxiv.org/html` 和 ar5iv 都是 LaTeXML 页面，所以共用同一套清洗和 Turndown 规则。来源选择在 `src/core/html-paper.js`。
 
 很多人第一次看会误以为：
 

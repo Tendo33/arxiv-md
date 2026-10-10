@@ -53,13 +53,14 @@
 
 阅读：
 
+- `src/core/html-paper.js`
 - `src/core/converter/ar5iv-converter.js`
 - `src/core/converter/mineru-client.js`
 - `src/core/metadata-extractor.js`
 
 练习：
 
-- 找出 ar5iv availability check 的判断依据
+- 找出官方 HTML 和 ar5iv 的选择依据
 - 找出 MinerU 任务轮询的退出条件
 
 完成标准：

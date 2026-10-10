@@ -10,14 +10,14 @@ Save arXiv papers from the abstract page as clean Markdown, title-based PDFs, or
 
 On an arXiv abstract page, it injects buttons below the submission history and sets the tab title to the paper title:
 
-- `Markdown`: convert the paper through `ar5iv` or submit a MinerU task, depending on your default mode
+- `Markdown`: convert the paper from HTML, or submit a MinerU task, depending on your default mode
 - `PDF`: download the original paper with a title-based filename
 - `BibTeX`: copy arXiv's citation, or a page-built record if that request fails
 
 The current codebase supports two real workflows:
 
 1. `Standard Mode`
-   ar5iv HTML -> local Markdown conversion in the page -> PDF fallback if ar5iv is unavailable or fails
+   official arXiv HTML -> ar5iv HTML -> local Markdown conversion in the page -> PDF fallback if neither HTML source is usable
 2. `MinerU Mode`
    submit the paper PDF URL to MinerU -> poll in the background -> download a ZIP package when the task finishes
 
@@ -25,10 +25,10 @@ The current codebase supports two real workflows:
 
 - Injects controls on `https://arxiv.org/abs/*`
 - Extracts paper metadata from the abstract page, with arXiv export API as fallback
-- Converts ar5iv HTML to Markdown in the browser with custom Turndown rules
+- Converts official arXiv HTML to Markdown in the browser, and uses ar5iv when that page is missing
 - Preserves formulas as LaTeX where possible
 - Keeps complex tables as raw HTML tables to avoid losing merged cells
-- Leaves images as remote ar5iv asset links
+- Leaves images as remote links on the host that supplied the HTML
 - Adds optional YAML frontmatter to Markdown exports
 - Tracks MinerU background tasks in the popup
 - Supports English and Chinese in the popup, settings page, and content UI
@@ -62,11 +62,11 @@ Then open `chrome://extensions`, enable `Developer mode`, click `Load unpacked`,
 
 ### Markdown output
 
-- Source: ar5iv HTML
+- Source: official arXiv HTML when it contains the paper, otherwise ar5iv. Frontmatter `source` is `arxiv-html` or `ar5iv`
 - Conversion runtime: browser content script
 - Metadata: optional YAML frontmatter with `title`, `arxiv_id`, `source`, `authors`, and `year`
 - Tables: preserved as HTML when necessary
-- Images: stored as remote links, not bundled locally
+- Images: remote links resolved from the fetched HTML page, not bundled locally
 
 ### PDF output
 

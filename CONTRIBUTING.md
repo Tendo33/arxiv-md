@@ -46,8 +46,8 @@ npm test
 
 Also do manual verification when behavior changes. At minimum:
 
-- test one paper where ar5iv works
-- test one paper where ar5iv is unavailable and PDF fallback is expected
+- test one paper that has official arXiv HTML
+- test one paper where both HTML sources are unavailable and PDF fallback is expected
 - test MinerU mode if you touched task flow, popup behavior, or settings
 
 ## Documentation Is Part Of The Change
@@ -80,14 +80,14 @@ Conventional commit prefixes are welcome but not required. Clear, specific commi
 
 Good examples:
 
-- `fix: recover PDF fallback when ar5iv is unavailable`
+- `fix: recover PDF fallback when no HTML paper is available`
 - `docs: sync README and privacy policy with MinerU task flow`
 - `feat: show duplicate-task confirmation for MinerU submissions`
 
 ## Good Contribution Areas
 
 - Markdown conversion accuracy
-- ar5iv cleanup and formatting rules
+- HTML cleanup and formatting rules
 - MinerU task UX and robustness
 - settings and localization quality
 - documentation clarity and onboarding

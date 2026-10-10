@@ -41,7 +41,7 @@ npm run package
 - `build`：单次构建生产包
 - `dev`：watch 模式
 - `lint`：检查 `src/**/*.js`
-- `test`：运行 Jest。覆盖论文 ID、文件名、ar5iv 可用性、MinerU 响应、删除守卫、BibTeX 和一段 HTML 夹具
+- `test`：运行 Jest。覆盖论文 ID、文件名、HTML 来源选择、MinerU 响应、删除守卫、BibTeX 和一段 HTML 夹具
 - `package`：先构建，再生成 `build/arxiv-md-v<version>.zip`
 
 ## 推荐开发顺序
@@ -62,14 +62,14 @@ npm run package
 
 #### 标准模式成功路径
 
-1. 选择一篇 ar5iv 已可用的旧论文
+1. 选择一篇已有官方 HTML 的论文。新论文通常当天就有 `https://arxiv.org/html/{id}`
 2. 点击 `Markdown`
-3. 确认下载的是 `.md`
-4. 打开文件检查 frontmatter、公式、标题和表格
+3. 确认下载的是 `.md`，frontmatter 的 `source` 为 `arxiv-html`
+4. 打开文件检查标题是一行、公式、表格，以及图片地址在 `arxiv.org`
 
 #### 标准模式回退路径
 
-1. 选择一篇 ar5iv 暂不可用的论文
+1. 选择一篇官方 HTML 和 ar5iv 都没有的论文
 2. 确认页面提示“仍可使用 PDF 兜底”
 3. 点击 `Markdown`
 4. 确认最终下载的是 PDF
@@ -110,7 +110,7 @@ npm run package
 适合排查：
 
 - 消息分发失败
-- ar5iv 可用性检测
+- HTML 来源选择
 - MinerU 轮询与下载
 - 通知与任务管理异常
 
@@ -142,7 +142,7 @@ npm run package
 2. `src/content/index.js`、`page-buttons.js`、`markdown-convert.js`
 3. `src/background/index.js`、`mineru-task-runner.js`
 4. `src/core/converter/index.js`
-5. `src/core/converter/ar5iv-converter.js`
+5. `src/core/html-paper.js`、`src/core/converter/ar5iv-converter.js`
 6. `src/core/converter/mineru-client.js`
 7. `src/core/task-manager.js`
 8. `src/ui/popup/popup.js`、`task-list.js`

@@ -7,7 +7,7 @@
 这个扩展的核心不是“万能论文转换器”，而是一个围绕 arXiv 摘要页构建的双工作流浏览器扩展：
 
 1. `标准模式`
-   ar5iv HTML 拉取与清洗 -> 页面内 Markdown 转换 -> 失败时回退到 PDF
+   官方 arXiv HTML，再 ar5iv，拉取与清洗 -> 页面内 Markdown 转换 -> 两者都失败时回退到 PDF
 2. `MinerU 模式`
    后台创建任务 -> 轮询 MinerU -> 下载 ZIP -> 在 Popup 中管理任务
 
@@ -61,6 +61,7 @@
 ### 4. 核心转换层
 
 - `src/core/converter/index.js`
+- `src/core/html-paper.js`
 - `src/core/converter/ar5iv-converter.js`
 - `src/core/converter/mineru-client.js`
 
@@ -68,8 +69,10 @@
 
 - `index.js`
   决定走标准模式还是 MinerU 模式
+- `html-paper.js`
+  先请求官方 `https://arxiv.org/html/{id}`，不可用时再请求 ar5iv。可用的响应必须不是摘要页重定向，并且包含 `article.ltx_document`
 - `ar5iv-converter.js`
-  检查 ar5iv 可用性、抓取 HTML、用 `linkedom` 清洗结构，然后把 HTML 发回内容脚本做 Markdown 转换
+  抓取选中的 HTML、用 `linkedom` 清洗结构，然后把 HTML 和最终页面 URL 发回内容脚本做 Markdown 转换
 - `mineru-client.js`
   创建 MinerU 任务、轮询状态、下载 ZIP
 
@@ -102,12 +105,12 @@
 | 模块 | 关键文件 | 作用 |
 | --- | --- | --- |
 | 页面入口 | `src/content/index.js` | 注入按钮、处理进度、接收后台消息 |
-| ar5iv 转 Markdown | `src/content/ar5iv-math.js`、`ar5iv-structure.js`、`ar5iv-elements.js`、`ar5iv-turndown-rules.js`、`markdown-convert.js` | 公式、版面清理和 Turndown 规则 |
+| HTML 转 Markdown | `src/content/ar5iv-math.js`、`ar5iv-structure.js`、`ar5iv-elements.js`、`ar5iv-turndown-rules.js`、`paper-assets.js`、`markdown-convert.js` | 公式、版面清理、图片地址和 Turndown 规则 |
 | 页面按钮 | `src/content/page-buttons.js`、`progress-ui.js` | 摘要页按钮、提示和进度 |
 | 页面内下载 | `src/content/page-download.js` | 文本和 Blob 下载 |
 | 删除守卫 | `src/core/deleted-task-guard.js` | 把已删除的 MinerU 任务 id 记在 `chrome.storage.local` |
 | 后台协调 | `src/background/index.js` | 接消息、调度转换、管理 MinerU 任务 |
-| 标准模式 | `src/core/converter/ar5iv-converter.js` | ar5iv 可用性检查、HTML 获取与清洗 |
+| 标准模式 | `src/core/html-paper.js`、`src/core/converter/ar5iv-converter.js` | HTML 来源选择、获取与清洗 |
 | MinerU 集成 | `src/core/converter/mineru-client.js` | 任务创建、轮询、ZIP 下载 |
 | 元数据提取 | `src/core/metadata-extractor.js` | 从摘要页或 export API 获取论文信息 |
 | 设置与统计 | `src/utils/storage.js` | 读写 `chrome.storage.sync` |
@@ -124,12 +127,12 @@
 3. 内容脚本提取元数据并发消息给后台
 4. 后台调用 `converter.convert()`
 5. `converter` 读取同步设置，判断当前为 `fast`
-6. `ar5iv-converter` 先做 `HEAD` 检查，再抓取 ar5iv HTML
-7. `linkedom` 在后台清洗页面结构
-8. 清洗后的 HTML 发送回内容脚本
-9. 内容脚本用 Turndown 和自定义规则生成 Markdown
-10. 后台通知内容脚本触发下载
-11. 如果 ar5iv 不可用或失败，后台直接回退到 PDF 下载
+6. `html-paper.js` 用 GET 依次检查官方 HTML 和 ar5iv，停在第一份包含 `article.ltx_document` 的页面
+7. `linkedom` 在后台清洗页面结构，并把标题里的换行收成一行
+8. 清洗后的 HTML 和该响应的最终 URL 发送回内容脚本
+9. 内容脚本用 Turndown 和自定义规则生成 Markdown，图片按最终 URL 解析
+10. 后台通知内容脚本触发下载。frontmatter 的 `source` 为 `arxiv-html` 或 `ar5iv`
+11. 如果两份 HTML 都不可用或转换失败，后台直接回退到 PDF 下载
 
 ### MinerU 模式链路
 
@@ -191,7 +194,7 @@
 
 其中最关键的边界差异是：
 
-- 标准模式：从 ar5iv 拉 HTML，再本地转 Markdown
+- 标准模式：先从 `arxiv.org/html` 拉 HTML，没有可转换正文时再从 ar5iv 拉，然后本地转 Markdown
 - MinerU 模式：把 arXiv PDF URL 和 Token 发给 MinerU
 
 ## 最容易误读的几点

@@ -56,8 +56,8 @@ Depending on the feature you use, the extension may make requests to:
 In standard mode, the extension:
 
 - reads the current arXiv page
-- checks whether an ar5iv HTML version exists
-- fetches ar5iv HTML when available
+- fetches official arXiv HTML when the paper page contains a convertible article
+- fetches ar5iv HTML when the official HTML page is missing or unusable
 - may call the arXiv export API as metadata fallback
 
 Markdown generation itself happens locally in the browser.

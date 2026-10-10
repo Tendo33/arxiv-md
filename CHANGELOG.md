@@ -6,6 +6,18 @@ For current product behavior, prefer `README.md`, `README_CN.md`, and the files 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.12] - 2026-10-10
+
+### Added
+
+- Standard mode tries official arXiv HTML at `https://arxiv.org/html/{id}` before ar5iv. PDF remains the fallback when neither HTML source has a convertible paper.
+
+### Changed
+
+- Images resolve against the HTML page that was actually fetched. Official figure paths stay on `arxiv.org`; ar5iv root-relative assets stay on `ar5iv.labs.arxiv.org`.
+- The standard-mode button label is `HTML`. The unavailable hint appears only when both HTML sources fail.
+- Frontmatter `source` is `arxiv-html` or `ar5iv`. A title broken by a line break stays on one YAML line and one Markdown heading.
+
 ## [1.1.11] - 2026-09-28
 
 ### Fixed

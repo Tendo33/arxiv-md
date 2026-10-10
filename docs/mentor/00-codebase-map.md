@@ -88,6 +88,7 @@ docs/
 然后读：
 
 - `src/core/converter/index.js`
+- `src/core/html-paper.js`
 - `src/core/converter/ar5iv-converter.js`
 - `src/core/converter/mineru-client.js`
 - `src/core/metadata-extractor.js`
@@ -95,7 +96,7 @@ docs/
 
 读这层时建议按“同步路径”和“异步路径”分开理解：
 
-- 同步路径：标准模式的 ar5iv -> Markdown / PDF
+- 同步路径：标准模式的官方 HTML -> ar5iv -> Markdown / PDF
 - 异步路径：MinerU 任务提交 -> 轮询 -> ZIP 下载
 
 ### 5. UI 与状态层
@@ -125,7 +126,7 @@ docs/
 ### 30 分钟版本
 
 1. 上面的 4 个文件
-2. `src/core/converter/ar5iv-converter.js`
+2. `src/core/html-paper.js`、`src/core/converter/ar5iv-converter.js`
 3. `src/core/converter/mineru-client.js`
 4. `src/core/task-manager.js`
 5. `src/utils/storage.js`
@@ -143,6 +144,6 @@ docs/
 
 打开一个 arXiv 摘要页，点击一次 `Markdown`，然后只靠日志和代码回答：
 
-- 这次有没有先检查 ar5iv 可用性？
+- 这次用的是官方 HTML 还是 ar5iv？
 - 当前模式是在哪一层被读取的？
 - 真正发起下载的是后台还是内容脚本？
