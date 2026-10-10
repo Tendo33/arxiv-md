@@ -31,6 +31,42 @@ describe('ar5iv markdown', () => {
     expect(markdown).toMatch(/#+\s+1 Intro/);
   });
 
+  test('resolves official arXiv HTML images against the paper page', () => {
+    const html = `<!doctype html><html><body>
+      <img src="1706.03762v7/Figures/ModalNet-21.png" alt="model">
+    </body></html>`;
+    const { document } = parseHTML(html);
+    const markdown = convertAr5ivDocument(document, {
+      assetPageUrl: 'https://arxiv.org/html/1706.03762',
+    });
+
+    expect(markdown).toContain(
+      'https://arxiv.org/html/1706.03762v7/Figures/ModalNet-21.png',
+    );
+  });
+
+  test('keeps a document title with a line break on one heading line', () => {
+    const html = `<!doctype html><html><body>
+      <h1 class="ltx_title ltx_title_document">Predicting Alignment Generalization
+        <br class="ltx_break">With Value Representations</h1>
+    </body></html>`;
+    const { document } = parseHTML(html);
+    const markdown = convertAr5ivDocument(document);
+
+    expect(markdown).toContain('# Predicting Alignment Generalization With Value Representations');
+    expect(markdown).not.toMatch(/Generalization\s*\nWith Value/);
+  });
+
+  test('keeps a title break without surrounding whitespace on one line', () => {
+    const html = `<!doctype html><html><body>
+      <h1 class="ltx_title ltx_title_document">Alignment<br class="ltx_break">Generalization</h1>
+    </body></html>`;
+    const { document } = parseHTML(html);
+    const markdown = convertAr5ivDocument(document);
+
+    expect(markdown).toContain('# Alignment Generalization');
+  });
+
   test('strips color commands from latex and leftover html from markdown', () => {
     expect(cleanLatexFormula('\\color{red}x+\\textcolor{blue}{y}')).toBe('x+y');
     const cleaned = postProcessMarkdown('See <span>kept</span> and \\[12\\].');

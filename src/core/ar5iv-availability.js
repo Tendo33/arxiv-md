@@ -1,6 +1,6 @@
 /**
- * Decide whether an ar5iv response is usable HTML.
- * HEAD is sometimes rejected; callers may retry with GET and pass that response here.
+ * Decide whether an HTML-paper response stayed on an HTML document.
+ * Applies to arXiv HTML and ar5iv. A redirect back to /abs/ is not usable.
  */
 export function isAr5ivHtmlAvailable({ ok, finalUrl, contentType }) {
   const url = finalUrl || '';

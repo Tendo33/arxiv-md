@@ -51,11 +51,11 @@ class MainConverter {
   ) {
     const { arxivId, title } = paperInfo;
 
-    // Tier 1: ar5iv
+    // Tier 1: official arXiv HTML, then ar5iv
     try {
       if (onProgress)
-        onProgress({ tier: 'ar5iv', stage: 'checking', progress: 0 });
-      logger.info('Tier 1: Trying ar5iv conversion...');
+        onProgress({ tier: 'html', stage: 'checking', progress: 0 });
+      logger.info('Tier 1: Trying HTML conversion...');
 
       const result = await ar5ivConverter.convert(arxivId, tabId, {
         includeMetadata,
@@ -74,11 +74,17 @@ class MainConverter {
       await this._downloadViaContentScript(result.markdown, filename, tabId);
       await storage.incrementConversion(CONVERSION_TIER.AR5IV_LOCAL);
 
+      const sourceLabel = result.metadata?.sourceLabel
+        || (result.metadata?.source === 'arxiv-html' ? 'arXiv HTML' : 'ar5iv');
       if (onProgress)
-        onProgress({ tier: 'ar5iv', stage: 'completed', progress: 100 });
+        onProgress({
+          tier: result.metadata?.source || 'html',
+          stage: 'completed',
+          progress: 100,
+        });
       showNotification(
         '✅ 转换完成',
-        `已保存：${filename}\n方式：ar5iv`,
+        `已保存：${filename}\n方式：${sourceLabel}`,
         'basic',
       );
       logger.info('Tier 1 success:', filename);

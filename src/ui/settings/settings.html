@@ -32,8 +32,8 @@
         <div class="welcome-banner" id="welcomeBanner" style="display: none">
           <h2 data-i18n="welcome_title">Welcome to arXiv to Markdown!</h2>
           <p data-i18n="welcome_desc">
-            Convert arXiv papers to Markdown with one click. Fast conversion
-            with ar5iv, automatic PDF fallback.
+            Convert arXiv papers to Markdown with one click. Tries arXiv HTML,
+            then ar5iv, then PDF.
           </p>
         </div>
 
@@ -53,7 +53,7 @@
                   Standard Mode
                 </div>
                 <div class="mode-description" data-i18n="mode_standard_desc">
-                  ar5iv + local conversion, PDF fallback
+                  arXiv HTML, then ar5iv, then PDF
                 </div>
                 <div
                   class="mode-badge mode-badge-recommended"
@@ -182,7 +182,7 @@
             <div class="stat-item">
               <div class="stat-number" id="ar5ivSuccess">0</div>
               <div class="stat-label" data-i18n="stats_ar5iv">
-                ar5iv Success
+                HTML success
               </div>
             </div>
             <div class="stat-item">

@@ -17,11 +17,11 @@ import { addAr5ivTurndownRules } from './ar5iv-turndown-rules';
  * 把已经解析好的 ar5iv 文档转成 Markdown。
  * 内容脚本和夹具测试走同一条预处理与 Turndown 规则。
  */
-export function convertAr5ivDocument(doc) {
+export function convertAr5ivDocument(doc, options = {}) {
   preprocessAuthorsAndMetadata(doc);
   const { doc: cleanedDoc, mathMap } = preprocessMathElements(doc);
   preprocessLists(cleanedDoc);
-  preprocessAr5ivElements(cleanedDoc);
+  preprocessAr5ivElements(cleanedDoc, options);
   preprocessTables(cleanedDoc);
   removeMathMLArtifacts(cleanedDoc);
 
@@ -37,7 +37,7 @@ export function convertAr5ivDocument(doc) {
   // 启用 GFM 插件（表格、删除线等）
   turndownService.use(gfm);
 
-  addAr5ivTurndownRules(turndownService);
+  addAr5ivTurndownRules(turndownService, options);
 
   // 执行 Turndown 转换
   let markdown = turndownService.turndown(cleanedDoc.body);
@@ -59,7 +59,9 @@ export function handleHtmlToMarkdown(data, sendResponse) {
   try {
     const parser = new DOMParser();
     const doc = parser.parseFromString(data.html, 'text/html');
-    const markdown = convertAr5ivDocument(doc);
+    const markdown = convertAr5ivDocument(doc, {
+      assetPageUrl: data.assetPageUrl,
+    });
     sendResponse({ success: true, markdown });
   } catch (error) {
     logger.error('Markdown conversion failed:', error);

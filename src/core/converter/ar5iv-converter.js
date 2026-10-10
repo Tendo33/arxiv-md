@@ -1,9 +1,8 @@
 // ar5iv HTML → Markdown 转换器
 
 import { parseHTML } from 'linkedom';
-import { API } from '@config/constants';
 import logger from '@utils/logger';
-import { isAr5ivHtmlAvailable } from '../ar5iv-availability';
+import { HTML_PAPER_SOURCES, loadHtmlPaper, selectConversionSource } from '../html-paper';
 
 class Ar5ivConverter {
   constructor() {}
@@ -12,11 +11,11 @@ class Ar5ivConverter {
    * 发送 HTML 到 Content Script 进行 Markdown 转换
    * @private
    */
-  async _convertToMarkdownInContentScript(html, tabId) {
+  async _convertToMarkdownInContentScript(html, tabId, assetPageUrl) {
     return new Promise((resolve, reject) => {
       chrome.tabs.sendMessage(
         tabId,
-        { type: 'CONVERT_HTML_TO_MARKDOWN', data: { html } },
+        { type: 'CONVERT_HTML_TO_MARKDOWN', data: { html, assetPageUrl } },
         (response) => {
           if (chrome.runtime.lastError) {
             reject(
@@ -37,41 +36,14 @@ class Ar5ivConverter {
   }
 
   async checkAvailability(arxivId) {
-    const url = `${API.AR5IV_BASE}/${arxivId}`;
     try {
-      // ar5iv intermittently returns 405 to HEAD; validate the actual HTML with GET.
-      let response = await fetch(url, { method: 'HEAD', redirect: 'follow' });
-      if (response.status === 405 || response.status === 403) {
-        response = await fetch(url, { method: 'GET', redirect: 'follow' });
-      }
-      const finalUrl = response.url || url;
-      const contentType = response.headers.get('content-type') || '';
-      const available = isAr5ivHtmlAvailable({
-        ok: response.ok,
-        finalUrl,
-        contentType,
-      });
-      logger.debug(`ar5iv availability: ${arxivId} -> ${available}, status ${response.status}, url: ${finalUrl}`);
+      const selected = await selectConversionSource(arxivId);
+      const available = selected.tier !== 'pdf';
+      logger.debug(`HTML availability: ${arxivId} -> ${available} (${selected.tier})`);
       return available;
     } catch (error) {
-      logger.error('ar5iv availability check failed:', error);
+      logger.error('HTML availability check failed:', error);
       return false;
-    }
-  }
-
-  async fetchHtml(arxivId) {
-    const url = `${API.AR5IV_BASE}/${arxivId}`;
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      const html = await response.text();
-      logger.debug(`Fetched ar5iv HTML: ${html.length} bytes`);
-      return html;
-    } catch (error) {
-      logger.error('Failed to fetch ar5iv HTML:', error);
-      throw error;
     }
   }
 
@@ -85,7 +57,10 @@ class Ar5ivConverter {
         '.ltx_title.ltx_title_document, h1.ltx_title, .ltx_title',
       );
       if (titleEl) {
-        title = titleEl.textContent.trim();
+        titleEl.querySelectorAll('br, .ltx_break').forEach((br) => {
+          br.replaceWith(document.createTextNode(' '));
+        });
+        title = titleEl.textContent.replace(/\s+/g, ' ').trim();
       }
 
       // 提取摘要（完整提取所有段落）
@@ -96,7 +71,7 @@ class Ar5ivConverter {
         const abstractParagraphs = abstractEl.querySelectorAll('.ltx_p, p');
         if (abstractParagraphs.length > 0) {
           const fullAbstract = Array.from(abstractParagraphs)
-            .map(p => p.textContent.trim())
+            .map((p) => p.textContent.replace(/\s+/g, ' ').trim())
             .filter(text => text.length > 0)
             .join(' ');
           // 限制在合理长度用于预览（但不会丢失主内容中的完整摘要）
@@ -112,7 +87,7 @@ class Ar5ivConverter {
         document.body;
 
       if (!mainContent) {
-        throw new Error('Cannot find main content in ar5iv page');
+        throw new Error('Cannot find main content in HTML paper');
       }
 
       // 移除不需要的元素
@@ -148,11 +123,12 @@ class Ar5ivConverter {
     }
   }
 
-  async toMarkdown(html, tabId) {
+  async toMarkdown(html, tabId, assetPageUrl) {
     try {
       const markdown = await this._convertToMarkdownInContentScript(
         html,
         tabId,
+        assetPageUrl,
       );
       logger.debug(`Converted to Markdown: ${markdown.length} bytes`);
       return markdown;
@@ -163,48 +139,50 @@ class Ar5ivConverter {
   }
 
   async convert(arxivId, tabId, options = {}) {
-    logger.info(`Starting ar5iv conversion for ${arxivId}`);
+    logger.info(`Starting HTML conversion for ${arxivId}`);
 
-    try {
-      const includeMetadata = options.includeMetadata !== false;
-      const paperInfo = options.paperInfo || {};
+    const includeMetadata = options.includeMetadata !== false;
+    const paperInfo = options.paperInfo || {};
+    let lastError = new Error('HTML version not available');
 
-      const available = await this.checkAvailability(arxivId);
-      if (!available) {
-        throw new Error('ar5iv version not available');
+    for (const source of HTML_PAPER_SOURCES) {
+      const paper = await loadHtmlPaper(source, arxivId);
+      if (!paper) continue;
+
+      try {
+        const cleaned = this.cleanHtml(paper.html);
+        const markdown = await this.toMarkdown(cleaned.content, tabId, paper.finalUrl);
+        const markdownWithMeta = includeMetadata
+          ? this._addMetadata(markdown, {
+            title: cleaned.title,
+            arxivId: arxivId,
+            source: paper.source,
+            authors: paperInfo.authors,
+            year: paperInfo.year,
+          })
+          : markdown;
+
+        logger.info(`HTML conversion successful for ${arxivId} via ${paper.source}`);
+
+        return {
+          markdown: markdownWithMeta,
+          title: cleaned.title || `arXiv ${arxivId}`,
+          excerpt: cleaned.excerpt,
+          metadata: {
+            arxivId: arxivId,
+            source: paper.source,
+            sourceLabel: paper.label,
+            conversionTime: new Date().toISOString(),
+          },
+        };
+      } catch (error) {
+        lastError = error;
+        logger.warn(`HTML source ${paper.source} conversion failed for ${arxivId}:`, error);
       }
-
-      const html = await this.fetchHtml(arxivId);
-      const cleaned = this.cleanHtml(html);
-      const markdown = await this.toMarkdown(cleaned.content, tabId);
-
-      const markdownWithMeta = includeMetadata
-        ? this._addMetadata(markdown, {
-          title: cleaned.title,
-          arxivId: arxivId,
-          source: 'ar5iv',
-          authors: paperInfo.authors,
-          year: paperInfo.year,
-        })
-        : markdown;
-
-      logger.info(`ar5iv conversion successful for ${arxivId}`);
-
-      const finalTitle = cleaned.title || `arXiv ${arxivId}`;
-      return {
-        markdown: markdownWithMeta,
-        title: finalTitle,
-        excerpt: cleaned.excerpt,
-        metadata: {
-          arxivId: arxivId,
-          source: 'ar5iv',
-          conversionTime: new Date().toISOString(),
-        },
-      };
-    } catch (error) {
-      logger.error(`ar5iv conversion failed for ${arxivId}:`, error);
-      throw error;
     }
+
+    logger.error(`HTML conversion failed for ${arxivId}:`, lastError);
+    throw lastError;
   }
 
   /**
@@ -214,10 +192,16 @@ class Ar5ivConverter {
    */
   _escapeYamlString(str) {
     if (!str) return str;
-    if (/[:#[\]{}&*!|>'"%@`]/.test(str) || str.includes('\n')) {
-      return `"${str.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+    const value = String(str);
+    if (/[:#[\]{}&*!|>'"%@`]/.test(value) || /[\n\r\t]/.test(value) || value.trim() !== value) {
+      const escaped = value
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"')
+        .replace(/\r\n|\r|\n/g, '\\n')
+        .replace(/\t/g, '\\t');
+      return `"${escaped}"`;
     }
-    return str;
+    return value;
   }
 
   /**

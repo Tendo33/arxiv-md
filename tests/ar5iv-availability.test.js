@@ -9,6 +9,14 @@ describe('isAr5ivHtmlAvailable', () => {
     })).toBe(true);
   });
 
+  test('accepts an official arXiv HTML url', () => {
+    expect(isAr5ivHtmlAvailable({
+      ok: true,
+      finalUrl: 'https://arxiv.org/html/1706.03762',
+      contentType: 'text/html; charset=utf-8',
+    })).toBe(true);
+  });
+
   test('accepts a missing content type', () => {
     expect(isAr5ivHtmlAvailable({
       ok: true,

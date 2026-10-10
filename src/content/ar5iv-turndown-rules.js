@@ -1,4 +1,7 @@
-export function addAr5ivTurndownRules(turndownService) {
+import { resolvePaperAssetUrl } from './paper-assets';
+
+export function addAr5ivTurndownRules(turndownService, options = {}) {
+  const assetPageUrl = options.assetPageUrl;
   // 【重要】自定义规则：保持 HTML 表格格式（不转换为 Markdown 表格）
   // 这样可以保留 colspan/rowspan 合并单元格
   turndownService.addRule('keepHtmlTables', {
@@ -19,15 +22,7 @@ export function addAr5ivTurndownRules(turndownService) {
       const alt = node.alt || 'image';
       let src = node.getAttribute('src') || '';
 
-      // 清理错误的 chrome-extension URL
-      src = src.replace(/chrome-extension:\/\/[^/]+\//, '');
-
-      // 处理相对路径 - 使用正确的 ar5iv 域名
-      if (src && !src.startsWith('http')) {
-        src = src.startsWith('/')
-          ? `https://ar5iv.labs.arxiv.org${src}`
-          : `https://ar5iv.labs.arxiv.org/${src}`;
-      }
+      src = resolvePaperAssetUrl(src, assetPageUrl);
 
       return src ? `![${alt}](${src})` : '';
     },
@@ -186,7 +181,9 @@ export function addAr5ivTurndownRules(turndownService) {
       if (node.nodeName.match(/^H[1-6]$/)) {
         return (
           node.classList &&
-            (node.classList.contains('ltx_title_section') ||
+            (node.classList.contains('ltx_title') ||
+              node.classList.contains('ltx_title_document') ||
+              node.classList.contains('ltx_title_section') ||
               node.classList.contains('ltx_title_subsection') ||
               node.classList.contains('ltx_title_subsubsection') ||
               node.classList.contains('ltx_title_paragraph') ||

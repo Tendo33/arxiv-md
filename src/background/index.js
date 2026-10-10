@@ -128,12 +128,12 @@ async function handleGetStatistics(sendResponse) {
 }
 
 async function handleCheckAr5iv(arxivId, sendResponse) {
-  logger.debug('Checking ar5iv availability for:', arxivId);
+  logger.debug('Checking HTML availability for:', arxivId);
   try {
     const available = await ar5ivConverter.checkAvailability(arxivId);
     sendResponse({ success: true, available });
   } catch (error) {
-    logger.error('Failed to check ar5iv availability:', error);
+    logger.error('Failed to check HTML availability:', error);
     sendResponse({ success: false, error: error.message });
   }
 }

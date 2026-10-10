@@ -4,6 +4,8 @@
  * API 端点配置
  */
 export const API = {
+  // 官方 HTML 与论文同步发布；ar5iv 按月批量转换，作为回退
+  ARXIV_HTML_BASE: 'https://arxiv.org/html',
   // ar5iv.org 会重定向到 ar5iv.labs.arxiv.org，直接使用最终域名
   AR5IV_BASE: 'https://ar5iv.labs.arxiv.org/html',
   // MinerU API v4 端点 (官方文档: https://mineru.net/apiManage/docs)
@@ -32,7 +34,7 @@ export const STORAGE_KEYS = {
  * 转换模式
  */
 export const CONVERSION_MODE = {
-  FAST: 'fast', // ar5iv + 本地转换，失败时下载 PDF
+  FAST: 'fast', // arXiv HTML，再 ar5iv，失败时下载 PDF
   ALWAYS_MINERU: 'always', // 仅 MinerU（手动模式）
 };
 

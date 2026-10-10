@@ -127,8 +127,8 @@ export async function injectConvertButton() {
 
   logger.info('Convert buttons injected below Submission history');
 
-  // Check ar5iv availability
-  checkAr5ivAvailability(mdButton, hintIndicator);
+  // 官方 HTML 和 ar5iv 都没有时，才提示 PDF 兜底
+  checkHtmlAvailability(mdButton, hintIndicator);
 
   // Auto convert prompt (optional)
   const autoConvert = await storage.getAutoConvert();
@@ -185,7 +185,7 @@ async function copyBibtex(button, hintEl) {
   }
 }
 
-async function checkAr5ivAvailability(button, hintEl) {
+async function checkHtmlAvailability(button, hintEl) {
   try {
     // 首先检查用户设置的转换模式
     let conversionMode = 'fast'; // 默认模式
@@ -196,40 +196,38 @@ async function checkAr5ivAvailability(button, hintEl) {
       logger.warn('Failed to get conversion mode:', error);
     }
 
-    // 如果是 mineru 模式（always），不需要检查 ar5iv 可用性
-    // mineru 直接使用 PDF 进行转换，不依赖 ar5iv 页面
+    // MinerU 直接提交 PDF，不依赖 HTML 论文
     if (conversionMode === 'always') {
-      logger.debug('MinerU mode enabled, skipping ar5iv availability check');
+      logger.debug('MinerU mode enabled, skipping HTML availability check');
       return;
     }
 
     const arxivId = metadataExtractor._extractIdFromUrl(window.location.href);
     if (!arxivId) return;
 
-    // 只在标准模式（fast）下检查 ar5iv 可用性
     const epoch = hintEpoch;
     chrome.runtime.sendMessage(
       { type: 'CHECK_AR5IV', data: arxivId },
       (response) => {
         if (epoch !== hintEpoch) return;
         if (chrome.runtime.lastError) {
-          logger.warn('Failed to check ar5iv:', chrome.runtime.lastError);
+          logger.warn('Failed to check HTML:', chrome.runtime.lastError);
           return;
         }
 
         if (response && response.success && response.available === false) {
-          logger.info(`ar5iv not available for ${arxivId}, showing fallback hint`);
+          logger.info(`HTML not available for ${arxivId}, showing fallback hint`);
           setHint(hintEl, t.content_ar5iv_unavailable);
-          button.setAttribute('data-ar5iv-unavailable', 'true');
+          button.setAttribute('data-html-unavailable', 'true');
         } else {
-          logger.debug(`ar5iv available for ${arxivId}`);
+          logger.debug(`HTML available for ${arxivId}`);
           clearHint(hintEl);
-          button.removeAttribute('data-ar5iv-unavailable');
+          button.removeAttribute('data-html-unavailable');
         }
       },
     );
   } catch (error) {
-    logger.error('Error checking ar5iv availability:', error);
+    logger.error('Error checking HTML availability:', error);
   }
 }
 

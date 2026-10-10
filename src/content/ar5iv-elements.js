@@ -1,9 +1,17 @@
 import logger from '@utils/logger';
+import { resolvePaperAssetUrl } from './paper-assets';
 
 /**
  * 预处理：清理 ar5iv 特有元素
  */
-export function preprocessAr5ivElements(doc) {
+export function preprocessAr5ivElements(doc, options = {}) {
+  // 标题里的换行要留成空格，否则 Markdown 标题和 YAML 会被拆开
+  doc.querySelectorAll('h1, h2, h3, h4, h5, h6, .ltx_title').forEach((heading) => {
+    heading.querySelectorAll('br, .ltx_break').forEach((br) => {
+      br.replaceWith(doc.createTextNode(' '));
+    });
+  });
+
   // 处理章节标题中的编号标签
   doc
     .querySelectorAll(
@@ -34,17 +42,12 @@ export function preprocessAr5ivElements(doc) {
     doc.querySelectorAll(selector).forEach((el) => el.remove()),
   );
 
-  // 清理图片的相对路径 - 使用正确的 ar5iv 域名
+  // 图片相对路径按来源页解析。ar5iv 是根路径，官方 HTML 是带版本号的相对路径。
+  const assetPageUrl = options.assetPageUrl;
   doc.querySelectorAll('img').forEach((img) => {
-    let src = img.getAttribute('src');
-    if (src && !src.startsWith('http') && !src.startsWith('data:')) {
-      img.setAttribute(
-        'src',
-        src.startsWith('/')
-          ? `https://ar5iv.labs.arxiv.org${src}`
-          : `https://ar5iv.labs.arxiv.org/${src}`,
-      );
-    }
+    const src = img.getAttribute('src');
+    const resolved = resolvePaperAssetUrl(src, assetPageUrl);
+    if (resolved) img.setAttribute('src', resolved);
   });
 
   // 处理参考文献列表
