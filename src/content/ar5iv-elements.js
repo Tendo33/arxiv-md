@@ -69,7 +69,11 @@ export function preprocessAr5ivElements(doc, options = {}) {
         return;
       }
       if (!code.querySelector('code')) {
-        code.innerHTML = `<code>${code.textContent}</code>`;
+        // Build the node instead of interpolating textContent into innerHTML:
+        // that re-parsed the text as HTML, so `#include <stdio.h>` lost `<stdio.h>`.
+        const inner = doc.createElement('code');
+        inner.textContent = code.textContent;
+        code.replaceChildren(inner);
       }
     });
 
