@@ -76,13 +76,17 @@ Markdown generation itself happens locally in the browser.
 
 PDF parsing is used only when you choose "PDF high-quality parsing". The extension contacts the **single** provider you selected in Settings. It never switches providers automatically; on failure it only offers a button to open Settings.
 
+Neither provider receives the PDF file from your browser: the extension sends only the PDF's link, and the provider downloads the paper itself.
+
+**Open-access check.** Before anything is sent, the extension checks whether the PDF is hosted on arXiv (`https://arxiv.org/pdf/…` or `https://export.arxiv.org/pdf/…`), which it treats as open access. For any other link, or when this cannot be determined, nothing is sent: the task waits as "Needs confirmation" and is submitted only after you confirm it in the popup. This applies to every way of starting a parse (popup, right-click menu, floating button and keyboard shortcut).
+
 #### PaddleOCR (default)
 
-The extension sends the paper's public PDF URL and your access token to `paddleocr.aistudio-app.com`, operated by Baidu (AI Studio). If the service cannot fetch the URL, the PDF file itself may be uploaded instead (pending QA). Access to this domain is requested only when you select PaddleOCR, and you can revoke it at any time.
+The extension sends your access token, the PDF link (`fileUrl`) and the model name to `paddleocr.aistudio-app.com`, operated by Baidu (AI Studio). It does not upload the PDF file. Access to this domain is requested only when you select PaddleOCR, and you can revoke it at any time.
 
 #### MinerU
 
-The extension sends your MinerU bearer token, the arXiv PDF URL for the selected paper, and the arXiv ID as task metadata to `mineru.net`. It does not upload the PDF file. MinerU processes the paper on its own service and returns a ZIP result URL (`cdn-mineru.openxlab.org.cn`), which the extension downloads. MinerU's domain access is unchanged from earlier versions and is granted at install.
+The extension sends your MinerU bearer token, the PDF link for the selected paper, the model and language options, and the arXiv ID as task metadata to `mineru.net`. It does not upload the PDF file. MinerU processes the paper on its own service and returns a ZIP result URL (`cdn-mineru.openxlab.org.cn`), which the extension downloads. MinerU's domain access is unchanged from earlier versions and is granted at install.
 
 Parsing providers are third parties, and their own terms govern how they process and retain what you submit. Retention periods for both providers are still to be verified.
 
