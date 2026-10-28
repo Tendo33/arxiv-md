@@ -2,18 +2,30 @@ import { resolvePaperAssetUrl } from './paper-assets';
 
 export function addAr5ivTurndownRules(turndownService, options = {}) {
   const assetPageUrl = options.assetPageUrl;
-  // 【重要】自定义规则：保持 HTML 表格格式（不转换为 Markdown 表格）
-  // 这样可以保留 colspan/rowspan 合并单元格
-  turndownService.addRule('keepHtmlTables', {
+  const mathMap = options.mathMap;
+
+  // 表格：简单表格（无合并单元格、无嵌套表格、单元格里没有含 | 的公式）转 GFM，
+  // 其余保留去掉 class 的 HTML，以保住 colspan/rowspan。
+  turndownService.addRule('arxivTables', {
     filter: 'table',
     replacement: (content, node) => {
-      // 清理 table 标签内的多余空白和换行
-      const cleanHtml = node.outerHTML
+      if (isEmptyTable(node)) return '';
+      if (isSimpleTable(node, mathMap)) {
+        return '\n\n' + tableToGfm(node, turndownService) + '\n\n';
+      }
+      const clone = node.cloneNode(true);
+      [clone, ...clone.querySelectorAll('*')].forEach((el) => {
+        el.removeAttribute('class');
+        el.removeAttribute('id');
+        el.removeAttribute('style');
+      });
+      const cleanHtml = clone.outerHTML
         .replace(/>\s+</g, '><')
-        .replace(/\n\s*/g, '');
+        .replace(/\n\s*/g, ' ');
       return '\n\n' + cleanHtml + '\n\n';
     },
   });
+
 
   // 自定义规则：处理图片
   turndownService.addRule('arxivImages', {
@@ -28,47 +40,23 @@ export function addAr5ivTurndownRules(turndownService, options = {}) {
     },
   });
 
-  // 自定义规则：处理 ar5iv 的引用链接
+  // 正文引用：链接到参考文献锚点并保留编号；其他站内链接只留文字
   turndownService.addRule('citations', {
     filter: (node) => {
-      if (node.nodeName === 'A') {
-        const href = node.getAttribute('href') || '';
-        // 过滤 chrome-extension URL
-        if (href.includes('chrome-extension://')) return true;
-        // 过滤 ar5iv 引用链接（指向参考文献的内部链接）
-        if (href.startsWith('#bib.')) return true;
-        // 过滤带有 ltx_ref 类的链接（ar5iv 的内部引用）
-        if (
-          node.classList &&
-            (node.classList.contains('ltx_ref') ||
-              node.classList.contains('ltx_cite'))
-        ) {
-          return true;
-        }
-      }
-      return false;
+      if (node.nodeName !== 'A') return false;
+      const href = node.getAttribute('href') || '';
+      return href.includes('chrome-extension://')
+        || node.getAttribute('data-arxivmd-cite') === '1'
+        || href.startsWith('#')
+        || (node.classList && (node.classList.contains('ltx_ref') || node.classList.contains('ltx_cite')));
     },
     replacement: (content, node) => {
       const href = node.getAttribute('href') || '';
-
-      // chrome-extension URL：只保留内容
-      if (href.includes('chrome-extension://')) {
-        return content;
+      const text = content.replace(/\s+/g, ' ').trim();
+      if (node.getAttribute('data-arxivmd-cite') === '1' && text) {
+        return `[${text}](${href})`;
       }
-
-      // ar5iv 的内部引用链接：转换为 [内容] 格式
-      if (href.startsWith('#bib.') || href.startsWith('#')) {
-        // 清理内容中的多余空白
-        const cleanContent = content.replace(/\s+/g, ' ').trim();
-        return `[${cleanContent}]`;
-      }
-
-      // ltx_ref 类：保留内容
-      if (node.classList && node.classList.contains('ltx_ref')) {
-        return content;
-      }
-
-      return `[${content}](${href})`;
+      return text;
     },
   });
 
@@ -314,4 +302,45 @@ export function addAr5ivTurndownRules(turndownService, options = {}) {
       return content;
     },
   });
+}
+
+function isEmptyTable(table) {
+  return !table.textContent.replace(/\s+/g, '')
+    && !table.querySelector('img, object, embed, math');
+}
+
+function isSimpleTable(table, mathMap) {
+  if (table.querySelector('table')) return false;
+  const rows = Array.from(table.querySelectorAll('tr'));
+  if (rows.length < 1) return false;
+  const cells = table.querySelectorAll('td, th');
+  for (const cell of cells) {
+    const rs = parseInt(cell.getAttribute('rowspan') || '1', 10);
+    const cs = parseInt(cell.getAttribute('colspan') || '1', 10);
+    if (rs > 1 || cs > 1) return false;
+    if (cell.querySelector('ul, ol, figure, pre, blockquote')) return false;
+  }
+  const width = rows[0].querySelectorAll('td, th').length;
+  if (!width || rows.some((r) => r.querySelectorAll('td, th').length !== width)) return false;
+  if (mathMap) {
+    const ids = table.textContent.match(/MATH(?:INLINE|BLOCK)START\d+MATH(?:INLINE|BLOCK)END/g) || [];
+    if (ids.some((id) => (mathMap.get(id)?.latex || '').includes('|'))) return false;
+    if (ids.some((id) => mathMap.get(id)?.isBlock)) return false;
+  }
+  return true;
+}
+
+function tableToGfm(table, turndownService) {
+  const rows = Array.from(table.querySelectorAll('tr')).map((tr) =>
+    Array.from(tr.querySelectorAll('td, th')).map((cell) =>
+      turndownService
+        .turndown(cell.innerHTML)
+        .replace(/\s*\n+\s*/g, ' ')
+        .replace(/\|/g, '\\|')
+        .trim(),
+    ),
+  );
+  const width = rows[0].length;
+  const line = (cells) => `| ${cells.map((c) => c || ' ').join(' | ')} |`;
+  return [line(rows[0]), line(new Array(width).fill('---')), ...rows.slice(1).map(line)].join('\n');
 }

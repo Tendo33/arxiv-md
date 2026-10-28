@@ -12,6 +12,14 @@ import {
   postProcessMarkdown,
 } from './ar5iv-preprocess';
 import { addAr5ivTurndownRules } from './ar5iv-turndown-rules';
+import {
+  appendFootnotes,
+  convertImageObjects,
+  finalizeReferences,
+  fixEmptyMailto,
+  preprocessNotes,
+  preprocessReferences,
+} from './ar5iv-references';
 
 /**
  * 把已经解析好的 ar5iv 文档转成 Markdown。
@@ -20,6 +28,10 @@ import { addAr5ivTurndownRules } from './ar5iv-turndown-rules';
 export function convertAr5ivDocument(doc, options = {}) {
   preprocessAuthorsAndMetadata(doc);
   const { doc: cleanedDoc, mathMap } = preprocessMathElements(doc);
+  const footnotes = preprocessNotes(cleanedDoc);
+  preprocessReferences(cleanedDoc);
+  fixEmptyMailto(cleanedDoc);
+  convertImageObjects(cleanedDoc);
   preprocessLists(cleanedDoc);
   preprocessAr5ivElements(cleanedDoc, options);
   preprocessTables(cleanedDoc);
@@ -37,14 +49,16 @@ export function convertAr5ivDocument(doc, options = {}) {
   // 启用 GFM 插件（表格、删除线等）
   turndownService.use(gfm);
 
-  addAr5ivTurndownRules(turndownService, options);
+  addAr5ivTurndownRules(turndownService, { ...options, mathMap });
 
   // 执行 Turndown 转换
   let markdown = turndownService.turndown(cleanedDoc.body);
 
   // 后处理
+  markdown = appendFootnotes(markdown, footnotes);
   markdown = restoreMathPlaceholders(markdown, mathMap);
   markdown = postProcessMarkdown(markdown);
+  markdown = finalizeReferences(markdown);
 
   logger.debug(
     `Markdown conversion complete: ${markdown.length} bytes, ${mathMap.size} formulas`,
