@@ -5,6 +5,7 @@ import storage from '@utils/storage';
 import { translations } from '@config/locales';
 import { showConfirm } from './confirm-dialog';
 import { renderTaskList, setTaskListLanguage } from './task-list';
+import { resolveTotalConversions } from './popup-stats';
 
 let currentTasks = [];
 let currentLang = 'en';
@@ -110,8 +111,11 @@ async function loadTasks() {
       currentTasks = response.tasks || [];
       const stats = response.stats || {};
 
-      // 更新统计信息
-      updateStats(stats);
+      // 总转换次数来自全局统计（含 ar5iv/HTML 直转），而非仅 MinerU 任务数
+      const totals = await chrome.runtime
+        .sendMessage({ type: 'GET_STATISTICS' })
+        .catch(() => null);
+      updateStats(stats, totals?.success ? totals.data : null);
 
       // 渲染任务列表
       renderTaskList(currentTasks);
@@ -126,8 +130,8 @@ async function loadTasks() {
 /**
  * 更新统计信息
  */
-function updateStats(stats) {
-  document.getElementById('statsTotal').textContent = stats.total || 0;
+function updateStats(stats, globalStats = null) {
+  document.getElementById('statsTotal').textContent = resolveTotalConversions(stats, globalStats);
   document.getElementById('statsProcessing').textContent =
     stats.processing || 0;
   document.getElementById('statsCompleted').textContent = stats.completed || 0;
