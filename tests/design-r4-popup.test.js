@@ -54,6 +54,13 @@ describe('建议：失败原因直接显示在行内', () => {
     const html = createTaskRow({ id: 'x', status: 'failed', error: 'Key <bad>', paperInfo: { title: 'T' }, provider: 'paddleocr' });
     expect(html).toMatch(/<span class="row-err">Key &lt;bad&gt;<\/span><\/div>$/);
     expect(createTaskRow({ id: 'y', status: 'completed', zipUrl: 'https://a/b.zip', paperInfo: { title: 'T' } })).not.toMatch(/row-err/);
-    expect(css).toMatch(/\.row:has\(\.row-err\)\{flex-wrap:wrap;row-gap:2px\}/);
+    expect(css).toMatch(/\.row\{flex-wrap:wrap;row-gap:2px\}/);
+  });
+});
+
+describe('任务行在 320–375 英文下不横向溢出', () => {
+  test('行允许换行，标题 flex-basis 为 0 且有最小宽度', () => {
+    expect(css).toMatch(/\.row\{flex-wrap:wrap;row-gap:2px\}/);
+    expect(css).toMatch(/\.row \.n\{flex:1 1 0;min-width:3em\}/);
   });
 });
