@@ -8,6 +8,7 @@ import { downloadZip } from '@core/converter/mineru-client';
 import { createDefaultRegistry } from '@pdf-core/providers/index';
 import { saveDeliverable } from '@pdf-core/output/save';
 import { createParseTaskRunner } from './parse-task-runner';
+import { taskNotificationText } from './task-notification-text';
 
 export const deletedTaskGuard = createDeletedTaskGuard(chrome.storage.local);
 export const providerRegistry = createDefaultRegistry();
@@ -20,24 +21,14 @@ function downloadViaChrome(opts) {
   });
 }
 
-/** 任务通知；id 前缀沿用 mineru_task_（点击处理兼容） */
-export function showTaskNotification(task, status, detail = '', provider = null) {
-  const title = task.paperInfo.title || task.paperInfo.arxivId;
-  const truncatedTitle = title.length > 40 ? title.substring(0, 40) + '…' : title;
+/** 任务通知；id 前缀沿用 mineru_task_（点击处理兼容）。文案按扩展设置的语言，见 task-notification-text.js */
+export async function showTaskNotification(task, status, detail = '', provider = null) {
   const label = (provider && provider.label) || 'MinerU';
-  const config = { type: 'basic', iconUrl: '/assets/icon-128.png' };
-  if (status === 'consent') {
-    // 审查 P1-1：右键菜单、快捷键、悬浮按钮发起的非 OA 任务，靠通知把用户带到弹窗里确认
-    config.title = `⚠️ 需要确认才能发送给 ${label} 解析`;
-    config.message = `${truncatedTitle}\n\n这篇 PDF 的链接不在 arXiv 上，打开扩展弹窗确认后才会发送给 ${label}`;
-  } else if (status === 'completed') {
-    config.title = `✅ PDF 解析完成（${label}）`;
-    config.message = `${truncatedTitle}\n\n点击查看任务`;
-    config.buttons = [{ title: '查看任务' }];
-  } else {
-    config.title = `❌ PDF 解析失败（${label}）`;
-    config.message = `${truncatedTitle}\n\n${detail || '未知错误'}`;
-  }
+  if (status === 'failed') logger.error('Parse task failed:', detail && (detail.message || detail));
+  const lang = await storage.getLanguage().catch(() => null);
+  const n = taskNotificationText(task, status, detail, label, lang);
+  const config = { type: 'basic', iconUrl: '/assets/icon-128.png', title: n.title, message: n.message };
+  if (n.button) config.buttons = [{ title: n.button }];
   chrome.notifications.create(`mineru_task_${task.id}`, config, () => {
     if (chrome.runtime.lastError) logger.error('Failed to create notification:', chrome.runtime.lastError);
   });

@@ -48,7 +48,7 @@ export function createParseTaskRunner(deps) {
       errorReason: e.reason || null,
       errorHttpStatus: e.httpStatus || null,
     });
-    notify(task, 'failed', e.message || e.code, provider);
+    notify(task, 'failed', e, provider); // 通知层按 code/reason 选文案，不展示 e.message
     return e;
   }
 
