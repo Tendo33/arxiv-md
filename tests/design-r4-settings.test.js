@@ -26,3 +26,12 @@ describe('设计建议：后端下拉框满宽', () => {
     expect(css).toMatch(/select\.input-field \{ appearance: auto; cursor: pointer; width: 100%; \}/);
   });
 });
+
+describe('a11y：语言按钮的可访问名称包含可见文字', () => {
+  test('不用覆盖可见文字的 aria-label，说明放在 sr-only 里', () => {
+    const btn = html.match(/<button[^>]*id="langToggle"[^>]*>[\s\S]*?<\/button>/)[0];
+    expect(btn).not.toMatch(/aria-label=/);
+    expect(btn).toMatch(/<span id="langText">[^<]*<\/span><span class="sr-only" data-i18n="lang_switch">/);
+    expect(css).toMatch(/\.sr-only\{position:absolute;width:1px;height:1px/);
+  });
+});
