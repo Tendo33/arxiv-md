@@ -15,7 +15,9 @@ let listeners; let action;
 const boot = (tabs) => {
   listeners = {}; action = mkAction();
   for (const t of tabs) action.state[t.id] = { text: t.badge };
-  const ev = (name) => ({ addListener: (fn) => { listeners[name] = fn; } });
+  // 同名事件可能有多个监听（C-3 右键菜单也监听 onStartup / onInstalled），全部依次调用
+  const all = {};
+  const ev = (name) => ({ addListener: (fn) => { (all[name] = all[name] || []).push(fn); listeners[name] = (...a) => Promise.all(all[name].map((f) => f(...a))).then((r) => r[0]); } });
   global.chrome = {
     runtime: { id: 'me', onMessage: ev('message'), onInstalled: ev('installed'), onStartup: ev('startup'), getURL: (p) => p, sendMessage: () => Promise.resolve() },
     action,

@@ -20,6 +20,7 @@ test('不注入 timers：「!」挂上 6000 ms 清除计时器，触发后徽标
   const badge = mod.createActionBadge(action);
   badge.shortcutStarted(7);
   badge.finish(7, false);
+  globalThis.setTimeout = realST; globalThis.clearTimeout = realCT;
   expect(thrown).toEqual([]);
   expect(state[7]).toBe('!');
   const c = calls.find((x) => x.ms === 6000);

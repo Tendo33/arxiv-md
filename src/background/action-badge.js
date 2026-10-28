@@ -86,6 +86,11 @@ export function createActionBadge(actionApi, timers = defaultTimers) {
       clear(tabId);
       return true;
     },
+    /** 没有转换可跟踪、但要让用户看到失败（右键链接导出失败/超时），复用 "!" 徽标 */
+    fail(tabId) {
+      shortcutTabs.delete(tabId);
+      show(tabId, 'error');
+    },
     isTracking: (tabId) => shortcutTabs.has(tabId),
     /** 页面跳转/刷新：清掉残留徽标（含 service worker 被回收后丢了计时器的情况，复审建议 3） */
     tabLoading(tabId) {

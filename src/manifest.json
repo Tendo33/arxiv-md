@@ -14,7 +14,8 @@
     "downloads",
     "activeTab",
     "notifications",
-    "alarms"
+    "alarms",
+    "contextMenus"
   ],
   "host_permissions": [
     "https://arxiv.org/*",

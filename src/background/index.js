@@ -11,6 +11,7 @@ import { deletedTaskGuard, processMinerUTaskInBackground } from './mineru-task-r
 import { KEEP_ALIVE_ALARM, syncKeepAlive } from './keep-alive';
 import { isTrustedArxivSender, isValidArxivId, triggerConversionInActiveTab } from './message-guards';
 import { createActionBadge, handleShortcutResult, conversionSucceeded } from './action-badge';
+import { createContextMenus } from './context-menu';
 
 const actionBadge = createActionBadge(chrome.action);
 if (chrome.tabs && chrome.tabs.onUpdated) {
@@ -21,6 +22,20 @@ if (chrome.tabs && chrome.tabs.onUpdated) {
 // Round 3：worker 重启 / 浏览器启动时清掉丢了计时器的残留徽标
 actionBadge.sweep(chrome.tabs);
 if (chrome.runtime.onStartup) chrome.runtime.onStartup.addListener(() => actionBadge.sweep(chrome.tabs));
+
+// Round 3 C-3：右键菜单。onInstalled 建一次；语言 / Token 变化时重建，文案和置灰状态跟着变
+const contextMenus = chrome.contextMenus ? createContextMenus({
+  menus: chrome.contextMenus, tabs: chrome.tabs, runtime: chrome.runtime, commands: chrome.commands,
+  storage, isValidArxivId, badge: actionBadge, log: (m) => logger.debug(m),
+}) : null;
+if (contextMenus) {
+  chrome.runtime.onInstalled.addListener(() => contextMenus.refresh());
+  if (chrome.runtime.onStartup) chrome.runtime.onStartup.addListener(() => contextMenus.refresh());
+  chrome.contextMenus.onClicked.addListener((info, tab) => contextMenus.onClicked(info, tab));
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'sync' && (changes.language || changes.mineruToken)) contextMenus.refresh();
+  });
+}
 
 logger.info('Background service worker initialized');
 
