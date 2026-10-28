@@ -20,3 +20,9 @@ describe('设计验收 M5：授权/撤销按钮套 .btn 基类', () => {
     expect(css).toMatch(/\.permission-row \.btn, \.revoke-row \.btn \{ min-height: 36px; padding: 0 12px; width: auto; flex: none; \}/);
   });
 });
+
+describe('设计建议：后端下拉框满宽', () => {
+  test('select.input-field width:100%', () => {
+    expect(css).toMatch(/select\.input-field \{ appearance: auto; cursor: pointer; width: 100%; \}/);
+  });
+});
