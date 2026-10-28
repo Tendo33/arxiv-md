@@ -78,3 +78,6 @@ body{min-width:320px}
 .acts #mineruBtn{flex-direction:column;gap:2px;padding-top:4px;padding-bottom:4px;line-height:1.2}
 .acts #mineruBtn .backend-label{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:339px){.acts{grid-template-columns:1fr}}
+/* 设计建议：失败原因直接显示在行下，不只放在 tooltip 里 */
+.row:has(.row-err){flex-wrap:wrap;row-gap:2px}
+.row .row-err{flex-basis:100%;min-width:0;color:var(--danger);font-size:12px;line-height:1.4;overflow-wrap:anywhere}

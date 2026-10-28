@@ -47,3 +47,13 @@ describe('建议：后端标签字号 ≥12px', () => {
     expect(m[1]).not.toMatch(/opacity/);
   });
 });
+
+describe('建议：失败原因直接显示在行内', () => {
+  const { createTaskRow } = require('../src/ui/popup/task-list');
+  test('failed 行带 .row-err（已转义），其他状态没有', () => {
+    const html = createTaskRow({ id: 'x', status: 'failed', error: 'Key <bad>', paperInfo: { title: 'T' }, provider: 'paddleocr' });
+    expect(html).toMatch(/<span class="row-err">Key &lt;bad&gt;<\/span><\/div>$/);
+    expect(createTaskRow({ id: 'y', status: 'completed', zipUrl: 'https://a/b.zip', paperInfo: { title: 'T' } })).not.toMatch(/row-err/);
+    expect(css).toMatch(/\.row:has\(\.row-err\)\{flex-wrap:wrap;row-gap:2px\}/);
+  });
+});
