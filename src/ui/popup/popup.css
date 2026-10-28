@@ -39,6 +39,9 @@ body{min-width:320px}
 .confirm-dialog{background:var(--surface);color:var(--text);padding:var(--sp-5);border-radius:var(--r-lg);width:min(280px,100%);box-shadow:var(--shadow-3);transform:translateY(10px);transition:transform var(--dur) var(--ease)}
 .confirm-overlay.show .confirm-dialog{transform:translateY(0)}
 .confirm-message{margin:0 0 var(--sp-5);font-size:var(--fs-md);text-align:center;text-wrap:balance}
+/* 设计验收 M10：发送确认框有标题；正文左对齐、次级色 */
+.confirm-title{margin:0 0 var(--sp-2);font:600 var(--fs-md)/1.4 var(--font-sans)}
+.confirm-title:not([hidden])+.confirm-message{font-size:var(--fs-sm);text-align:left;text-wrap:pretty;color:var(--text-2)}
 .confirm-actions{display:flex;gap:10px}
 .confirm-btn{flex:1;min-height:var(--hit-min);border:0;border-radius:var(--r-sm);cursor:pointer;font:600 var(--fs-sm) var(--font-sans)}
 .confirm-cancel{background:var(--surface-2);color:var(--text)}

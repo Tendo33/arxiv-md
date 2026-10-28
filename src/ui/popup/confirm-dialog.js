@@ -2,7 +2,7 @@
  * 显示自定义确认对话框
  * @returns {Promise<boolean>}
  */
-export function showConfirm(message, { okLabel = null, tone = 'danger' } = {}) {
+export function showConfirm(message, { title = null, okLabel = null, tone = 'danger' } = {}) {
   return new Promise((resolve) => {
     const overlay = document.getElementById('confirmOverlay');
     const msgEl = document.getElementById('confirmMessage');
@@ -20,7 +20,20 @@ export function showConfirm(message, { okLabel = null, tone = 'danger' } = {}) {
       );
 
     msgEl.textContent = message;
-    // 非删除类确认（如「继续上传」）：换按钮文字，用品牌色而不是危险色
+    // 设计验收 M10：有标题时 标题=名字、正文=描述；没有标题（删除确认）时仍用正文当名字
+    const titleEl = document.getElementById('confirmTitle');
+    if (titleEl) {
+      titleEl.textContent = title || '';
+      titleEl.hidden = !title;
+    }
+    if (title && titleEl) {
+      dialog.setAttribute('aria-labelledby', 'confirmTitle');
+      dialog.setAttribute('aria-describedby', 'confirmMessage');
+    } else {
+      dialog.setAttribute('aria-labelledby', 'confirmMessage');
+      dialog.removeAttribute('aria-describedby');
+    }
+    // 非删除类确认（如「发送并解析」）：换按钮文字，用品牌色而不是危险色
     const prevOkLabel = okBtn.textContent;
     if (okLabel) okBtn.textContent = okLabel;
     okBtn.classList.toggle('brand', tone === 'brand');

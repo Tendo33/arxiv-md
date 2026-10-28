@@ -163,8 +163,8 @@ export function createParseTaskRunner(deps) {
     return ids;
   }
 
-  /** 用户在确认框里同意上传后调用：只放行这一个任务，不记住“总是允许” */
-  async function confirmUpload(taskId) {
+  /** 用户在确认框里同意发送 PDF 链接后调用：只放行这一个任务，不记住“总是允许” */
+  async function confirmSend(taskId) {
     const task = await taskManager.getTask(taskId);
     if (!task || task.status !== TASK_STATUS.AWAITING_CONSENT) return { skipped: 'not-awaiting' };
     await taskManager.updateTask(taskId, { uploadConsent: true, status: TASK_STATUS.PENDING });
@@ -173,7 +173,7 @@ export function createParseTaskRunner(deps) {
     return { confirmed: true, done };
   }
 
-  return { process, confirmUpload, resumeActiveTasks, isRunning: (id) => running.has(id) };
+  return { process, confirmSend, resumeActiveTasks, isRunning: (id) => running.has(id) };
 }
 
 export { pdfUrlOf };

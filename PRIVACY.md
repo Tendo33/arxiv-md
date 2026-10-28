@@ -78,7 +78,7 @@ PDF parsing is used only when you choose "PDF high-quality parsing". The extensi
 
 Neither provider receives the PDF file from your browser: the extension sends only the PDF's link, and the provider downloads the paper itself.
 
-**Open-access check.** Before anything is sent, the extension checks whether the PDF is hosted on arXiv (`https://arxiv.org/pdf/…` or `https://export.arxiv.org/pdf/…`), which it treats as open access. For any other link, or when this cannot be determined, nothing is sent: the task waits as "Needs confirmation" and is submitted only after you confirm it in the popup. This applies to every way of starting a parse (popup, right-click menu, floating button and keyboard shortcut).
+**Open-access check.** Before anything is sent, the extension checks whether the PDF is hosted on arXiv (`https://arxiv.org/pdf/…` or `https://export.arxiv.org/pdf/…`), which it treats as open access. For any other link, or when this cannot be determined, nothing is sent: the task waits as "Awaiting" and its PDF link is sent only after you choose "Send & parse" in the popup's confirmation dialog. This applies to every way of starting a parse (popup, right-click menu, floating button and keyboard shortcut).
 
 #### PaddleOCR (default)
 

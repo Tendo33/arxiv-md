@@ -8,7 +8,7 @@ import storage from '@utils/storage';
 import { TASK_STATUS } from '@config/constants';
 import { arxivApiUrl } from '@core/metadata-extractor';
 import { installPaddleOriginRuleListeners } from './paddle-origin-rule';
-import { deletedTaskGuard, processMinerUTaskInBackground, providerRegistry, resumeParseTasks, confirmPdfUpload } from './mineru-task-runner';
+import { deletedTaskGuard, processMinerUTaskInBackground, providerRegistry, resumeParseTasks, confirmPdfSend } from './mineru-task-runner';
 import { KEEP_ALIVE_ALARM, syncKeepAlive } from './keep-alive';
 import { isExtensionPageSender, isTrustedArxivSender, isValidArxivId, triggerConversionInActiveTab } from './message-guards';
 import { createActionBadge, handleShortcutResult, conversionBadgeState } from './action-badge';
@@ -96,14 +96,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     handleStartMinerUTaskForce(message.data, sendResponse);
     return true;
 
-  case 'CONFIRM_PDF_UPLOAD':
+  case 'CONFIRM_PDF_SEND':
     // 审查 P1-1：非 OA PDF 用户确认后才发送；只接受扩展页面发来的确认
     if (!isExtensionPageSender(sender, chrome.runtime.id)) {
-      logger.warn('CONFIRM_PDF_UPLOAD rejected: untrusted sender', sender && sender.url);
+      logger.warn('CONFIRM_PDF_SEND rejected: untrusted sender', sender && sender.url);
       sendResponse({ success: false, error: 'Untrusted sender' });
       return false;
     }
-    confirmPdfUpload(message.taskId)
+    confirmPdfSend(message.taskId)
       .then((r) => { refreshKeepAlive(); sendResponse({ success: !!(r && r.confirmed), skipped: r && r.skipped }); })
       .catch((e) => sendResponse({ success: false, error: e && e.message }));
     return true;

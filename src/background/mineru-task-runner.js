@@ -28,8 +28,8 @@ export function showTaskNotification(task, status, detail = '', provider = null)
   const config = { type: 'basic', iconUrl: '/assets/icon-128.png' };
   if (status === 'consent') {
     // 审查 P1-1：右键菜单、快捷键、悬浮按钮发起的非 OA 任务，靠通知把用户带到弹窗里确认
-    config.title = `⚠️ 需要确认才能上传（${label}）`;
-    config.message = `${truncatedTitle}\n\n这篇 PDF 不是开放获取文章，打开扩展弹窗确认后才会发送`;
+    config.title = `⚠️ 需要确认才能发送给 ${label} 解析`;
+    config.message = `${truncatedTitle}\n\n这篇 PDF 的链接不在 arXiv 上，打开扩展弹窗确认后才会发送给 ${label}`;
   } else if (status === 'completed') {
     config.title = `✅ PDF 解析完成（${label}）`;
     config.message = `${truncatedTitle}\n\n点击查看任务`;
@@ -60,9 +60,9 @@ export const parseTaskRunner = createParseTaskRunner({
 export function processMinerUTaskInBackground(taskId) {
   return parseTaskRunner.process(taskId);
 }
-/** 审查 P1-1：用户确认上传非 OA PDF */
-export function confirmPdfUpload(taskId) {
-  return parseTaskRunner.confirmUpload(taskId);
+/** 审查 P1-1：用户确认把非 OA PDF 的链接发给后端 */
+export function confirmPdfSend(taskId) {
+  return parseTaskRunner.confirmSend(taskId);
 }
 export const processParseTask = processMinerUTaskInBackground;
 

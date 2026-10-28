@@ -115,7 +115,7 @@ export const TASK_STATUS = {
   PROCESSING: 'processing', // 处理中
   COMPLETED: 'completed',   // 已完成
   FAILED: 'failed',         // 失败
-  AWAITING_CONSENT: 'awaiting_consent', // 非 OA PDF，等用户确认上传（审查 P1-1）
+  AWAITING_CONSENT: 'awaiting_consent', // 非 OA PDF，等用户确认发送链接（审查 P1-1）
 };
 
 /**

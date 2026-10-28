@@ -35,4 +35,24 @@ describe('Round 2 审查：删除确认对话框会弹出', () => {
     document.getElementById('confirmOk').dispatchEvent(new document.defaultView.Event('click'));
     await expect(p).resolves.toBe(true);
   });
+
+  // 设计验收 M10：发送确认框有标题；aria-labelledby=标题、aria-describedby=正文；删除确认仍用正文当名字
+  test('title → labelledby confirmTitle + describedby confirmMessage; delete confirm has no title', async () => {
+    const dialog = document.querySelector('.confirm-dialog');
+    const p = showConfirm('body', { title: '发送给 PaddleOCR 解析？', okLabel: '发送并解析', tone: 'brand' });
+    const h = document.getElementById('confirmTitle');
+    expect(h.hidden).toBe(false);
+    expect(h.textContent).toBe('发送给 PaddleOCR 解析？');
+    expect(dialog.getAttribute('aria-labelledby')).toBe('confirmTitle');
+    expect(dialog.getAttribute('aria-describedby')).toBe('confirmMessage');
+    expect(document.getElementById('confirmOk').textContent).toBe('发送并解析');
+    document.getElementById('confirmCancel').dispatchEvent(new document.defaultView.Event('click'));
+    await p;
+    const q = showConfirm(translations.zh.popup_confirm_delete);
+    expect(h.hidden).toBe(true);
+    expect(dialog.getAttribute('aria-labelledby')).toBe('confirmMessage');
+    expect(dialog.hasAttribute('aria-describedby')).toBe(false);
+    document.getElementById('confirmCancel').dispatchEvent(new document.defaultView.Event('click'));
+    await q;
+  });
 });

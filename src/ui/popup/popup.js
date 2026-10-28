@@ -5,7 +5,7 @@ import logger from '@utils/logger';
 import storage from '@utils/storage';
 import { translations } from '@config/locales';
 import { showConfirm } from './confirm-dialog';
-import { confirmUploadFlow } from './upload-consent';
+import { confirmSendFlow } from './send-consent';
 import { createTaskRow, setTaskListLanguage } from './task-list';
 import { pageContext, recentTasks } from './page-context';
 import { renderShortcutGuide } from './shortcut-guide';
@@ -285,7 +285,8 @@ async function taskCall(message, okKey, failKey, extra) {
 }
 
 async function handleConsent(taskId, providerId) {
-  await confirmUploadFlow(taskId, providerId, { showConfirm, sendMessage: (m) => chrome.runtime.sendMessage(m), tr: t() });
+  const task = currentTasks.find((x) => x.id === taskId) || taskId;
+  await confirmSendFlow(task, providerId, { showConfirm, sendMessage: (m) => chrome.runtime.sendMessage(m), tr: t() });
   loadTasks();
 }
 

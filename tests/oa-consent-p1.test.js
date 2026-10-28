@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { isOpenAccessPdf, uploadAllowed } from '../src/background/oa-gate';
 import { isExtensionPageSender } from '../src/background/message-guards';
-import { confirmUploadFlow } from '../src/ui/popup/upload-consent';
+import { confirmSendFlow } from '../src/ui/popup/send-consent';
 import { translations } from '../src/config/locales';
 import { makeHarness, fakeProvider } from './helpers/runner-harness';
 
@@ -67,7 +67,7 @@ describe('后台统一入口 parse-task-runner', () => {
     const h = makeHarness({ providers: [p], tasks: [{ id: 't1', paperInfo: pi }, { id: 't2', paperInfo: pi }] });
     await h.runner.process('t1');
     await h.runner.process('t2');
-    const r = await h.runner.confirmUpload('t1');
+    const r = await h.runner.confirmSend('t1');
     await r.done;
     expect(p.submit).toHaveBeenCalledTimes(1);
     expect(h.store.get('t1')).toMatchObject({ status: 'completed', uploadConsent: true });
@@ -76,7 +76,7 @@ describe('后台统一入口 parse-task-runner', () => {
 
   test('不在待确认状态的任务不能被“确认”', async () => {
     const h = makeHarness({ tasks: [{ id: 't1', status: 'completed' }] });
-    expect(await h.runner.confirmUpload('t1')).toEqual({ skipped: 'not-awaiting' });
+    expect(await h.runner.confirmSend('t1')).toEqual({ skipped: 'not-awaiting' });
   });
 });
 
@@ -107,39 +107,59 @@ describe('各入口都绕不过', () => {
     expect(isExtensionPageSender({ id, url: 'https://arxiv.org/abs/1', tab: { id: 1 } }, id)).toBe(false);
     expect(isExtensionPageSender({ id, url: `chrome-extension://${id}/popup.html`, tab: { id: 1 } }, id)).toBe(false);
     expect(isExtensionPageSender({ id: 'other', url: 'chrome-extension://other/x' }, id)).toBe(false);
-    expect(read('src/background/index.js')).toMatch(/case 'CONFIRM_PDF_UPLOAD':\s*\n[^\n]*\n\s*if \(!isExtensionPageSender/);
+    expect(read('src/background/index.js')).toMatch(/case 'CONFIRM_PDF_SEND':\s*\n[^\n]*\n\s*if \(!isExtensionPageSender/);
   });
 });
 
 describe('弹窗确认', () => {
-  test.each(['zh', 'en'])('%s：取消 → 不发消息；确认 → 发 CONFIRM_PDF_UPLOAD', async (lang) => {
+  const task = { id: 't1', provider: 'paddleocr', paperInfo: { title: 'Some Paper', arxivId: '2401.00001' } };
+  test.each(['zh', 'en'])('%s：取消 → 不发消息；确认 → 发 CONFIRM_PDF_SEND', async (lang) => {
     const tr = translations[lang];
     const sendMessage = jest.fn(async () => ({ success: true }));
     const no = jest.fn(async () => false);
-    expect(await confirmUploadFlow('t1', 'paddleocr', { showConfirm: no, sendMessage, tr })).toBe(false);
+    expect(await confirmSendFlow(task, 'paddleocr', { showConfirm: no, sendMessage, tr })).toBe(false);
     expect(sendMessage).not.toHaveBeenCalled();
-    expect(no.mock.calls[0][0]).toContain('PaddleOCR');
-    expect(no.mock.calls[0][1]).toEqual({ okLabel: tr.popup_btn_upload, tone: 'brand' });
+    const [msg, opts] = no.mock.calls[0];
+    expect(msg).toContain('PaddleOCR');
+    expect(msg).toContain('Some Paper');
+    expect(opts).toEqual({ title: tr.popup_confirm_send_title.replace('{provider}', 'PaddleOCR'), okLabel: tr.popup_btn_send, tone: 'brand' });
     const yes = jest.fn(async () => true);
-    expect(await confirmUploadFlow('t1', 'paddleocr', { showConfirm: yes, sendMessage, tr })).toBe(true);
-    expect(sendMessage).toHaveBeenCalledWith({ type: 'CONFIRM_PDF_UPLOAD', taskId: 't1' });
+    expect(await confirmSendFlow(task, 'paddleocr', { showConfirm: yes, sendMessage, tr })).toBe(true);
+    expect(sendMessage).toHaveBeenCalledWith({ type: 'CONFIRM_PDF_SEND', taskId: 't1' });
   });
 
-  test('中英文案齐全', () => {
-    for (const k of ['popup_status_awaiting', 'popup_action_consent', 'popup_confirm_upload', 'popup_btn_upload']) {
-      expect(translations.zh[k]).toBeTruthy();
-      expect(translations.en[k]).toBeTruthy();
+  test('协调人定稿文案（复审 P3-A / 设计验收 M10）', () => {
+    const { zh, en } = translations;
+    expect(zh.popup_confirm_send_title).toBe('发送给 {provider} 解析？');
+    expect(zh.popup_confirm_send).toBe('《{title}》的 PDF 链接会发送给 {provider}。该链接不在 arXiv 上，发送前需要你确认。');
+    expect(zh.popup_btn_send).toBe('发送并解析');
+    expect(zh.popup_action_consent).toBe('确认解析');
+    expect(en.popup_confirm_send_title).toBe('Send to {provider} for parsing?');
+    expect(en.popup_confirm_send).toMatch(/PDF link for “\{title\}” will be sent to \{provider\}/);
+    expect(en.popup_btn_send).toBe('Send & parse');
+    for (const k of ['popup_status_awaiting', 'popup_action_consent', 'popup_confirm_send', 'popup_confirm_send_title', 'popup_btn_send']) {
+      expect(zh[k]).toBeTruthy(); expect(en[k]).toBeTruthy();
     }
-    expect(translations.zh.popup_confirm_upload).toContain('{provider}');
+    expect(zh).not.toHaveProperty('popup_confirm_upload');
+    expect(zh).not.toHaveProperty('popup_btn_upload');
+  });
+
+  test('全仓（界面、通知、消息名）不再把发送链接说成上传', () => {
+    const files = ['src/config/locales.js', 'src/background/mineru-task-runner.js', 'src/background/index.js', 'src/background/message-guards.js', 'src/background/parse-task-runner.js', 'src/ui/popup/popup.js', 'src/ui/popup/send-consent.js', 'src/ui/popup/confirm-dialog.js', 'src/ui/popup/popup.html'];
+    for (const f of files) {
+      const src = read(f);
+      expect([f, /上传|CONFIRM_PDF_UPLOAD|confirmPdfUpload|confirmUpload\b|Uploading|Continue upload|Confirm upload/.test(src)]).toEqual([f, false]);
+    }
+    expect(read('PRIVACY.md')).toContain('"Send & parse"');
   });
 });
 
 describe('任务行', () => {
-  test('待确认任务显示「待确认」和「确认上传」按钮', () => {
+  test('待确认任务显示「待确认」和「确认解析」按钮', () => {
     const { createTaskRow, setTaskListLanguage } = require('../src/ui/popup/task-list');
     setTaskListLanguage('zh');
     const html = createTaskRow({ id: 't1', status: 'awaiting_consent', provider: 'paddleocr', paperInfo: { title: 'T' }, createdAt: Date.now() });
     expect(html).toContain('待确认');
-    expect(html).toMatch(/data-action="consent" data-task-id="t1" data-provider="paddleocr">确认上传</);
+    expect(html).toMatch(/data-action="consent" data-task-id="t1" data-provider="paddleocr">确认解析</);
   });
 });
