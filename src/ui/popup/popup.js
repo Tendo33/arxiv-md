@@ -69,6 +69,7 @@ function updateLanguage(lang) {
   currentLang = lang;
   setTaskListLanguage(lang);
   const t = translations[lang];
+  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
 
   // 更新所有带 data-i18n 属性的元素
   document.querySelectorAll('[data-i18n]').forEach((el) => {

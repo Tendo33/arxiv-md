@@ -20,8 +20,11 @@ export function showConfirm(message) {
       );
 
     msgEl.textContent = message;
+    // 关闭时 hidden + inert：读屏和 Tab 都进不去（axe aria-hidden-focus）
+    overlay.hidden = false;
+    overlay.inert = false;
+    overlay.removeAttribute('inert');
     overlay.classList.add('show');
-    overlay.setAttribute('aria-hidden', 'false');
 
     const focusFirst = () => {
       const focusable = getFocusable();
@@ -34,7 +37,9 @@ export function showConfirm(message) {
 
     const cleanup = () => {
       overlay.classList.remove('show');
-      overlay.setAttribute('aria-hidden', 'true');
+      overlay.hidden = true;
+      overlay.inert = true;
+      overlay.setAttribute('inert', '');
       okBtn.removeEventListener('click', onOk);
       cancelBtn.removeEventListener('click', onCancel);
       overlay.removeEventListener('click', onOverlayClick);
