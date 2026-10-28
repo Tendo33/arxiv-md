@@ -98,3 +98,13 @@ export function handleShortcutResult(badge, message, sender, runtimeId) {
   if (!sender || sender.id !== runtimeId || !sender.tab || sender.tab.id == null) return false;
   return badge.finish(sender.tab.id, !!message.ok);
 }
+
+/**
+ * H-01：快捷键转换的徽标结果。{ success:false }（断网、下载失败等）显示「!」；
+ * duplicate（已有同一篇的 MinerU 任务，前端会提示）不算失败，显示「✓」。
+ */
+export function conversionSucceeded(result) {
+  if (!result || typeof result !== 'object') return false;
+  if (result.duplicate) return true;
+  return result.success !== false;
+}
