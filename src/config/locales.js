@@ -202,7 +202,7 @@ export const translations = {
     pdf_revoke_btn: 'Revoke access',
     pdf_revoked: 'Access to {host} revoked',
     // R4-03：统一错误码
-    notify_task_consent_title: '⚠ Confirm before sending to {provider}',
+    notify_task_consent_title: 'Confirm before sending to {provider}',
     notify_task_consent_body: 'This PDF link is not on arXiv. Open the extension popup and confirm before it is sent to {provider}',
     notify_task_done_title: '✅ PDF parsed ({provider})',
     notify_task_done_body: 'Click to view the task',
@@ -424,7 +424,7 @@ export const translations = {
     pdf_revoke_btn: '撤销授权',
     pdf_revoked: '已撤销对 {host} 的访问权限',
     // R4-03：统一错误码
-    notify_task_consent_title: '⚠ 需要确认才能发送给 {provider} 解析',
+    notify_task_consent_title: '需要确认才能发送给 {provider} 解析',
     notify_task_consent_body: '这篇 PDF 的链接不在 arXiv 上，打开扩展弹窗确认后才会发送给 {provider}',
     notify_task_done_title: '✅ PDF 解析完成（{provider}）',
     notify_task_done_body: '点击查看任务',

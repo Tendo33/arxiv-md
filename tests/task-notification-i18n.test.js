@@ -90,7 +90,7 @@ test('完成 / 待确认通知也按设置语言', async () => {
   expect(c.buttons).toEqual([{ title: '查看任务' }]);
   chrome.notifications.create.mockClear();
   c = await send('en', 'consent', '');
-  expect(c.title).toBe('⚠ Confirm before sending to MinerU');
+  expect(c.title).toBe('Confirm before sending to MinerU');
   expect(c.title + c.message.replace(task.paperInfo.title, '')).not.toMatch(han);
 });
 

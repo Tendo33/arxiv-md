@@ -74,3 +74,12 @@ describe('design S8: failed row has no duplicate title', () => {
     expect(html.split('Boom here').length - 1).toBe(1);
   });
 });
+
+describe('design S9: ⚠ only marks the incomplete notification', () => {
+  test('consent title has no ⚠ in zh/en', () => {
+    for (const lang of ['zh', 'en']) {
+      expect(translations[lang].notify_task_consent_title).not.toMatch(/⚠/);
+      expect(translations[lang].notify_task_consent_title).toMatch(/^\S/);
+    }
+  });
+});
