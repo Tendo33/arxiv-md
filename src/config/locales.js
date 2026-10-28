@@ -218,7 +218,7 @@ export const translations = {
     err_PERMISSION_MISSING: 'Permission for {host} is required to use {provider}',
     err_TIMEOUT: '{provider} timed out',
     err_PROVIDER_FAILED: '{provider} failed: {reason}',
-    err_reason_forbidden_empty: 'request was rejected (HTTP 403, empty response). This is not a key or quota problem',
+    err_reason_forbidden_empty: 'Request was rejected (HTTP 403, empty response). This is not a key or quota problem',
     err_reason_key_not_on_device: 'No {provider} key on this device (keys don’t sync between devices). Re-enter it on this device in Settings › PDF parsing',
     err_action_settings: 'Open settings',
     err_action_switch: 'Switch provider',

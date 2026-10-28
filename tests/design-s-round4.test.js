@@ -50,3 +50,9 @@ describe('design S5', () => {
     expect(translations.en.pdf_desc_paddleocr).toMatch(/access token \(Key\)\.$/);
   });
 });
+
+describe('design S6', () => {
+  test('en forbidden_empty reason is capitalized', () => {
+    expect(translations.en.err_reason_forbidden_empty).toMatch(/^Request was rejected/);
+  });
+});
