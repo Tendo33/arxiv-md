@@ -19,14 +19,14 @@ describe('H-01 conversionSucceeded', () => {
     [null, false],
     [{ success: true }, true],
     [{ taskId: 'x' }, true],
-    [{ success: false, duplicate: true }, true],
+    [{ success: false, duplicate: true }, false],
   ])('%p → %p', (r, ok) => expect(conversionSucceeded(r)).toBe(ok));
 });
 
 describe('H-01 background/index.js 接线：CONVERT_PAPER 返回 success:false → 「!」', () => {
   const src = fs.readFileSync(path.join(__dirname, '../src/background/index.js'), 'utf8');
   test('handleConvertPaper 按 result 决定徽标，不再固定 finish(tabId, true)', () => {
-    expect(src).toMatch(/actionBadge\.finish\(tabId, conversionSucceeded\(result\)\)/);
+    expect(src).toMatch(/if \(result && result\.duplicate\) actionBadge\.hold\(tabId\);\s*else actionBadge\.finish\(tabId, conversionSucceeded\(result\)\)/);
     expect(src).not.toMatch(/actionBadge\.finish\(tabId, true\)/);
   });
   test('端到端：SW 侧 fetch 失败 → 转换返回失败 → 徽标「!」，6000 ms 后清除', async () => {
@@ -74,7 +74,8 @@ describe('H-02 content 提前失败上报 SW', () => {
   test('showError 调用 reportShortcutFailure → SHORTCUT_RESULT ok:false', () => {
     const body = ui.match(/export function showError[\s\S]*?\n}\n/)[0];
     expect(body).toMatch(/reportShortcutFailure\(\)/);
-    expect(ui).toMatch(/sendMessage\(\{ type: 'SHORTCUT_RESULT', ok: false \}\)/);
+    expect(ui).toMatch(/export function reportShortcutFailure\(\) \{ sendShortcutResult\(\{ ok: false \}\); \}/);
+    expect(ui).toMatch(/sendMessage\(\{ type: 'SHORTCUT_RESULT', \.\.\.extra \}\)/);
   });
   test('SW 收到后「…」→「!」，6000 ms 后清除（离线 / 元数据失败同一路径）', () => {
     const a = mkAction(); const t = [];

@@ -14,6 +14,8 @@ import {
   clearProgressState,
   notifyOutcome,
   onNextOutcome,
+  reportShortcutClear,
+  reportShortcutFailure,
   setProgressState,
   setProgressText,
   showError,
@@ -208,6 +210,10 @@ async function handleConversionTrigger(type = 'markdown') {
                 notifyOutcome({ ok: !!(forceResponse && forceResponse.success), background: true });
                 if (forceResponse && forceResponse.success) {
                   logger.info('Duplicate task created successfully:', forceResponse.taskId);
+                  reportShortcutClear();
+                } else {
+                  // H-01：强制提交失败不经过 showError，单独上报，徽标「!」
+                  reportShortcutFailure();
                 }
               }
             );
@@ -215,6 +221,7 @@ async function handleConversionTrigger(type = 'markdown') {
             // 用户取消
             logger.info('User cancelled duplicate task creation');
             notifyOutcome({ ok: false, cancelled: true });
+            reportShortcutClear();
             if (activeButton) {
               activeButton.disabled = false;
               activeButton.style.opacity = '1';

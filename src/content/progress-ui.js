@@ -96,9 +96,12 @@ export function showError(message) {
 }
 
 /** 让后台把快捷键徽标从「…」换成「!」；不是快捷键发起的转换，后台会忽略 */
-function reportShortcutFailure() {
+export function reportShortcutFailure() { sendShortcutResult({ ok: false }); }
+/** H-01：重复任务用户取消/强制提交成功——让后台直接清除徽标 */
+export function reportShortcutClear() { sendShortcutResult({ clear: true }); }
+function sendShortcutResult(extra) {
   try {
-    const r = chrome.runtime.sendMessage({ type: 'SHORTCUT_RESULT', ok: false });
+    const r = chrome.runtime.sendMessage({ type: 'SHORTCUT_RESULT', ...extra });
     if (r && typeof r.catch === 'function') r.catch(() => {});
   } catch (_) { /* 扩展已重载，消息发不出去 */ }
 }

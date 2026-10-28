@@ -11,7 +11,7 @@ export const BADGE_CLEAR_MS = { running: 120000, success: 4000, error: 6000 };
 
 // A2-01：Chrome 里 setTimeout/clearTimeout 脱离 globalThis 调用会抛 "Illegal invocation"，
 // 所以默认实现用箭头函数包一层，调用时 this 仍是全局对象。
-const defaultTimers = {
+export const defaultTimers = {
   setTimeout: (fn, ms) => setTimeout(fn, ms),
   clearTimeout: (id) => clearTimeout(id),
 };
@@ -70,6 +70,22 @@ export function createActionBadge(actionApi, timers = defaultTimers) {
       show(tabId, ok ? 'success' : 'error');
       return true;
     },
+    /**
+     * H-01（管理员定）：重复的 MinerU 任务——清掉「…」但继续跟踪，
+     * 等 content 上报用户取消（清除）或强制提交失败（「!」）。
+     */
+    hold(tabId) {
+      if (!shortcutTabs.has(tabId)) return false;
+      clear(tabId);
+      return true;
+    },
+    /** 不显示结果、直接清除并停止跟踪（用户取消重复任务等） */
+    dismiss(tabId) {
+      if (!shortcutTabs.has(tabId)) return false;
+      shortcutTabs.delete(tabId);
+      clear(tabId);
+      return true;
+    },
     isTracking: (tabId) => shortcutTabs.has(tabId),
     /** 页面跳转/刷新：清掉残留徽标（含 service worker 被回收后丢了计时器的情况，复审建议 3） */
     tabLoading(tabId) {
@@ -96,15 +112,15 @@ export function createActionBadge(actionApi, timers = defaultTimers) {
  */
 export function handleShortcutResult(badge, message, sender, runtimeId) {
   if (!sender || sender.id !== runtimeId || !sender.tab || sender.tab.id == null) return false;
+  if (message.clear) return badge.dismiss(sender.tab.id);
   return badge.finish(sender.tab.id, !!message.ok);
 }
 
 /**
- * H-01：快捷键转换的徽标结果。{ success:false }（断网、下载失败等）显示「!」；
- * duplicate（已有同一篇的 MinerU 任务，前端会提示）不算失败，显示「✓」。
+ * H-01：快捷键转换的徽标结果。{ success:false }（断网、下载失败等）显示「!」。
+ * duplicate 不走这里：background 调 hold() 直接清除徽标（管理员定，不显示「✓」）。
  */
 export function conversionSucceeded(result) {
-  if (!result || typeof result !== 'object') return false;
-  if (result.duplicate) return true;
+  if (!result || typeof result !== 'object' || result.duplicate) return false;
   return result.success !== false;
 }

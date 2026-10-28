@@ -139,7 +139,8 @@ async function handleConvertPaper(paperInfo, sendResponse, sender) {
       sendResponse({ success: true, data: result });
     }
     // H-01：MainConverter 多数失败返回 { success:false } 而不抛异常，按结果决定「✓」还是「!」
-    actionBadge.finish(tabId, conversionSucceeded(result));
+    if (result && result.duplicate) actionBadge.hold(tabId);
+    else actionBadge.finish(tabId, conversionSucceeded(result));
   } catch (error) {
     logger.error('Conversion failed:', error);
     actionBadge.finish(tabId, false);
