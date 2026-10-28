@@ -59,6 +59,7 @@ export const ERROR_MESSAGES = {
   MINERU_DOWNLOAD_FAILED: 'MinerU 结果下载失败',
   PDF_DOWNLOAD_FAILED: 'PDF 下载失败',
   NETWORK_ERROR: '网络连接错误',
+  NETWORK_OFFLINE: '网络连接失败，请检查网络后重试',
   UNKNOWN_ERROR: '未知错误',
 };
 

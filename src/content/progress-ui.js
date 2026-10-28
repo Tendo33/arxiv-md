@@ -60,6 +60,16 @@ export function clearProgressState() {
   removeResultActions(progressIndicator);
   progressIndicator.style.display = 'none';
   progressIndicator.classList.remove('error', 'success');
+  // 隐藏时同时清空文字，避免残留上一次的“Completed 100%”
+  const textEl = progressIndicator.querySelector('.progress-text');
+  const percentEl = progressIndicator.querySelector('.progress-percent');
+  const detailEl = progressIndicator.querySelector('.progress-detail');
+  if (textEl) textEl.textContent = '';
+  if (percentEl) percentEl.textContent = '';
+  if (detailEl) {
+    detailEl.textContent = '';
+    detailEl.style.display = 'none';
+  }
 }
 
 export function showError(message) {

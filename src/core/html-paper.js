@@ -22,7 +22,7 @@ export function isUsableHtmlPaper({ ok, finalUrl, contentType, html }) {
   return isAr5ivHtmlAvailable({ ok, finalUrl, contentType }) && hasLtxDocument(html);
 }
 
-export async function loadHtmlPaper(source, arxivId, fetchImpl = fetch) {
+export async function loadHtmlPaper(source, arxivId, fetchImpl = fetch, onError = null) {
   const url = `${source.base}/${arxivId}`;
   try {
     const response = await fetchImpl(url, { method: 'GET', redirect: 'follow' });
@@ -48,6 +48,7 @@ export async function loadHtmlPaper(source, arxivId, fetchImpl = fetch) {
     };
   } catch (error) {
     logger.warn(`HTML source ${source.id} failed for ${arxivId}:`, error);
+    if (onError) onError(error);
     return null;
   }
 }

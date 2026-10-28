@@ -3,6 +3,7 @@
 import ar5ivConverter from './ar5iv-converter';
 import storage from '@utils/storage';
 import logger from '@utils/logger';
+import { isNetworkError } from '@utils/network-error';
 import {
   CONVERSION_TIER,
   CONVERSION_MODE,
@@ -97,6 +98,16 @@ class MainConverter {
       };
     } catch (ar5ivError) {
       logger.warn('Tier 1 failed:', ar5ivError.message);
+
+      // 断网时不再退回 PDF 下载（下载同样会失败，却会被当成"已保存"），直接给出明确提示
+      if (isNetworkError(ar5ivError)) {
+        return {
+          success: false,
+          tier: CONVERSION_TIER.AR5IV_LOCAL,
+          errorCode: 'NETWORK_OFFLINE',
+          error: ERROR_MESSAGES.NETWORK_OFFLINE,
+        };
+      }
 
       // Tier 2: PDF Fallback
       return this._fallbackToPdf(paperInfo, onProgress);

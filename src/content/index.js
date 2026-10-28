@@ -124,6 +124,17 @@ async function handleConversionTrigger(type = 'markdown') {
       return;
     }
 
+    // 断网时直接提示，不再发起注定失败的请求
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      if (activeButton) {
+        activeButton.disabled = false;
+        activeButton.style.opacity = '1';
+        activeButton.style.cursor = 'pointer';
+      }
+      showError(t.content_error_offline);
+      return;
+    }
+
     // Markdown 转换：通过 background script 处理
     const metadata = isArxivAbsPage
       ? metadataExtractor.extractFromAbsPage()
@@ -204,7 +215,11 @@ async function handleConversionTrigger(type = 'markdown') {
         }
 
         if (response && response.success === false) {
-          showError(response.error || t.content_error_generic);
+          showError(
+            response.errorCode === 'NETWORK_OFFLINE'
+              ? t.content_error_offline
+              : response.error || t.content_error_generic,
+          );
           return;
         }
 

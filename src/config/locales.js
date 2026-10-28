@@ -123,6 +123,7 @@ export const translations = {
     content_error_extension_reloaded:
       'Extension was updated or reloaded. Please refresh and try again.',
     content_error_generic: 'Conversion failed',
+    content_error_offline: 'Network connection failed. Check your connection and try again.',
     content_ar5iv_unavailable:
       'No HTML version is available for this paper. PDF fallback is still available.',
     content_auto_prompt_title: 'Auto-convert enabled',
@@ -254,6 +255,7 @@ export const translations = {
     content_error_extension_reloaded:
       '扩展已更新或重载，请刷新页面后重试。',
     content_error_generic: '转换失败',
+    content_error_offline: '网络连接失败，请检查网络后重试',
     content_ar5iv_unavailable:
       '该论文暂无 HTML 版本，仍可使用 PDF 兜底。',
     content_auto_prompt_title: '已开启自动转换',
