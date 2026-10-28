@@ -40,6 +40,7 @@ export function showTaskNotification(task, status, detail = '', provider = null)
 }
 
 export const parseTaskRunner = createParseTaskRunner({
+  permissions: typeof chrome !== 'undefined' && chrome.permissions ? chrome.permissions : null,
   registry: providerRegistry,
   taskManager,
   storage,

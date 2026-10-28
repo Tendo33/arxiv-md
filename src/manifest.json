@@ -26,6 +26,9 @@
     "https://mineru.net/*",
     "https://cdn-mineru.openxlab.org.cn/*"
   ],
+  "optional_host_permissions": [
+    "https://paddleocr.aistudio-app.com/*"
+  ],
   "background": {
     "service_worker": "background.js"
   },

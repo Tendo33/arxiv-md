@@ -5,6 +5,7 @@
 // - jobId 落盘后，SW 被杀也能按 jobId 续上轮询（R4-12 resume）
 import { ParseError, isParseError } from '@pdf-core/errors';
 import { normalizeMarkdown, shouldNormalize } from '@pdf-core/normalize/index';
+import { ensureProviderPermission } from '@pdf-core/permissions';
 import { TASK_STATUS } from '@config/constants';
 
 export const SYNC_PROVIDER_TIMEOUT_MS = 60 * 1000;
@@ -107,6 +108,10 @@ export function createParseTaskRunner(deps) {
       if (!provider) return { error: await fail(task, new ParseError('PROVIDER_FAILED', { reason: `unknown provider ${task.provider}` })) };
       const key = await storage.getProviderKey(provider.id);
       if (!key) return { error: await fail(task, new ParseError('AUTH_INVALID', { provider: provider.id }), provider) };
+      // R4-08：缺域名权限 → 不发任何请求，任务失败为 PERMISSION_MISSING（UI 显示“去设置授权”）
+      if (deps.permissions) {
+        try { await ensureProviderPermission(deps.permissions, provider); } catch (e) { return { error: await fail(task, e, provider) }; }
+      }
       const creds = { token: key };
       await taskManager.updateTask(taskId, { status: TASK_STATUS.PROCESSING, ...(task.jobId ? {} : { progress: 0 }) });
       try {
