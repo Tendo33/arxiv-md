@@ -56,3 +56,50 @@ describe('Round 2 审查：删除确认对话框会弹出', () => {
     await q;
   });
 });
+
+describe('设计验收 M8 + 焦点：取消显式聚焦，关闭后按 taskId 找回焦点', () => {
+  let document;
+  beforeEach(() => {
+    const html = fs.readFileSync(path.join(__dirname, '../src/ui/popup/popup.html'), 'utf8');
+    ({ document } = parseHTML(html));
+    global.document = document;
+  });
+  afterEach(() => { delete global.document; });
+
+  test('初始焦点是 cancelBtn（显式调用，不依赖 DOM 顺序）', async () => {
+    const cancel = document.getElementById('confirmCancel');
+    const ok = document.getElementById('confirmOk');
+    // 把主按钮挪到前面：仍然聚焦「取消」
+    ok.parentNode.insertBefore(ok, cancel);
+    const spy = jest.spyOn(cancel, 'focus');
+    const okSpy = jest.spyOn(ok, 'focus');
+    const p = showConfirm('x', { title: 't', okLabel: 'go', tone: 'brand' });
+    expect(spy).toHaveBeenCalled();
+    expect(okSpy).not.toHaveBeenCalled(); // linkedom 没有 activeElement，用 spy 判断
+    cancel.dispatchEvent(new document.defaultView.Event('click'));
+    await p;
+    const src = fs.readFileSync(path.join(__dirname, '../src/ui/popup/confirm-dialog.js'), 'utf8');
+    expect(src).toMatch(/cancelBtn\.focus\(\)/);
+  });
+
+  test('refocusTask：重绘后聚焦同一任务的按钮；任务没了 → #taskList', () => {
+    const { refocusTask } = require('../src/ui/popup/send-consent');
+    const list = document.getElementById('taskList');
+    expect(list.getAttribute('tabindex')).toBe('-1');
+    list.innerHTML = '<div class="row"><button data-action="consent" data-task-id="t1">a</button><button data-action="delete" data-task-id="t1">×</button></div>';
+    expect(refocusTask(document, 't1').dataset.action).toBe('consent');
+    list.innerHTML = '<div class="row"><button data-action="delete" data-task-id="t1">×</button></div>';
+    expect(refocusTask(document, 't1').dataset.action).toBe('delete');
+    list.innerHTML = '';
+    expect(refocusTask(document, 't1')).toBe(list);
+    // 行容器本身也带 data-task-id 但不可聚焦 → 不能选它
+    list.innerHTML = '<div class="row" data-task-id="t1"><span>x</span></div>';
+    expect(refocusTask(document, 't1')).toBe(list);
+  });
+
+  test('popup：handleConsent 在 loadTasks 之后 refocus；renderRecent 重绘保留焦点', () => {
+    const js = fs.readFileSync(path.join(__dirname, '../src/ui/popup/popup.js'), 'utf8');
+    expect(js).toMatch(/await loadTasks\(\);\s*refocusTask\(document, taskId\);/);
+    expect(js).toMatch(/innerHTML = list\.map\(createTaskRow\)\.join\(''\);\s*if \(keepId\) refocusTask\(document, keepId\);/);
+  });
+});

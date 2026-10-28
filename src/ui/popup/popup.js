@@ -5,7 +5,7 @@ import logger from '@utils/logger';
 import storage from '@utils/storage';
 import { translations } from '@config/locales';
 import { showConfirm } from './confirm-dialog';
-import { confirmSendFlow } from './send-consent';
+import { confirmSendFlow, refocusTask } from './send-consent';
 import { createTaskRow, setTaskListLanguage } from './task-list';
 import { pageContext, recentTasks } from './page-context';
 import { renderShortcutGuide } from './shortcut-guide';
@@ -243,7 +243,11 @@ function renderRecent() {
   $('taskList').classList.toggle('hidden', empty);
   if (empty) { $('recentAll').classList.add('hidden'); $('clearCompletedBtn').classList.add('hidden'); return; }
   const list = showAll ? recentTasks(currentTasks, Infinity) : recentTasks(currentTasks, 3);
+  // 设计验收 M8：重绘会替换掉行内按钮；焦点原本在任务行里就按 taskId 找回来，不让它掉到 body
+  const focused = document.activeElement;
+  const keepId = focused && $('taskList').contains(focused) && focused.dataset ? focused.dataset.taskId : null;
   $('taskList').innerHTML = list.map(createTaskRow).join('');
+  if (keepId) refocusTask(document, keepId);
   const more = currentTasks.length > 3;
   const all = $('recentAll');
   all.classList.toggle('hidden', !more);
@@ -287,7 +291,8 @@ async function taskCall(message, okKey, failKey, extra) {
 async function handleConsent(taskId, providerId) {
   const task = currentTasks.find((x) => x.id === taskId) || taskId;
   await confirmSendFlow(task, providerId, { showConfirm, sendMessage: (m) => chrome.runtime.sendMessage(m), tr: t() });
-  loadTasks();
+  await loadTasks();
+  refocusTask(document, taskId);
 }
 
 async function handleRetry(taskId) {

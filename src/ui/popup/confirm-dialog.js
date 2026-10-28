@@ -43,13 +43,10 @@ export function showConfirm(message, { title = null, okLabel = null, tone = 'dan
     overlay.removeAttribute('inert');
     overlay.classList.add('show');
 
+    // 初始焦点显式放在「取消」（破坏性最小，WAI-ARIA APG Alert Dialog），不依赖按钮的 DOM 顺序
     const focusFirst = () => {
-      const focusable = getFocusable();
-      if (focusable.length > 0) {
-        focusable[0].focus();
-      } else {
-        dialog.focus();
-      }
+      if (cancelBtn && !cancelBtn.disabled) cancelBtn.focus();
+      else dialog.focus();
     };
 
     const cleanup = () => {

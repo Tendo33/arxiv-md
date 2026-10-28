@@ -15,3 +15,15 @@ export async function confirmSendFlow(task, providerId, { showConfirm, sendMessa
   const res = await sendMessage({ type: 'CONFIRM_PDF_SEND', taskId: t.id });
   return !!(res && res.success);
 }
+
+/**
+ * 设计验收 M8：确认框关闭后任务列表会重绘，原来的「确认解析」按钮已被替换，焦点会掉到 body。
+ * 重绘后按 taskId 找回这一行的按钮；这一行没了就落到任务列表本身（#taskList tabindex=-1）。
+ */
+export function refocusTask(doc, taskId) {
+  const esc = String(taskId).replace(/["\\]/g, '\\$&');
+  const el = doc.querySelector(`[data-action="consent"][data-task-id="${esc}"]`) || doc.querySelector(`button[data-task-id="${esc}"]`);
+  const target = el || doc.getElementById('taskList');
+  if (target && typeof target.focus === 'function') target.focus();
+  return target;
+}
