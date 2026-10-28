@@ -27,6 +27,7 @@ export const STORAGE_KEYS = {
   AUTO_CONVERT: 'autoConvert',
   INCLUDE_METADATA: 'includeMetadata',
   SHOW_NOTIFICATIONS: 'showNotifications',
+  SHOW_PDF_FAB: 'showPdfFab',
   LANGUAGE: 'language',
 };
 
@@ -70,6 +71,7 @@ export const DEFAULTS = {
   CONVERSION_MODE: CONVERSION_MODE.FAST,
   AUTO_CONVERT: false,
   INCLUDE_METADATA: true,
+  SHOW_PDF_FAB: true,
   POLL_INTERVAL: 2000, // MinerU 轮询间隔（毫秒）
   MAX_POLL_ATTEMPTS: 150, // 最大轮询次数（5 分钟）
   REQUEST_TIMEOUT: 30000, // 请求超时（毫秒）

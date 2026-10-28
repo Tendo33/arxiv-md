@@ -113,6 +113,7 @@ export const translations = {
     toast_saved: '✅ Settings saved successfully',
     toast_save_failed: 'Could not save:',
     autosave_note: 'Changes are saved automatically',
+    advanced_pdf_fab: 'Show a floating export button on PDF pages',
     toast_reset: '✅ Settings reset to default',
     toast_stats_reset: '✅ Statistics reset successfully',
     confirm_reset: 'Are you sure you want to reset to default settings?',
@@ -131,6 +132,10 @@ export const translations = {
 
     // Content Script
     content_btn_markdown: 'Markdown',
+    content_fab_idle: 'Export Markdown',
+    content_fab_run: 'Exporting…',
+    content_fab_ok: 'Saved',
+    content_fab_err: 'Export failed, click to retry',
     content_btn_pdf: 'PDF',
     content_btn_bibtex: 'BibTeX',
     content_bibtex_copied: 'BibTeX copied',
@@ -276,6 +281,7 @@ export const translations = {
     toast_saved: '✅ 设置已保存',
     toast_save_failed: '保存失败：',
     autosave_note: '改动会自动保存',
+    advanced_pdf_fab: '在 PDF 页显示悬浮导出按钮',
     toast_reset: '✅ 已恢复默认设置',
     toast_stats_reset: '✅ 统计数据已重置',
     confirm_reset: '确定要恢复默认设置吗？',
@@ -293,6 +299,10 @@ export const translations = {
     token_toggle: '显示/隐藏 Token',
 
     // Content Script
+    content_fab_idle: '导出 Markdown',
+    content_fab_run: '导出中…',
+    content_fab_ok: '已保存',
+    content_fab_err: '导出失败，点击重试',
     content_btn_markdown: 'Markdown',
     content_btn_pdf: 'PDF',
     content_btn_bibtex: 'BibTeX',

@@ -105,6 +105,8 @@ async function loadSettings() {
     const includeMetadata = await storage.getIncludeMetadata();
     document.getElementById('includeMetadata').checked = includeMetadata;
 
+    document.getElementById('showPdfFab').checked = await storage.getShowPdfFab();
+
     logger.info('Settings loaded');
   } catch (error) {
     logger.error('Failed to load settings:', error);
@@ -190,6 +192,9 @@ async function resetSettings() {
 
     document.getElementById('includeMetadata').checked = true;
     await storage.setIncludeMetadata(true);
+
+    document.getElementById('showPdfFab').checked = true;
+    await storage.setShowPdfFab(true);
 
     showToast(t.toast_reset, 'success');
   } catch (error) {

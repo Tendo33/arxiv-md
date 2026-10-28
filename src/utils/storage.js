@@ -85,6 +85,15 @@ class StorageManager {
     await this.set(STORAGE_KEYS.AUTO_CONVERT, value);
   }
 
+  /** A3-1：PDF 页悬浮按钮开关（默认开） */
+  async getShowPdfFab() {
+    return this.get(STORAGE_KEYS.SHOW_PDF_FAB, DEFAULTS.SHOW_PDF_FAB);
+  }
+
+  async setShowPdfFab(value) {
+    await this.set(STORAGE_KEYS.SHOW_PDF_FAB, value);
+  }
+
   /**
    * 获取是否包含 Markdown 元数据
    * @returns {Promise<boolean>}

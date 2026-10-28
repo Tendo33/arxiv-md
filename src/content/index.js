@@ -8,6 +8,7 @@ import storage from '@utils/storage';
 import { translations } from '@config/locales';
 import { handleFileDownload, handleBlobDownload } from './page-download';
 import { handleHtmlToMarkdown } from './markdown-convert';
+import { mountPdfFab } from './pdf-fab';
 import { clearHint, injectConvertButton, setConversionHandler, setPageButtonText } from './page-buttons';
 import {
   clearProgressState,
@@ -52,6 +53,9 @@ async function init() {
 
   // 注入转换按钮
   await injectConvertButton();
+
+  // A3-1：PDF 页悬浮按钮（默认显示，设置里可关）
+  if (isArxivPdfPage) await setupPdfFab();
 
   // 监听来自 Background 的消息
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -349,3 +353,28 @@ async function fetchMetadataFromAbsPage() {
   return await metadataExtractor.fetchMetadataFromApi(arxivId);
 }
 
+
+let pdfFab = null;
+async function setupPdfFab() {
+  const show = await storage.getShowPdfFab().catch(() => true);
+  if (show) mountFab();
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'sync' || !changes.showPdfFab) return;
+    if (changes.showPdfFab.newValue === false) { if (pdfFab) { pdfFab.remove(); pdfFab = null; } }
+    else if (!pdfFab) mountFab();
+  });
+}
+
+function mountFab() {
+  pdfFab = mountPdfFab(document, {
+    labels: {
+      idle: t.content_fab_idle, run: t.content_fab_run, ok: t.content_fab_ok, err: t.content_fab_err,
+    },
+    onClick: () => {
+      const fab = pdfFab;
+      fab.setState('run');
+      onNextOutcome((res) => fab.setState(res && res.ok ? 'ok' : 'err'));
+      handleConversionTrigger('markdown');
+    },
+  });
+}

@@ -4,6 +4,7 @@ export const FIELDS = [
   { sel: '#showNotifications', read: (el) => el.checked, save: (s, v) => s.setShowNotifications(v) },
   { sel: '#autoConvert', read: (el) => el.checked, save: (s, v) => s.setAutoConvert(v) },
   { sel: '#includeMetadata', read: (el) => el.checked, save: (s, v) => s.setIncludeMetadata(v) },
+  { sel: '#showPdfFab', read: (el) => el.checked, save: (s, v) => s.setShowPdfFab(v) },
   // Token：change 在失焦且内容有变时触发；清空即删除已保存的 Token
   { sel: '#mineruToken', read: (el) => el.value.trim(), save: (s, v) => s.setMinerUToken(v) },
 ];
