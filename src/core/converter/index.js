@@ -16,6 +16,14 @@ import {
   showNotification,
 } from '@utils/helpers';
 import { incompleteNotification } from './incomplete-notification';
+import { converterNotification } from './converter-notifications';
+
+// 通知语言跟随扩展设置；取不到时交给 converterNotification 的默认规则，不能让通知拖垮转换
+function notifyLang() {
+  return Promise.resolve()
+    .then(() => storage.getLanguage())
+    .catch(() => null);
+}
 
 /**
  * 主转换器 - 智能三层降级架构
@@ -87,9 +95,9 @@ class MainConverter {
         });
       // AF3-01：导出明显少于页面时仍然保存，但通知、徽标和页内提示都改为「可能不完整」
       const incomplete = !!(result.integrity && result.integrity.complete === false);
+      // 通知语言跟随扩展设置（与 popup、页面条一致）
+      const lang = await notifyLang();
       if (incomplete) {
-        // 通知语言跟随扩展设置（与 popup、页面条一致）
-        const lang = await storage.getLanguage().catch(() => null);
         const n = incompleteNotification({
           expected: result.integrity.source.headings,
           actual: result.integrity.exported.headings,
@@ -97,7 +105,8 @@ class MainConverter {
         }, lang);
         showNotification(n.title, n.message, 'basic');
       } else {
-        showNotification('✅ 转换完成', `已保存：${filename}\n方式：${sourceLabel}`, 'basic');
+        const n = converterNotification('done', { filename, source: sourceLabel }, lang);
+        showNotification(n.title, n.message, 'basic');
       }
       logger.info('Tier 1 success:', filename);
 
@@ -184,11 +193,8 @@ class MainConverter {
           }
         }, 0);
 
-        showNotification(
-          '✅ MinerU 任务已提交',
-          `${title}\n正在后台处理，完成后将通知您\n可点击插件图标查看进度`,
-          'basic'
-        );
+        const n = converterNotification('task_submitted', { title }, await notifyLang());
+        showNotification(n.title, n.message, 'basic');
 
         logger.info('MinerU task submitted:', task.id);
 
@@ -217,11 +223,10 @@ class MainConverter {
             }
 
             if (response && response.success) {
-              showNotification(
-                '✅ MinerU 任务已提交',
-                `${title}\n正在后台处理，完成后将通知您\n可点击插件图标查看进度`,
-                'basic'
-              );
+              notifyLang().then((lang) => {
+                const n = converterNotification('task_submitted', { title }, lang);
+                showNotification(n.title, n.message, 'basic');
+              });
               logger.info('MinerU task submitted:', response.taskId);
 
               resolve({
@@ -272,17 +277,16 @@ class MainConverter {
 
       if (onProgress)
         onProgress({ tier: 'pdf', stage: 'completed', progress: 100 });
-      showNotification('ℹ️ 已保存为 PDF', `文件：${filename}`, 'basic');
+      const n = converterNotification('pdf_fallback', { filename }, await notifyLang());
+      showNotification(n.title, n.message, 'basic');
       logger.info('Tier 2 success:', filename);
 
       return { success: true, tier: CONVERSION_TIER.PDF_FALLBACK, filename };
     } catch (error) {
       logger.error('PDF download failed:', error);
-      showNotification(
-        '❌ 转换失败',
-        error.message || ERROR_MESSAGES.UNKNOWN_ERROR,
-        'basic',
-      );
+      // 原始错误只进日志（上一行），通知给通用文案
+      const n = converterNotification('convert_failed', {}, await notifyLang());
+      showNotification(n.title, n.message, 'basic');
       return {
         success: false,
         tier: CONVERSION_TIER.PDF_FALLBACK,
@@ -313,17 +317,16 @@ class MainConverter {
       const pdfUrl = paperInfo.pdfUrl || `${API.ARXIV_PDF}/${arxivId}.pdf`;
       await downloadFile(pdfUrl, filename);
 
-      showNotification('✅ PDF 已保存', `文件：${filename}`, 'basic');
+      const n = converterNotification('pdf_saved', { filename }, await notifyLang());
+      showNotification(n.title, n.message, 'basic');
       logger.info('PDF download success:', filename);
 
       return { success: true, filename };
     } catch (error) {
       logger.error('PDF download failed:', error);
-      showNotification(
-        '❌ 下载失败',
-        error.message || ERROR_MESSAGES.UNKNOWN_ERROR,
-        'basic',
-      );
+      // 原始错误只进日志（上一行），通知给通用文案
+      const n = converterNotification('download_failed', {}, await notifyLang());
+      showNotification(n.title, n.message, 'basic');
       return {
         success: false,
         error: error.message,

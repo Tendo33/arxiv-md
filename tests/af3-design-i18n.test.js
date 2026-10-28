@@ -58,7 +58,7 @@ describe('AF3 设计验收：_locales', () => {
 
   test('后台接线：不完整通知走 incompleteNotification，不再写死中文', () => {
     const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'core', 'converter', 'index.js'), 'utf8');
-    expect(src).toMatch(/const lang = await storage\.getLanguage\(\)[\s\S]{0,400}incompleteNotification\([\s\S]*?\}, lang\)/);
+    expect(src).toMatch(/const lang = await (?:storage\.getLanguage\(\)|notifyLang\(\))[\s\S]{0,400}incompleteNotification\([\s\S]*?\}, lang\)/);
     expect(src).not.toMatch(/导出可能不完整/);
   });
 
