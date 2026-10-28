@@ -71,3 +71,10 @@ body{min-width:320px}
 .row[data-status=awaiting_consent] .row-act .btn[data-action=consent]{max-width:7em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* 设计验收建议：「待确认」用等待样式（信息色 + 描边），和「处理中」（警示色）区分 */
 .badge.wait{background:var(--info-bg);color:var(--info);box-shadow:inset 0 0 0 1px currentColor}
+/* 设计验收 M3：英文窄宽下两个次按钮各占一半、文字省略，后端名换到按钮第二行 */
+.acts{grid-template-columns:repeat(2,minmax(0,1fr))}
+.acts .btn{min-width:0}
+.acts .btn>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acts #mineruBtn{flex-direction:column;gap:2px;padding-top:4px;padding-bottom:4px;line-height:1.2}
+.acts #mineruBtn .backend-label{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:339px){.acts{grid-template-columns:1fr}}
