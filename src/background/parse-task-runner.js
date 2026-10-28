@@ -119,7 +119,7 @@ export function createParseTaskRunner(deps) {
         // 复审 P2-A：Key 不跨设备同步。后端是选过的（sync 带过来）但本设备没有 Key → 明确提示在本设备重新填写
         const chosen = storage.getChosenPdfProvider ? await storage.getChosenPdfProvider().catch(() => null) : null;
         const info = chosen === provider.id
-          ? { provider: provider.id, reason: ERROR_REASONS.KEY_NOT_ON_DEVICE, message: `本设备还没有 ${provider.label} 的 Key（Key 不会跨设备同步），请在本设备的设置 › PDF 解析里重新填写` }
+          ? { provider: provider.id, reason: ERROR_REASONS.KEY_NOT_ON_DEVICE }  // 文案由 UI 按 reason 走 i18n（err_reason_key_not_on_device）
           : { provider: provider.id };
         return { error: await fail(task, new ParseError('AUTH_INVALID', info), provider) };
       }

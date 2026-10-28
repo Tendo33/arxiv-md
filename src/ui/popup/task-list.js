@@ -188,7 +188,10 @@ export function getTaskActions(task) {
  */
 export function createTaskRow(task) {
   const t = translations[currentLang];
-  const { id, status, progress, paperInfo = {}, createdAt, zipUrl, error } = task;
+  const { id, status, progress, paperInfo = {}, createdAt, zipUrl } = task;
+  // 三审 P3：有 errorReason 且有对应 err_reason_* 文案时按当前语言显示，否则沿用后台原文
+  const reasonMsg = task.errorReason && t[`err_reason_${task.errorReason}`];
+  const error = reasonMsg ? reasonMsg.replace(/\{provider\}/g, providerLabel(task.provider)) : task.error;
   const title = paperInfo.title || paperInfo.arxivId || '';
   // 设计验收 R3 建议 1：行内用短格式（11 min. ago），给标题留宽度
   const timeAgo = formatTimeAgo(createdAt, currentLang, t.popup_time_just_now, Date.now(), 'narrow');

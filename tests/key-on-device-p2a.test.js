@@ -101,7 +101,7 @@ describe('P2-A parse entry (runner)', () => {
     const r = await h.runner.process('t1');
     expect(r.error.code).toBe('AUTH_INVALID');
     expect(r.error.reason).toBe('key_not_on_device');
-    expect(r.error.message).toContain('请在本设备');
+    expect(r.error.message).not.toMatch(/[\u4e00-\u9fff]/); // 后台不再写死中文，UI 按 reason 翻译
     expect(p.submit).not.toHaveBeenCalled();
     expect(h.store.get('t1')).toMatchObject({ status: 'failed', errorCode: 'AUTH_INVALID', errorReason: 'key_not_on_device' });
   });
