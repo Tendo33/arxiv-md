@@ -7,6 +7,7 @@ import logger from '@utils/logger';
 import storage from '@utils/storage';
 import { TASK_STATUS } from '@config/constants';
 import { deletedTaskGuard, processMinerUTaskInBackground } from './mineru-task-runner';
+import { KEEP_ALIVE_ALARM, syncKeepAlive } from './keep-alive';
 
 logger.info('Background service worker initialized');
 
@@ -59,6 +60,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // 内部消息：触发任务处理（从 converter 调用）
     if (message.taskId) {
       processMinerUTaskInBackground(message.taskId);
+      refreshKeepAlive();
     }
     return false;
 
@@ -174,6 +176,7 @@ async function _doStartMinerUTask(paperInfo, sendResponse, skipDuplicateCheck) {
     // 使用 Promise.resolve().then() 而非 setImmediate（浏览器兼容）
     Promise.resolve().then(() => {
       processMinerUTaskInBackground(task.id);
+      refreshKeepAlive();
     });
   } catch (error) {
     logger.error('Failed to start MinerU task:', error);
@@ -249,6 +252,7 @@ async function handleRetryTask(taskId, sendResponse) {
 
     // 重新处理
     processMinerUTaskInBackground(taskId);
+    refreshKeepAlive();
   } catch (error) {
     logger.error('Failed to retry task:', error);
     sendResponse({ success: false, error: error.message });
@@ -308,13 +312,21 @@ if (chrome.commands && chrome.commands.onCommand) {
   logger.warn('chrome.commands API not available');
 }
 
-// 保持 Service Worker 活跃（使用 chrome.alarms，符合 MV3 规范）
-chrome.alarms.create('keepAlive', { periodInMinutes: 0.4 });
+// 仅在有进行中的 MinerU 任务时保持 Service Worker 活跃，空闲时清除 alarm
+async function refreshKeepAlive() {
+  try {
+    await syncKeepAlive(chrome.alarms, await taskManager.getStatistics());
+  } catch (error) {
+    logger.warn('Failed to sync keep-alive alarm:', error);
+  }
+}
+
 chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === 'keepAlive') {
-    logger.debug('Keep alive alarm');
+  if (alarm.name === KEEP_ALIVE_ALARM) {
+    refreshKeepAlive();
   }
 });
+refreshKeepAlive();
 
 // 导出函数供其他模块使用
 export { processMinerUTaskInBackground };
