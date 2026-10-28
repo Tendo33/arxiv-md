@@ -57,6 +57,7 @@ class Ar5ivConverter {
         '.ltx_title.ltx_title_document, h1.ltx_title, .ltx_title',
       );
       if (titleEl) {
+        titleEl.querySelectorAll('.ltx_pubnotes, .ltx_note').forEach((note) => note.remove());
         titleEl.querySelectorAll('br, .ltx_break').forEach((br) => {
           br.replaceWith(document.createTextNode(' '));
         });
