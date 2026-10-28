@@ -8,7 +8,7 @@
 
 1. `标准模式`
    官方 arXiv HTML，再 ar5iv，拉取与清洗 -> 页面内 Markdown 转换 -> 两者都失败时回退到 PDF
-2. `MinerU 模式`
+2. `PDF 解析模式`
    后台创建任务 -> 轮询 MinerU -> 下载 ZIP -> 在 Popup 中管理任务
 
 ## 运行时分层
@@ -68,7 +68,7 @@
 职责拆分：
 
 - `index.js`
-  决定走标准模式还是 MinerU 模式
+  决定走标准模式还是 PDF 解析模式
 - `html-paper.js`
   先请求官方 `https://arxiv.org/html/{id}`，不可用时再请求 ar5iv。可用的响应必须不是摘要页重定向，并且包含 `article.ltx_document`
 - `ar5iv-converter.js`
@@ -134,7 +134,7 @@
 10. 后台通知内容脚本触发下载。frontmatter 的 `source` 为 `arxiv-html` 或 `ar5iv`
 11. 如果两份 HTML 都不可用或转换失败，后台直接回退到 PDF 下载
 
-### MinerU 模式链路
+### PDF 解析模式链路
 
 1. 用户在设置页启用 `always`
 2. 点击 `Markdown`
@@ -195,7 +195,7 @@
 其中最关键的边界差异是：
 
 - 标准模式：先从 `arxiv.org/html` 拉 HTML，没有可转换正文时再从 ar5iv 拉，然后本地转 Markdown
-- MinerU 模式：把 arXiv PDF URL 和 Token 发给 MinerU
+- PDF 解析模式：把 arXiv PDF URL 和 Token 发给 MinerU
 
 ## 最容易误读的几点
 

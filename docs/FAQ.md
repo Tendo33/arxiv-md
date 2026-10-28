@@ -13,7 +13,7 @@
 这取决于设置页里的默认模式：
 
 - `标准模式`：先尝试官方 arXiv HTML，再尝试 ar5iv，两者都不可用或转换失败时回退到 PDF
-- `MinerU 模式`：直接把 arXiv PDF URL 提交给 MinerU，后台异步处理
+- `PDF 解析模式`：直接把 arXiv PDF URL 提交给 MinerU，后台异步处理
 
 按钮副标题会显示当前模式是 `HTML` 还是 `MinerU`。
 
@@ -55,7 +55,7 @@
 不是。当前实现里：
 
 - 标准模式：`官方 arXiv HTML -> ar5iv -> PDF`
-- MinerU 模式：单独的手动默认模式，需要 Token
+- PDF 解析模式：单独的手动默认模式，需要 Token
 
 也就是说，标准模式不会在 HTML 失败后自动切到 MinerU。
 

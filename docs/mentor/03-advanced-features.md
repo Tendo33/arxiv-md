@@ -85,7 +85,7 @@
 - 设置和统计在 `chrome.storage.sync`
 - 任务在 `chrome.storage.local`
 - MinerU Token 会进入同步存储
-- MinerU 模式会把 arXiv PDF URL 发给第三方服务
+- PDF 解析模式会把 arXiv PDF URL 发给第三方服务
 
 这直接影响两类文档：
 
