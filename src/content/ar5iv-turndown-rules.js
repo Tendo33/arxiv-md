@@ -282,7 +282,11 @@ export function addAr5ivTurndownRules(turndownService, options = {}) {
       const text = node.textContent.replace(/^\n+|\s+$/g, '');
       if (!text) return '';
       const fence = /```/.test(text) ? '~~~~' : '```';
-      return `\n\n${fence}${guessCodeLanguage(text)}\n${text}\n${fence}\n\n`;
+      let lang = guessCodeLanguage(text);
+      // AA3-01：启发式只对 ltx_verbatim 生效，且源 HTML 已标语言（ltx_lst_language_*）时不猜
+      if (!lang && node.classList?.contains('ltx_verbatim')
+        && !/\bltx_lst_language_/.test(node.className || '') && guessPythonByHints(text)) lang = 'python';
+      return `\n\n${fence}${lang}\n${text}\n${fence}\n\n`;
     },
   });
 
@@ -315,15 +319,40 @@ export function addAr5ivTurndownRules(turndownService, options = {}) {
   });
 }
 
-const PYTHON_HINTS = [
-  /\bre\.(?:compile|match|search|sub|findall|fullmatch)\(/, // 标准库 re
-  /[=(,]\s*(?:rf|fr|rb|br|[rfb])"/i, // r"" f"" rf"" 字符串前缀
+// AA3-01（审查 B1 后收紧）：强特征只认 Python 才有的写法；弱特征只用来凑第二条。
+const PYTHON_STRONG = [
+  /\bre\.(?:compile|match|search|sub|findall|fullmatch)\(/, // 标准库 re 调用
+  /\bre\.(?:IGNORECASE|MULTILINE|DOTALL|VERBOSE)\b/, // re 标志
+  /\b(?:re\.)?\w+\(\s*(?:rf|fr|rb|br|[rfb])"/i, // 作为函数实参的 r"" / f"" / rf""（TOML 的 key = r"x" 不算）
+  /(?:'[^'\n]*'|"[^"\n]*")\.join\(/, // '…'.join(
+];
+const PYTHON_WEAK = [
   /^\w+ = [[{(]\s*$/m, // 多行列表 / 字典 / 元组赋值的开头
   /,\s+#\s?\S/, // 元素后的 # 行内注释
-  /\bre\.(?:IGNORECASE|MULTILINE|DOTALL|VERBOSE)\b/,
   /\bself\.\w+/,
-  /'\S*'\.join\(|"\S*"\.join\(/,
 ];
+// 其他语言的排他特征：命中任一条就不标 python
+const NOT_PYTHON = [
+  /^\s*end\s*$/m, // Ruby / Julia / Lua 的独立 end
+  /(?:^|[^\w@])@\w+/m, // Ruby 实例变量 / Julia 宏（Python 装饰器也会排除，宁可不标）
+  /<-/, // R / 伪代码赋值
+  /\b(?:println|puts|printf|console\.log)\b/,
+  /[;{]\s*$/m, // C / JS 行尾
+  /\b(?:const|let|var|function)\s+\w/, // JS
+  /=>|===/,
+];
+
+/**
+ * AA3-01：只给 ltx_verbatim（源 HTML 不带语言）用。至少 1 条强特征 + 另 1 条（强或弱），且不含其他语言排他特征。
+ */
+export function guessPythonByHints(code) {
+  const text = String(code || '');
+  if (NOT_PYTHON.some((re) => re.test(text))) return false;
+  const strong = PYTHON_STRONG.filter((re) => re.test(text)).length;
+  const weak = PYTHON_WEAK.filter((re) => re.test(text)).length;
+  return strong >= 1 && strong + weak >= 2;
+}
+
 
 /**
  * R1-03：LaTeXML 的 verbatim/listing 不带语言，按内容保守猜测；拿不准就不写。
@@ -331,9 +360,6 @@ const PYTHON_HINTS = [
 export function guessCodeLanguage(code) {
   const text = String(code || '');
   if (/^\s*(?:import [\w.]+(?: as \w+)?|from [\w.]+ import |def \w+\(.*\):|class \w+(?:\(.*\))?:)\s*$/m.test(text)) return 'python';
-  // AA3-01：没有 import/def 的 Python 片段（如 2402.19173 附录 A.3 的 license_file_names 列表 + re.compile）。
-  // 至少命中两条 Python 特有写法才标注，避免把伪代码或其他语言误标成 python。
-  if (PYTHON_HINTS.filter((re) => re.test(text)).length >= 2) return 'python';
   if (/^\s*(?:\$ )?(?:pip|conda|git|python3?|bash|sh|cd|export) \S/m.test(text) && !/[;{}]\s*$/m.test(text)) return 'bash';
   if (/^\s*#include\s*[<"]/m.test(text)) return 'cpp';
   if (/^\s*(?:const|let|function) \w+/m.test(text) && /[;{}]\s*$/m.test(text)) return 'javascript';
