@@ -53,9 +53,11 @@ class Ar5ivConverter {
 
       // 提取标题
       let title = '';
-      const titleEl = document.querySelector(
+      const titleSource = document.querySelector(
         '.ltx_title.ltx_title_document, h1.ltx_title, .ltx_title',
       );
+      // 在副本上去掉 pubnotes 取纯标题；原节点保留，内容脚本会把 pubnotes 转成脚注
+      const titleEl = titleSource ? titleSource.cloneNode(true) : null;
       if (titleEl) {
         titleEl.querySelectorAll('.ltx_pubnotes, .ltx_note').forEach((note) => note.remove());
         titleEl.querySelectorAll('br, .ltx_break').forEach((br) => {
