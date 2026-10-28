@@ -37,3 +37,10 @@ describe('design S3: row actions right-aligned, awaiting title >= 80px', () => {
     expect(js).toMatch(/\$\{title\} · \$\{providerLabel\(task\.provider\)\}/);
   });
 });
+
+describe('design S4: requires-key chip not uppercased', () => {
+  test('settings.css sets text-transform:none on the key chip', () => {
+    const css = require('fs').readFileSync(require('path').join(__dirname, '../src/ui/settings/settings.css'), 'utf8');
+    expect(css).toMatch(/\.mode-badge\[data-i18n="mode_requires_token"\]\s*\{\s*text-transform:\s*none;/);
+  });
+});

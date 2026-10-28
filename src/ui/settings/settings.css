@@ -266,6 +266,11 @@ body {
   letter-spacing: 0.05em;
 }
 
+/* 设计复核 S4：「需要 Key」chip 不转大写，保持 Key 的写法 */
+.mode-badge[data-i18n="mode_requires_token"] {
+  text-transform: none;
+}
+
 .mode-badge-recommended {
   background: var(--accent);
   color: var(--on-accent);
