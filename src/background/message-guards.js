@@ -32,8 +32,16 @@ export function triggerConversionInActiveTab(tabsApi, runtime, log = () => {}, h
   tabsApi.query({ active: true, currentWindow: true }, (tabs) => {
     const tab = tabs && tabs[0];
     if (!tab || tab.id == null) return;
-    const undelivered = () => hooks.onUndelivered && hooks.onUndelivered(tab.id);
-    if (hooks.onSent) hooks.onSent(tab.id);
+    // 徽标钩子只是反馈：任何异常都吞掉，不能阻断 sendMessage（A2-01）
+    const safeHook = (name) => {
+      try {
+        if (hooks[name]) hooks[name](tab.id);
+      } catch (err) {
+        log(`徽标更新失败：${err && err.message}`);
+      }
+    };
+    const undelivered = () => safeHook('onUndelivered');
+    safeHook('onSent');
     const onDone = () => {
       const err = runtime && runtime.lastError;
       if (err) {

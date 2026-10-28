@@ -9,31 +9,47 @@ export const BADGE = {
 };
 export const BADGE_CLEAR_MS = { running: 120000, success: 4000, error: 6000 };
 
-export function createActionBadge(actionApi, timers = { setTimeout, clearTimeout }) {
+// A2-01：Chrome 里 setTimeout/clearTimeout 脱离 globalThis 调用会抛 "Illegal invocation"，
+// 所以默认实现用箭头函数包一层，调用时 this 仍是全局对象。
+const defaultTimers = {
+  setTimeout: (fn, ms) => setTimeout(fn, ms),
+  clearTimeout: (id) => clearTimeout(id),
+};
+
+// setBadgeText 等在 MV3 返回 Promise，标签页已关闭时会 reject；同步抛错也一并吞掉
+const safeCall = (fn) => {
+  try {
+    const r = fn();
+    if (r && typeof r.catch === 'function') r.catch(() => {});
+  } catch (_) { /* tab 已关闭 */ }
+};
+
+export function createActionBadge(actionApi, timers = defaultTimers) {
   const pending = new Map(); // tabId -> clear timer
   const shortcutTabs = new Set();
 
   const clear = (tabId) => {
-    if (pending.has(tabId)) timers.clearTimeout(pending.get(tabId));
-    pending.delete(tabId);
     try {
-      actionApi.setBadgeText({ tabId, text: '' });
-    } catch (_) { /* tab 已关闭 */ }
+      if (pending.has(tabId)) timers.clearTimeout(pending.get(tabId));
+    } catch (_) { /* 计时器异常不影响清除徽标 */ }
+    pending.delete(tabId);
+    if (actionApi) safeCall(() => actionApi.setBadgeText({ tabId, text: '' }));
   };
 
   const show = (tabId, state) => {
     const badge = BADGE[state];
     if (!badge || tabId == null || !actionApi) return;
-    if (pending.has(tabId)) timers.clearTimeout(pending.get(tabId));
     try {
-      actionApi.setBadgeBackgroundColor({ tabId, color: badge.color });
-      actionApi.setBadgeText({ tabId, text: badge.text });
-    } catch (_) { return; }
-    pending.set(tabId, timers.setTimeout(() => {
+      if (pending.has(tabId)) timers.clearTimeout(pending.get(tabId));
       pending.delete(tabId);
-      if (state !== 'running') shortcutTabs.delete(tabId);
-      clear(tabId);
-    }, BADGE_CLEAR_MS[state]));
+      safeCall(() => actionApi.setBadgeBackgroundColor({ tabId, color: badge.color }));
+      safeCall(() => actionApi.setBadgeText({ tabId, text: badge.text }));
+      pending.set(tabId, timers.setTimeout(() => {
+        pending.delete(tabId);
+        if (state !== 'running') shortcutTabs.delete(tabId);
+        clear(tabId);
+      }, BADGE_CLEAR_MS[state]));
+    } catch (_) { /* 徽标只是反馈，出错不能影响转换 */ }
   };
 
   return {
