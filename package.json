@@ -9,6 +9,7 @@
     "dev": "webpack --mode development --watch",
     "lint": "eslint src/**/*.js",
     "test": "jest --runInBand",
+    "test:e2e": "npm run build && node scripts/e2e-shortcut.js",
     "package": "npm run build && node scripts/package.js"
   },
   "dependencies": {
