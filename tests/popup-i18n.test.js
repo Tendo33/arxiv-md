@@ -50,7 +50,7 @@ describe('R4-15 popup 文案泛化', () => {
       expect(translations.en[key]).not.toMatch(/MinerU/);
       expect(translations.zh[key]).not.toMatch(/MinerU/);
     }
-    expect(translations.zh.popup_btn_mineru).toBe('PDF 高质量解析');
+    expect(translations.zh.popup_btn_mineru).toBe('PDF 解析');
     expect(translations.en.popup_recent).toBe('PDF parsing tasks');
     expect(document.getElementById('backendLabel')).toBeTruthy();
     expect(document.getElementById('mineruBtn').getAttribute('aria-describedby')).toBe('backendLabel');

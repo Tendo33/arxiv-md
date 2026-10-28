@@ -35,7 +35,9 @@ export function arxivIdFromLink(url, isValid) {
 /** 生成菜单项（纯函数） */
 export function buildMenuItems(lang, { shortcut = '', hasToken = false, provider = 'mineru' } = {}) {
   const t = translations[lang] || translations.en;
-  const pageTitle = shortcut ? `${t.menu_page_download} (${shortcut})` : t.menu_page_download;
+  const pageTitle = shortcut
+    ? t.menu_with_shortcut.replace('{label}', t.menu_page_download).replace('{shortcut}', shortcut)
+    : t.menu_page_download;
   // R4-15：id 保持 page-mineru（兼容）；只在当前后端已配 Key 时显示
   const items = [{ id: MENU.PAGE, title: pageTitle, contexts: ['page'], documentUrlPatterns: PAGE_PATTERNS }];
   if (hasToken) {

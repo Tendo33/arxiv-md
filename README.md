@@ -30,7 +30,7 @@
 - **PDFs named by title**: `Attention Is All You Need (2017).pdf` instead of `1706.03762.pdf`.
 - **Copy BibTeX**: uses arXiv's official citation, or builds one from the page title, authors and year.
 - **Copy for AI or notes**: after a conversion, a result card on the page offers "Copy Markdown".
-- **Optional PDF high-quality parsing**: with your own API key, the PDF is parsed in the background by the provider you pick in Settings — PaddleOCR (default, free quota) or MinerU; PaddleOCR results are saved as a `.md` file (a ZIP when there are images), MinerU results as its original ZIP; progress shows in the popup.
+- **Optional PDF parsing**: with your own API key, the PDF is parsed in the background by the provider you pick in Settings — PaddleOCR (default, free quota) or MinerU; PaddleOCR results are saved as a `.md` file (a ZIP when there are images), MinerU results as its original ZIP; progress shows in the popup.
 - **Several entry points**: page buttons, toolbar popup, context menu, keyboard shortcut, and a floating button on PDF pages.
 - **Chinese and English UI**, light and dark themes.
 
@@ -59,7 +59,7 @@ Open `chrome://extensions`, enable Developer mode, click "Load unpacked" and pic
 
 1. Open any arXiv paper, e.g. <https://arxiv.org/abs/1706.03762>.
 2. Click `Markdown` on the page to convert with your default mode and download a `.md` file.
-3. Or click the toolbar icon and choose Export Markdown, PDF parsing (HQ), or Download PDF.
+3. Or click the toolbar icon and choose Export Markdown, PDF parsing, or Download PDF.
 
 | Entry point | What it does |
 | --- | --- |
@@ -115,7 +115,7 @@ Changes are saved automatically.
 ## FAQ
 
 **Why did I get a PDF instead of Markdown?**
-Neither the official HTML nor ar5iv has a convertible version of that paper, so Standard mode falls back to the PDF. Try PDF high-quality parsing.
+Neither the official HTML nor ar5iv has a convertible version of that paper, so Standard mode falls back to the PDF. Try PDF parsing.
 
 **Are images downloaded?**
 No. Images in the Markdown are remote links to arXiv / ar5iv.

@@ -30,7 +30,7 @@ describe('C-3 右键菜单', () => {
     const page = items.find((i) => i.id === MENU.PAGE);
     expect(page.contexts).toEqual(['page']);
     expect(page.documentUrlPatterns).toEqual(PAGE_PATTERNS);
-    expect(page.title).toBe('导出本论文为 Markdown (Alt+Shift+M)');
+    expect(page.title).toBe('导出本论文为 Markdown（Alt+Shift+M）');
     const link = items.find((i) => i.id === MENU.LINK);
     expect(link.contexts).toEqual(['link']);
     expect(link.targetUrlPatterns).toEqual(LINK_PATTERNS);

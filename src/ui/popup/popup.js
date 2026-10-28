@@ -87,7 +87,7 @@ async function loadActiveProvider() {
 
 function renderBackend() {
   const el = $('backendLabel');
-  if (el) el.textContent = `(${providerLabel(active.id)})`;
+  if (el) el.textContent = (t().popup_backend || '({provider})').replace('{provider}', providerLabel(active.id));
   // 复审 P2-A：后端随 sync 过来了，但 Key 不同步 → 打开弹窗就提示在本设备重新填写
   renderKeyHint(document, active, t(), providerLabel(active.id));
 }

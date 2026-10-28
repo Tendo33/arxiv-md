@@ -28,7 +28,7 @@
 - **PDF 按标题命名**：不再是 `1706.03762.pdf`，而是 `Attention Is All You Need (2017).pdf` 这样的文件名。
 - **BibTeX 一键复制**：取 arXiv 官方引用；取不到时用页面上的标题、作者和年份生成。
 - **复制给 AI 或笔记**：转换成功后页面上保留结果卡片，可一键「复制 Markdown」。
-- **PDF 高质量解析（可选）**：填入你自己的 API Key 后，可把 PDF 交给设置里选定的后端在后台解析，支持 PaddleOCR（默认，免费额度）和 MinerU；PaddleOCR 结果保存为 `.md` 文件（带图片时为 ZIP 包），MinerU 保留原始 ZIP 包，任务进度在弹窗里查看。
+- **PDF 解析（可选）**：填入你自己的 API Key 后，可把 PDF 交给设置里选定的后端在后台解析，支持 PaddleOCR（默认，免费额度）和 MinerU；PaddleOCR 结果保存为 `.md` 文件（带图片时为 ZIP 包），MinerU 保留原始 ZIP 包，任务进度在弹窗里查看。
 - **多个入口**：页面按钮、工具栏弹窗、右键菜单、快捷键，PDF 页右下角还有悬浮按钮。
 - **中英文界面**，支持浅色和深色模式。
 
@@ -57,7 +57,7 @@ npm run build
 
 1. 打开任意 arXiv 论文页，例如 <https://arxiv.org/abs/1706.03762>。
 2. 点击页面上的 `Markdown` 按钮，按设置里的默认模式转换并下载 `.md`。
-3. 也可以点击工具栏图标，在弹窗里「导出 Markdown」「PDF 高质量解析」或「下载 PDF」。
+3. 也可以点击工具栏图标，在弹窗里「导出 Markdown」「PDF 解析」或「下载 PDF」。
 
 | 入口 | 说明 |
 | --- | --- |
@@ -113,7 +113,7 @@ npm run build
 ## 常见问题
 
 **为什么有的论文导出的是 PDF？**
-官方 HTML 和 ar5iv 都没有这篇论文的可转换版本时，标准模式会回退为下载 PDF。想要 Markdown 可以改用 PDF 高质量解析。
+官方 HTML 和 ar5iv 都没有这篇论文的可转换版本时，标准模式会回退为下载 PDF。想要 Markdown 可以改用 PDF 解析。
 
 **图片会下载到本地吗？**
 不会。Markdown 里的图片是指向 arXiv / ar5iv 的远程链接。

@@ -30,7 +30,7 @@ class MainConverter {
     const mineruToken = await storage.getMinerUToken();
     const includeMetadata = await storage.getIncludeMetadata();
 
-    // popup「MinerU 高质量」按钮（C-2）带 forceMineru：有 Token 就直接走 MinerU
+    // popup「PDF 解析」按钮（C-2）带 forceMineru：有 Key 就直接走 PDF 解析
     if ((mode === CONVERSION_MODE.ALWAYS_MINERU || paperInfo.forceMineru) && mineruToken) {
       return this._convertWithMinerU(paperInfo, onProgress, tabId);
     }
