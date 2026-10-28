@@ -48,4 +48,13 @@ describe('AF3 设计验收：页面条', () => {
     const css = PAGE_BUTTON_STYLES;
     expect(css).toMatch(/\.progress-file\s*\{[^}]*color:\s*var\(--amd-text-2\)/);
   });
+  // AF3 复审 P3：文件名按纯文本写入，HTML 不会被解析或执行
+  test('文件名里的 <img onerror> 只作为文本显示，不生成 img', () => {
+    const name = '<img src=x onerror=alert(1)>.md';
+    showResult({ filename: name, integrity: { expectedSections: 58, exportedSections: 25 } });
+    const file = document.querySelector('.arxiv-md-progress .progress-file');
+    expect(file.textContent).toContain(name);
+    expect(file.children.length).toBe(0);
+    expect(document.querySelector('.arxiv-md-progress img')).toBeNull();
+  });
 });
