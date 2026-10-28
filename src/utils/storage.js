@@ -2,7 +2,7 @@
 
 import { STORAGE_KEYS, DEFAULTS } from '@config/constants';
 import logger from './logger';
-import { PROVIDER_KEYS_KEY } from './migrations';
+import { PROVIDER_KEYS_KEY, PDF_PROVIDER_KEY, pickPdfProvider } from './migrations';
 
 /**
  * Storage Manager - 封装 Chrome Storage API
@@ -74,6 +74,21 @@ class StorageManager {
   async clearProviderKeys() {
     await chrome.storage.local.remove(PROVIDER_KEYS_KEY);
     await chrome.storage.sync.remove(STORAGE_KEYS.MINERU_TOKEN).catch(() => {});
+  }
+
+  /**
+   * R4-13：当前 PDF 解析后端（规则见 pickPdfProvider）
+   * @param {(id:string)=>boolean} [isKnown] 传入注册表校验，未知值按未设置处理
+   */
+  async getPdfProvider(isKnown) {
+    const { [PDF_PROVIDER_KEY]: pdfProvider } = await chrome.storage.sync.get(PDF_PROVIDER_KEY);
+    const hasMinerUToken = !!(await this.getProviderKey('mineru'));
+    return pickPdfProvider({ pdfProvider, hasMinerUToken, isKnown });
+  }
+
+  /** @param {string} providerId */
+  async setPdfProvider(providerId) {
+    await chrome.storage.sync.set({ [PDF_PROVIDER_KEY]: providerId });
   }
 
   /** 兼容旧调用：等价于 getProviderKey('mineru') */

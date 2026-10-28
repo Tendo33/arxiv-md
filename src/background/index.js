@@ -223,8 +223,8 @@ async function handleCheckAr5iv(arxivId, sendResponse) {
  */
 async function resolvePdfProvider(requested) {
   if (requested && providerRegistry.has(requested)) return requested;
-  const { pdfProvider } = await chrome.storage.sync.get('pdfProvider');
-  return pdfProvider && providerRegistry.has(pdfProvider) ? pdfProvider : 'mineru';
+  // R4-13：已选 → 用它；老用户有 MinerU token → mineru；否则 paddleocr
+  return storage.getPdfProvider((id) => providerRegistry.has(id));
 }
 
 async function _doStartPdfTask(paperInfo, sendResponse, skipDuplicateCheck, requestedProvider) {

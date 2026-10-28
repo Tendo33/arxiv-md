@@ -7,6 +7,18 @@ export const SCHEMA_VERSION = 2;
 export const SCHEMA_VERSION_KEY = 'schemaVersion';
 export const PROVIDER_KEYS_KEY = 'providerKeys';
 export const PDF_PROVIDER_KEY = 'pdfProvider';
+/** R4-13：新用户默认后端（不带 Key，第一次走 PDF 路径时引导去设置） */
+export const DEFAULT_PDF_PROVIDER = 'paddleocr';
+
+/**
+ * R4-13 默认后端规则：①已存在 pdfProvider → 用它；②有 MinerU token → mineru；③其他 → paddleocr
+ * @param {{pdfProvider?:string, hasMinerUToken?:boolean, isKnown?:(id:string)=>boolean}} s
+ */
+export function pickPdfProvider({ pdfProvider, hasMinerUToken, isKnown = () => true } = {}) {
+  if (pdfProvider && isKnown(pdfProvider)) return pdfProvider;
+  if (hasMinerUToken) return 'mineru';
+  return DEFAULT_PDF_PROVIDER;
+}
 
 /**
  * 步骤顺序保证中途失败可重跑：
