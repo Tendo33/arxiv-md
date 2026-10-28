@@ -44,7 +44,9 @@ module.exports = (env, argv) => ({
         { from: "src/ui/settings/settings.html", to: "settings.html" },
         { from: "src/ui/settings/settings.css", to: "settings.css" },
         { from: "src/ui/shared/ui-v2.css", to: "ui-v2.css" },
-        { from: "assets", to: "assets" },
+        // R3 perf：只拷扩展实际用到的资源，README 截图（paper-page.png / popup.png）不进包
+        { from: "assets/icon-*.png", to: "assets/[name][ext]" },
+        { from: "assets/icon.svg", to: "assets/icon.svg" },
       ],
     }),
   ],
