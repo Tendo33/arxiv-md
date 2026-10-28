@@ -11,7 +11,7 @@ export function addAr5ivTurndownRules(turndownService, options = {}) {
     replacement: (content, node) => {
       if (isEmptyTable(node)) return '';
       if (isSimpleTable(node, mathMap)) {
-        return '\n\n' + tableToGfm(node, turndownService) + '\n\n';
+        return '\n\n' + tableToGfm(node, turndownService, mathMap) + '\n\n';
       }
       const clone = node.cloneNode(true);
       [clone, ...clone.querySelectorAll('*')].forEach((el) => {
@@ -275,6 +275,17 @@ export function addAr5ivTurndownRules(turndownService, options = {}) {
     },
   });
 
+  // 自定义规则：verbatim / listing 代码块，附语言标记（R1-03）
+  turndownService.addRule('arxivPre', {
+    filter: (node) => node.nodeName === 'PRE' && !node.closest('.ltx_table_text, .ltx_algorithm_converted'),
+    replacement: (content, node) => {
+      const text = node.textContent.replace(/^\n+|\s+$/g, '');
+      if (!text) return '';
+      const fence = /```/.test(text) ? '~~~~' : '```';
+      return `\n\n${fence}${guessCodeLanguage(text)}\n${text}\n${fence}\n\n`;
+    },
+  });
+
   // 自定义规则：处理 figure 中的表格标题
   turndownService.addRule('arxivTableCaption', {
     filter: (node) => {
@@ -304,6 +315,26 @@ export function addAr5ivTurndownRules(turndownService, options = {}) {
   });
 }
 
+/**
+ * R1-03：LaTeXML 的 verbatim/listing 不带语言，按内容保守猜测；拿不准就不写。
+ */
+export function guessCodeLanguage(code) {
+  const text = String(code || '');
+  if (/^\s*(?:import [\w.]+(?: as \w+)?|from [\w.]+ import |def \w+\(.*\):|class \w+(?:\(.*\))?:)\s*$/m.test(text)) return 'python';
+  if (/^\s*(?:\$ )?(?:pip|conda|git|python3?|bash|sh|cd|export) \S/m.test(text) && !/[;{}]\s*$/m.test(text)) return 'bash';
+  if (/^\s*#include\s*[<"]/m.test(text)) return 'cpp';
+  if (/^\s*(?:const|let|function) \w+/m.test(text) && /[;{}]\s*$/m.test(text)) return 'javascript';
+  if (/^\s*[{[]/.test(text)) {
+    try {
+      JSON.parse(text);
+      return 'json';
+    } catch {
+      /* not json */
+    }
+  }
+  return '';
+}
+
 function isEmptyTable(table) {
   return !table.textContent.replace(/\s+/g, '')
     && !table.querySelector('img, object, embed, math');
@@ -324,13 +355,24 @@ function isSimpleTable(table, mathMap) {
   if (!width || rows.some((r) => r.querySelectorAll('td, th').length !== width)) return false;
   if (mathMap) {
     const ids = table.textContent.match(/MATH(?:INLINE|BLOCK)START\d+MATH(?:INLINE|BLOCK)END/g) || [];
-    if (ids.some((id) => (mathMap.get(id)?.latex || '').includes('|'))) return false;
     if (ids.some((id) => mathMap.get(id)?.isBlock)) return false;
   }
   return true;
 }
 
-function tableToGfm(table, turndownService) {
+function tableToGfm(table, turndownService, mathMap) {
+  // R1-03：单元格里公式含 |（如 $|\Theta|$）不再整表回退 HTML；公式在后面才还原，
+  // 这里先把它的 | 转义成 \|（GFM 表格解析会先去掉这个反斜杠，渲染结果不变）
+  if (mathMap) {
+    const ids = table.textContent.match(/MATH(?:INLINE|BLOCK)START\d+MATH(?:INLINE|BLOCK)END/g) || [];
+    ids.forEach((id) => {
+      const entry = mathMap.get(id);
+      if (entry && entry.latex && entry.latex.includes('|') && !entry.pipeEscaped) {
+        entry.latex = entry.latex.replace(/\|/g, '\\|');
+        entry.pipeEscaped = true;
+      }
+    });
+  }
   const rows = Array.from(table.querySelectorAll('tr')).map((tr) =>
     Array.from(tr.querySelectorAll('td, th')).map((cell) =>
       turndownService
