@@ -716,3 +716,8 @@ body {
 select.input-field { appearance: auto; cursor: pointer; }
 .permission-row, .revoke-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 8px; font-size: 13px; color: var(--text-secondary, #475569); }
 .permission-row[hidden], .revoke-row[hidden] { display: none; }
+
+/* 设计验收 M4：窄屏下 Key 输入框缩小，显示/测试按钮留在同一行 */
+.input-group { flex-wrap: nowrap; }
+.input-group input { min-width: 0; flex: 1; }
+.input-group .btn-icon { flex: none; }
