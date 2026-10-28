@@ -36,4 +36,13 @@ describe('e2e-shortcut 环境前置检查', () => {
     expect(r.status).toBe(2);
     expect(r.stderr).toMatch(/CHROME_PATH 指向的文件不存在/);
   });
+  // batch6 AB5-01：没有 dist/ 时提示先构建，退出 2
+  test('没有 dist/：提示请先构建（npm run build）并退出 2', () => {
+    const chrome = path.join(fake, 'chrome');
+    fs.writeFileSync(chrome, '');
+    const r = run({ E2E_PLAYWRIGHT_DIR: fake, CHROME_PATH: chrome, DISPLAY: ':99', E2E_DIST: path.join(fake, 'no-dist') });
+    expect(r.status).toBe(2);
+    expect(r.stderr).toMatch(/请先构建（npm run build）/);
+    expect(r.stderr).not.toMatch(/ENOENT|\n\s+at /);
+  });
 });
