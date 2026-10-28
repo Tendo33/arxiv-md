@@ -15,6 +15,16 @@ describe('后台消息校验', () => {
     expect(isTrustedArxivSender({ id: rid, tab: { id: 1, url: 'http://arxiv.org/abs/1' } }, rid)).toBe(false);
     expect(isTrustedArxivSender(undefined, rid)).toBe(false);
   });
+
+  test('优先看 sender.url：子 frame 与以标签页打开的扩展页', () => {
+    const rid = 'ext-id';
+    // 发消息的 frame 不是 arXiv，即使所在 tab 是 arXiv 也拒绝
+    expect(isTrustedArxivSender({ id: rid, url: 'https://evil.example/f', tab: { id: 1, url: 'https://arxiv.org/abs/1' } }, rid)).toBe(false);
+    // settings 以标签页打开：带 tab，但 url 是本扩展页面
+    expect(isTrustedArxivSender({ id: rid, url: 'chrome-extension://ext-id/settings.html', tab: { id: 2, url: 'chrome-extension://ext-id/settings.html' } }, rid)).toBe(true);
+    expect(isTrustedArxivSender({ id: rid, url: 'chrome-extension://other/settings.html', tab: { id: 2 } }, rid)).toBe(false);
+    expect(isTrustedArxivSender({ id: rid, url: 'https://arxiv.org/abs/1706.03762', tab: { id: 3 } }, rid)).toBe(true);
+  });
 });
 
 describe('快捷键在非 arXiv 页', () => {

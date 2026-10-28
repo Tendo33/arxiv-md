@@ -7,13 +7,17 @@ export function isValidArxivId(id) {
 }
 
 /**
- * 只接受本扩展自己的消息；来自标签页时必须是 arXiv 页面（content script 只注入在 arxiv.org）
+ * 只接受本扩展自己的消息。优先看 sender.url（真正发消息的 frame），tab.url 仅兜底：
+ * - chrome-extension://<本扩展 id>/ 页面（popup、以标签页打开的 settings）放行；
+ * - 其余必须是 https://arxiv.org（content script 只注入在 arxiv.org）。
  */
 export function isTrustedArxivSender(sender, runtimeId) {
   if (!sender || !runtimeId || sender.id !== runtimeId) return false;
-  if (!sender.tab) return true; // 扩展自身页面（popup/settings）
+  const url = sender.url || (sender.tab && sender.tab.url) || '';
+  if (!url) return !sender.tab; // 无 url 且非标签页：扩展自身上下文
+  if (url.startsWith(`chrome-extension://${runtimeId}/`)) return true;
   try {
-    const { protocol, hostname } = new URL(sender.tab.url || sender.url || '');
+    const { protocol, hostname } = new URL(url);
     return protocol === 'https:' && hostname === 'arxiv.org';
   } catch {
     return false;
