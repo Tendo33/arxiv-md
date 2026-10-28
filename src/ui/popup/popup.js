@@ -1,6 +1,7 @@
 // Popup v2（Round 3 C-2）：当前页上下文 + 三个导出动作 + 最近 MinerU 任务
 
 import { keyHereMessage, renderKeyHint } from './key-hint';
+import { ctxBadgeState } from './ctx-badge';
 import logger from '@utils/logger';
 import storage from '@utils/storage';
 import { translations } from '@config/locales';
@@ -142,11 +143,8 @@ function renderContext() {
   $('ctxTitle').textContent = ctx.title;
   $('ctxTitle').title = ctx.title;
   $('ctxMeta').textContent = `arXiv:${ctx.arxivId}`;
-  if (busy) setBadge('run', tr.popup_badge_run);
-  else if (ctx.loading) setBadge('dis', tr.popup_badge_dis);
-  else if (ctx.state === 'ok') setBadge('ok', tr.popup_badge_ok);
-  else if (ctx.state === 'err') setBadge('err', tr.popup_badge_err);
-  else setBadge('idle', tr[`popup_badge_${ctx.kind}`]);
+  const [cls, text] = ctxBadgeState({ busy, loading: ctx.loading, state: ctx.state, kind: ctx.kind }, tr);
+  setBadge(cls, text);
 }
 
 function setBusy(on) {
@@ -197,6 +195,7 @@ async function runExport(mode) {
       const here = keyHereMessage(active, tr, providerLabel(active.id));
       if (here) { showErr(here.title, here.hint); $('alertKey').classList.add('hidden'); }
       else showErr(tr.popup_err_token_title.replace('{provider}', providerLabel(active.id)), tr.popup_err_token_hint);
+      ctx.state = 'needkey'; // 设计复核 S1：没有任务失败，卡片用中性的「需要 Key」
       renderContext();
       return;
     }
