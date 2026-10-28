@@ -1,24 +1,23 @@
 /**
- * AF3 设计验收：「导出可能不完整」系统通知走 _locales（notify_incomplete_title / notify_incomplete_body），
- * 先写缺了多少，再写文件名。标题里的 ⚠ 是 U+26A0（不带 U+FE0F），与徽标、页面条一致。
- * chrome.i18n 不可用（单测、极端环境）时退回中文。
+ * AF3：「导出可能不完整」系统通知。语言跟随扩展设置（storage 的 language，与 popup、页面条一致），
+ * 不跟随浏览器 UI 语言；未设置或不是 zh/en（如「自动」）时按 browserDefaultLanguage 的默认规则。
+ * 文案在 locales.js 的 notify_incomplete_*，与 _locales 里同名 key 保持一致（由测试保证）。
+ * 先写缺了多少，再写文件名；标题 ⚠ 为 U+26A0，不带 U+FE0F。
  */
-const FALLBACK = {
-  title: '\u26a0 导出可能不完整',
-  body: '约 $1 个标题只导出了 $2 个，请核对。\n已保存：$3',
-};
+import { translations } from '@config/locales';
+import { browserDefaultLanguage } from '@utils/storage';
 
-export function incompleteNotification({ expected, actual, filename }, i18n = globalThis.chrome && globalThis.chrome.i18n) {
-  const subs = [String(expected), String(actual), String(filename || '')];
-  const get = (key) => {
-    try {
-      return (i18n && typeof i18n.getMessage === 'function' && i18n.getMessage(key, subs)) || '';
-    } catch (_) {
-      return '';
-    }
+export function resolveNotifyLanguage(lang) {
+  return lang === 'zh' || lang === 'en' ? lang : browserDefaultLanguage();
+}
+
+export function incompleteNotification({ expected, actual, filename }, lang) {
+  const t = translations[resolveNotifyLanguage(lang)];
+  return {
+    title: t.notify_incomplete_title,
+    message: t.notify_incomplete_body
+      .replace('{expected}', String(expected))
+      .replace('{actual}', String(actual))
+      .replace('{filename}', String(filename || '')),
   };
-  const title = get('notify_incomplete_title') || FALLBACK.title;
-  const message = get('notify_incomplete_body')
-    || FALLBACK.body.replace('$1', subs[0]).replace('$2', subs[1]).replace('$3', subs[2]);
-  return { title, message };
 }

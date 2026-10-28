@@ -3,26 +3,14 @@
  */
 import fs from 'fs';
 import path from 'path';
-import { incompleteNotification } from '../src/core/converter/incomplete-notification';
 import { translations } from '../src/config/locales';
 
 const LOC = path.join(__dirname, '..', 'src', '_locales');
 const load = (lang) => JSON.parse(fs.readFileSync(path.join(LOC, lang, 'messages.json'), 'utf8'));
 
-// 按 Chrome 规则展开 $NAME$ → placeholders[name].content → $n
-function fakeI18n(lang) {
-  const msgs = load(lang);
-  return {
-    getMessage(key, subs = []) {
-      const m = msgs[key];
-      if (!m) return '';
-      return m.message.replace(/\$([a-z0-9_]+)\$/gi, (_, name) => {
-        const ph = m.placeholders && m.placeholders[name.toLowerCase()];
-        return ph ? ph.content.replace(/\$(\d)/g, (__, i) => subs[Number(i) - 1]) : '';
-      });
-    },
-  };
-}
+// storage.js 导入时会实例化单例并读 chrome.storage.sync，先放一个最小 chrome 再 require
+global.chrome = { storage: { sync: {} }, i18n: { getUILanguage: () => 'en-US' } };
+const { incompleteNotification } = require('../src/core/converter/incomplete-notification');
 
 const args = { expected: 58, actual: 25, filename: 'paper.md' };
 
@@ -38,32 +26,47 @@ describe('AF3 设计验收：_locales', () => {
     expect(Object.keys(load('en')).sort()).toEqual(Object.keys(load('zh_CN')).sort());
   });
 
-  test('中文通知：单色 ⚠，先写缺失，再写文件名', () => {
-    const n = incompleteNotification(args, fakeI18n('zh_CN'));
-    expect(n.title).toBe('\u26a0 导出可能不完整');
-    expect(n.message).toBe('约 58 个标题只导出了 25 个，请核对。\n已保存：paper.md');
+  // 浏览器 UI 语言与设置语言相反，断言通知用的是设置里的语言
+  const withUiLang = (ui, fn) => {
+    const prev = global.chrome;
+    global.chrome = { i18n: { getUILanguage: () => ui, getMessage: () => 'UI-LOCALE' } };
+    try { return fn(); } finally { global.chrome = prev; }
+  };
+  const zh = { title: '\u26a0 导出可能不完整', message: '约 58 个标题只导出了 25 个，请核对。\n已保存：paper.md' };
+  const en = { title: '\u26a0 Export may be incomplete', message: 'Only 25 of ~58 headings exported — please check.\nSaved: paper.md' };
+
+  test('设置为 zh（浏览器是 en-US）→ 中文通知，先写缺失再写文件名', () => {
+    expect(withUiLang('en-US', () => incompleteNotification(args, 'zh'))).toEqual(zh);
   });
 
-  test('英文通知', () => {
-    const n = incompleteNotification(args, fakeI18n('en'));
-    expect(n.title).toBe('\u26a0 Export may be incomplete');
-    expect(n.message).toBe('Only 25 of ~58 headings exported — please check.\nSaved: paper.md');
+  test('设置为 en（浏览器是 zh-CN）→ 英文通知', () => {
+    expect(withUiLang('zh-CN', () => incompleteNotification(args, 'en'))).toEqual(en);
   });
 
-  test('chrome.i18n 不可用时退回中文', () => {
-    expect(incompleteNotification(args, undefined)).toEqual(incompleteNotification(args, fakeI18n('zh_CN')));
+  test.each([undefined, null, 'auto'])('未设置/自动（%s）→ 按浏览器默认规则', (lang) => {
+    expect(withUiLang('zh-CN', () => incompleteNotification(args, lang))).toEqual(zh);
+    expect(withUiLang('en-US', () => incompleteNotification(args, lang))).toEqual(en);
+  });
+
+  test('locales.js 的 notify_incomplete_* 与 _locales 同名 key 一致', () => {
+    const conv = (m) => m.replace('$EXPECTED$', '{expected}').replace('$ACTUAL$', '{actual}').replace('$FILENAME$', '{filename}');
+    for (const [l, dir] of [['en', 'en'], ['zh', 'zh_CN']]) {
+      expect(translations[l].notify_incomplete_title).toBe(load(dir).notify_incomplete_title.message);
+      expect(translations[l].notify_incomplete_body).toBe(conv(load(dir).notify_incomplete_body.message));
+    }
   });
 
   test('后台接线：不完整通知走 incompleteNotification，不再写死中文', () => {
     const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'core', 'converter', 'index.js'), 'utf8');
-    expect(src).toMatch(/incompleteNotification\(/);
+    expect(src).toMatch(/const lang = await storage\.getLanguage\(\)[\s\S]{0,400}incompleteNotification\([\s\S]*?\}, lang\)/);
     expect(src).not.toMatch(/导出可能不完整/);
   });
 
   test('所有不完整文案：不带 U+FE0F，不出现「后半部分」/ later sections', () => {
     const texts = [
       ...['en', 'zh_CN'].flatMap((l) => [load(l).notify_incomplete_title.message, load(l).notify_incomplete_body.message]),
-      ...['en', 'zh'].flatMap((l) => [translations[l].content_progress_incomplete, translations[l].content_result_incomplete]),
+      ...['en', 'zh'].flatMap((l) => [translations[l].content_progress_incomplete, translations[l].content_result_incomplete,
+        translations[l].notify_incomplete_title, translations[l].notify_incomplete_body]),
       fs.readFileSync(path.join(__dirname, '..', 'src', 'core', 'converter', 'incomplete-notification.js'), 'utf8'),
     ];
     for (const s of texts) {

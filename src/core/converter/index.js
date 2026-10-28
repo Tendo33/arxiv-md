@@ -88,11 +88,13 @@ class MainConverter {
       // AF3-01：导出明显少于页面时仍然保存，但通知、徽标和页内提示都改为「可能不完整」
       const incomplete = !!(result.integrity && result.integrity.complete === false);
       if (incomplete) {
+        // 通知语言跟随扩展设置（与 popup、页面条一致）
+        const lang = await storage.getLanguage().catch(() => null);
         const n = incompleteNotification({
           expected: result.integrity.source.headings,
           actual: result.integrity.exported.headings,
           filename,
-        });
+        }, lang);
         showNotification(n.title, n.message, 'basic');
       } else {
         showNotification('✅ 转换完成', `已保存：${filename}\n方式：${sourceLabel}`, 'basic');

@@ -159,6 +159,9 @@ export const translations = {
     content_progress_extracting: 'Extracting results…',
     content_progress_completed: 'Completed',
     content_progress_incomplete: '⚠ Export may be incomplete',
+    // 与 _locales/en 的 notify_incomplete_* 一致（后台按扩展设置的语言选用）
+    notify_incomplete_title: '⚠ Export may be incomplete',
+    notify_incomplete_body: 'Only {actual} of ~{expected} headings exported — please check.\nSaved: {filename}',
     content_progress_failed: 'Failed',
     content_progress_submitted: 'Submitted',
     content_result_saved: 'Saved: {filename}',
@@ -339,6 +342,9 @@ export const translations = {
     content_progress_extracting: '正在提取结果…',
     content_progress_completed: '已完成',
     content_progress_incomplete: '⚠ 导出可能不完整',
+    // 与 _locales/zh_CN 的 notify_incomplete_* 一致
+    notify_incomplete_title: '⚠ 导出可能不完整',
+    notify_incomplete_body: '约 {expected} 个标题只导出了 {actual} 个，请核对。\n已保存：{filename}',
     content_progress_failed: '失败',
     content_progress_submitted: '已提交',
     content_result_saved: '已保存：{filename}',
