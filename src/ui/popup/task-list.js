@@ -202,7 +202,7 @@ export function createTaskRow(task) {
   const eid = escapeHtml(id);
   let act = '';
   if (status === TASK_STATUS.COMPLETED && zipUrl) {
-    act = `<button class="btn btn-ghost" data-action="download" data-url="${escapeHtml(zipUrl)}">${t.popup_action_download}</button>`;
+    act = `<button class="btn btn-ghost btn-dl" data-action="download" data-url="${escapeHtml(zipUrl)}" title="${t.popup_action_download}" aria-label="${t.popup_action_download}"><svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg><span class="lbl"> ${t.popup_action_download}</span></button>`;
   } else if (status === TASK_STATUS.FAILED) {
     act = `<button class="btn btn-ghost" data-action="retry" data-task-id="${eid}">${t.popup_action_retry}</button>`;
   }

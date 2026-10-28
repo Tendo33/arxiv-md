@@ -18,12 +18,15 @@ body{min-width:320px}
 #taskList{padding:4px 10px;overflow-y:auto;min-height:0;overscroll-behavior:contain}
 .recent-empty{padding:10px;color:var(--text-2);font-size:var(--fs-xs)}
 .row .badge{padding:1px 6px}
-.row .n{flex:1 1 0;min-width:6em}
+.row .n{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .row small{color:var(--text-2);flex:none;font-size:var(--fs-xs)}
 @media (max-width:339px){.ft{flex-wrap:wrap;row-gap:2px}.ft .hint{display:none}}
 #alertErr .btn-refresh{margin-top:6px}
 .row .row-act{flex:none;display:flex;gap:2px;margin:-2px 0}
 .row .row-act .btn{min-height:24px;padding:0 6px;font-size:12px}
+.row .row-act .btn svg{flex:none;vertical-align:-2px}
+/* design-recheck N1：320 宽英文时 Download 只留图标（aria-label/title 保留文字） */
+@media (max-width:339px){.row .row-act .btn-dl{padding:0 5px}.row .row-act .btn-dl .lbl{display:none}}
 .row .pct{font-variant-numeric:tabular-nums}
 /* 确认对话框（删除 MinerU 任务） */
 .confirm-overlay{position:fixed;inset:0;background:rgb(0 0 0/.5);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity var(--dur) var(--ease);z-index:100;padding:var(--sp-4)}
