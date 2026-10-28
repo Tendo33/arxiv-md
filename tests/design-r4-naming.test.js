@@ -25,3 +25,10 @@ describe('设计建议：统一叫「PDF 解析」，中文全角括号、英文
     expect(read('src/background/context-menu.js')).toMatch(/t\.menu_with_shortcut/);
   });
 });
+
+describe('设计建议：err_NETWORK 不提本轮隐藏的本地服务', () => {
+  test('中英都不出现 local service / 本地服务', () => {
+    expect(translations.en.err_NETWORK).toBe("Can't reach {provider}. Check your network connection");
+    expect(translations.zh.err_NETWORK).toBe('连不上 {provider}，请检查网络');
+  });
+});
