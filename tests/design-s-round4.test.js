@@ -44,3 +44,9 @@ describe('design S4: requires-key chip not uppercased', () => {
     expect(css).toMatch(/\.mode-badge\[data-i18n="mode_requires_token"\]\s*\{\s*text-transform:\s*none;/);
   });
 });
+
+describe('design S5', () => {
+  test('en paddle desc names the Key', () => {
+    expect(translations.en.pdf_desc_paddleocr).toMatch(/access token \(Key\)\.$/);
+  });
+});

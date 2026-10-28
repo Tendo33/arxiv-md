@@ -187,7 +187,7 @@ export const translations = {
     pdf_provider_label: 'Provider',
     pdf_provider_paddleocr: 'PaddleOCR (default, free quota)',
     pdf_provider_mineru: 'MinerU',
-    pdf_desc_paddleocr: 'Sends the PDF link to paddleocr.aistudio-app.com (Baidu AI Studio). Free daily quota; needs your AI Studio access token.',
+    pdf_desc_paddleocr: 'Sends the PDF link to paddleocr.aistudio-app.com (Baidu AI Studio). Free daily quota; needs your AI Studio access token (Key).',
     pdf_desc_mineru: 'Sends the PDF link to mineru.net. Free tier with a daily page limit; needs your MinerU API key.',
     pdf_key_label: '{provider} API key',
     pdf_key_placeholder: 'Paste your API key',
