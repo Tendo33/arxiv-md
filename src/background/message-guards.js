@@ -28,21 +28,30 @@ export function isTrustedArxivSender(sender, runtimeId) {
  * 快捷键：向当前标签页发 TRIGGER_CONVERSION。非 arXiv 页没有 content script，
  * sendMessage 会报 "Could not establish connection"，这里吞掉，不留未处理的 rejection。
  */
-export function triggerConversionInActiveTab(tabsApi, runtime, log = () => {}) {
+export function triggerConversionInActiveTab(tabsApi, runtime, log = () => {}, hooks = {}) {
   tabsApi.query({ active: true, currentWindow: true }, (tabs) => {
     const tab = tabs && tabs[0];
     if (!tab || tab.id == null) return;
+    const undelivered = () => hooks.onUndelivered && hooks.onUndelivered(tab.id);
+    if (hooks.onSent) hooks.onSent(tab.id);
     const onDone = () => {
       const err = runtime && runtime.lastError;
-      if (err) log(`快捷键转换未发送：${err.message || err}`);
+      if (err) {
+        log(`快捷键转换未发送：${err.message || err}`);
+        undelivered();
+      }
     };
     try {
       const result = tabsApi.sendMessage(tab.id, { type: 'TRIGGER_CONVERSION' }, onDone);
       if (result && typeof result.catch === 'function') {
-        result.catch((err) => log(`快捷键转换未发送：${err && err.message}`));
+        result.catch((err) => {
+          log(`快捷键转换未发送：${err && err.message}`);
+          undelivered();
+        });
       }
     } catch (err) {
       log(`快捷键转换未发送：${err && err.message}`);
+      undelivered();
     }
   });
 }

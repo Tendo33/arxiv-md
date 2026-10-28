@@ -10,6 +10,9 @@ import { arxivApiUrl } from '@core/metadata-extractor';
 import { deletedTaskGuard, processMinerUTaskInBackground } from './mineru-task-runner';
 import { KEEP_ALIVE_ALARM, syncKeepAlive } from './keep-alive';
 import { isTrustedArxivSender, isValidArxivId, triggerConversionInActiveTab } from './message-guards';
+import { createActionBadge } from './action-badge';
+
+const actionBadge = createActionBadge(chrome.action);
 
 logger.info('Background service worker initialized');
 
@@ -123,8 +126,10 @@ async function handleConvertPaper(paperInfo, sendResponse, sender) {
     } else {
       sendResponse({ success: true, data: result });
     }
+    actionBadge.finish(tabId, true);
   } catch (error) {
     logger.error('Conversion failed:', error);
+    actionBadge.finish(tabId, false);
     sendResponse({ success: false, error: error.message || 'Unknown error' });
   }
 }
@@ -322,7 +327,10 @@ if (chrome.commands && chrome.commands.onCommand) {
 
     if (command === 'convert-current-paper') {
       // 向当前 Tab 发送转换指令；非 arXiv 页没有 content script，错误在内部吞掉
-      triggerConversionInActiveTab(chrome.tabs, chrome.runtime, (msg) => logger.debug(msg));
+      triggerConversionInActiveTab(chrome.tabs, chrome.runtime, (msg) => logger.debug(msg), {
+        onSent: (tabId) => actionBadge.shortcutStarted(tabId),
+        onUndelivered: (tabId) => actionBadge.shortcutUndelivered(tabId),
+      });
     }
   });
 } else {
