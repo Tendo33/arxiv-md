@@ -30,8 +30,7 @@
   "content_scripts": [
     {
       "matches": [
-        "https://arxiv.org/abs/*",
-        "https://arxiv.org/pdf/*"
+        "https://arxiv.org/abs/*"
       ],
       "js": [
         "content.js"

@@ -1,3 +1,4 @@
+/* global process */
 // 统一的日志工具 - 支持不同级别的日志输出
 
 const LOG_LEVELS = {
@@ -10,7 +11,14 @@ const LOG_LEVELS = {
 class Logger {
   constructor(namespace = 'ArxivMD') {
     this.namespace = namespace;
-    const isProduction = globalThis.process?.env?.NODE_ENV === 'production';
+    // webpack 会把 process.env.NODE_ENV 静态替换为字面量；浏览器中未替换时回退为开发模式
+    let nodeEnv;
+    try {
+      nodeEnv = process.env.NODE_ENV;
+    } catch {
+      nodeEnv = undefined;
+    }
+    const isProduction = nodeEnv === 'production';
     this.level =
       isProduction
         ? LOG_LEVELS.WARN
