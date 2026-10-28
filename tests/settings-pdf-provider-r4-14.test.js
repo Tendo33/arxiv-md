@@ -145,3 +145,33 @@ describe('R4-14 设置页：后端选择 + Key', () => {
     delete global.fetch;
   });
 });
+
+describe('设计建议：连接测试失败', () => {
+  test('Key 无效：带 ❌、不说「未填写」，并附「获取 PaddleOCR Key」链接', async () => {
+    const h = setup({ origins: [PADDLE], keys: { paddleocr: 'abcdefghijklmnop' }, lang: 'zh' });
+    await h.sec.init();
+    const orig = h.registry.get.bind(h.registry);
+    const fake = { ...orig('paddleocr'), testConnection: jest.fn(async () => ({ ok: false, error: { code: 'AUTH_INVALID' } })) };
+    h.registry.get = (id) => (id === 'paddleocr' ? fake : orig(id));
+    await h.sec.onTest();
+    const st = h.document.getElementById('tokenStatus');
+    expect(st.textContent).toMatch(/^❌ Key 无效或已过期/);
+    expect(st.textContent).not.toMatch(/未填写/);
+    const a = st.querySelector('a.token-status-link');
+    expect(a.textContent).toBe('获取 PaddleOCR Key');
+    expect(a.getAttribute('href')).toBe('https://aistudio.baidu.com/account/accessToken');
+  });
+  test('其他失败也带 ❌', async () => {
+    const h = setup({ origins: [PADDLE], keys: { paddleocr: 'abcdefghijklmnop' }, lang: 'zh' });
+    await h.sec.init();
+    const orig = h.registry.get.bind(h.registry);
+    const fake = { ...orig('paddleocr'), testConnection: jest.fn(async () => ({ ok: false, error: { code: 'RATE_LIMITED' } })) };
+    h.registry.get = (id) => (id === 'paddleocr' ? fake : orig(id));
+    await h.sec.onTest();
+    expect(h.document.getElementById('tokenStatus').textContent.startsWith('❌')).toBe(true);
+  });
+  test('测试按钮悬停/聚焦保持 on-success 色', () => {
+    const css = fs.readFileSync(path.join(__dirname, '../src/ui/settings/settings.css'), 'utf8');
+    expect(css).toMatch(/\.btn-test:hover, \.btn-test:focus-visible \{ color: var\(--on-success\); \}/);
+  });
+});

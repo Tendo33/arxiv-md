@@ -157,7 +157,20 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
       const e = r.error || {};
       const reason = e.reason === 'forbidden_empty' ? tr.err_reason_forbidden_empty : (e.message || '');
       status.className = 'token-status error';
-      status.textContent = fmt(tr[`err_${e.code}`] || tr.token_test_error, { provider: p.label, host: hostOf(p), reason });
+      // 设计建议：已经填了 Key 时不说「未填写」；失败一律带 ❌，Key 问题附「获取 Key」链接
+      const msg = e.code === 'AUTH_INVALID'
+        ? tr.token_api_invalid
+        : fmt(tr[`err_${e.code}`] || tr.token_test_error, { provider: p.label, host: hostOf(p), reason });
+      status.textContent = msg.startsWith('❌') ? msg : `❌ ${msg}`;
+      if (e.code === 'AUTH_INVALID') {
+        const a = doc.createElement('a');
+        a.href = KEY_LINKS[p.id] || '#';
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.className = 'token-status-link';
+        a.textContent = fmt(tr.pdf_get_key, { provider: p.label });
+        status.append(' ', a);
+      }
     }
     return r;
   }

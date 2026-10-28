@@ -727,3 +727,7 @@ select.input-field { appearance: auto; cursor: pointer; }
 
 /* 设计验收 M6：权限被拒的说明 */
 .permission-row.denied #permissionStatus { color: var(--danger); }
+
+/* 设计建议：测试按钮悬停/聚焦时图标保持白色，不出现红图标压绿底 */
+.btn-test:hover, .btn-test:focus-visible { color: var(--on-success); }
+.token-status-link { color: inherit; text-decoration: underline; font-weight: 600; }
