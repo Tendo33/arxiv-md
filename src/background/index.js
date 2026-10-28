@@ -9,6 +9,7 @@ import { TASK_STATUS } from '@config/constants';
 import { arxivApiUrl } from '@core/metadata-extractor';
 import { deletedTaskGuard, processMinerUTaskInBackground } from './mineru-task-runner';
 import { KEEP_ALIVE_ALARM, syncKeepAlive } from './keep-alive';
+import { isTrustedArxivSender, isValidArxivId, triggerConversionInActiveTab } from './message-guards';
 
 logger.info('Background service worker initialized');
 
@@ -25,6 +26,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
 
   case 'FETCH_ARXIV_API':
+    if (!isTrustedArxivSender(sender, chrome.runtime.id)) {
+      logger.warn('FETCH_ARXIV_API rejected: untrusted sender', sender && sender.url);
+      sendResponse({ success: false, error: 'Untrusted sender' });
+      return false;
+    }
     handleFetchArxivApi(message.arxivId, sendResponse);
     return true;
 
@@ -82,7 +88,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 async function handleFetchArxivApi(arxivId, sendResponse) {
   try {
-    if (!arxivId) throw new Error('Missing arXiv ID');
+    if (!isValidArxivId(arxivId)) throw new Error('Invalid arXiv ID');
     const response = await fetch(arxivApiUrl(arxivId));
     if (!response.ok) throw new Error(`API returned ${response.status}`);
     sendResponse({ success: true, xml: await response.text() });
@@ -315,14 +321,8 @@ if (chrome.commands && chrome.commands.onCommand) {
     logger.debug('Command received:', command);
 
     if (command === 'convert-current-paper') {
-      // 向当前 Tab 发送转换指令
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (tabs[0]) {
-          chrome.tabs.sendMessage(tabs[0].id, {
-            type: 'TRIGGER_CONVERSION',
-          });
-        }
-      });
+      // 向当前 Tab 发送转换指令；非 arXiv 页没有 content script，错误在内部吞掉
+      triggerConversionInActiveTab(chrome.tabs, chrome.runtime, (msg) => logger.debug(msg));
     }
   });
 } else {
