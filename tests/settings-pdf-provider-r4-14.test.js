@@ -77,7 +77,29 @@ describe('R4-14 设置页：后端选择 + Key', () => {
     expect(await h.sec.onSelect('paddleocr')).toBe(false);
     expect(h.document.getElementById('pdfProvider').value).toBe('mineru');
     expect(h.storage.setPdfProvider).not.toHaveBeenCalled();
-    expect(h.document.getElementById('tokenStatus').textContent).toContain('paddleocr.aistudio-app.com');
+    expect(h.document.getElementById('permissionStatus').textContent).toContain('paddleocr.aistudio-app.com');
+  });
+
+  test('设计验收 M6：拒绝说明留在 #permissionRow（role=status）里，附「重新授权」并滚到可见处；再授权成功则切换', async () => {
+    const h = setup({ provider: 'mineru', answer: false, lang: 'zh' });
+    await h.sec.init();
+    const row = h.document.getElementById('permissionRow');
+    row.scrollIntoView = jest.fn();
+    expect(await h.sec.onSelect('paddleocr')).toBe(false);
+    expect(row.hidden).toBe(false);
+    expect(row.classList.contains('denied')).toBe(true);
+    expect(h.document.getElementById('permissionStatus').getAttribute('role')).toBe('status');
+    expect(h.document.getElementById('permissionStatus').textContent).toBe('未获得访问 paddleocr.aistudio-app.com 的权限，仍在使用 MinerU。需要时可重新授权。');
+    const btn = h.document.getElementById('grantPermissionBtn');
+    expect(btn.hidden).toBe(false);
+    expect(btn.textContent).toBe('重新授权');
+    expect(row.scrollIntoView).toHaveBeenCalledWith({ block: 'center' });
+    expect(h.document.getElementById('tokenStatus').textContent).toBe('');
+    // 再点「重新授权」：这次同意 → 切到 PaddleOCR 并保存
+    h.permissions.request = jest.fn(async () => true);
+    expect(await h.sec.onGrant()).toBe(true);
+    expect(h.storage.setPdfProvider).toHaveBeenCalledWith('paddleocr');
+    expect(row.classList.contains('denied')).toBe(false);
   });
 
   test('切到 MinerU（install 权限）不弹窗；旧后端 PaddleOCR 出现“撤销”，点了调用 permissions.remove', async () => {

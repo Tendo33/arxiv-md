@@ -724,3 +724,6 @@ select.input-field { appearance: auto; cursor: pointer; }
 
 /* 设计验收 M5：授权/撤销按钮用设置页按钮样式；窄屏下不拉满整行 */
 .permission-row .btn, .revoke-row .btn { min-height: 36px; padding: 0 12px; width: auto; flex: none; }
+
+/* 设计验收 M6：权限被拒的说明 */
+.permission-row.denied #permissionStatus { color: var(--danger); }

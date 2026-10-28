@@ -26,7 +26,7 @@ const hostOf = (provider) => {
  */
 export function createPdfProviderSection({ doc, storage, permissions, registry, t, toast = () => {} }) {
   const $ = (id) => doc.getElementById(id);
-  const state = { current: null };
+  const state = { current: null, denied: null };
 
   // 撤销按钮：只要还留着任一项（部分授权也算）就显示
   async function hasAnyGrant(p) {
@@ -35,6 +35,7 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
   }
 
   async function render() {
+    state.denied = null;
     const tr = t();
     const p = registry.get(state.current);
     const vars = { provider: p.label, host: hostOf(p) };
@@ -60,6 +61,7 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
     $('permissionRow').hidden = !needs;
     $('permissionStatus').textContent = needs ? fmt(granted ? tr.pdf_perm_granted : tr.pdf_perm_missing, vars) : '';
     $('grantPermissionBtn').hidden = !needs || granted;
+    $('grantPermissionBtn').textContent = tr.pdf_grant_btn;
 
     // 切换后端后，旧后端还有可撤销的权限 → 显示“撤销”
     const stale = [];
@@ -86,13 +88,22 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
     const tr = t();
     if (!ok) {
       setSelect($('pdfProvider'), prev);
-      toast(fmt(tr.pdf_perm_denied, { provider: registry.get(prev).label }), 'error');
-      $('tokenStatus').className = 'token-status error';
-      $('tokenStatus').style.display = 'block';
-      $('tokenStatus').textContent = fmt(tr.err_PERMISSION_MISSING, { host: hostOf(next), provider: next.label });
+      // 设计验收 M6：拒绝的说明留在权限行里（不随 toast 消失），附「重新授权」，并滚到可见处
+      state.denied = nextId;
+      const msg = fmt(tr.pdf_perm_denied, { host: hostOf(next), provider: registry.get(prev).label, next: next.label });
+      const row = $('permissionRow');
+      row.hidden = false;
+      row.classList.add('denied');
+      $('permissionStatus').textContent = msg;
+      const btn = $('grantPermissionBtn');
+      btn.textContent = tr.pdf_regrant_btn;
+      btn.hidden = false;
+      if (typeof row.scrollIntoView === 'function') row.scrollIntoView({ block: 'center' });
+      toast(msg, 'error');
       return false;
     }
     state.current = nextId;
+    $('permissionRow').classList.remove('denied');
     await storage.setPdfProvider(nextId);
     $('tokenStatus').style.display = 'none';
     toast(tr.toast_saved, 'success');
@@ -101,6 +112,12 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
   }
 
   async function onGrant() {
+    if (state.denied) {
+      const id = state.denied;
+      const ok = await onSelect(id);
+      if (ok) $('permissionRow').classList.remove('denied');
+      return ok;
+    }
     const p = registry.get(state.current);
     const ok = await requestProviderPermission(permissions, p);
     if (!ok) toast(fmt(t().pdf_perm_missing, { provider: p.label, host: hostOf(p) }), 'error');
