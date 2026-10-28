@@ -6,7 +6,7 @@ import logger from '@utils/logger';
 
 import { translations } from '@config/locales';
 
-let currentLang = 'en';
+let currentLang = 'en'; // init() 中会换成已保存的语言，未保存时跟随浏览器（storage.getLanguage）
 
 document.addEventListener('DOMContentLoaded', init);
 
