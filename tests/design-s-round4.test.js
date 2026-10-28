@@ -63,3 +63,14 @@ describe('design S7', () => {
     expect(translations.zh.content_result_incomplete).not.toContain('「PDF（标题）」');
   });
 });
+
+describe('design S8: failed row has no duplicate title', () => {
+  test('error appears once, only in .row-err', () => {
+    const { createTaskRow } = require('../src/ui/popup/task-list');
+    const html = createTaskRow({ id: 'x', status: 'failed', error: 'Boom here', paperInfo: { title: 'T' }, provider: 'paddleocr' });
+    const rowTag = html.match(/^<div class="row"[^>]*>/)[0];
+    expect(rowTag).not.toMatch(/\stitle=/);
+    expect(html).toContain('<span class="row-err">Boom here</span>');
+    expect(html.split('Boom here').length - 1).toBe(1);
+  });
+});
