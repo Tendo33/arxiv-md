@@ -1,4 +1,5 @@
-// Keep the MV3 service worker alive only while MinerU tasks are running.
+// Keep the MV3 service worker alive only while PDF parsing tasks (any provider) are pending/processing.
+// R4-12：没有任务时 chrome.alarms.getAll() 里看不到 keepAlive；alarm 唤醒时由 index.js 续上轮询。
 
 export const KEEP_ALIVE_ALARM = 'keepAlive';
 export const KEEP_ALIVE_PERIOD_MINUTES = 0.4;

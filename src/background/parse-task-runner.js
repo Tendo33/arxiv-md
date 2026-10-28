@@ -72,7 +72,7 @@ export function createParseTaskRunner(deps) {
       jobId = r.jobId; startedAt = now();
       await taskManager.updateTask(task.id, { jobId, startedAt, progress: 10 });
     }
-    const deadline = (startedAt || now()) + (provider.timeoutMs || DEFAULT_ASYNC_TIMEOUT_MS);
+    const deadline = (startedAt ?? now()) + (provider.timeoutMs || DEFAULT_ASYNC_TIMEOUT_MS);
     for (;;) {
       if (await guard.consume(task.id)) return { deleted: true };
       const s = await provider.poll(jobId, creds, ctx);
@@ -129,7 +129,21 @@ export function createParseTaskRunner(deps) {
     }
   }
 
-  return { process, isRunning: (id) => running.has(id) };
+  /**
+   * R4-12：SW 重启 / keepAlive alarm 唤醒时调用。对 pending/processing 且本 SW 里没在跑的任务：
+   * 有 jobId → 按 jobId 续上轮询（不会重新提交）；没有 jobId → 正常提交
+   * @returns {Promise<string[]>} 本次续上的任务 id
+   */
+  async function resumeActiveTasks() {
+    const tasks = await taskManager.getTasks();
+    const ids = tasks
+      .filter((t) => (t.status === TASK_STATUS.PENDING || t.status === TASK_STATUS.PROCESSING) && !running.has(t.id))
+      .map((t) => t.id);
+    ids.forEach((id) => { process(id).catch((e) => log.error('resume failed', id, e)); });
+    return ids;
+  }
+
+  return { process, resumeActiveTasks, isRunning: (id) => running.has(id) };
 }
 
 export function pdfUrlOf(task) {

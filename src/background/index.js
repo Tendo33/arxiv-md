@@ -7,7 +7,7 @@ import logger from '@utils/logger';
 import storage from '@utils/storage';
 import { TASK_STATUS } from '@config/constants';
 import { arxivApiUrl } from '@core/metadata-extractor';
-import { deletedTaskGuard, processMinerUTaskInBackground, providerRegistry } from './mineru-task-runner';
+import { deletedTaskGuard, processMinerUTaskInBackground, providerRegistry, resumeParseTasks } from './mineru-task-runner';
 import { KEEP_ALIVE_ALARM, syncKeepAlive } from './keep-alive';
 import { isTrustedArxivSender, isValidArxivId, triggerConversionInActiveTab } from './message-guards';
 import { createActionBadge, handleShortcutResult, conversionBadgeState } from './action-badge';
@@ -404,12 +404,23 @@ async function refreshKeepAlive() {
   }
 }
 
+// R4-12：alarm 唤醒（SW 可能刚被杀掉重启）→ 先续上未完成任务（按 jobId 继续轮询，不重新提交），再同步 alarm
+async function resumeAndRefresh() {
+  try {
+    await migrationsReady;
+    const resumed = await resumeParseTasks();
+    if (resumed.length) logger.info('Resumed parse tasks:', resumed);
+  } catch (error) {
+    logger.warn('Failed to resume parse tasks:', error);
+  }
+  await refreshKeepAlive();
+}
+
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === KEEP_ALIVE_ALARM) {
-    refreshKeepAlive();
+    resumeAndRefresh();
   }
 });
-refreshKeepAlive();
+resumeAndRefresh();
 
-// 导出函数供其他模块使用
 export { processMinerUTaskInBackground };
