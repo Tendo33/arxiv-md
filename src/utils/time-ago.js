@@ -17,5 +17,9 @@ export function formatTimeAgo(timestamp, lang, justNow, now = Date.now()) {
   if (minutes < 60) return rtf.format(-minutes, 'minute');
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return rtf.format(-hours, 'hour');
-  return rtf.format(-Math.floor(hours / 24), 'day');
+  const days = Math.floor(hours / 24);
+  // Round 3 复审：30 天以上进位到月，365 天以上进位到年
+  if (days < 30) return rtf.format(-days, 'day');
+  if (days < 365) return rtf.format(-Math.floor(days / 30), 'month');
+  return rtf.format(-Math.floor(days / 365), 'year');
 }

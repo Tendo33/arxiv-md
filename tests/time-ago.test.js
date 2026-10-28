@@ -30,3 +30,25 @@ describe('设计验收必须改 2：相对时间单复数', () => {
     for (const l of ['en', 'zh']) expect(translations[l].popup_time_mins_ago).toBeUndefined();
   });
 });
+
+describe('Round 3 复审：NaN/undefined 防御 + 进位到月、年', () => {
+  test('非数值不抛错', () => {
+    for (const bad of [undefined, null, NaN, Infinity, '2026-10-01', {}]) {
+      // 基于 hotfix A2-02：无效值显示占位「—」
+      expect(formatTimeAgo(bad, 'en', 'Just now', NOW)).toBe('—');
+      expect(formatTimeAgo(bad, 'zh', '刚刚', NOW)).toBe('—');
+    }
+    expect(formatTimeAgo(ago(M), 'en', 'Just now', NaN)).toBe('—');
+  });
+  test('月 / 年', () => {
+    expect(formatTimeAgo(ago(29 * D), 'en', 'J', NOW)).toBe('29 days ago');
+    expect(formatTimeAgo(ago(30 * D), 'en', 'J', NOW)).toBe('last month');
+    expect(formatTimeAgo(ago(75 * D), 'en', 'J', NOW)).toBe('2 months ago');
+    expect(formatTimeAgo(ago(364 * D), 'en', 'J', NOW)).toBe('12 months ago');
+    expect(formatTimeAgo(ago(365 * D), 'en', 'J', NOW)).toBe('last year');
+    expect(formatTimeAgo(ago(800 * D), 'en', 'J', NOW)).toBe('2 years ago');
+    expect(formatTimeAgo(ago(75 * D), 'zh', 'J', NOW)).toBe('2个月前');
+    expect(formatTimeAgo(ago(400 * D), 'zh', 'J', NOW)).toBe('去年');
+    expect(formatTimeAgo(ago(800 * D), 'zh', 'J', NOW)).toBe('2年前');
+  });
+});

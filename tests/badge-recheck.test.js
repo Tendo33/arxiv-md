@@ -43,10 +43,10 @@ test('页面开始加载时清掉残留徽标和跟踪', () => {
   expect(badge.isTracking(6)).toBe(false);
 });
 
-test('time-ago：非有限时间戳回退为「刚刚」而不是抛 RangeError', () => {
-  expect(formatTimeAgo(undefined, 'zh', '刚刚')).toBe('刚刚');
-  expect(formatTimeAgo(NaN, 'en', 'Just now')).toBe('Just now');
-  expect(formatTimeAgo('x', 'en', 'Just now')).toBe('Just now');
+test('time-ago：非有限时间戳显示占位「—」（基于 hotfix A2-02）而不是抛 RangeError', () => {
+  expect(formatTimeAgo(undefined, 'zh', '刚刚')).toBe('—');
+  expect(formatTimeAgo(NaN, 'en', 'Just now')).toBe('—');
+  expect(formatTimeAgo('x', 'en', 'Just now')).toBe('—');
 });
 
 describe('background/index.js 接线', () => {
