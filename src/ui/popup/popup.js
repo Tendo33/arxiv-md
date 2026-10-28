@@ -6,6 +6,7 @@ import { translations } from '@config/locales';
 import { showConfirm } from './confirm-dialog';
 import { createTaskRow, setTaskListLanguage } from './task-list';
 import { pageContext, recentTasks } from './page-context';
+import { renderShortcutGuide } from './shortcut-guide';
 
 let currentTasks = [];
 let currentLang = 'en';
@@ -35,6 +36,7 @@ async function init() {
   $('pdfBtn').addEventListener('click', () => runExport('pdf'));
   $('footerVersion').textContent = `v${chrome.runtime.getManifest().version}`;
   bindTaskActions();
+  loadShortcut();
 
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -49,6 +51,25 @@ async function init() {
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'local' && changes.mineruTasks) scheduleLoadTasks();
     if (area === 'sync' && changes.language) updateLanguage(changes.language.newValue);
+  });
+}
+
+// 快捷键没注册上（被浏览器/其他扩展占用）时显示「去设置」引导
+let shortcutCmds = null;
+async function loadShortcut() {
+  if (!chrome.commands?.getAll) return;
+  try {
+    shortcutCmds = await chrome.commands.getAll();
+    renderShortcut();
+  } catch (error) {
+    logger.warn('commands.getAll failed:', error);
+  }
+}
+
+function renderShortcut() {
+  if (!shortcutCmds) return;
+  renderShortcutGuide(document, shortcutCmds, navigator.userAgent, t(), (url) => {
+    Promise.resolve(chrome.tabs.create({ url })).catch(() => {});
   });
 }
 
@@ -80,6 +101,7 @@ function updateLanguage(lang) {
   });
   renderContext();
   renderRecent();
+  renderShortcut();
 }
 
 function setBadge(cls, text) {
