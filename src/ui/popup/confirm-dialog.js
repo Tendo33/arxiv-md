@@ -2,7 +2,7 @@
  * 显示自定义确认对话框
  * @returns {Promise<boolean>}
  */
-export function showConfirm(message) {
+export function showConfirm(message, { okLabel = null, tone = 'danger' } = {}) {
   return new Promise((resolve) => {
     const overlay = document.getElementById('confirmOverlay');
     const msgEl = document.getElementById('confirmMessage');
@@ -20,6 +20,10 @@ export function showConfirm(message) {
       );
 
     msgEl.textContent = message;
+    // 非删除类确认（如「继续上传」）：换按钮文字，用品牌色而不是危险色
+    const prevOkLabel = okBtn.textContent;
+    if (okLabel) okBtn.textContent = okLabel;
+    okBtn.classList.toggle('brand', tone === 'brand');
     // 关闭时 hidden + inert：读屏和 Tab 都进不去（axe aria-hidden-focus）
     overlay.hidden = false;
     overlay.inert = false;
@@ -38,6 +42,8 @@ export function showConfirm(message) {
     const cleanup = () => {
       overlay.classList.remove('show');
       overlay.hidden = true;
+      if (okLabel) okBtn.textContent = prevOkLabel;
+      okBtn.classList.remove('brand');
       overlay.inert = true;
       overlay.setAttribute('inert', '');
       okBtn.removeEventListener('click', onOk);

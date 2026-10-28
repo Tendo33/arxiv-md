@@ -4,6 +4,7 @@ import logger from '@utils/logger';
 import storage from '@utils/storage';
 import { translations } from '@config/locales';
 import { showConfirm } from './confirm-dialog';
+import { confirmUploadFlow } from './upload-consent';
 import { createTaskRow, setTaskListLanguage } from './task-list';
 import { pageContext, recentTasks } from './page-context';
 import { renderShortcutGuide } from './shortcut-guide';
@@ -254,6 +255,7 @@ function bindTaskActions() {
     const { action, taskId, url } = btn.dataset;
     if (action === 'download') handleDownload(url);
     else if (action === 'retry') await handleRetry(taskId);
+    else if (action === 'consent') await handleConsent(taskId, btn.dataset.provider);
     else if (action === 'delete') await handleDelete(taskId);
   });
 }
@@ -275,6 +277,11 @@ async function taskCall(message, okKey, failKey, extra) {
     logger.error(`${message.type} failed:`, error);
     showToast(t()[failKey]);
   }
+}
+
+async function handleConsent(taskId, providerId) {
+  await confirmUploadFlow(taskId, providerId, { showConfirm, sendMessage: (m) => chrome.runtime.sendMessage(m), tr: t() });
+  loadTasks();
 }
 
 async function handleRetry(taskId) {

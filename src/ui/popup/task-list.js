@@ -197,6 +197,7 @@ export function createTaskRow(task) {
     [TASK_STATUS.PROCESSING]: ['run', t.popup_status_processing],
     [TASK_STATUS.COMPLETED]: ['ok', t.popup_status_completed],
     [TASK_STATUS.FAILED]: ['err', t.popup_status_failed],
+    [TASK_STATUS.AWAITING_CONSENT]: ['run', t.popup_status_awaiting],
   };
   const [cls, label] = map[status] || ['idle', t.popup_status_unknown];
   const busy = status === TASK_STATUS.PENDING || status === TASK_STATUS.PROCESSING;
@@ -204,6 +205,9 @@ export function createTaskRow(task) {
   let act = '';
   if (status === TASK_STATUS.COMPLETED && zipUrl) {
     act = `<button class="btn btn-ghost btn-dl" data-action="download" data-url="${escapeHtml(zipUrl)}" title="${t.popup_action_download}" aria-label="${t.popup_action_download}"><svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg><span class="lbl"> ${t.popup_action_download}</span></button>`;
+  } else if (status === TASK_STATUS.AWAITING_CONSENT) {
+    // 审查 P1-1：非 OA PDF，点了才弹确认框
+    act = `<button class="btn btn-ghost" data-action="consent" data-task-id="${eid}" data-provider="${escapeHtml(task.provider || '')}">${t.popup_action_consent}</button>`;
   } else if (status === TASK_STATUS.FAILED) {
     act = `<button class="btn btn-ghost" data-action="retry" data-task-id="${eid}">${t.popup_action_retry}</button>`;
   }

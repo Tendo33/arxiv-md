@@ -43,6 +43,7 @@ body{min-width:320px}
 .confirm-btn{flex:1;min-height:var(--hit-min);border:0;border-radius:var(--r-sm);cursor:pointer;font:600 var(--fs-sm) var(--font-sans)}
 .confirm-cancel{background:var(--surface-2);color:var(--text)}
 .confirm-ok{background:var(--danger);color:var(--surface)}
+.confirm-ok.brand{background:var(--brand);color:var(--brand-on)}
 .confirm-btn:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 /* toast：用 token（设计复验建议 1），深浅色自动反相 */
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--text);color:var(--surface);padding:8px 16px;border-radius:var(--r-full);font-size:var(--fs-xs);transition:transform .3s ease,opacity .3s ease;z-index:200;white-space:nowrap;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis}

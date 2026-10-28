@@ -7,6 +7,8 @@ import { ParseError, isParseError } from '@pdf-core/errors';
 import { normalizeMarkdown, shouldNormalize } from '@pdf-core/normalize/index';
 import { ensureProviderPermission } from '@pdf-core/permissions';
 import { TASK_STATUS } from '@config/constants';
+import { pdfUrlOf } from './pdf-url';
+import { uploadAllowed } from './oa-gate';
 
 export const SYNC_PROVIDER_TIMEOUT_MS = 60 * 1000;
 export const DEFAULT_ASYNC_TIMEOUT_MS = 10 * 60 * 1000;
@@ -106,6 +108,12 @@ export function createParseTaskRunner(deps) {
       if (!task) return { skipped: 'missing' };
       const provider = registry.get(task.provider || 'mineru');
       if (!provider) return { error: await fail(task, new ParseError('PROVIDER_FAILED', { reason: `unknown provider ${task.provider}` })) };
+      // 审查 P1-1：非 OA（或判断不了）的 PDF 先停下等用户确认，确认前不发任何请求
+      if (!uploadAllowed(task)) {
+        await taskManager.updateTask(taskId, { status: TASK_STATUS.AWAITING_CONSENT });
+        notify(task, 'consent', '', provider);
+        return { needsConsent: true };
+      }
       const key = await storage.getProviderKey(provider.id);
       if (!key) return { error: await fail(task, new ParseError('AUTH_INVALID', { provider: provider.id }), provider) };
       // R4-08：缺域名权限 → 不发任何请求，任务失败为 PERMISSION_MISSING（UI 显示“去设置授权”）
@@ -148,10 +156,17 @@ export function createParseTaskRunner(deps) {
     return ids;
   }
 
-  return { process, resumeActiveTasks, isRunning: (id) => running.has(id) };
+  /** 用户在确认框里同意上传后调用：只放行这一个任务，不记住“总是允许” */
+  async function confirmUpload(taskId) {
+    const task = await taskManager.getTask(taskId);
+    if (!task || task.status !== TASK_STATUS.AWAITING_CONSENT) return { skipped: 'not-awaiting' };
+    await taskManager.updateTask(taskId, { uploadConsent: true, status: TASK_STATUS.PENDING });
+    const done = process(taskId);
+    done.catch((e) => log.error('confirmed task failed', taskId, e));
+    return { confirmed: true, done };
+  }
+
+  return { process, confirmUpload, resumeActiveTasks, isRunning: (id) => running.has(id) };
 }
 
-export function pdfUrlOf(task) {
-  const p = task.paperInfo || {};
-  return p.pdfUrl || `https://arxiv.org/pdf/${p.arxivId}.pdf`;
-}
+export { pdfUrlOf };

@@ -26,7 +26,11 @@ export function showTaskNotification(task, status, detail = '', provider = null)
   const truncatedTitle = title.length > 40 ? title.substring(0, 40) + '…' : title;
   const label = (provider && provider.label) || 'MinerU';
   const config = { type: 'basic', iconUrl: '/assets/icon-128.png' };
-  if (status === 'completed') {
+  if (status === 'consent') {
+    // 审查 P1-1：右键菜单、快捷键、悬浮按钮发起的非 OA 任务，靠通知把用户带到弹窗里确认
+    config.title = `⚠️ 需要确认才能上传（${label}）`;
+    config.message = `${truncatedTitle}\n\n这篇 PDF 不是开放获取文章，打开扩展弹窗确认后才会发送`;
+  } else if (status === 'completed') {
     config.title = `✅ PDF 解析完成（${label}）`;
     config.message = `${truncatedTitle}\n\n点击查看任务`;
     config.buttons = [{ title: '查看任务' }];
@@ -55,6 +59,10 @@ export const parseTaskRunner = createParseTaskRunner({
 /** 旧名字：处理任意 provider 的任务 */
 export function processMinerUTaskInBackground(taskId) {
   return parseTaskRunner.process(taskId);
+}
+/** 审查 P1-1：用户确认上传非 OA PDF */
+export function confirmPdfUpload(taskId) {
+  return parseTaskRunner.confirmUpload(taskId);
 }
 export const processParseTask = processMinerUTaskInBackground;
 
