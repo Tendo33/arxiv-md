@@ -39,11 +39,23 @@ describe('C-3 右键菜单', () => {
     items.forEach((i) => expect(i.parentId).toBeUndefined());
   });
 
-  test('没配 Token 时 MinerU 项置灰并提示去设置', () => {
-    const off = buildMenuItems('en', { hasToken: false }).find((i) => i.id === MENU.MINERU);
-    expect(off.enabled).toBe(false);
-    expect(off.title).toMatch(/token in Settings/);
-    expect(buildMenuItems('en', { hasToken: true }).find((i) => i.id === MENU.MINERU).enabled).toBe(true);
+  test('R4-15：当前后端没配 Key 时不显示 PDF 解析项；配好后显示后端名，id 仍是 page-mineru', () => {
+    expect(buildMenuItems('en', { hasToken: false }).find((i) => i.id === MENU.MINERU)).toBeUndefined();
+    expect(MENU.MINERU).toBe('page-mineru');
+    expect(buildMenuItems('en', { hasToken: true, provider: 'paddleocr' }).find((i) => i.id === MENU.MINERU).title).toBe('Convert with PDF parsing (PaddleOCR)');
+    expect(buildMenuItems('zh', { hasToken: true, provider: 'mineru' }).find((i) => i.id === MENU.MINERU).title).toBe('用 PDF 解析转换（MinerU）');
+  });
+
+  test('R4-15：rebuild 按当前后端的 Key 决定是否显示', async () => {
+    const c = fakeChrome({ lang: 'en' });
+    let active = { id: 'paddleocr', hasKey: false };
+    c.storage.getActivePdfProvider = async () => active;
+    const m = make(c);
+    await m.refresh();
+    expect(c.created.map((i) => i.id)).toEqual([MENU.PAGE, MENU.LINK]);
+    active = { id: 'paddleocr', hasKey: true };
+    await m.refresh();
+    expect(c.created.find((i) => i.id === MENU.MINERU).title).toBe('Convert with PDF parsing (PaddleOCR)');
   });
 
   test('切换语言 / 填 Token 后重建，文案跟着变', async () => {
@@ -51,11 +63,12 @@ describe('C-3 右键菜单', () => {
     const m = make(c);
     await m.refresh();
     expect(c.created.map((i) => i.title)).toContain('导出链接指向的论文为 Markdown');
+    expect(c.created).toHaveLength(2);
     c.store.language = 'en'; c.store.mineruToken = 'tok';
     await m.refresh();
     expect(c.created).toHaveLength(3);
     expect(c.created.map((i) => i.title)).toContain('Export linked arXiv paper as Markdown');
-    expect(c.created.find((i) => i.id === MENU.MINERU).enabled).toBe(true);
+    expect(c.created.find((i) => i.id === MENU.MINERU).title).toBe('Convert with PDF parsing (MinerU)');
   });
 
   test('点击页面项向该标签页发 TRIGGER_CONVERSION 并亮徽标', () => {

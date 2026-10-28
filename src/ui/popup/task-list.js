@@ -1,6 +1,7 @@
 import { translations } from '@config/locales';
 import { TASK_STATUS } from '@config/constants';
 import { formatTimeAgo } from '@utils/time-ago';
+import { providerLabel } from '@config/pdf-providers';
 
 let currentLang = 'en';
 
@@ -208,5 +209,5 @@ export function createTaskRow(task) {
   }
   act += `<button class="btn btn-ghost" data-action="delete" data-task-id="${eid}" title="${t.popup_action_delete}" aria-label="${t.popup_action_delete}">×</button>`;
   const side = busy ? `<small class="pct">${Number(progress) || 0}%</small>` : `<small>${escapeHtml(timeAgo)}</small>`;
-  return `<div class="row" data-task-id="${eid}" data-status="${escapeHtml(status)}"${error ? ` title="${escapeHtml(error)}"` : ''}><span class="badge ${cls}">${escapeHtml(label)}</span><span class="n" title="${escapeHtml(title)}">${escapeHtml(title)}</span>${side}<span class="row-act">${act}</span></div>`;
+  return `<div class="row" data-task-id="${eid}" data-status="${escapeHtml(status)}"${error ? ` title="${escapeHtml(error)}"` : ''}><span class="badge ${cls}">${escapeHtml(label)}</span><span class="n" title="${escapeHtml(title)}">${escapeHtml(title)}</span><span class="prov">${escapeHtml(providerLabel(task.provider))}</span>${side}<span class="row-act">${act}</span></div>`;
 }

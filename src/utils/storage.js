@@ -91,6 +91,13 @@ class StorageManager {
     await chrome.storage.sync.set({ [PDF_PROVIDER_KEY]: providerId });
   }
 
+  /** R4-15：当前后端 + 是否已配 Key（popup、右键菜单用） */
+  async getActivePdfProvider(isKnown) {
+    const id = await this.getPdfProvider(isKnown);
+    const hasKey = !!(await this.getProviderKey(id));
+    return { id, hasKey };
+  }
+
   /** 兼容旧调用：等价于 getProviderKey('mineru') */
   async getMinerUToken() {
     return this.getProviderKey('mineru');

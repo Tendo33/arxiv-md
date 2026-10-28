@@ -7,6 +7,7 @@ import { showConfirm } from './confirm-dialog';
 import { createTaskRow, setTaskListLanguage } from './task-list';
 import { pageContext, recentTasks } from './page-context';
 import { renderShortcutGuide } from './shortcut-guide';
+import { providerLabel } from '@config/pdf-providers';
 
 let currentTasks = [];
 let currentLang = 'en';
@@ -16,6 +17,7 @@ let tabId = null;
 let showAll = false;
 let busy = false;
 let lastMode = 'markdown';
+let active = { id: 'paddleocr', hasKey: false };
 
 const $ = (id) => document.getElementById(id);
 const t = () => translations[currentLang];
@@ -45,12 +47,14 @@ async function init() {
   } catch (error) {
     logger.warn('tabs.query failed:', error);
   }
+  await loadActiveProvider();
   renderContext();
   await loadTasks();
 
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'local' && changes.mineruTasks) scheduleLoadTasks();
     if (area === 'sync' && changes.language) updateLanguage(changes.language.newValue);
+    if ((area === 'sync' && changes.pdfProvider) || (area === 'local' && changes.providerKeys)) loadActiveProvider();
   });
 }
 
@@ -71,6 +75,17 @@ function renderShortcut() {
   renderShortcutGuide(document, shortcutCmds, navigator.userAgent, t(), (url) => {
     Promise.resolve(chrome.tabs.create({ url })).catch(() => {});
   });
+}
+
+/** R4-15：按钮旁小字显示当前后端 */
+async function loadActiveProvider() {
+  try { active = await storage.getActivePdfProvider(); } catch (error) { logger.warn('provider lookup failed:', error); }
+  renderBackend();
+}
+
+function renderBackend() {
+  const el = $('backendLabel');
+  if (el) el.textContent = `(${providerLabel(active.id)})`;
 }
 
 function scheduleLoadTasks() {
@@ -99,6 +114,7 @@ function updateLanguage(lang) {
     const key = el.getAttribute('data-i18n-aria');
     if (tr[key]) el.setAttribute('aria-label', tr[key]);
   });
+  renderBackend();
   renderContext();
   renderRecent();
   renderShortcut();
@@ -172,9 +188,9 @@ async function runExport(mode) {
   hideAlerts();
   const tr = t();
   if (mode === 'mineru') {
-    const token = await storage.getMinerUToken();
-    if (!token) {
-      showErr(tr.popup_err_token_title, tr.popup_err_token_hint);
+    await loadActiveProvider();
+    if (!active.hasKey) {
+      showErr(tr.popup_err_token_title.replace('{provider}', providerLabel(active.id)), tr.popup_err_token_hint);
       renderContext();
       return;
     }
@@ -189,7 +205,7 @@ async function runExport(mode) {
   }
   setBusy(false);
   if (res && res.ok) {
-    showOk(mode === 'mineru' ? tr.popup_saved_bg : (res.filename || res.message || ''));
+    showOk(mode === 'mineru' ? tr.popup_saved_bg.replace('{provider}', providerLabel(active.id)) : (res.filename || res.message || ''));
   } else {
     showErr(res?.error || tr.popup_badge_err, res?.unreachable ? '' : tr.popup_err_generic_hint);
     showRefresh(!!res?.unreachable);
