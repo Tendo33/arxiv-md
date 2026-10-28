@@ -249,26 +249,22 @@ export function cleanLatexFormula(latex) {
  * 恢复数学公式占位符
  */
 export function restoreMathPlaceholders(markdown, mathMap) {
-  let result = markdown;
-
-  mathMap.forEach((value, placeholder) => {
-    let { latex, isBlock } = value;
-
-    // 清理 LaTeX 中不支持的命令
-    latex = cleanLatexFormula(latex);
-
-    const escapedPlaceholder = placeholder.replace(
-      /[.*+?^${}()|[\]\\]/g,
-      '\\$&',
-    );
-    const regex = new RegExp(escapedPlaceholder, 'g');
-
-    // Function replacers keep literal dollars. A string replacer treats $$ as one $.
-    const rendered = isBlock ? `$$${latex.trim()}$$` : `$${latex.trim()}$`;
-    result = result.replace(regex, () => rendered);
-  });
-
-  return result;
+  if (!mathMap || mathMap.size === 0) return markdown;
+  // 单次扫描：一条正则匹配全部占位符再查表，替代逐个 new RegExp 全文替换（O(N·L) → O(L)）
+  const rendered = new Map();
+  return markdown.replace(
+    /MATH(BLOCK|INLINE)START\d+MATH\1END/g,
+    (ph) => {
+      if (rendered.has(ph)) return rendered.get(ph);
+      const value = mathMap.get(ph);
+      if (!value) return ph;
+      const latex = cleanLatexFormula(value.latex).trim();
+      // 函数替换保留字面 $，字符串替换会把 $$ 当成一个 $
+      const out = value.isBlock ? `$$${latex}$$` : `$${latex}$`;
+      rendered.set(ph, out);
+      return out;
+    },
+  );
 }
 
 const TEXT_GROUP_RE = /\\(?:text|textrm|textbf|textit|texttt|textsf|mbox)\s*\{/g;
