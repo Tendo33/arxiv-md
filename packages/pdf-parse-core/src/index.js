@@ -3,3 +3,4 @@ export const CORE_VERSION = '0.1.0';
 export * from './provider.js';
 export { createRegistry } from './registry.js';
 export * from './errors.js';
+export * from './normalize/index.js';
