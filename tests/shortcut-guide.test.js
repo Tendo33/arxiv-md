@@ -82,3 +82,14 @@ describe('快捷键未设置引导', () => {
     expect(src).toMatch(/chrome\.tabs\.create\(\{ url \}\)/);
   });
 });
+
+describe('taskList 地标', () => {
+  test('taskList 为带名称的 region', () => {
+    const d = parseHTML(read('src/ui/popup/popup.html')).document;
+    const el = d.getElementById('taskList');
+    expect(el.getAttribute('role')).toBe('region');
+    expect(el.getAttribute('aria-label')).toBeTruthy();
+    expect(el.getAttribute('data-i18n-aria')).toBe('popup_task_list');
+    expect(el.getAttribute('aria-live')).toBe('polite');
+  });
+});
