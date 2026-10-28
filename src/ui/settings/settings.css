@@ -721,3 +721,6 @@ select.input-field { appearance: auto; cursor: pointer; }
 .input-group { flex-wrap: nowrap; }
 .input-group input { min-width: 0; flex: 1; }
 .input-group .btn-icon { flex: none; }
+
+/* 设计验收 M5：授权/撤销按钮用设置页按钮样式；窄屏下不拉满整行 */
+.permission-row .btn, .revoke-row .btn { min-height: 36px; padding: 0 12px; width: auto; flex: none; }

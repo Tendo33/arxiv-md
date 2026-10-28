@@ -12,3 +12,11 @@ describe('设计验收 M4：Key 输入组不换行', () => {
     expect(css).toMatch(/\.input-group input \{ min-width: 0; flex: 1; \}/);
   });
 });
+
+describe('设计验收 M5：授权/撤销按钮套 .btn 基类', () => {
+  test('两个按钮 class="btn btn-secondary"，行内按钮 ≥36px 且不拉满', () => {
+    expect(html).toMatch(/id="grantPermissionBtn" class="btn btn-secondary"/);
+    expect(html).toMatch(/id="revokePermissionBtn" class="btn btn-secondary"/);
+    expect(css).toMatch(/\.permission-row \.btn, \.revoke-row \.btn \{ min-height: 36px; padding: 0 12px; width: auto; flex: none; \}/);
+  });
+});
