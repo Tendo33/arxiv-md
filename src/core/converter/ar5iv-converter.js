@@ -266,7 +266,7 @@ ${markdown}`;
 
 const PAGE_CHROME_SELECTOR = [
   'footer', 'header', 'nav', 'script', 'style', 'noscript',
-  '[class*="ltx_page_"]', '.ltx_rdf', '.ar5iv-footer', '.arxiv-html-footer',
+  '[class*="ltx_page_"]', '.ltx_TOC', '.ltx_rdf', '.ar5iv-footer', '.arxiv-html-footer',
   '.ds-site-footer', '#fixed-buttons-container', '[role="navigation"]',
 ].join(', ');
 
