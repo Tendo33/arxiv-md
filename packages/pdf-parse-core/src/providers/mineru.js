@@ -52,7 +52,7 @@ export const mineruProvider = defineProvider({
   id: ID,
   label: 'MinerU',
   hosts: ['https://mineru.net/*', 'https://cdn-mineru.openxlab.org.cn/*'],
-  // Simon 决定 A：MinerU 域名保持在 manifest host_permissions，不走按需申请
+  // MinerU 域名保持在 manifest host_permissions，不走按需申请
   permissionMode: 'install',
   credentialFields: [{ key: 'token', label: 'API Token', secret: true }],
   keyUrl: 'https://mineru.net/apiManage/token',

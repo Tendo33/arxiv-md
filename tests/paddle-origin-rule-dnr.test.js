@@ -6,7 +6,7 @@ const manifest = require('../src/manifest.json');
 
 const mk = (perm) => ({ permissions: createPermissions(perm), runtime: { id: 'extid' }, declarativeNetRequest: { updateDynamicRules: jest.fn(async () => {}) } });
 
-describe('DNR（已批）：仅星河域名删除 Origin', () => {
+describe('DNR 可选权限：仅星河域名删除 Origin', () => {
   test('manifest：只进 optional_permissions，不是必需权限', () => {
     expect(manifest.optional_permissions).toEqual([DNR_PERMISSION]);
     expect(manifest.permissions).not.toContain(DNR_PERMISSION);

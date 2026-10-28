@@ -1,4 +1,4 @@
-// DNR（Simon 22:40 已批）：星河网关对带 chrome-extension:// Origin 的请求返回空 body 403。
+// DNR 可选权限，仅作用于 paddleocr.aistudio-app.com，用于去掉 Origin 头：星河网关对带 chrome-extension:// Origin 的请求返回空 body 403。
 // 只在用户授予可选权限 declarativeNetRequestWithHostAccess 后生效；规则只作用于 paddleocr.aistudio-app.com，
 // 只删本扩展自己发出的请求的 Origin 头，不影响其他网站和其他扩展。
 import logger from '@utils/logger';

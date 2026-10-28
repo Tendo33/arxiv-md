@@ -435,7 +435,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   }
 });
 resumeAndRefresh();
-// DNR（已批）：授权后才装星河 Origin 规则
+// DNR 可选权限：用户授权后才安装星河 Origin 规则
 installPaddleOriginRuleListeners();
 
 export { processMinerUTaskInBackground };

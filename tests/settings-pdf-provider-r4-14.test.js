@@ -27,7 +27,7 @@ function setup({ provider = 'paddleocr', keys = {}, origins = [], answer = true,
 }
 
 describe('R4-14 设置页：后端选择 + Key', () => {
-  test('下拉框只有 PaddleOCR（默认）和 MinerU；本地服务本轮隐藏（决定 B）', () => {
+  test('下拉框只有 PaddleOCR（默认）和 MinerU；本地服务本轮隐藏', () => {
     const { document } = parseHTML(html);
     const opts = [...document.querySelectorAll('#pdfProvider option')].map((o) => o.value);
     expect(opts).toEqual(['paddleocr', 'mineru']);

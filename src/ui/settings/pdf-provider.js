@@ -2,7 +2,7 @@
 // 权限申请只发生在下拉框 change / 按钮 click（用户手势）里；用户拒绝 → 下拉框回到原来的后端。
 import { requestProviderPermission, hasProviderPermission, removeProviderPermission, canRevoke, permissionsFor } from '@pdf-core/permissions';
 
-/** 本轮 UI 可选的后端（本地服务按 Simon 决定 B：本轮隐藏，只预留接口） */
+/** 本轮 UI 可选的后端（本地服务本轮隐藏，只预留接口） */
 export const UI_PROVIDERS = ['paddleocr', 'mineru'];
 export const KEY_LINKS = {
   paddleocr: 'https://aistudio.baidu.com/account/accessToken',
