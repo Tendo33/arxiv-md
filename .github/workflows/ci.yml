@@ -22,3 +22,39 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+
+  # batch6：扩展 e2e（有界面的 Chromium + xvfb）。新增 e2e 脚本时只需往 E2E_SCRIPTS 里追加一行。
+  # 本仓库不依赖 playwright，这里装到仓库外的临时目录，经 E2E_PLAYWRIGHT_DIR 交给脚本。
+  e2e:
+    runs-on: ubuntu-latest
+    needs: build
+    env:
+      PLAYWRIGHT_VERSION: 1.60.0
+      E2E_SCRIPTS: |
+        scripts/e2e-shortcut.js
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install Playwright Chromium
+        run: |
+          mkdir -p "$RUNNER_TEMP/e2e-tools"
+          cd "$RUNNER_TEMP/e2e-tools"
+          npm init -y >/dev/null
+          npm install --no-save --no-audit --no-fund "playwright@${PLAYWRIGHT_VERSION}"
+          npx playwright install --with-deps chromium
+          sudo apt-get install -y xvfb
+          echo "E2E_PLAYWRIGHT_DIR=$RUNNER_TEMP/e2e-tools" >> "$GITHUB_ENV"
+          echo "CHROME_PATH=$(node -p "require('playwright').chromium.executablePath()")" >> "$GITHUB_ENV"
+      - run: npm run build
+      - name: Run e2e scripts
+        run: |
+          set -e
+          for s in $E2E_SCRIPTS; do
+            echo "::group::$s"
+            xvfb-run -a node "$s"
+            echo "::endgroup::"
+          done
