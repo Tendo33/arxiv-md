@@ -55,7 +55,7 @@ describe('P2-A popup', () => {
   });
   test('runExport uses the device hint when starting a parse', () => {
     const js = read('src/ui/popup/popup.js');
-    expect(js).toMatch(/const here = keyHereMessage\(active, tr, providerLabel\(active\.id\)\);\s*if \(here\) \{ showErr\(here\.title, here\.hint\)/);
+    expect(js).toMatch(/const here = keyHereMessage\(active, tr, providerLabel\(active\.id\)\);\s*(\/\/[^\n]*\s*)?if \(here\) showNeedKey\(here\.title, here\.hint\)/);
   });
 });
 

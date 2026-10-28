@@ -22,7 +22,7 @@ body{min-width:320px}
 .row .n{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .row small{color:var(--text-2);flex:none;font-size:var(--fs-xs)}
 @media (max-width:339px){.ft{flex-wrap:wrap;row-gap:2px}.ft .hint{display:none}}
-#alertErr .btn-refresh{margin-top:6px}
+#alertErr .btn-refresh,#alertKey .btn-refresh{margin-top:6px}
 .row .row-act{flex:none;display:flex;gap:2px;margin:-2px 0;margin-left:auto}
 .row .row-act .btn{min-height:24px;padding:0 6px;font-size:12px}
 .row .row-act .btn{min-width:24px}

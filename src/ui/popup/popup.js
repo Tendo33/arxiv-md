@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', init);
 async function init() {
   await initLanguage();
   $('settingsBtn').addEventListener('click', openSettings);
+  $('keySettingsBtn').addEventListener('click', openSettings);
   $('clearCompletedBtn').addEventListener('click', clearCompleted);
   $('recentAll').addEventListener('click', () => { showAll = !showAll; renderRecent(); });
   $('refreshBtn').addEventListener('click', () => {
@@ -170,6 +171,13 @@ function showOk(text) {
   $('alertOk').classList.remove('hidden');
 }
 
+function showNeedKey(title, hint) {
+  hideAlerts();
+  $('keyHereTitle').textContent = title;
+  $('keyHereHint').textContent = hint || '';
+  $('alertKey').classList.remove('hidden');
+}
+
 function showErr(title, hint) {
   hideAlerts();
   ctx.state = 'err';
@@ -193,8 +201,9 @@ async function runExport(mode) {
     await loadActiveProvider();
     if (!active.hasKey) {
       const here = keyHereMessage(active, tr, providerLabel(active.id));
-      if (here) { showErr(here.title, here.hint); $('alertKey').classList.add('hidden'); }
-      else showErr(tr.popup_err_token_title.replace('{provider}', providerLabel(active.id)), tr.popup_err_token_hint);
+      // 设计建议 A：缺 Key 不是失败，用现有的 info 提示框（#alertKey）加「打开设置」，红框只留给真正的错误
+      if (here) showNeedKey(here.title, here.hint);
+      else showNeedKey(tr.popup_err_token_title.replace('{provider}', providerLabel(active.id)), tr.popup_err_token_hint);
       ctx.state = 'needkey'; // 设计复核 S1：没有任务失败，卡片用中性的「需要 Key」
       renderContext();
       return;
