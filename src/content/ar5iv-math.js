@@ -223,6 +223,8 @@ export function cleanLatexFormula(latex) {
 
   // 6b. KaTeX 不支持的文本命令 / 交叉引用
   result = result.replace(/\\textsc\b/g, '\\text');
+  // 论文里常见的自定义算子宏（\newcommand\diag{\operatorname{diag}} 之类），KaTeX 不认识
+  result = result.replace(/\\(diag|argmax|argmin|Tr|tr|rank|sign|sgn)(?![a-zA-Z])/g, '\\operatorname{$1}');
   result = result.replace(/~?\\(?:eqref|ref|autoref|cref|Cref|label)\s*\{[^}]*\}/g, '');
 
   // LaTeXML 输出的 \\begin{array}[]{c} 空可选参数 KaTeX 不认
