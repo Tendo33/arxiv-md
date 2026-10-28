@@ -6,6 +6,8 @@ import { detectPageTheme } from './page-theme';
 import storage from '@utils/storage';
 import { REGEX } from '@config/constants';
 import { translations } from '@config/locales';
+import { providerLabel } from '@config/pdf-providers';
+import { setProgressProvider } from './progress-ui';
 
 let t = translations.en;
 let startConversion = () => {};
@@ -32,9 +34,11 @@ export async function injectConvertButton() {
 
   // 读取用户设置的转换模式
   let conversionMode = 'fast'; // 默认模式
+  let pdfProvider; // 未选择时 providerLabel 用默认后端
   try {
-    const result = await chrome.storage.sync.get('conversionMode');
+    const result = await chrome.storage.sync.get(['conversionMode', 'pdfProvider']);
     conversionMode = result.conversionMode || 'fast';
+    pdfProvider = result.pdfProvider;
   } catch (error) {
     logger.warn('Failed to get conversion mode, using default:', error);
   }
@@ -42,8 +46,9 @@ export async function injectConvertButton() {
   // 根据模式设置显示标签
   const modeLabel =
     conversionMode === 'always'
-      ? t.content_mode_mineru
+      ? t.content_mode_mineru.replace('{provider}', providerLabel(pdfProvider))
       : t.content_mode_ar5iv;
+  setProgressProvider(pdfProvider);
 
   // 注入样式
   const style = document.createElement('style');

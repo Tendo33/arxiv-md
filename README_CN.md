@@ -75,7 +75,7 @@ npm run build
 
 | 设置项 | 说明 |
 | --- | --- |
-| 转换模式 | `标准模式`（推荐）：官方 HTML → ar5iv → PDF；`MinerU 模式`：始终用当前选定的后端做 PDF 解析，需要对应的 Key |
+| 转换模式 | `标准模式`（推荐）：官方 HTML → ar5iv → PDF；`PDF 解析模式`：始终用当前选定的后端做 PDF 解析，需要对应的 Key |
 | PDF 解析 | 选择后端（默认 PaddleOCR，也可选 MinerU）并填写对应的 API Key；Key 只存在本机 `chrome.storage.local`，不会同步；可在设置页测试连接 |
 | 自动转换 | 进入论文页时弹出转换提示 |
 | Markdown 元数据 | 是否写入 YAML frontmatter |

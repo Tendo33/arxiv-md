@@ -36,7 +36,7 @@ describe('Round 2 设计验收建议（S 级）', () => {
     expect(translations.zh.popup_btn_confirm).toBe('删除');
   });
   test('文案：统计标签 sentence case，不用 ASCII 省略号', () => {
-    expect(translations.en.stats_mineru).toBe('MinerU success');
+    expect(translations.en.stats_mineru).toBe('PDF parsing success');
     expect(translations.en.stats_ar5iv).toBe('HTML success');
     for (const l of ['en', 'zh']) {
       for (const [k, v] of Object.entries(translations[l])) {

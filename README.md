@@ -77,7 +77,7 @@ Open `chrome://extensions`, enable Developer mode, click "Load unpacked" and pic
 
 | Setting | Description |
 | --- | --- |
-| Conversion mode | `Standard` (recommended): official HTML → ar5iv → PDF; `MinerU mode`: always use PDF parsing with the selected provider, needs its key |
+| Conversion mode | `Standard` (recommended): official HTML → ar5iv → PDF; `PDF parsing mode`: always use PDF parsing with the selected provider, needs its key |
 | PDF parsing | Pick the provider (PaddleOCR by default, or MinerU) and enter its API key; keys stay in `chrome.storage.local` on this device and never sync; the connection can be tested from Settings |
 | Auto convert | Show a convert prompt when you open a paper |
 | Markdown metadata | Write YAML frontmatter or not |

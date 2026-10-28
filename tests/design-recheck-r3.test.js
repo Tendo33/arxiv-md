@@ -21,8 +21,7 @@ test('N1：Download 按钮带 aria-label/title，≤339px 只显示图标', () =
   expect(css).toMatch(/@media \(max-width:339px\)\{[^\n]*\.btn-dl \.lbl\{display:none\}/);
 });
 
-test('S1：英文设置页 MinerU 标题句首大写', () => {
-  expect(translations.en.mode_mineru_title).toBe('MinerU mode');
-  expect(translations.en.mineru_title).toBe('MinerU API configuration');
-  expect(settings).not.toMatch(/MinerU Mode|MinerU API Configuration/);
+test('S1：英文设置页模式标题句首大写', () => {
+  expect(translations.en.mode_mineru_title).toBe('PDF parsing mode');
+  expect(settings).not.toMatch(/MinerU Mode|MinerU API Configuration|PDF Parsing Mode/);
 });
