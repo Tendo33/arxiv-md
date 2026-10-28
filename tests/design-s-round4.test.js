@@ -20,3 +20,20 @@ test('S2 行内后端名 .row .prov 为 11px', () => {
   expect(css()).toMatch(/\.row \.prov \{[^}]*font-size: 11px/);
   expect(css()).not.toMatch(/\.row \.prov \{[^}]*font-size: 10px/);
 });
+
+describe('design S3: row actions right-aligned, awaiting title >= 80px', () => {
+  const css = require('fs').readFileSync(require('path').join(__dirname, '../src/ui/popup/popup.css'), 'utf8');
+  test('row-act has margin-left:auto', () => {
+    expect(css).toMatch(/\.row \.row-act\{[^}]*margin-left:auto/);
+  });
+  test('provider label hidden below 379px', () => {
+    expect(css).toMatch(/@media \(max-width:378px\)\{\.row \.prov\{display:none\}\}/);
+  });
+  test('awaiting title min-width 80px', () => {
+    expect(css).toMatch(/\.row\[data-status="awaiting_consent"\] \.n\{min-width:80px\}/);
+  });
+  test('provider name kept in title tooltip', () => {
+    const js = require('fs').readFileSync(require('path').join(__dirname, '../src/ui/popup/task-list.js'), 'utf8');
+    expect(js).toMatch(/\$\{title\} · \$\{providerLabel\(task\.provider\)\}/);
+  });
+});
