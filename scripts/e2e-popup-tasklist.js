@@ -51,9 +51,13 @@ function loadPlaywright() {
         await p.goto(`chrome-extension://${id}/popup.html`);
         await p.waitForSelector('#taskList .row', { timeout: 10000 });
         await p.waitForTimeout(800);
-        // 点击失败直接抛错（由外层 catch 判失败），不再吞掉；并断言缺 Key 提示 #alertKey 真的出现
+        // 复审 bf11ea4：播种的是 P2-A 场景，renderKeyHint 一打开就显示 #alertKey。
+        // 顺序：先断言可见 → 页面里加 .hidden → 断言已隐藏 → 点击（不吞错）→ 等它重新可见
+        await p.waitForSelector('#alertKey', { state: 'visible', timeout: 5000 });
+        await p.evaluate(() => document.getElementById('alertKey').classList.add('hidden'));
+        await p.waitForSelector('#alertKey', { state: 'hidden', timeout: 2000 });
         await p.click('#mineruBtn', { timeout: 5000 });
-        await p.waitForSelector('#alertKey:not(.hidden)', { state: 'visible', timeout: 5000 });
+        await p.waitForSelector('#alertKey', { state: 'visible', timeout: 5000 });
         const m = await p.evaluate(() => {
           const list = document.getElementById('taskList');
           list.scrollTop = 0;
@@ -71,6 +75,23 @@ function loadPlaywright() {
         if (!m.ok) { console.error(`e2e tasklist: FAIL ${lang}@${w} ${JSON.stringify(m)}`); fail++; }
         await p.close();
       }
+      // 更强的一条：没在 sync 里选过后端（keyMissingHere=false）时，打开 popup 不显示 #alertKey、标题为空；
+      // 只有点击路径的 showNeedKey 会显示它并写入「缺 Token」标题。弄坏 showNeedKey 的取消隐藏就会失败。
+      await sw.evaluate(() => chrome.storage.sync.remove('pdfProvider'));
+      const q = await ctx.newPage();
+      await q.setViewportSize({ width: 360, height: 600 });
+      await q.addInitScript(() => { chrome.tabs.query = async () => [{ id: 999999, url: 'https://arxiv.org/abs/2402.19173', title: 'StarCoder 2 and The Stack v2' }]; });
+      await q.goto(`chrome-extension://${id}/popup.html`);
+      await q.waitForSelector('#taskList .row', { timeout: 10000 });
+      await q.waitForTimeout(800);
+      const before = await q.evaluate(() => ({ hidden: document.getElementById('alertKey').classList.contains('hidden'), title: document.getElementById('keyHereTitle').textContent }));
+      if (!before.hidden || before.title) throw new Error(`e2e tasklist: ${lang} 未选后端时打开就显示了 #alertKey ${JSON.stringify(before)}`);
+      await q.click('#mineruBtn', { timeout: 5000 });
+      await q.waitForSelector('#alertKey', { state: 'visible', timeout: 5000 });
+      const title = (await q.textContent('#keyHereTitle')).trim();
+      if (!title) throw new Error(`e2e tasklist: ${lang} 点击后 #keyHereTitle 为空`);
+      out[`${lang}-unchosen`] = { title };
+      await q.close();
     } finally {
       await ctx.close();
       fs.rmSync(prof, { recursive: true, force: true });
