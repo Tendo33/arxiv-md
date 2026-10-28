@@ -51,8 +51,9 @@ function loadPlaywright() {
         await p.goto(`chrome-extension://${id}/popup.html`);
         await p.waitForSelector('#taskList .row', { timeout: 10000 });
         await p.waitForTimeout(800);
-        await p.click('#mineruBtn').catch(() => {});
-        await p.waitForTimeout(400);
+        // 点击失败直接抛错（由外层 catch 判失败），不再吞掉；并断言缺 Key 提示 #alertKey 真的出现
+        await p.click('#mineruBtn', { timeout: 5000 });
+        await p.waitForSelector('#alertKey:not(.hidden)', { state: 'visible', timeout: 5000 });
         const m = await p.evaluate(() => {
           const list = document.getElementById('taskList');
           list.scrollTop = 0;
