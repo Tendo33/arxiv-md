@@ -93,6 +93,6 @@ describe('C-2 像素回归（round3 对比截图）', () => {
   });
   test('列表行操作按钮不撑高行（行高与样稿一致 37px）', () => {
     expect(css).toMatch(/\.row \.row-act\{[^}]*margin:-2px 0/);
-    expect(css).toMatch(/\.row \.badge\{padding:1px 6px\}/);
+    expect(css).toMatch(/\.row \.badge\{padding:1px 6px[;}]/);
   });
 });

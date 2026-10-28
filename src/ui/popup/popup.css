@@ -17,7 +17,8 @@ body{min-width:320px}
 .sec-x{display:flex;gap:4px}
 #taskList{padding:4px 10px;overflow-y:auto;min-height:0;overscroll-behavior:contain}
 .recent-empty{padding:10px;color:var(--text-2);font-size:var(--fs-xs)}
-.row .badge{padding:1px 6px}
+/* AF3-02：状态标签不换行、不被标题挤压（中文按字断行，320/360 宽都会折成两行） */
+.row .badge{padding:1px 6px;flex:none;white-space:nowrap}
 .row .n{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .row small{color:var(--text-2);flex:none;font-size:var(--fs-xs)}
 @media (max-width:339px){.ft{flex-wrap:wrap;row-gap:2px}.ft .hint{display:none}}
