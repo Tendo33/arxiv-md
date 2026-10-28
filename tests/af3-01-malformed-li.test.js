@@ -45,4 +45,31 @@ describe('AF3-01 不规范 </li></li> 不再截断正文', () => {
     expect(article.querySelector('#S5')).not.toBeNull();
     expect(article.textContent).not.toContain('f');
   });
+
+  // 审查 P2-1：body 级的 ul/section 不能被收进来
+  test('rescueEscapedContent 不收 body 级的 <ul class="menu"> 和 <section id="cookie">', () => {
+    const { document } = parseHTML('<html><body><div class="ltx_page_main"><article class="ltx_document"><p>a</p></article>'
+      + '<section class="ltx_section" id="S5">b</section></div>'
+      + '<ul class="menu"><li>menu</li></ul><section id="cookie">cookie</section></body></html>');
+    const article = document.querySelector('article');
+    expect(rescueEscapedContent(article)).toBe(1);
+    expect(article.querySelector('#S5')).not.toBeNull();
+    expect(article.querySelector('ul.menu')).toBeNull();
+    expect(article.querySelector('#cookie')).toBeNull();
+  });
+
+  test('rescueEscapedContent 只收 ltx_ 节点，祖先只走到最外层 .ltx_page_main 为止', () => {
+    const { document } = parseHTML('<html><body><div class="wrapper"><div class="ltx_page_main"><div class="ltx_page_content">'
+      + '<article class="ltx_document"><p>a</p></article><ul class="share"><li>s</li></ul></div>'
+      + '<section class="ltx_section" id="S5">b</section></div>'
+      + '<section class="ltx_section" id="S6">c</section></div>'
+      + '<div class="ltx_para" id="outside">o</div></body></html>');
+    const article = document.querySelector('article');
+    // 最外层 page_main 后面的兄弟（#S6）还要收（真实页面正文就落在这里），再往上的 #outside 不收
+    expect(rescueEscapedContent(article)).toBe(2);
+    expect(article.querySelector('#S5')).not.toBeNull();
+    expect(article.querySelector('#S6')).not.toBeNull();
+    expect(article.querySelector('ul.share')).toBeNull();
+    expect(article.querySelector('#outside')).toBeNull();
+  });
 });

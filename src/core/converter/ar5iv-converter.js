@@ -274,17 +274,26 @@ function isEscapedPaperNode(node) {
   if (!node || node.nodeType !== 1) return false;
   if (node.matches(PAGE_CHROME_SELECTOR)) return false;
   const cls = typeof node.className === 'string' ? node.className : '';
-  return /(^|\s)ltx_/.test(cls) || /^(SECTION|FIGURE|TABLE|LI|UL|OL)$/.test(node.tagName);
+  // 审查 P2-1：只收 LaTeXML 节点（ltx_ 类），不再按标签名放行 body 级的 ul/section
+  return /(^|\s)ltx_/.test(cls);
 }
+
+// 审查 P2-1：向上找祖先到页面主容器为止，不再走到 body/html
+const PAGE_ROOT_SELECTOR = '.ltx_page_main, .ltx_page_content';
 
 /**
  * AF3-01：把解析器提前闭合 article 后落在其祖先后面的正文节点，按文档顺序移回 article 末尾。
- * 只收 LaTeXML 正文节点（ltx_ 类或 section/figure/table/列表），页面页脚、导航等不动。
+ * 只收 LaTeXML 正文节点（ltx_ 类），页面页脚、导航等不动；祖先只走到最外层的 .ltx_page_main/.ltx_page_content。
  * 返回收回的节点数。
  */
 export function rescueEscapedContent(article) {
   let moved = 0;
-  for (let anc = article; anc && anc.parentElement; anc = anc.parentElement) {
+  // 审查 P2-1：只走到最外层的 .ltx_page_main/.ltx_page_content（含其后的兄弟节点：
+  // 实测 </li></li> 会把 article 及这两层一起提前闭合，正文落在它们后面），不再往上；
+  // 没有这两层时不越过 body。
+  let root = null;
+  for (let a = article.parentElement; a; a = a.parentElement) if (a.matches(PAGE_ROOT_SELECTOR)) root = a;
+  for (let anc = article; anc && anc.parentElement && anc.tagName !== 'BODY'; anc = anc.parentElement) {
     let sib = anc.nextSibling;
     while (sib) {
       const next = sib.nextSibling;
@@ -294,6 +303,7 @@ export function rescueEscapedContent(article) {
       }
       sib = next;
     }
+    if (anc === root) break;
   }
   return moved;
 }
