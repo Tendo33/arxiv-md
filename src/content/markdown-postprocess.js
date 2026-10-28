@@ -41,7 +41,6 @@ export function postProcessMarkdown(markdown) {
   result = result.replace(/^(\s*-\s*)•\s*/gm, '$1');
 
   // 修复表格和空格
-  result = result.replace(/\|\s*\|\s*\|/g, '| |');
   result = result.replace(/[ \t]+$/gm, '');
 
   // 移除 HTML 实体残留
