@@ -34,9 +34,22 @@ export function renderTaskList(tasks) {
   emptyStateEl.style.display = 'none';
 
   // 按创建时间倒序排列（最新的在前）
-  const sortedTasks = [...tasks].sort((a, b) => b.createdAt - a.createdAt);
+  // 时间无效的排在最后，避免 NaN 打乱排序
+  const timeOf = (t) => (t && Number.isFinite(t.createdAt) ? t.createdAt : -Infinity);
+  const sortedTasks = [...tasks].sort((a, b) => {
+    const ta = timeOf(a), tb = timeOf(b);
+    return ta === tb ? 0 : tb > ta ? 1 : -1;
+  });
 
-  listEl.innerHTML = sortedTasks.map(createTaskCard).join('');
+  // A2-02：单条任务数据损坏只跳过这一条，不让整个列表变空
+  listEl.innerHTML = sortedTasks.map((task) => {
+    try {
+      return createTaskCard(task);
+    } catch (err) {
+      console.warn('Skip broken task:', task && task.id, err);
+      return '';
+    }
+  }).join('');
 }
 
 /**
