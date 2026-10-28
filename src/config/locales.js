@@ -387,7 +387,7 @@ export const translations = {
     content_progress_failed: '失败',
     content_progress_submitted: '已提交',
     content_result_saved: '已保存：{filename}',
-    content_result_incomplete: '页面约有 {expected} 个标题，只导出了 {actual} 个。请打开文件核对，必要时改用「PDF（标题）」对照原文。',
+    content_result_incomplete: '页面约有 {expected} 个标题，只导出了 {actual} 个。请打开文件核对，必要时改用『PDF（标题）』对照原文。',
     content_btn_copy_md: '复制 Markdown',
     content_copy_done: '已复制到剪贴板',
     content_copy_failed: '复制失败，请打开已下载的文件',

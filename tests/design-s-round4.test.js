@@ -56,3 +56,10 @@ describe('design S6', () => {
     expect(translations.en.err_reason_forbidden_empty).toMatch(/^Request was rejected/);
   });
 });
+
+describe('design S7', () => {
+  test('zh incomplete detail uses 『』 for the inner quote', () => {
+    expect(translations.zh.content_result_incomplete).toContain('『PDF（标题）』');
+    expect(translations.zh.content_result_incomplete).not.toContain('「PDF（标题）」');
+  });
+});
