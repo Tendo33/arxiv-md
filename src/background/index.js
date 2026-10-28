@@ -18,6 +18,9 @@ if (chrome.tabs && chrome.tabs.onUpdated) {
     if (info && info.status === 'loading') actionBadge.tabLoading(tabId);
   });
 }
+// Round 3：worker 重启 / 浏览器启动时清掉丢了计时器的残留徽标
+actionBadge.sweep(chrome.tabs);
+if (chrome.runtime.onStartup) chrome.runtime.onStartup.addListener(() => actionBadge.sweep(chrome.tabs));
 
 logger.info('Background service worker initialized');
 

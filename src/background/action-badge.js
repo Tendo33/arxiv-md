@@ -76,6 +76,17 @@ export function createActionBadge(actionApi, timers = defaultTimers) {
       shortcutTabs.delete(tabId);
       clear(tabId);
     },
+    /**
+     * Round 3：service worker 启动（含被回收后重启）或浏览器启动时，内存里的计时器已经丢了，
+     * 把所有标签页上可能残留的徽标清掉。tabs.query 不带 url 过滤时不需要 tabs 权限。
+     */
+    async sweep(tabsApi) {
+      if (!actionApi || !tabsApi || typeof tabsApi.query !== 'function') return 0;
+      let tabs = [];
+      try { tabs = (await tabsApi.query({})) || []; } catch (_) { return 0; }
+      for (const t of tabs) if (t && t.id != null && !shortcutTabs.has(t.id)) clear(t.id);
+      return tabs.length;
+    },
   };
 }
 
