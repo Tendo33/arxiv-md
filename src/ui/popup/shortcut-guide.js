@@ -3,7 +3,7 @@
 
 export const SHORTCUT_COMMAND = 'convert-current-paper';
 
-/** 按 UA 判断浏览器：'edge' | 'firefox' | 'chrome' */
+/** 按 UA 判断浏览器：'edge' | 'firefox' | 'chrome'（Brave 的 UA 与 Chrome 相同；Opera 也归为 chrome，由 Opera 把 chrome:// 重定向，真机验证前不单独处理） */
 export function detectBrowser(ua = '') {
   if (/\bFirefox\//.test(ua)) return 'firefox';
   if (/\bEdg\//.test(ua)) return 'edge';

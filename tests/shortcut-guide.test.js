@@ -8,8 +8,13 @@ const UA = {
   chrome: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36',
   edge: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36 Edg/156.0.0.0',
   firefox: 'Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0',
+  // batch5：Opera 的 UA 带 OPR/；Brave 的 UA 与 Chrome 完全相同
+  opera: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 OPR/124.0.0.0',
+  brave: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36',
 };
-const URLS = { chrome: 'chrome://extensions/shortcuts', edge: 'edge://extensions/shortcuts', firefox: null };
+// detectBrowser 的期望值：Opera 走默认 chrome:// 路径（真机验证前，由 Opera 自己重定向）；Brave 无法从 UA 区分，按 chrome 处理（Brave 会把 chrome:// 重定向到 brave://）
+const KIND = { chrome: 'chrome', edge: 'edge', firefox: 'firefox', opera: 'chrome', brave: 'chrome' };
+const URLS = { chrome: 'chrome://extensions/shortcuts', edge: 'edge://extensions/shortcuts', firefox: null, opera: 'chrome://extensions/shortcuts', brave: 'chrome://extensions/shortcuts' };
 const SET = [{ name: SHORTCUT_COMMAND, shortcut: 'Alt+Shift+M' }];
 const EMPTY = [{ name: SHORTCUT_COMMAND, shortcut: '' }];
 const read = (f) => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
@@ -33,10 +38,15 @@ describe('快捷键未设置引导', () => {
     expect(shortcutGuide([], UA.chrome).set).toBe(false);
     expect(shortcutGuide([{ name: 'x', shortcut: 'Alt+Q' }], UA.chrome).set).toBe(false);
   });
+  test('shortcut 字段为 undefined / cmds 为 undefined 也视为未设置（batch5）', () => {
+    expect(shortcutGuide([{ name: SHORTCUT_COMMAND }], UA.chrome)).toEqual({ set: false, url: URLS.chrome });
+    expect(shortcutGuide([{ name: SHORTCUT_COMMAND, shortcut: undefined }], UA.opera)).toEqual({ set: false, url: URLS.opera });
+    expect(shortcutGuide(undefined, UA.chrome).set).toBe(false);
+  });
 
   describe.each(Object.keys(UA))('%s', (b) => {
     const ua = UA[b];
-    test('UA 识别', () => expect(detectBrowser(ua)).toBe(b));
+    test('UA 识别', () => expect(detectBrowser(ua)).toBe(KIND[b]));
     test('快捷键非空：显示 kbd，不显示引导', () => {
       const d = doc(); const opened = [];
       expect(renderShortcutGuide(d, SET, ua, translations.zh, (u) => opened.push(u))).toEqual({ set: true, shortcut: 'Alt+Shift+M' });
