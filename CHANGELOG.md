@@ -6,6 +6,12 @@ For current product behavior, prefer `README.md`, `README_CN.md`, and the files 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- The popup footer shows a "Shortcut not set · Set up" guide when Chrome did not register the convert shortcut (e.g. it was taken by another extension or reserved by the browser). The button opens the browser's shortcuts page: `chrome://extensions/shortcuts` in Chrome, Brave and Opera, `edge://extensions/shortcuts` in Edge. Firefox shows a text hint instead. No new permissions.
+
 ## [1.1.12] - 2026-10-10
 
 ### Added
