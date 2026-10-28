@@ -54,15 +54,34 @@ export const CONVERSION_TIER = {
 export const ERROR_MESSAGES = {
   AR5IV_NOT_FOUND: 'ar5iv 版本不存在',
   AR5IV_PARSE_FAILED: 'ar5iv 解析失败',
-  MINERU_TOKEN_MISSING: '未配置 MinerU API Token',
-  MINERU_API_ERROR: 'MinerU API 调用失败',
-  MINERU_QUOTA_EXCEEDED: 'MinerU 配额已用完',
-  MINERU_DOWNLOAD_FAILED: 'MinerU 结果下载失败',
   PDF_DOWNLOAD_FAILED: 'PDF 下载失败',
   NETWORK_ERROR: '网络连接错误',
   NETWORK_OFFLINE: '网络连接失败，请检查网络后重试',
   UNKNOWN_ERROR: '未知错误',
 };
+
+/**
+ * R4-03：旧的 ERROR_MESSAGES.MINERU_* 已删除，改用 pdf-parse-core 的统一错误码。
+ * 兼容映射：旧键 → 新码（给仍引用旧键的外部代码/存量任务记录用）。
+ */
+export const LEGACY_MINERU_ERROR_CODES = Object.freeze({
+  MINERU_TOKEN_MISSING: 'AUTH_INVALID',
+  MINERU_API_ERROR: 'PROVIDER_FAILED',
+  MINERU_QUOTA_EXCEEDED: 'QUOTA_EXCEEDED',
+  MINERU_DOWNLOAD_FAILED: 'PROVIDER_FAILED',
+});
+
+/** 旧版硬编码的中文提示（存量任务记录里的 error 字符串）→ 新码，用于显示时重新翻译 */
+export const LEGACY_MINERU_ERROR_TEXT = Object.freeze({
+  '未配置 MinerU API Token': 'AUTH_INVALID',
+  '未配置 MinerU Token': 'AUTH_INVALID',
+  'MinerU API 调用失败': 'PROVIDER_FAILED',
+  'MinerU 配额已用完': 'QUOTA_EXCEEDED',
+  'MinerU 结果下载失败': 'PROVIDER_FAILED',
+  'MinerU 请求超时': 'TIMEOUT',
+  'MinerU 查询超时': 'TIMEOUT',
+  'Task polling timeout': 'TIMEOUT',
+});
 
 /**
  * 配置默认值

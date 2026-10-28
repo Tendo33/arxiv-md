@@ -1,4 +1,5 @@
-import { API, DEFAULTS, ERROR_MESSAGES } from '@config/constants';
+import { API, DEFAULTS } from '@config/constants';
+import { ParseError, classifyHttpError, readErrorResponse, fromFetchFailure, isParseError } from '@pdf-core/errors';
 import logger from '@utils/logger';
 import { sleep } from '@utils/helpers';
 import { isMinerUSuccessCode, readMinerUTaskStatus } from '../mineru-response';
@@ -52,16 +53,7 @@ class MinerUClient {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        if (response.status === 401) {
-          throw new Error(ERROR_MESSAGES.MINERU_TOKEN_MISSING);
-        } else if (response.status === 429) {
-          throw new Error(ERROR_MESSAGES.MINERU_QUOTA_EXCEEDED);
-        } else {
-          throw new Error(
-            errorData.msg || errorData.message || ERROR_MESSAGES.MINERU_API_ERROR
-          );
-        }
+        throw classifyHttpError(await readErrorResponse(response), 'mineru');
       }
 
       const result = await response.json();
@@ -78,8 +70,9 @@ class MinerUClient {
       logger.info('MinerU task created:', taskId);
       return taskId;
     } catch (error) {
-      if (error.name === 'AbortError') throw new Error('MinerU 请求超时');
       logger.error('Failed to create MinerU task:', error);
+      if (isParseError(error)) throw error;
+      if (error.name === 'AbortError' || error.name === 'TypeError') throw fromFetchFailure(error, 'mineru');
       throw error;
     }
   }
@@ -114,7 +107,7 @@ class MinerUClient {
       // MinerU v4 nests state under data.extract_result; flat data remains the fallback.
       return readMinerUTaskStatus(result.data || {});
     } catch (error) {
-      if (error.name === 'AbortError') throw new Error('MinerU 查询超时');
+      if (error.name === 'AbortError') throw new ParseError('TIMEOUT', { provider: 'mineru' });
       logger.error('Failed to query MinerU task:', error);
       throw error;
     }
@@ -183,7 +176,7 @@ class MinerUClient {
       }
     }
 
-    throw new Error('Task polling timeout');
+    throw new ParseError('TIMEOUT', { provider: 'mineru' });
   }
 
   /**

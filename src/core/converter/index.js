@@ -16,6 +16,7 @@ import {
   showNotification,
 } from '@utils/helpers';
 import { incompleteNotification } from './incomplete-notification';
+import { ParseError } from '@pdf-core/errors';
 
 /**
  * 主转换器 - 智能三层降级架构
@@ -140,7 +141,7 @@ class MainConverter {
 
     const mineruToken = await storage.getMinerUToken();
     if (!mineruToken) {
-      throw new Error(ERROR_MESSAGES.MINERU_TOKEN_MISSING);
+      throw new ParseError('AUTH_INVALID', { provider: 'mineru' });
     }
 
     // 检测运行环境：background 还是 content script

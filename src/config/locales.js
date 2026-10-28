@@ -183,6 +183,21 @@ export const translations = {
     content_auto_prompt_cancel: 'Not now',
     content_confirm_duplicate:
       'A MinerU task already exists ({status}). Create a new task anyway?',
+    // R4-03：统一错误码
+    err_AUTH_INVALID: '{provider} key is missing or invalid',
+    err_QUOTA_EXCEEDED: '{provider} quota exhausted. Try tomorrow or switch provider',
+    err_RATE_LIMITED: 'Too many requests, retrying shortly',
+    err_FILE_UNSUPPORTED: '{provider} can\'t process this PDF',
+    err_TOO_LARGE: 'PDF exceeds {provider} limits',
+    err_NETWORK: 'Can\'t reach {provider}. Check your connection (or that the local service is running)',
+    err_PERMISSION_MISSING: 'Permission for {host} is required to use {provider}',
+    err_TIMEOUT: '{provider} timed out',
+    err_PROVIDER_FAILED: '{provider} failed: {reason}',
+    err_reason_forbidden_empty: 'request was rejected (HTTP 403, empty response). This is not a key or quota problem',
+    err_action_settings: 'Open settings',
+    err_action_switch: 'Switch provider',
+    err_action_retry: 'Retry',
+    err_action_grant: 'Grant access',
   },
   zh: {
     // Popup
@@ -364,5 +379,20 @@ export const translations = {
     content_auto_prompt_confirm: '开始',
     content_auto_prompt_cancel: '稍后',
     content_confirm_duplicate: '该论文的 MinerU 任务已存在（{status}）。是否仍要创建新任务？',
+    // R4-03：统一错误码
+    err_AUTH_INVALID: '{provider} 的 Key 无效或未填写',
+    err_QUOTA_EXCEEDED: '{provider} 的额度已用完，请明天再试或换一个后端',
+    err_RATE_LIMITED: '请求太频繁，稍后自动重试',
+    err_FILE_UNSUPPORTED: '{provider} 无法处理这个 PDF',
+    err_TOO_LARGE: 'PDF 太大，超出 {provider} 的限制',
+    err_NETWORK: '连不上 {provider}，请检查网络（本地服务请确认已启动）',
+    err_PERMISSION_MISSING: '需要授权访问 {host} 才能使用 {provider}',
+    err_TIMEOUT: '{provider} 处理超时，任务已停止',
+    err_PROVIDER_FAILED: '{provider} 解析失败：{reason}',
+    err_reason_forbidden_empty: '请求被拒绝（HTTP 403，响应为空），不是 Key 或额度问题',
+    err_action_settings: '去设置',
+    err_action_switch: '换后端',
+    err_action_retry: '重试',
+    err_action_grant: '去授权',
   },
 };
