@@ -27,7 +27,12 @@
 - 从摘要页提取论文元数据，必要时回退到 arXiv export API
 - 在浏览器内容脚本里用 Turndown 把官方 arXiv HTML 转成 Markdown；官方页面没有论文时再用 ar5iv
 - 尽量保留 LaTeX 公式
-- 为了保住合并单元格，复杂表格会保留为 HTML 表格
+- 简单表格转成 GFM 表格；有合并单元格的表格保留为 HTML（去掉 LaTeXML 的 class）
+- 正文引用链接到带编号的参考文献，脚注转成标准的 `[^n]` 写法
+- `<object>` 嵌入的 SVG 图保留为图片链接
+- 转换成功后页面上保留结果卡片，可一键“复制 Markdown”
+- 快捷键 `Alt+Shift+M` 可在摘要页和 PDF 页转换当前论文（可在 `chrome://extensions/shortcuts` 修改）
+- 断网时给出明确的“网络连接失败”提示，不再悄悄回退成 PDF
 - 图片保留为来源页面上的远程链接，不会本地打包
 - 可选为 Markdown 添加 YAML frontmatter
 - 在 Popup 中管理 MinerU 后台任务
@@ -65,7 +70,7 @@ npm run build
 - 来源：有可转换正文时用官方 arXiv HTML，否则用 ar5iv。frontmatter 的 `source` 为 `arxiv-html` 或 `ar5iv`
 - 转换位置：页面内容脚本
 - 元数据：可选 YAML frontmatter，包含 `title`、`arxiv_id`、`source`、`authors`、`year`
-- 表格：复杂表格保留为 HTML
+- 表格：简单表格为 GFM，有合并单元格的保留为 HTML
 - 图片：按实际抓到的 HTML 页面解析成远程链接，不做本地资源打包
 
 ### PDF 导出

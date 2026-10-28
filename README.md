@@ -27,7 +27,12 @@ The current codebase supports two real workflows:
 - Extracts paper metadata from the abstract page, with arXiv export API as fallback
 - Converts official arXiv HTML to Markdown in the browser, and uses ar5iv when that page is missing
 - Preserves formulas as LaTeX where possible
-- Keeps complex tables as raw HTML tables to avoid losing merged cells
+- Converts simple tables to GFM tables; tables with merged cells stay as HTML (without LaTeXML classes)
+- Links in-text citations to the numbered reference list and turns notes into standard `[^n]` footnotes
+- Keeps SVG figures (`<object>` embeds) as image links
+- After a successful conversion, keeps a result card on the page with a `Copy Markdown` button
+- Keyboard shortcut `Alt+Shift+M` converts the current paper on abstract and PDF pages (change it at `chrome://extensions/shortcuts`)
+- Shows a clear error when the network is offline instead of silently falling back to PDF
 - Leaves images as remote links on the host that supplied the HTML
 - Adds optional YAML frontmatter to Markdown exports
 - Tracks MinerU background tasks in the popup
@@ -65,7 +70,7 @@ Then open `chrome://extensions`, enable `Developer mode`, click `Load unpacked`,
 - Source: official arXiv HTML when it contains the paper, otherwise ar5iv. Frontmatter `source` is `arxiv-html` or `ar5iv`
 - Conversion runtime: browser content script
 - Metadata: optional YAML frontmatter with `title`, `arxiv_id`, `source`, `authors`, and `year`
-- Tables: preserved as HTML when necessary
+- Tables: GFM for simple tables, HTML for tables with merged cells
 - Images: remote links resolved from the fetched HTML page, not bundled locally
 
 ### PDF output
