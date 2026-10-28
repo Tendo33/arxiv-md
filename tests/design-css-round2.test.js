@@ -13,3 +13,35 @@ describe('Round 2 设计验收', () => {
     expect(rule(settings, '.input-field')).toMatch(/background:\s*var\(--surface\)/);
   });
 });
+
+describe('Round 2 设计验收建议（S 级）', () => {
+  const settings = read('src/ui/settings/settings.css');
+  const popup = read('src/ui/popup/popup.css');
+  const { translations } = require('../src/config/locales');
+  test('设置页：h1 20/600，.btn 8/16 + min-height 36，.btn-icon 1px，toast 用 token 且淡入淡出', () => {
+    expect(rule(settings, '.logo h1')).toMatch(/font-size: 20px[^;]*;\s*\/?\*?[^\n]*\n\s*font-weight: 600/);
+    expect(rule(settings, '.btn')).toMatch(/padding: 8px 16px/);
+    expect(rule(settings, '.btn')).toMatch(/min-height: 36px/);
+    expect(rule(settings, '.btn-icon')).toMatch(/border: 1px solid/);
+    expect(rule(settings, '.btn-test:hover')).not.toMatch(/rgba\(5, 150, 105/);
+    const toast = rule(settings, '.toast');
+    expect(toast).not.toMatch(/#1F2937|#fff\b/i);
+    expect(toast).toMatch(/transition: opacity/);
+  });
+  test('popup：删除按钮 600 + 文案 Delete/删除，确认消息 balance，无斜体', () => {
+    expect(popup).toMatch(/\.confirm-ok\{font-weight:600\}/);
+    expect(popup).toMatch(/\.confirm-message\{text-wrap:balance\}/);
+    expect(popup).toMatch(/\.action-placeholder\{font-style:normal\}/);
+    expect(translations.en.popup_btn_confirm).toBe('Delete');
+    expect(translations.zh.popup_btn_confirm).toBe('删除');
+  });
+  test('文案：统计标签 sentence case，不用 ASCII 省略号', () => {
+    expect(translations.en.stats_mineru).toBe('MinerU success');
+    expect(translations.en.stats_ar5iv).toBe('HTML success');
+    for (const l of ['en', 'zh']) {
+      for (const [k, v] of Object.entries(translations[l])) {
+        if (typeof v === 'string') expect(`${k}=${v}`).not.toMatch(/\.\.\.$/);
+      }
+    }
+  });
+});

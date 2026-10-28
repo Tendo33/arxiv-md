@@ -4,3 +4,8 @@
 @media (max-width:280px){.header{padding:12px}.header-actions{gap:4px}.icon-btn{width:36px;height:36px}.task-list-container{padding:8px}.task-actions{flex-direction:column}}@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}.settings-btn:hover svg{transform:none}}
 
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:0s!important;animation-duration:0s!important;animation-iteration-count:1!important}.settings-btn:hover svg{transform:none}}
+
+/* Round 2 设计建议 7/8/10 */
+.confirm-ok{font-weight:600}
+.confirm-message{text-wrap:balance}
+.action-placeholder{font-style:normal}

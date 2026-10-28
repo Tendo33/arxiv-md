@@ -65,8 +65,8 @@ body {
 }
 
 .logo h1 {
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 20px; /* 设计建议 2：字号阶 */
+  font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
@@ -316,7 +316,7 @@ body {
 
 .btn-icon {
   padding: 12px;
-  border: 2px solid var(--border);
+  border: 1px solid var(--border); /* 设计建议 4 */
   border-radius: 10px;
   background: var(--surface);
   cursor: pointer;
@@ -394,7 +394,7 @@ body {
 
 .btn-test:hover {
   background: var(--success);
-  box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.3);
+  box-shadow: 0 4px 6px -1px color-mix(in srgb, var(--success-solid) 30%, transparent); /* 设计建议 5 */
 }
 
 .btn-test:disabled {
@@ -486,7 +486,8 @@ body {
 
 /* Buttons */
 .btn {
-  padding: 12px 24px;
+  padding: 8px 16px; /* 设计建议 3 */
+  min-height: 36px;
   border: none;
   border-radius: 8px;
   font-size: 14px;
@@ -605,14 +606,14 @@ body {
   position: fixed;
   bottom: 32px;
   right: 32px;
-  background: #1F2937;
-  color: #fff;
+  background: var(--text-primary); /* 设计建议 6：反色 token */
+  color: var(--surface);
   padding: 16px 24px;
   border-radius: 10px;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   opacity: 0;
   transform: translateY(20px);
-  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
   z-index: 1000;
   display: flex;
