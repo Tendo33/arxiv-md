@@ -12,7 +12,10 @@
 
 [Install](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd) · [中文说明](./README_CN.md) · [FAQ](./docs/FAQ.md) · [Privacy](./PRIVACY.md) · [Changelog](./CHANGELOG.md)
 
-<img src="docs/screenshots/hero-light.png" width="860" alt="Export buttons on an arXiv abstract page, with the extension popup">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/hero-dark.png">
+  <img src="docs/screenshots/hero-light.png" width="860" alt="Export buttons on an arXiv abstract page, with the extension popup">
+</picture>
 
 </div>
 
@@ -23,7 +26,7 @@
 - **One-click Markdown export**: adds `Markdown`, `PDF` and `BibTeX` buttons under `Submission history` on arXiv abstract pages.
 - **Official HTML first**: converts arXiv's official HTML version, falls back to ar5iv, and downloads the PDF when neither is available.
 - **Keeps math and structure**: LaTeX stays as `$...$` / `$$...$$`; simple tables become GFM, tables with merged cells stay as HTML; in-text citations link to the numbered references and footnotes become `[^n]`.
-- **Optional YAML frontmatter**: `title`, `arxiv_id`, `source`, `authors`, `year` for Obsidian, Logseq and similar tools.
+- **Optional YAML frontmatter**: `title`, `arxiv_id`, `source`, `authors`, `year` for Obsidian, Logseq, Zotero and similar tools.
 - **PDFs named by title**: `Attention Is All You Need (2017).pdf` instead of `1706.03762.pdf`.
 - **Copy BibTeX**: uses arXiv's official citation, or builds one from the page title, authors and year.
 - **Copy for AI or notes**: after a conversion, a result card on the page offers "Copy Markdown".
@@ -81,7 +84,7 @@ Open `chrome://extensions`, enable Developer mode, click "Load unpacked" and pic
 | Desktop notifications | Notify when a MinerU task finishes or fails |
 | PDF floating button | Show the floating button on PDF pages |
 | Language | 中文 / English |
-| Usage statistics | Local counters only; can be reset |
+| Usage statistics | Conversion counters kept in `chrome.storage.sync` (synced with your browser account if sync is on), never uploaded; can be reset |
 
 Changes are saved automatically.
 
@@ -89,7 +92,7 @@ Changes are saved automatically.
 
 | Permission | Why |
 | --- | --- |
-| `storage` | Saves settings, your MinerU token and the task list in your browser |
+| `storage` | Settings, your MinerU token and usage statistics are kept in `chrome.storage.sync`, so they sync with your browser account if browser sync is on; MinerU task state stays in `chrome.storage.local` on this device |
 | `downloads` | Saves Markdown, PDF or MinerU ZIP files |
 | `activeTab` | Reads the arXiv page you are on so it can be converted |
 | `notifications` | Desktop notice when a MinerU task finishes or fails |
@@ -98,6 +101,7 @@ Changes are saved automatically.
 | `arxiv.org`, `export.arxiv.org` | Paper HTML, metadata and PDF |
 | `ar5iv.org`, `ar5iv.labs.arxiv.org` | ar5iv fallback when official HTML is missing |
 | `mineru.net`, `cdn-mineru.openxlab.org.cn` | Only when you use MinerU: submit tasks and download results |
+| Content script on `arxiv.org/abs/*`, `arxiv.org/pdf/*`, `arxiv.org/html/*` | Adds the page buttons, result card and PDF floating button on those pages |
 
 ## Privacy
 

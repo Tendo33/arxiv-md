@@ -12,7 +12,10 @@
 
 [安装](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd) · [English](./README.md) · [常见问题](./docs/FAQ.md) · [隐私说明](./PRIVACY.md) · [更新日志](./CHANGELOG.md)
 
-<img src="docs/screenshots/hero-light.png" width="860" alt="arXiv 摘要页上的导出按钮和扩展弹窗">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/hero-dark.png">
+  <img src="docs/screenshots/hero-light.png" width="860" alt="arXiv 摘要页上的导出按钮和扩展弹窗">
+</picture>
 
 </div>
 
@@ -79,7 +82,7 @@ npm run build
 | 桌面通知 | MinerU 任务完成或失败时通知 |
 | PDF 页悬浮按钮 | 是否在 PDF 页显示悬浮转换按钮 |
 | 界面语言 | 中文 / English |
-| 使用统计 | 只在本地计数（转换次数等），可一键重置 |
+| 使用统计 | 转换次数等计数存在 `chrome.storage.sync`（开启浏览器同步时会随账号同步），不会上传，可一键重置 |
 
 设置改动会自动保存。
 
@@ -87,7 +90,7 @@ npm run build
 
 | 权限 | 用途 |
 | --- | --- |
-| `storage` | 保存设置、MinerU Token 和任务列表，只存在你的浏览器里 |
+| `storage` | 设置、MinerU Token 和使用统计存在 `chrome.storage.sync`，开启浏览器同步时会随浏览器账号同步；MinerU 任务状态存在 `chrome.storage.local`，只留在本机 |
 | `downloads` | 把 Markdown、PDF 或 MinerU 结果 ZIP 保存到本地 |
 | `activeTab` | 读取你当前打开的 arXiv 页面，用于转换 |
 | `notifications` | MinerU 后台任务完成或失败时发桌面通知 |
@@ -96,6 +99,7 @@ npm run build
 | `arxiv.org`、`export.arxiv.org` | 读取论文 HTML、元数据和 PDF |
 | `ar5iv.org`、`ar5iv.labs.arxiv.org` | 官方 HTML 不可用时读取 ar5iv 版本 |
 | `mineru.net`、`cdn-mineru.openxlab.org.cn` | 仅在你使用 MinerU 时提交任务、下载结果 |
+| 内容脚本：`arxiv.org/abs/*`、`arxiv.org/pdf/*`、`arxiv.org/html/*` | 在这些页面注入导出按钮、结果卡片和 PDF 页悬浮按钮 |
 
 ## 隐私
 

@@ -88,6 +88,8 @@ MinerU then processes that paper on its own service and returns a ZIP result URL
 | `downloads` | Save Markdown, PDF, and MinerU ZIP results |
 | `activeTab` | Read metadata from the current arXiv page |
 | `notifications` | Show optional task and completion notifications |
+| `alarms` | Periodically wake the background worker while MinerU tasks are running, to poll their progress; cleared when no task is active |
+| `contextMenus` | Add right-click menu items on arXiv abs/pdf/html pages and on links to arXiv papers |
 
 ## Your Choices
 
