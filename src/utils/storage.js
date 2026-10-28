@@ -2,6 +2,7 @@
 
 import { STORAGE_KEYS, DEFAULTS } from '@config/constants';
 import logger from './logger';
+import { PROVIDER_KEYS_KEY } from './migrations';
 
 /**
  * Storage Manager - 封装 Chrome Storage API
@@ -46,19 +47,28 @@ class StorageManager {
   // === 业务特定方法 ===
 
   /**
-   * 获取 MinerU Token
+   * 获取 MinerU Token（R4-05 起只存 storage.local 的 providerKeys.mineru）
    * @returns {Promise<string|null>}
    */
   async getMinerUToken() {
-    return this.get(STORAGE_KEYS.MINERU_TOKEN);
+    try {
+      const { [PROVIDER_KEYS_KEY]: keys = {} } = await chrome.storage.local.get(PROVIDER_KEYS_KEY);
+      return keys.mineru || null;
+    } catch (error) {
+      logger.error('Storage get error:', error);
+      return null;
+    }
   }
 
   /**
-   * 设置 MinerU Token
+   * 设置 MinerU Token（写 local，不进 sync）
    * @param {string} token
    */
   async setMinerUToken(token) {
-    await this.set(STORAGE_KEYS.MINERU_TOKEN, token);
+    const { [PROVIDER_KEYS_KEY]: keys = {} } = await chrome.storage.local.get(PROVIDER_KEYS_KEY);
+    const next = { ...keys };
+    if (token) next.mineru = token; else delete next.mineru;
+    await chrome.storage.local.set({ [PROVIDER_KEYS_KEY]: next });
   }
 
   /**

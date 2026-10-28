@@ -3,6 +3,7 @@
 
 import logger from '@utils/logger';
 import { STORAGE_KEYS, TASK_STATUS, TASK_TYPE } from '@config/constants';
+import { normalizeTask } from '@utils/migrations';
 
 /**
  * 任务管理器
@@ -32,7 +33,7 @@ class TaskManager {
   async getTasks() {
     try {
       const result = await chrome.storage.local.get(this.storageKey);
-      return result[this.storageKey] || [];
+      return (result[this.storageKey] || []).map(normalizeTask);
     } catch (error) {
       logger.error('Failed to get tasks:', error);
       return [];
@@ -59,10 +60,11 @@ class TaskManager {
    * @param {string} type - 任务类型 (默认: 'mineru')
    * @returns {Promise<Object>} 创建的任务对象
    */
-  async addTask(paperInfo, type = TASK_TYPE.MINERU) {
+  async addTask(paperInfo, type = TASK_TYPE.MINERU, provider = 'mineru') {
     const task = {
       id: this._generateTaskId(),
       type,
+      provider,
       status: TASK_STATUS.PENDING,
       progress: 0,
       paperInfo: {

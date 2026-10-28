@@ -12,6 +12,7 @@ import { KEEP_ALIVE_ALARM, syncKeepAlive } from './keep-alive';
 import { isTrustedArxivSender, isValidArxivId, triggerConversionInActiveTab } from './message-guards';
 import { createActionBadge, handleShortcutResult, conversionBadgeState } from './action-badge';
 import { createContextMenus } from './context-menu';
+import { runMigrations } from '@utils/migrations';
 
 const actionBadge = createActionBadge(chrome.action);
 if (chrome.tabs && chrome.tabs.onUpdated) {
@@ -33,9 +34,16 @@ if (contextMenus) {
   if (chrome.runtime.onStartup) chrome.runtime.onStartup.addListener(() => contextMenus.refresh());
   chrome.contextMenus.onClicked.addListener((info, tab) => contextMenus.onClicked(info, tab));
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === 'sync' && (changes.language || changes.mineruToken)) contextMenus.refresh();
+    if ((area === 'sync' && (changes.language || changes.pdfProvider)) || (area === 'local' && changes.providerKeys)) contextMenus.refresh();
   });
 }
+
+// R4-05：老配置迁移。onInstalled(update) 跑一次；SW 每次启动也跑（幂等，已是最新版本时直接返回），
+// 保证中途失败后下次启动能补上。迁移完成后刷新右键菜单（Token 位置变了）。
+const migrationsReady = runMigrations(chrome.storage)
+  .then((r) => { if (r.ran) logger.info('Storage migrated:', r); if (r.ran && contextMenus) contextMenus.refresh(); return r; })
+  .catch((e) => { logger.error('Storage migration failed, will retry on next start:', e); return null; });
+chrome.runtime.onInstalled.addListener(() => { migrationsReady.then(() => runMigrations(chrome.storage)).catch(() => {}); });
 
 logger.info('Background service worker initialized');
 
