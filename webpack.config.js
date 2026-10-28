@@ -43,6 +43,7 @@ module.exports = (env, argv) => ({
         { from: "src/ui/popup/popup.css", to: "popup.css" },
         { from: "src/ui/settings/settings.html", to: "settings.html" },
         { from: "src/ui/settings/settings.css", to: "settings.css" },
+        { from: "src/ui/shared/ui-v2.css", to: "ui-v2.css" },
         { from: "assets", to: "assets" },
       ],
     }),
