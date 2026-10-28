@@ -14,3 +14,9 @@ describe('S1 没有 Key：卡片徽标中性「需要 Key」而不是 Failed', (
     expect(read('src/ui/popup/popup.js')).toMatch(/if \(!active\.hasKey\) \{[\s\S]{0,400}ctx\.state = 'needkey';\s*(\/\/[^\n]*)?\s*renderContext\(\);\s*return;/);
   });
 });
+
+const css = () => read('src/ui/popup/popup.css');
+test('S2 行内后端名 .row .prov 为 11px', () => {
+  expect(css()).toMatch(/\.row \.prov \{[^}]*font-size: 11px/);
+  expect(css()).not.toMatch(/\.row \.prov \{[^}]*font-size: 10px/);
+});
