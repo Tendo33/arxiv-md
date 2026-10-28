@@ -4,7 +4,7 @@ html,body{width:360px}
 body{min-width:320px}
 /* 浏览器自带 popup 外框，不再画圆角和阴影；1px 边框保留为透明，尺寸与样稿一致 */
 .pop{border-color:transparent;border-radius:0;box-shadow:none}
-@media (max-width:339px){html,body{width:100%}.pop{--pw:100%}}
+@media (max-width:339px){html,body{width:100%}.pop{--pw:100%}.acts{grid-template-columns:1fr}}
 .btn-xs{min-height:28px;padding:0 8px}
 .btn-xxs{min-height:24px;padding:0 6px;font-size:12px}
 .alert>svg{flex:none;margin-top:1px}
@@ -14,10 +14,10 @@ body{min-width:320px}
 .sec-h{min-height:24px}
 .sec-x{display:flex;gap:4px}
 #taskList{padding:4px 10px}
-.row .badge{padding:2px 6px}
+.row .badge{padding:1px 6px}
 .row .n{min-width:0}
 .row small{color:var(--text-2);flex:none}
-.row .row-act{flex:none;display:flex;gap:2px}
+.row .row-act{flex:none;display:flex;gap:2px;margin:-2px 0}
 .row .row-act .btn{min-height:24px;padding:0 6px;font-size:12px}
 .row .pct{font-variant-numeric:tabular-nums}
 /* 确认对话框（删除 MinerU 任务） */
