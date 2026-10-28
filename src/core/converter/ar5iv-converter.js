@@ -94,6 +94,12 @@ class Ar5ivConverter {
         throw new Error('Cannot find main content in HTML paper');
       }
 
+      // AF3-01：linkedom（htmlparser2）遇到 LaTeXML 不规范的 `</li></li>` 会提前把 article
+      // 及其祖先都闭合，后半篇正文被挂到 article 外面。把逃逸出去的正文按文档顺序收回来。
+      if (mainContent.matches && mainContent.matches('article.ltx_document')) {
+        rescueEscapedContent(mainContent);
+      }
+
       // 移除不需要的元素
       const selectorsToRemove = [
         '.ltx_page_header',
@@ -249,4 +255,39 @@ ${markdown}`;
 }
 
 // 导出单例
+
+const PAGE_CHROME_SELECTOR = [
+  'footer', 'header', 'nav', 'script', 'style', 'noscript',
+  '[class*="ltx_page_"]', '.ltx_rdf', '.ar5iv-footer', '.arxiv-html-footer',
+  '.ds-site-footer', '#fixed-buttons-container', '[role="navigation"]',
+].join(', ');
+
+function isEscapedPaperNode(node) {
+  if (!node || node.nodeType !== 1) return false;
+  if (node.matches(PAGE_CHROME_SELECTOR)) return false;
+  const cls = typeof node.className === 'string' ? node.className : '';
+  return /(^|\s)ltx_/.test(cls) || /^(SECTION|FIGURE|TABLE|LI|UL|OL)$/.test(node.tagName);
+}
+
+/**
+ * AF3-01：把解析器提前闭合 article 后落在其祖先后面的正文节点，按文档顺序移回 article 末尾。
+ * 只收 LaTeXML 正文节点（ltx_ 类或 section/figure/table/列表），页面页脚、导航等不动。
+ * 返回收回的节点数。
+ */
+export function rescueEscapedContent(article) {
+  let moved = 0;
+  for (let anc = article; anc && anc.parentElement; anc = anc.parentElement) {
+    let sib = anc.nextSibling;
+    while (sib) {
+      const next = sib.nextSibling;
+      if (isEscapedPaperNode(sib)) {
+        article.appendChild(sib);
+        moved += 1;
+      }
+      sib = next;
+    }
+  }
+  return moved;
+}
+
 export default new Ar5ivConverter();

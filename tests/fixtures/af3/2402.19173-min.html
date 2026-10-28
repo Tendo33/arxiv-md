@@ -1,0 +1,154 @@
+<!doctype html>
+<!-- source: https://arxiv.org/html/2402.19173 (abs: https://arxiv.org/abs/2402.19173) ; license: CC BY-SA 4.0 https://creativecommons.org/licenses/by-sa/4.0/ ; cropped for AF3-01 regression test (S4 list with malformed </li></li> + S5 start), test use only -->
+<html><head><meta charset="utf-8"></head><body><div class="ltx_page_main"><div class="ltx_page_content"><article class="ltx_document"><h1 class="ltx_title ltx_title_document">StarCoder 2 and The Stack v2</h1><section id="S4" class="ltx_section"><h2 class="ltx_title ltx_title_section">4 Training data</h2><ul id="S4.I1" class="ltx_itemize">
+<li id="S4.I1.i1" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S4.I1.i1.p1" class="ltx_para ltx_noindent">
+<p id="S4.I1.i1.p1.1" class="ltx_p">Specifically, we include the following programming languages:</p>
+<ul id="S4.I1.i1.I1" class="ltx_itemize">
+<div id="S4.I1.i1.I1.1" class="ltx_block ltx_minipage ltx_align_top" style="width:122.1pt;">
+<li id="S4.I1.i1.I1.i1" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item"><span id="S4.I1.i1.I1.i1.1" class="ltx_text ltx_font_bold">–</span></span> 
+<div id="S4.I1.i1.I1.i1.p1" class="ltx_para ltx_noindent">
+<p id="S4.I1.i1.I1.i1.p1.1" class="ltx_p">C</p>
+</div>
+<li id="S4.I1.i1.I1.i2" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item"><span id="S4.I1.i1.I1.i2.1" class="ltx_text ltx_font_bold">–</span></span> 
+<div id="S4.I1.i1.I1.i2.p1" class="ltx_para ltx_noindent">
+<p id="S4.I1.i1.I1.i2.p1.1" class="ltx_p">C#</p>
+</div>
+<li id="S4.I1.i1.I1.i3" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item"><span id="S4.I1.i1.I1.i3.1" class="ltx_text ltx_font_bold">–</span></span> 
+<div id="S4.I1.i1.I1.i3.p1" class="ltx_para ltx_noindent">
+<p id="S4.I1.i1.I1.i3.p1.1" class="ltx_p">C++</p>
+</div>
+<li id="S4.I1.i1.I1.i4" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item"><span id="S4.I1.i1.I1.i4.1" class="ltx_text ltx_font_bold">–</span></span> 
+<div id="S4.I1.i1.I1.i4.p1" class="ltx_para ltx_noindent">
+<p id="S4.I1.i1.I1.i4.p1.1" class="ltx_p">Go</p>
+</div>
+<li id="S4.I1.i1.I1.i5" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item"><span id="S4.I1.i1.I1.i5.1" class="ltx_text ltx_font_bold">–</span></span> 
+<div id="S4.I1.i1.I1.i5.p1" class="ltx_para ltx_noindent">
+<p id="S4.I1.i1.I1.i5.p1.1" class="ltx_p">Java</p>
+</div>
+<li id="S4.I1.i1.I1.i6" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item"><span id="S4.I1.i1.I1.i6.1" class="ltx_text ltx_font_bold">–</span></span> 
+<div id="S4.I1.i1.I1.i6.p1" class="ltx_para">
+<p id="S4.I1.i1.I1.i6.p1.1" class="ltx_p">JavaScript</p>
+</div></li></li></li></li></li></li>
+</div>
+<div id="S4.I1.i1.I1.2" class="ltx_block ltx_minipage ltx_align_top" style="width:122.1pt;">
+<li id="S4.I1.i1.I1.i7" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item"><span id="S4.I1.i1.I1.i7.1" class="ltx_text ltx_font_bold">–</span></span> 
+<div id="S4.I1.i1.I1.i7.p1" class="ltx_para ltx_noindent">
+<p id="S4.I1.i1.I1.i7.p1.1" class="ltx_p">Kotlin</p>
+</div>
+<li id="S4.I1.i1.I1.i8" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item"><span id="S4.I1.i1.I1.i8.1" class="ltx_text ltx_font_bold">–</span></span> 
+<div id="S4.I1.i1.I1.i8.p1" class="ltx_para ltx_noindent">
+<p id="S4.I1.i1.I1.i8.p1.1" class="ltx_p">Lua</p>
+</div>
+<li id="S4.I1.i1.I1.i9" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item"><span id="S4.I1.i1.I1.i9.1" class="ltx_text ltx_font_bold">–</span></span> 
+<div id="S4.I1.i1.I1.i9.p1" class="ltx_para ltx_noindent">
+<p id="S4.I1.i1.I1.i9.p1.1" class="ltx_p">PHP</p>
+</div>
+<li id="S4.I1.i1.I1.i10" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item"><span id="S4.I1.i1.I1.i10.1" class="ltx_text ltx_font_bold">–</span></span> 
+<div id="S4.I1.i1.I1.i10.p1" class="ltx_para ltx_noindent">
+<p id="S4.I1.i1.I1.i10.p1.1" class="ltx_p">Python</p>
+</div>
+<li id="S4.I1.i1.I1.i11" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item"><span id="S4.I1.i1.I1.i11.1" class="ltx_text ltx_font_bold">–</span></span> 
+<div id="S4.I1.i1.I1.i11.p1" class="ltx_para ltx_noindent">
+<p id="S4.I1.i1.I1.i11.p1.1" class="ltx_p">R</p>
+</div>
+<li id="S4.I1.i1.I1.i12" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item"><span id="S4.I1.i1.I1.i12.1" class="ltx_text ltx_font_bold">–</span></span> 
+<div id="S4.I1.i1.I1.i12.p1" class="ltx_para">
+<p id="S4.I1.i1.I1.i12.p1.1" class="ltx_p">Ruby</p>
+</div></li></li></li></li></li></li>
+</div>
+<div id="S4.I1.i1.I1.3" class="ltx_block ltx_minipage ltx_align_top" style="width:122.1pt;">
+<li id="S4.I1.i1.I1.i13" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item"><span id="S4.I1.i1.I1.i13.1" class="ltx_text ltx_font_bold">–</span></span> 
+<div id="S4.I1.i1.I1.i13.p1" class="ltx_para ltx_noindent">
+<p id="S4.I1.i1.I1.i13.p1.1" class="ltx_p">Rust</p>
+</div>
+<li id="S4.I1.i1.I1.i14" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item"><span id="S4.I1.i1.I1.i14.1" class="ltx_text ltx_font_bold">–</span></span> 
+<div id="S4.I1.i1.I1.i14.p1" class="ltx_para ltx_noindent">
+<p id="S4.I1.i1.I1.i14.p1.1" class="ltx_p">SQL</p>
+</div>
+<li id="S4.I1.i1.I1.i15" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item"><span id="S4.I1.i1.I1.i15.1" class="ltx_text ltx_font_bold">–</span></span> 
+<div id="S4.I1.i1.I1.i15.p1" class="ltx_para ltx_noindent">
+<p id="S4.I1.i1.I1.i15.p1.1" class="ltx_p">Shell</p>
+</div>
+<li id="S4.I1.i1.I1.i16" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item"><span id="S4.I1.i1.I1.i16.1" class="ltx_text ltx_font_bold">–</span></span> 
+<div id="S4.I1.i1.I1.i16.p1" class="ltx_para ltx_noindent">
+<p id="S4.I1.i1.I1.i16.p1.1" class="ltx_p">Swift</p>
+</div>
+<li id="S4.I1.i1.I1.i17" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item"><span id="S4.I1.i1.I1.i17.1" class="ltx_text ltx_font_bold">–</span></span> 
+<div id="S4.I1.i1.I1.i17.p1" class="ltx_para">
+<p id="S4.I1.i1.I1.i17.p1.1" class="ltx_p">TypeScript</p>
+</div></li></li></li></li></li>
+</div>
+</ul>
+</div></li>
+<li id="S4.I1.i2" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S4.I1.i2.p1" class="ltx_para ltx_noindent">
+<p id="S4.I1.i2.p1.1" class="ltx_p">And incorporate the following languages associated with code documentation:</p>
+<ul id="S4.I1.i2.I1" class="ltx_itemize">
+<div id="S4.I1.i2.I1.1" class="ltx_block ltx_minipage ltx_align_top" style="width:122.1pt;">
+<li id="S4.I1.i2.I1.i1" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item"><span id="S4.I1.i2.I1.i1.1" class="ltx_text ltx_font_bold">–</span></span> 
+<div id="S4.I1.i2.I1.i1.p1" class="ltx_para ltx_noindent">
+<p id="S4.I1.i2.I1.i1.p1.1" class="ltx_p">AsciiDoc</p>
+</div>
+<li id="S4.I1.i2.I1.i2" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item"><span id="S4.I1.i2.I1.i2.1" class="ltx_text ltx_font_bold">–</span></span> 
+<div id="S4.I1.i2.I1.i2.p1" class="ltx_para ltx_noindent">
+<p id="S4.I1.i2.I1.i2.p1.1" class="ltx_p">HTML</p>
+</div>
+<li id="S4.I1.i2.I1.i3" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item"><span id="S4.I1.i2.I1.i3.1" class="ltx_text ltx_font_bold">–</span></span> 
+<div id="S4.I1.i2.I1.i3.p1" class="ltx_para">
+<p id="S4.I1.i2.I1.i3.p1.1" class="ltx_p">Markdown</p>
+</div></li></li></li>
+</div>
+<div id="S4.I1.i2.I1.2" class="ltx_block ltx_minipage ltx_align_top" style="width:122.1pt;">
+<li id="S4.I1.i2.I1.i4" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item"><span id="S4.I1.i2.I1.i4.1" class="ltx_text ltx_font_bold">–</span></span> 
+<div id="S4.I1.i2.I1.i4.p1" class="ltx_para ltx_noindent">
+<p id="S4.I1.i2.I1.i4.p1.1" class="ltx_p">RDoc</p>
+</div>
+<li id="S4.I1.i2.I1.i5" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item"><span id="S4.I1.i2.I1.i5.1" class="ltx_text ltx_font_bold">–</span></span> 
+<div id="S4.I1.i2.I1.i5.p1" class="ltx_para">
+<p id="S4.I1.i2.I1.i5.p1.1" class="ltx_p">RMarkdown</p>
+</div></li></li>
+</div>
+<div id="S4.I1.i2.I1.3" class="ltx_block ltx_minipage ltx_align_top" style="width:122.1pt;">
+<li id="S4.I1.i2.I1.i6" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item"><span id="S4.I1.i2.I1.i6.1" class="ltx_text ltx_font_bold">–</span></span> 
+<div id="S4.I1.i2.I1.i6.p1" class="ltx_para ltx_noindent">
+<p id="S4.I1.i2.I1.i6.p1.1" class="ltx_p">Text</p>
+</div>
+<li id="S4.I1.i2.I1.i7" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item"><span id="S4.I1.i2.I1.i7.1" class="ltx_text ltx_font_bold">–</span></span> 
+<div id="S4.I1.i2.I1.i7.p1" class="ltx_para">
+<p id="S4.I1.i2.I1.i7.p1.1" class="ltx_p">reStructuredText</p>
+</div></li></li>
+</div>
+</ul>
+</div></li>
+<li id="S4.I1.i3" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S4.I1.i3.p1" class="ltx_para ltx_noindent">
+<p id="S4.I1.i3.p1.1" class="ltx_p">We also include several configuration languages and files, which we list in Appendix <a href="#A3.SS1" title="C.1 TheStackV2-train-smol ‣ Appendix C Data Composition ‣ StarCoder 2 and The Stack v2: The Next Generation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">C.1</span></a>.</p>
+</div></li>
+<li id="S4.I1.i4" class="ltx_item" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S4.I1.i4.p1" class="ltx_para">
+<p id="S4.I1.i4.p1.1" class="ltx_p">Despite limiting the languages to this subset, we obtain a dataset of 525B+ unique tokens.</p>
+</div></li>
+</ul>
+</div>
+</section>
+<section id="S4.SS0.SSS0.Px5" class="ltx_paragraph">
+<h5 class="ltx_title ltx_title_paragraph">The-stack-v2-train-full</h5>
+
+<div id="S4.SS0.SSS0.Px5.p1" class="ltx_para ltx_noindent">
+<p id="S4.SS0.SSS0.Px5.p1.1" class="ltx_p">For the full variant, we include all 619 programming languages. Although this subset significantly enhances language diversity (adding 600+ programming languages), it contributes only around 250B tokens to the dataset, culminating in 775B+ tokens.</p>
+</div>
+</section>
+<section id="S4.SS0.SSS0.Px6" class="ltx_paragraph">
+<h5 class="ltx_title ltx_title_paragraph">Data composition per model size</h5>
+
+<div id="S4.SS0.SSS0.Px6.p1" class="ltx_para ltx_noindent">
+<p id="S4.SS0.SSS0.Px6.p1.1" class="ltx_p">In Table <a href="#S4.T4" title="Table 4 ‣ 4 Data Composition ‣ StarCoder 2 and The Stack v2: The Next Generation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>, we summarize the data composition for the 3B, 7B, and 15B models. We use the-stack-v2-train-extras to denote all supplementary sources gathered for StarCoder2, excluding the source code obtained from SWH. For the 3B, we use <code id="S4.SS0.SSS0.Px6.p1.1.1" class="ltx_verbatim ltx_font_typewriter">the-stack-v2-train-smol</code> and exclude OpenWebMath, Wikipedia, and Arxiv from the extra data sources in <a href="#S2" title="2 Data Sources ‣ StarCoder 2 and The Stack v2: The Next Generation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">section</span> <span class="ltx_text ltx_ref_tag">2</span></a>. This leads to a dataset of 622B+ unique tokens. For the 7B, we include OpenWebMath, Wikipedia, and Arxiv, leading to a slightly larger dataset of 658B+ unique tokens. For the 15B, we include <code id="S4.SS0.SSS0.Px6.p1.1.2" class="ltx_verbatim ltx_font_typewriter">the-stack-v2-train-full</code> dataset and all extra data sources listed in <a href="#S2" title="2 Data Sources ‣ StarCoder 2 and The Stack v2: The Next Generation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">section</span> <span class="ltx_text ltx_ref_tag">2</span></a>, resulting in a dataset with 913B+ unique tokens. The size of this dataset is 4<math id="S4.SS0.SSS0.Px6.p1.m1" class="ltx_Math" alttext="\times" display="inline" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math> the size of the training dataset for StarCoderBase.</p>
+</div>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">5 </span>Data Formatting</h2>
+
+<div id="S5.p1" class="ltx_para ltx_noindent">
+<p id="S5.p1.1" class="ltx_p">We present the formatting guidelines for each of the data sources below. We provide the templates below in which <math id="S5.p1.m1" class="ltx_Math" alttext="\langle" display="inline" intent=":literal"><semantics><mo stretchy="false">⟨</mo><annotation encoding="application/x-tex">\langle</annotation></semantics></math>token<math id="S5.p1.m2" class="ltx_Math" alttext="\rangle" display="inline" intent=":literal"><semantics><mo stretchy="false">⟩</mo><annotation encoding="application/x-tex">\rangle</annotation></semantics></math> refers to a sentinel token, and <span id="S5.p1.1.1" class="ltx_text" style="--ltx-fg-color:#FF0000;">metadata</span> and <span id="S5.p1.1.2" class="ltx_text" style="--ltx-fg-color:#0000FF;">data</span> refer to placeholders for data fields, respectively.</p></section></section></article></div><footer class="ltx_page_footer">footer</footer></div></body></html>
