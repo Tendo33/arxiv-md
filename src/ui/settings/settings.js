@@ -6,6 +6,17 @@ import logger from '@utils/logger';
 
 import { translations } from '@config/locales';
 import { bindInstantSave } from './instant-save';
+import { createDefaultRegistry } from '@pdf-core/providers/index';
+import { createPdfProviderSection } from './pdf-provider';
+
+const pdfSection = createPdfProviderSection({
+  doc: document,
+  storage,
+  permissions: chrome.permissions,
+  registry: createDefaultRegistry(),
+  t: () => translations[currentLang],
+  toast: (m, type) => showToast(m, type),
+});
 
 let currentLang = 'en'; // init() 中会换成已保存的语言，未保存时跟随浏览器（storage.getLanguage）
 
@@ -91,10 +102,7 @@ async function loadSettings() {
       `input[name="conversionMode"][value="${mode}"]`,
     ).checked = true;
 
-    const token = await storage.getMinerUToken();
-    if (token) {
-      document.getElementById('mineruToken').value = token;
-    }
+    await pdfSection.init();
 
     const showNotifications = await storage.getShowNotifications();
     document.getElementById('showNotifications').checked = showNotifications;
@@ -135,7 +143,11 @@ function bindEvents() {
   document.getElementById('langToggle').addEventListener('click', () => {
     const newLang = currentLang === 'en' ? 'zh' : 'en';
     updateLanguage(newLang);
+    pdfSection.render();
   });
+
+  // R4-14：后端选择 / 授权 / 撤销 / 测试连接
+  pdfSection.bind();
 
   // 即时保存（A3-3）：每项改动立刻写入，不再有「保存」按钮
   bindInstantSave(document, storage, {
@@ -159,15 +171,10 @@ function bindEvents() {
     .getElementById('resetStatsBtn')
     .addEventListener('click', resetStatistics);
 
-  // Token 输入验证
+  // Key 输入格式提示
   document
-    .getElementById('mineruToken')
+    .getElementById('providerKey')
     .addEventListener('blur', validateToken);
-
-  // 测试 Token 按钮
-  document
-    .getElementById('testTokenBtn')
-    .addEventListener('click', testMinerUToken);
 }
 
 async function resetSettings() {
@@ -182,9 +189,10 @@ async function resetSettings() {
     ).checked = true;
 
     // R4-06：清除全部 Key（只在 storage.local）
-    document.getElementById('mineruToken').value = '';
+    document.getElementById('providerKey').value = '';
     await storage.clearProviderKeys();
     document.getElementById('tokenStatus').style.display = 'none';
+    await pdfSection.render();
 
     // 重置高级选项
     document.getElementById('autoConvert').checked = false;
@@ -204,13 +212,14 @@ async function resetSettings() {
 }
 
 function toggleTokenVisibility() {
-  const input = document.getElementById('mineruToken');
+  const input = document.getElementById('providerKey');
   const btn = document.getElementById('toggleTokenBtn');
+  btn.setAttribute('aria-pressed', input.type === 'password' ? 'true' : 'false');
 
   if (input.type === 'password') {
     input.type = 'text';
     btn.innerHTML = `
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
         <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
         <line x1="1" y1="1" x2="23" y2="23"/>
       </svg>
@@ -218,7 +227,7 @@ function toggleTokenVisibility() {
   } else {
     input.type = 'password';
     btn.innerHTML = `
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
         <circle cx="12" cy="12" r="3"/>
       </svg>
@@ -227,7 +236,7 @@ function toggleTokenVisibility() {
 }
 
 async function validateToken() {
-  const token = document.getElementById('mineruToken').value.trim();
+  const token = document.getElementById('providerKey').value.trim();
   const statusEl = document.getElementById('tokenStatus');
 
   if (!token) {
@@ -249,66 +258,6 @@ async function validateToken() {
   statusEl.style.display = 'block';
   statusEl.className = 'token-status success';
   statusEl.textContent = t.token_valid;
-}
-
-/**
- * 测试 MinerU API Token 是否有效
- * 通过调用任务查询接口验证 Token 有效性
- */
-async function testMinerUToken() {
-  const token = document.getElementById('mineruToken').value.trim();
-  const statusEl = document.getElementById('tokenStatus');
-  const testBtn = document.getElementById('testTokenBtn');
-  const t = translations[currentLang];
-
-  if (!token) {
-    showToast(t.token_empty_error, 'error');
-    return;
-  }
-
-  // 显示加载状态
-  testBtn.disabled = true;
-  testBtn.classList.add('loading');
-  statusEl.style.display = 'block';
-  statusEl.className = 'token-status testing';
-  statusEl.textContent = t.token_testing;
-
-  try {
-    // 调用 MinerU API 查询一个不存在的任务来验证 Token
-    // 如果 Token 有效，会返回 404 或任务不存在的错误
-    // 如果 Token 无效，会返回 401 Unauthorized
-    const response = await fetch(
-      'https://mineru.net/api/v4/extract/task/test-connection-check',
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    if (response.status === 401 || response.status === 403) {
-      // Token 无效或过期
-      statusEl.className = 'token-status error';
-      statusEl.textContent = t.token_api_invalid;
-      showToast(t.token_api_invalid, 'error');
-    } else {
-      // Token 有效 (可能返回 404 表示任务不存在，但这说明 Token 是有效的)
-      statusEl.className = 'token-status success';
-      statusEl.textContent = t.token_api_valid;
-      showToast(t.token_api_valid, 'success');
-    }
-  } catch (error) {
-    logger.error('Token test failed:', error);
-    // 网络错误
-    statusEl.className = 'token-status error';
-    statusEl.textContent = t.token_test_error;
-    showToast(t.token_test_error, 'error');
-  } finally {
-    testBtn.disabled = false;
-    testBtn.classList.remove('loading');
-  }
 }
 
 async function resetStatistics() {

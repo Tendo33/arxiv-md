@@ -10,7 +10,7 @@ function setup() {
   const storage = {
     setConversionMode: jest.fn(async () => {}), setShowNotifications: jest.fn(async () => {}),
     setAutoConvert: jest.fn(async () => {}), setIncludeMetadata: jest.fn(async () => {}),
-    setMinerUToken: jest.fn(async () => {}),
+    setProviderKey: jest.fn(async () => {}),
   };
   const onSaved = jest.fn();
   const onError = jest.fn();
@@ -46,13 +46,14 @@ describe('A3-3 设置即时保存', () => {
     meta.checked = false;
     await fire(meta);
     expect(storage.setIncludeMetadata).toHaveBeenCalledWith(false);
-    const tok = document.getElementById('mineruToken');
+    // R4-14：Key 输入框通用化，按 data-provider 存到对应后端
+    const tok = document.getElementById('providerKey');
     tok.value = '  abcdefghijk  ';
     await fire(tok);
-    expect(storage.setMinerUToken).toHaveBeenLastCalledWith('abcdefghijk');
+    expect(storage.setProviderKey).toHaveBeenLastCalledWith('paddleocr', 'abcdefghijk');
     tok.value = '';
     await fire(tok);
-    expect(storage.setMinerUToken).toHaveBeenLastCalledWith('');
+    expect(storage.setProviderKey).toHaveBeenLastCalledWith('paddleocr', '');
   });
   test('写入失败走 onError，不提示已保存', async () => {
     const { document, storage, onSaved, onError, fire } = setup();

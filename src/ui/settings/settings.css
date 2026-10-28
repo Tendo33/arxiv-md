@@ -711,3 +711,8 @@ body {
   color: var(--text-secondary);
   font-size: 13px;
 }
+
+/* R4-14：PDF 解析分组 */
+select.input-field { appearance: auto; cursor: pointer; }
+.permission-row, .revoke-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 8px; font-size: 13px; color: var(--text-secondary, #475569); }
+.permission-row[hidden], .revoke-row[hidden] { display: none; }

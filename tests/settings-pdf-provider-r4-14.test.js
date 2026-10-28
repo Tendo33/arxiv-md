@@ -1,0 +1,125 @@
+import fs from 'fs';
+import path from 'path';
+import { parseHTML } from 'linkedom';
+import { createPermissions } from './helpers/chrome-stubs';
+import { createDefaultRegistry } from '@pdf-core/providers/index';
+import { createPdfProviderSection, UI_PROVIDERS } from '../src/ui/settings/pdf-provider';
+import { bindInstantSave } from '../src/ui/settings/instant-save';
+import { translations } from '../src/config/locales';
+
+const html = fs.readFileSync(path.join(__dirname, '../src/ui/settings/settings.html'), 'utf8');
+const PADDLE = 'https://paddleocr.aistudio-app.com/*';
+
+function setup({ provider = 'paddleocr', keys = {}, origins = [], answer = true, lang = 'en' } = {}) {
+  const { document } = parseHTML(html);
+  const store = { provider, keys: { ...keys } };
+  const storage = {
+    getPdfProvider: jest.fn(async () => store.provider),
+    setPdfProvider: jest.fn(async (id) => { store.provider = id; }),
+    getProviderKey: jest.fn(async (id) => store.keys[id] || null),
+    setProviderKey: jest.fn(async (id, v) => { if (v) store.keys[id] = v; else delete store.keys[id]; }),
+  };
+  const permissions = createPermissions({ origins, permissions: origins.length ? ['declarativeNetRequestWithHostAccess'] : [], answer });
+  const registry = createDefaultRegistry();
+  const toast = jest.fn();
+  const sec = createPdfProviderSection({ doc: document, storage, permissions, registry, t: () => translations[lang], toast });
+  return { document, storage, permissions, registry, toast, sec, store };
+}
+
+describe('R4-14 设置页：后端选择 + Key', () => {
+  test('下拉框只有 PaddleOCR（默认）和 MinerU；本地服务本轮隐藏（决定 B）', () => {
+    const { document } = parseHTML(html);
+    const opts = [...document.querySelectorAll('#pdfProvider option')].map((o) => o.value);
+    expect(opts).toEqual(['paddleocr', 'mineru']);
+    expect(UI_PROVIDERS).toEqual(['paddleocr', 'mineru']);
+    expect(html).not.toMatch(/localhost|127\.0\.0\.1/);
+  });
+
+  test('每个控件都有 label；Key 是 password 输入框', () => {
+    const { document } = parseHTML(html);
+    for (const id of ['pdfProvider', 'providerKey']) expect(document.querySelector(`label[for="${id}"]`)).toBeTruthy();
+    expect(document.getElementById('providerKey').getAttribute('type')).toBe('password');
+    for (const id of ['toggleTokenBtn', 'testTokenBtn']) expect(document.getElementById(id).getAttribute('aria-label')).toBeTruthy();
+  });
+
+  test('中英文 pdf_* 文案齐全', () => {
+    const en = Object.keys(translations.en).filter((k) => k.startsWith('pdf_'));
+    const zh = Object.keys(translations.zh).filter((k) => k.startsWith('pdf_'));
+    expect(en.length).toBeGreaterThan(10);
+    expect(zh.sort()).toEqual(en.sort());
+  });
+
+  test('init：显示当前后端的说明（数据发往的域名）、Key、授权状态', async () => {
+    const h = setup({ keys: { paddleocr: 'fixture-key' } });
+    await h.sec.init();
+    const d = h.document;
+    expect(d.getElementById('pdfProvider').value).toBe('paddleocr');
+    expect(d.getElementById('pdfProviderDesc').textContent).toContain('paddleocr.aistudio-app.com');
+    expect(d.getElementById('providerKey').value).toBe('fixture-key');
+    expect(d.getElementById('providerKey').dataset.provider).toBe('paddleocr');
+    expect(d.getElementById('grantPermissionBtn').hidden).toBe(false);
+    expect(d.getElementById('providerKeyLabel').textContent).toBe('PaddleOCR API key');
+  });
+
+  test('切到 PaddleOCR：先申请权限（域名 + DNR 一次弹窗），同意后才保存', async () => {
+    const h = setup({ provider: 'mineru' });
+    await h.sec.init();
+    expect(await h.sec.onSelect('paddleocr')).toBe(true);
+    expect(h.permissions.request).toHaveBeenCalledTimes(1);
+    expect(h.permissions.request.mock.calls[0][0].origins).toEqual([PADDLE]);
+    expect(h.storage.setPdfProvider).toHaveBeenCalledWith('paddleocr');
+    expect(h.document.getElementById('grantPermissionBtn').hidden).toBe(true);
+  });
+
+  test('用户拒绝授权 → 下拉框回到原来的后端，提示 PERMISSION_MISSING，不保存', async () => {
+    const h = setup({ provider: 'mineru', answer: false });
+    await h.sec.init();
+    expect(await h.sec.onSelect('paddleocr')).toBe(false);
+    expect(h.document.getElementById('pdfProvider').value).toBe('mineru');
+    expect(h.storage.setPdfProvider).not.toHaveBeenCalled();
+    expect(h.document.getElementById('tokenStatus').textContent).toContain('paddleocr.aistudio-app.com');
+  });
+
+  test('切到 MinerU（install 权限）不弹窗；旧后端 PaddleOCR 出现“撤销”，点了调用 permissions.remove', async () => {
+    const h = setup({ origins: [PADDLE] });
+    await h.sec.init();
+    await h.sec.onSelect('mineru');
+    expect(h.permissions.request).not.toHaveBeenCalled();
+    expect(h.document.getElementById('revokeRow').hidden).toBe(false);
+    expect(h.document.getElementById('revokeText').textContent).toContain('PaddleOCR');
+    await h.sec.onRevoke();
+    expect(h.permissions.remove).toHaveBeenCalled();
+    expect(h.document.getElementById('revokeRow').hidden).toBe(true);
+  });
+
+  test('Key 失焦保存到当前后端（instant-save）', async () => {
+    const h = setup({ provider: 'mineru' });
+    await h.sec.init();
+    bindInstantSave(h.document, h.storage, {});
+    const key = h.document.getElementById('providerKey');
+    key.value = '  fixture-mineru  ';
+    key.dispatchEvent(new h.document.defaultView.Event('change'));
+    await new Promise((r) => setImmediate(r));
+    expect(h.storage.setProviderKey).toHaveBeenCalledWith('mineru', 'fixture-mineru');
+  });
+
+  test('测试连接：没权限时不发请求；有权限时调用 provider.testConnection', async () => {
+    const h = setup({ keys: { paddleocr: 'fixture-key' } });
+    await h.sec.init();
+    global.fetch = jest.fn();
+    expect((await h.sec.onTest()).ok).toBe(false);
+    expect(global.fetch).not.toHaveBeenCalled();
+    delete global.fetch;
+  });
+
+  test('测试连接：空 body 403 显示“不是 Key 或额度问题”', async () => {
+    const h = setup({ keys: { paddleocr: 'fixture-key' }, origins: [PADDLE], lang: 'zh' });
+    await h.sec.init();
+    global.fetch = jest.fn(async () => ({ ok: false, status: 403, headers: { get: () => null }, text: async () => '', json: async () => { throw new Error('empty'); } }));
+    const r = await h.sec.onTest();
+    expect(r.ok).toBe(false);
+    expect(global.fetch.mock.calls[0][1].method).toBe('GET');
+    expect(h.document.getElementById('tokenStatus').textContent).toMatch(/403/);
+    delete global.fetch;
+  });
+});

@@ -5,8 +5,8 @@ export const FIELDS = [
   { sel: '#autoConvert', read: (el) => el.checked, save: (s, v) => s.setAutoConvert(v) },
   { sel: '#includeMetadata', read: (el) => el.checked, save: (s, v) => s.setIncludeMetadata(v) },
   { sel: '#showPdfFab', read: (el) => el.checked, save: (s, v) => s.setShowPdfFab(v) },
-  // Token：change 在失焦且内容有变时触发；清空即删除已保存的 Token
-  { sel: '#mineruToken', read: (el) => el.value.trim(), save: (s, v) => s.setMinerUToken(v) },
+  // R4-14：Key 按当前后端保存到 storage.local（change 在失焦且内容有变时触发；清空即删除）
+  { sel: '#providerKey', read: (el) => el.value.trim(), save: (s, v, el) => s.setProviderKey(el.dataset.provider || 'paddleocr', v) },
 ];
 
 export function bindInstantSave(doc, storage, { onSaved, onError } = {}) {
@@ -15,7 +15,7 @@ export function bindInstantSave(doc, storage, { onSaved, onError } = {}) {
       el.addEventListener('change', async () => {
         if (f.only && !f.only(el)) return;
         try {
-          await f.save(storage, f.read(el));
+          await f.save(storage, f.read(el), el);
           if (onSaved) onSaved(el);
         } catch (error) {
           if (onError) onError(error, el);
