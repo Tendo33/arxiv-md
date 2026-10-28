@@ -686,3 +686,20 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* A3-2 关于 */
+.settings-section h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 20px 0 12px;
+  color: var(--text-primary);
+}
+.about-version {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+.about-version b {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

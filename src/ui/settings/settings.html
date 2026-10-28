@@ -21,7 +21,7 @@
               <span id="langIcon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></span>
               <span id="langText">中文</span>
             </button>
-            <div class="version" id="versionDisplay">v1.0.0</div>
+            <div class="version" id="versionDisplay">v</div>
           </div>
         </div>
       </header>
@@ -168,9 +168,11 @@
           </div>
         </section>
 
-        <!-- Statistics -->
-        <section class="settings-section">
-          <h2 data-i18n="stats_title">Usage statistics</h2>
+        <!-- About（A3-2：总转换次数等统计从 popup 移到这里） -->
+        <section class="settings-section" id="aboutSection" aria-labelledby="aboutTitle">
+          <h2 id="aboutTitle" data-i18n="about_title">About</h2>
+          <div class="about-version"><span data-i18n="about_version">Version</span> <b id="aboutVersion">v</b></div>
+          <h3 data-i18n="stats_title">Usage statistics</h3>
 
           <div class="stats-grid">
             <div class="stat-item">
@@ -188,7 +190,7 @@
             <div class="stat-item">
               <div class="stat-number" id="mineruSuccess">0</div>
               <div class="stat-label" data-i18n="stats_mineru">
-                MinerU Success
+                MinerU success
               </div>
             </div>
             <div class="stat-item">

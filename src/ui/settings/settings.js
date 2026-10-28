@@ -33,6 +33,7 @@ async function init() {
   // 设置版本号
   const manifest = chrome.runtime.getManifest();
   document.getElementById('versionDisplay').textContent = `v${manifest.version}`;
+  document.getElementById('aboutVersion').textContent = `v${manifest.version}`;
 
   // 绑定事件
   bindEvents();
