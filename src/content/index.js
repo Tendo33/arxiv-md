@@ -29,8 +29,10 @@ let t = translations.en;
 // 检查是否在 arXiv 页面
 const isArxivAbsPage = REGEX.ARXIV_ABS_PAGE.test(window.location.href);
 const isArxivPdfPage = REGEX.ARXIV_PDF_PAGE.test(window.location.href);
+// 官方 HTML 版（/html/<id>）：不注入按钮，只响应快捷键，元数据和 PDF 页一样从 abs 页取
+const isArxivHtmlPage = REGEX.ARXIV_HTML_PAGE.test(window.location.href);
 
-if (!isArxivAbsPage && !isArxivPdfPage) {
+if (!isArxivAbsPage && !isArxivPdfPage && !isArxivHtmlPage) {
   logger.warn('Not an arXiv page, exiting');
 } else {
   init().catch((error) => logger.error('Init failed:', error));

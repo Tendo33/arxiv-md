@@ -83,6 +83,7 @@ export const REGEX = {
   ARXIV_ID: /(?:arxiv\.(?:org|abs)\/(?:abs\/|pdf\/)?|export\.arxiv\.org\/abs\/)?((?:\d{4}\.\d{4,5}|[a-z-]+\/[0-9]{7})(?:v\d+)?)/i,
   ARXIV_ABS_PAGE: /^https?:\/\/arxiv\.org\/abs\//,
   ARXIV_PDF_PAGE: /^https?:\/\/arxiv\.org\/pdf\//,
+  ARXIV_HTML_PAGE: /^https?:\/\/arxiv\.org\/html\/\d{4}\.\d{4,5}/,
 };
 
 /**
