@@ -214,11 +214,15 @@ async function handleConversionTrigger(type = 'markdown') {
           activeButton.style.cursor = 'pointer';
         }
 
-        if (response && response.success === false) {
+        // 后台把转换结果包在 data 里：data.success === false 同样是失败
+        const failure = response?.success === false
+          ? response
+          : response?.data?.success === false ? response.data : null;
+        if (failure) {
           showError(
-            response.errorCode === 'NETWORK_OFFLINE'
+            failure.errorCode === 'NETWORK_OFFLINE'
               ? t.content_error_offline
-              : response.error || t.content_error_generic,
+              : failure.error || t.content_error_generic,
           );
           return;
         }

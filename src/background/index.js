@@ -6,6 +6,7 @@ import taskManager from '@core/task-manager';
 import logger from '@utils/logger';
 import storage from '@utils/storage';
 import { TASK_STATUS } from '@config/constants';
+import { arxivApiUrl } from '@core/metadata-extractor';
 import { deletedTaskGuard, processMinerUTaskInBackground } from './mineru-task-runner';
 import { KEEP_ALIVE_ALARM, syncKeepAlive } from './keep-alive';
 
@@ -21,6 +22,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   case 'DOWNLOAD_PDF':
     handleDownloadPdf(message.data, sendResponse, sender);
+    return true;
+
+  case 'FETCH_ARXIV_API':
+    handleFetchArxivApi(message.arxivId, sendResponse);
     return true;
 
   case 'CHECK_AR5IV':
@@ -74,6 +79,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return false;
   }
 });
+
+async function handleFetchArxivApi(arxivId, sendResponse) {
+  try {
+    if (!arxivId) throw new Error('Missing arXiv ID');
+    const response = await fetch(arxivApiUrl(arxivId));
+    if (!response.ok) throw new Error(`API returned ${response.status}`);
+    sendResponse({ success: true, xml: await response.text() });
+  } catch (error) {
+    logger.warn('arXiv API request failed:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
 
 async function handleConvertPaper(paperInfo, sendResponse, sender) {
   logger.info('Handling convert request:', paperInfo);

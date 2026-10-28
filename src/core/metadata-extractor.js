@@ -78,19 +78,14 @@ class MetadataExtractor {
    * @param {string} arxivId - arXiv ID
    * @returns {Promise<Object>}
    */
-  async fetchMetadataFromApi(arxivId) {
+  async fetchMetadataFromApi(arxivId, fetchXml = null) {
     logger.info('Fetching metadata from arXiv API:', arxivId);
 
     try {
-      // arXiv 提供 export API
-      const apiUrl = `https://export.arxiv.org/api/query?id_list=${arxivId}`;
-      const response = await fetch(apiUrl);
-
-      if (!response.ok) {
-        throw new Error(`API returned ${response.status}`);
-      }
-
-      const xmlText = await response.text();
+      // 内容脚本直接请求 export.arxiv.org 会被 CORS 拦截，默认交给后台（已有该 host 权限）去取
+      const xmlText = fetchXml
+        ? await fetchXml(arxivId)
+        : await fetchArxivApiXmlViaBackground(arxivId);
       return this._parseArxivApiXml(xmlText);
     } catch (error) {
       logger.error('Failed to fetch metadata from API:', error);
@@ -183,12 +178,40 @@ class MetadataExtractor {
       title: `arXiv Paper ${arxivId}`,
       authors: [],
       abstract: null,
-      year: null,
+      year: yearFromArxivId(arxivId),
       subjects: [],
       pdfUrl: arxivId ? `https://arxiv.org/pdf/${arxivId}.pdf` : null,
       isMinimal: true,
     };
   }
+}
+
+/** arXiv API 的查询地址 */
+export function arxivApiUrl(arxivId) {
+  return `https://export.arxiv.org/api/query?id_list=${encodeURIComponent(arxivId)}`;
+}
+
+/** 通过后台 Service Worker 读取 arXiv API XML */
+export function fetchArxivApiXmlViaBackground(arxivId) {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage({ type: 'FETCH_ARXIV_API', arxivId }, (response) => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+        return;
+      }
+      if (response && response.success) resolve(response.xml);
+      else reject(new Error(response?.error || 'arXiv API request failed'));
+    });
+  });
+}
+
+/** 新式 ID（YYMM.NNNNN）可直接推出提交年份，API 不可用时用作兜底 */
+export function yearFromArxivId(arxivId) {
+  const match = /^(\d{2})(\d{2})\.\d{4,5}/.exec(String(arxivId || ''));
+  if (!match) return null;
+  const month = Number(match[2]);
+  if (month < 1 || month > 12) return null;
+  return 2000 + Number(match[1]);
 }
 
 // 导出单例
