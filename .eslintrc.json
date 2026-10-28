@@ -10,14 +10,68 @@
     "sourceType": "module"
   },
   "rules": {
-    "indent": ["error", 2],
-    "linebreak-style": ["error", "unix"],
-    "quotes": ["error", "single"],
-    "semi": ["error", "always"],
-    "no-unused-vars": ["warn"],
-    "no-console": ["warn", { "allow": ["warn", "error"] }]
+    "indent": [
+      "error",
+      2
+    ],
+    "linebreak-style": [
+      "error",
+      "unix"
+    ],
+    "quotes": [
+      "error",
+      "single"
+    ],
+    "semi": [
+      "error",
+      "always"
+    ],
+    "no-unused-vars": [
+      "warn"
+    ],
+    "no-console": [
+      "warn",
+      {
+        "allow": [
+          "warn",
+          "error"
+        ]
+      }
+    ]
   },
   "globals": {
     "chrome": "readonly"
-  }
+  },
+  "overrides": [
+    {
+      "files": [
+        "packages/pdf-parse-core/**/*.js"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@core/*",
+                  "@utils/*",
+                  "@config/*",
+                  "@ui/*",
+                  "@background/*",
+                  "@/*",
+                  "**/src/core/*",
+                  "**/src/utils/*",
+                  "**/src/config/*",
+                  "**/src/ui/*",
+                  "**/src/background/*"
+                ],
+                "message": "pdf-parse-core 不能反向依赖插件代码（R4-01）"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }
