@@ -7,7 +7,7 @@ import logger from '@utils/logger';
 import storage from '@utils/storage';
 import { TASK_STATUS } from '@config/constants';
 import { arxivApiUrl } from '@core/metadata-extractor';
-import { deletedTaskGuard, processMinerUTaskInBackground } from './mineru-task-runner';
+import { deletedTaskGuard, processMinerUTaskInBackground, providerRegistry } from './mineru-task-runner';
 import { KEEP_ALIVE_ALARM, syncKeepAlive } from './keep-alive';
 import { isTrustedArxivSender, isValidArxivId, triggerConversionInActiveTab } from './message-guards';
 import { createActionBadge, handleShortcutResult, conversionBadgeState } from './action-badge';
@@ -80,7 +80,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     handleGetStatistics(sendResponse);
     return true;
 
+  case 'START_PDF_TASK':
+    // R4-11：通用入口 {data: paperInfo, provider?, force?}
+    _doStartPdfTask(message.data, sendResponse, !!message.force, message.provider);
+    return true;
+
   case 'START_MINERU_TASK':
+    // 旧消息名（别名）：走当前 PDF 后端
     handleStartMinerUTask(message.data, sendResponse);
     return true;
 
@@ -215,10 +221,17 @@ async function handleCheckAr5iv(arxivId, sendResponse) {
  * @param {Function} sendResponse - 消息响应函数
  * @param {boolean} skipDuplicateCheck - 是否跳过重复任务检查
  */
-async function _doStartMinerUTask(paperInfo, sendResponse, skipDuplicateCheck) {
+async function resolvePdfProvider(requested) {
+  if (requested && providerRegistry.has(requested)) return requested;
+  const { pdfProvider } = await chrome.storage.sync.get('pdfProvider');
+  return pdfProvider && providerRegistry.has(pdfProvider) ? pdfProvider : 'mineru';
+}
+
+async function _doStartPdfTask(paperInfo, sendResponse, skipDuplicateCheck, requestedProvider) {
   try {
+    const provider = await resolvePdfProvider(requestedProvider);
     if (!skipDuplicateCheck) {
-      const existingTask = await taskManager.findTaskByArxivId(paperInfo.arxivId);
+      const existingTask = await taskManager.findTaskByArxivId(paperInfo.arxivId, provider);
       if (existingTask) {
         sendResponse({
           success: false,
@@ -228,25 +241,29 @@ async function _doStartMinerUTask(paperInfo, sendResponse, skipDuplicateCheck) {
             status: existingTask.status,
             arxivId: existingTask.paperInfo.arxivId,
             title: existingTask.paperInfo.title,
+            provider: existingTask.provider,
           }
         });
         return;
       }
     }
 
-    const task = await taskManager.addTask(paperInfo, 'mineru');
-    sendResponse({ success: true, taskId: task.id });
+    const task = await taskManager.addTask(paperInfo, 'mineru', provider);
+    sendResponse({ success: true, taskId: task.id, provider });
 
     // 立即异步处理任务（不阻塞响应）
-    // 使用 Promise.resolve().then() 而非 setImmediate（浏览器兼容）
     Promise.resolve().then(() => {
       processMinerUTaskInBackground(task.id);
       refreshKeepAlive();
     });
   } catch (error) {
-    logger.error('Failed to start MinerU task:', error);
+    logger.error('Failed to start PDF task:', error);
     sendResponse({ success: false, error: error.message });
   }
+}
+
+function _doStartMinerUTask(paperInfo, sendResponse, skipDuplicateCheck) {
+  return _doStartPdfTask(paperInfo, sendResponse, skipDuplicateCheck, null);
 }
 
 /**
@@ -311,6 +328,10 @@ async function handleRetryTask(taskId, sendResponse) {
       status: TASK_STATUS.PENDING,
       progress: 0,
       error: null,
+      errorCode: null,
+      errorReason: null,
+      jobId: null, // 重试 = 重新提交
+      startedAt: null,
     });
 
     sendResponse({ success: true });

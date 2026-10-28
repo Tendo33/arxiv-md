@@ -106,9 +106,10 @@ class TaskManager {
    * @param {string} arxivId - arXiv ID
    * @returns {Promise<Object|null>} 找到的任务或 null
    */
-  async findTaskByArxivId(arxivId) {
+  async findTaskByArxivId(arxivId, provider = null) {
     const tasks = await this.getTasks();
-    return tasks.find((t) => t.paperInfo.arxivId === arxivId) || null;
+    // R4-11：重复检查按 (arxivId, provider)；不传 provider 时保持旧行为
+    return tasks.find((t) => t.paperInfo.arxivId === arxivId && (!provider || t.provider === provider)) || null;
   }
 
   /**
