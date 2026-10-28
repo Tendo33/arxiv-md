@@ -33,7 +33,7 @@ These settings, including usage statistics, live in `chrome.storage.sync`: if yo
 
 Used for:
 
-- API keys for the PDF parsing provider you choose (PaddleOCR, MinerU). Keys are never synced and are sent only to the matching provider. Older versions kept the MinerU token in `chrome.storage.sync`; the update copies it here on each device. The old synced copy is left in place, unused, so your other devices can migrate too; clearing keys in Settings removes it.
+- API keys for the PDF parsing provider you choose (PaddleOCR, MinerU). Keys are never synced and are sent only to the matching provider. Older versions kept the MinerU token in `chrome.storage.sync`; the update moves it here: it is copied to `chrome.storage.local` and then deleted from `chrome.storage.sync`. Because keys never sync, your other devices will not receive it; if they still have your chosen provider (that choice does sync) but no key, Settings and the popup ask you to re-enter the key on that device.
 
 It also holds PDF parsing task state, including:
 

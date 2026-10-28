@@ -14,11 +14,12 @@ describe('R4-05 storage migration', () => {
     expect(L().providerKeys).toBeUndefined();
   });
 
-  test('old user with token: copied to local, sync copy kept for other devices, provider=mineru, conversionMode kept', async () => {
+  test('old user with token: copied to local, removed from sync, provider=mineru, conversionMode kept', async () => {
     installChrome({ sync: { mineruToken: ' fixture-token ', conversionMode: 'always' } });
-    await runMigrations(chrome.storage);
+    const r = await runMigrations(chrome.storage);
     expect(L().providerKeys).toEqual({ mineru: 'fixture-token' });
-    expect(S().mineruToken).toBe(' fixture-token ');
+    expect('mineruToken' in S()).toBe(false);
+    expect(r.steps).toContain('remove-sync-token');
     expect(S().pdfProvider).toBe('mineru');
     expect(S().conversionMode).toBe('always');
   });
@@ -41,16 +42,18 @@ describe('R4-05 storage migration', () => {
 
   test('failure mid-way does not write version; re-run completes without losing token', async () => {
     installChrome({ sync: { mineruToken: 'fixture-token' } });
-    const realSet = chrome.storage.sync.set;
-    chrome.storage.sync.set = async () => { throw new Error('boom'); };
+    const realRemove = chrome.storage.sync.remove;
+    chrome.storage.sync.remove = async () => { throw new Error('boom'); };
     await expect(runMigrations(chrome.storage)).rejects.toThrow('boom');
     expect(L().schemaVersion).toBeUndefined();
     expect(L().providerKeys).toEqual({ mineru: 'fixture-token' });
-    chrome.storage.sync.set = realSet;
+    expect(S().mineruToken).toBe('fixture-token'); // 删除失败时 sync 里仍在，下次重跑
+    chrome.storage.sync.remove = realRemove;
     const r = await runMigrations(chrome.storage);
     expect(r.ran).toBe(true);
     expect(S().pdfProvider).toBe('mineru');
     expect(L().providerKeys).toEqual({ mineru: 'fixture-token' });
+    expect('mineruToken' in S()).toBe(false);
     expect(L().schemaVersion).toBe(SCHEMA_VERSION);
   });
 
@@ -65,16 +68,17 @@ describe('R4-05 storage migration', () => {
     expect(normalizeTask({ id: 1, provider: 'paddleocr' }).provider).toBe('paddleocr');
   });
 
-  // 审查 P2-1：两台设备共用一个 sync 账号，第一台迁移后第二台仍能迁移
-  test('two devices sharing sync: second device still migrates the token', async () => {
+  // 复审 P2-A：Key 不跨设备同步。设备 A 迁移后 sync 只剩 pdfProvider，设备 B 拿不到 Key，要提示重新填写
+  test('two devices sharing sync: token is gone from sync, device B has no key but keeps the chosen provider', async () => {
     installChrome({ sync: { mineruToken: 'fixture-token' } });
-    const sharedSync = chrome.storage.sync;
     await runMigrations(chrome.storage); // 设备 A
+    expect(S()).not.toHaveProperty('mineruToken');
     installChrome({ sync: S() }); // 设备 B：同一份 sync，空 local
-    expect(chrome.storage.sync).not.toBe(sharedSync);
     await runMigrations(chrome.storage);
-    expect(L().providerKeys).toEqual({ mineru: 'fixture-token' });
+    expect(L().providerKeys).toBeUndefined();
     expect(S().pdfProvider).toBe('mineru');
+    const { default: storage } = await import('../src/utils/storage');
+    expect(await storage.getActivePdfProvider()).toEqual({ id: 'mineru', hasKey: false, keyMissingHere: true });
   });
 
   // 审查 P2-2：已经选了 PaddleOCR 的老用户不会被改回 MinerU
@@ -84,5 +88,6 @@ describe('R4-05 storage migration', () => {
     expect(S().pdfProvider).toBe('paddleocr');
     expect(r.steps).not.toContain('keep-mineru');
     expect(L().providerKeys).toEqual({ mineru: 'fixture-token' });
+    expect('mineruToken' in S()).toBe(false);
   });
 });

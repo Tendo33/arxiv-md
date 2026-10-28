@@ -175,6 +175,11 @@ function bindEvents() {
   document
     .getElementById('providerKey')
     .addEventListener('blur', validateToken);
+  // 开始填 Key 后，“请在本设备重新填写”提示就不需要了
+  document.getElementById('providerKey').addEventListener('input', (e) => {
+    const hint = document.getElementById('keyHereHint');
+    if (hint && e.target.value.trim()) { hint.hidden = true; hint.textContent = ''; }
+  });
 }
 
 async function resetSettings() {

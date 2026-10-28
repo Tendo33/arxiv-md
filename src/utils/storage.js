@@ -91,11 +91,21 @@ class StorageManager {
     await chrome.storage.sync.set({ [PDF_PROVIDER_KEY]: providerId });
   }
 
-  /** R4-15：当前后端 + 是否已配 Key（popup、右键菜单用） */
+  /** 用户（可能在另一台设备上）明确选过的后端；没选过返回 null。sync 里只有选择，没有 Key */
+  async getChosenPdfProvider() {
+    const { [PDF_PROVIDER_KEY]: v } = await chrome.storage.sync.get(PDF_PROVIDER_KEY);
+    return typeof v === 'string' && v ? v : null;
+  }
+
+  /**
+   * R4-15：当前后端 + 是否已配 Key（popup、右键菜单用）
+   * keyMissingHere：后端是选过的（随 sync 过来），但本设备 local 里没有 Key → 提示在本设备重新填写
+   */
   async getActivePdfProvider(isKnown) {
     const id = await this.getPdfProvider(isKnown);
     const hasKey = !!(await this.getProviderKey(id));
-    return { id, hasKey };
+    const keyMissingHere = !hasKey && (await this.getChosenPdfProvider()) === id;
+    return { id, hasKey, keyMissingHere };
   }
 
   /** 兼容旧调用：等价于 getProviderKey('mineru') */

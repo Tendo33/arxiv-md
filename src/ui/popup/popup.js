@@ -1,5 +1,6 @@
 // Popup v2（Round 3 C-2）：当前页上下文 + 三个导出动作 + 最近 MinerU 任务
 
+import { keyHereMessage, renderKeyHint } from './key-hint';
 import logger from '@utils/logger';
 import storage from '@utils/storage';
 import { translations } from '@config/locales';
@@ -87,6 +88,8 @@ async function loadActiveProvider() {
 function renderBackend() {
   const el = $('backendLabel');
   if (el) el.textContent = `(${providerLabel(active.id)})`;
+  // 复审 P2-A：后端随 sync 过来了，但 Key 不同步 → 打开弹窗就提示在本设备重新填写
+  renderKeyHint(document, active, t(), providerLabel(active.id));
 }
 
 function scheduleLoadTasks() {
@@ -191,7 +194,9 @@ async function runExport(mode) {
   if (mode === 'mineru') {
     await loadActiveProvider();
     if (!active.hasKey) {
-      showErr(tr.popup_err_token_title.replace('{provider}', providerLabel(active.id)), tr.popup_err_token_hint);
+      const here = keyHereMessage(active, tr, providerLabel(active.id));
+      if (here) { showErr(here.title, here.hint); $('alertKey').classList.add('hidden'); }
+      else showErr(tr.popup_err_token_title.replace('{provider}', providerLabel(active.id)), tr.popup_err_token_hint);
       renderContext();
       return;
     }

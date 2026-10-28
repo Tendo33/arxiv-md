@@ -3,7 +3,7 @@
 // - 同步 provider：不进轮询，直接 await，60s 超时
 // - 失败只记录统一错误码，绝不自动换到另一个 provider（R4-16）
 // - jobId 落盘后，SW 被杀也能按 jobId 续上轮询（R4-12 resume）
-import { ParseError, isParseError } from '@pdf-core/errors';
+import { ParseError, isParseError, ERROR_REASONS } from '@pdf-core/errors';
 import { normalizeMarkdown, shouldNormalize } from '@pdf-core/normalize/index';
 import { ensureProviderPermission } from '@pdf-core/permissions';
 import { TASK_STATUS } from '@config/constants';
@@ -115,7 +115,14 @@ export function createParseTaskRunner(deps) {
         return { needsConsent: true };
       }
       const key = await storage.getProviderKey(provider.id);
-      if (!key) return { error: await fail(task, new ParseError('AUTH_INVALID', { provider: provider.id }), provider) };
+      if (!key) {
+        // 复审 P2-A：Key 不跨设备同步。后端是选过的（sync 带过来）但本设备没有 Key → 明确提示在本设备重新填写
+        const chosen = storage.getChosenPdfProvider ? await storage.getChosenPdfProvider().catch(() => null) : null;
+        const info = chosen === provider.id
+          ? { provider: provider.id, reason: ERROR_REASONS.KEY_NOT_ON_DEVICE, message: `本设备还没有 ${provider.label} 的 Key（Key 不会跨设备同步），请在本设备的设置 › PDF 解析里重新填写` }
+          : { provider: provider.id };
+        return { error: await fail(task, new ParseError('AUTH_INVALID', info), provider) };
+      }
       // R4-08：缺域名权限 → 不发任何请求，任务失败为 PERMISSION_MISSING（UI 显示“去设置授权”）
       if (deps.permissions) {
         try { await ensureProviderPermission(deps.permissions, provider); } catch (e) { return { error: await fail(task, e, provider) }; }

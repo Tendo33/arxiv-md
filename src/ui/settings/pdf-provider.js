@@ -47,6 +47,13 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
     const key = $('providerKey');
     key.dataset.provider = p.id;
     key.value = (await storage.getProviderKey(p.id)) || '';
+    // 复审 P2-A：后端是选过的（sync 带过来）但本设备没有 Key → 提示在本设备重新填写
+    const hint = $('keyHereHint');
+    if (hint) {
+      const chosen = storage.getChosenPdfProvider ? await storage.getChosenPdfProvider().catch(() => null) : null;
+      hint.hidden = !(chosen === p.id && !key.value);
+      hint.textContent = hint.hidden ? '' : fmt(tr.pdf_key_here, vars);
+    }
 
     const needs = permissionsFor(p).origins.length > 0;
     const granted = await hasProviderPermission(permissions, p);

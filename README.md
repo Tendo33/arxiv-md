@@ -92,7 +92,7 @@ Changes are saved automatically.
 
 | Permission | Why |
 | --- | --- |
-| `storage` | Settings (including the selected PDF parsing provider) and usage statistics are kept in `chrome.storage.sync`, so they sync with your browser account if browser sync is on; provider API keys and PDF parsing task state stay in `chrome.storage.local` on this device. A MinerU token saved by an older version is copied to local storage on each device; the old synced copy is left (unused) so other devices can migrate, and is removed when you clear keys in Settings |
+| `storage` | Settings (including the selected PDF parsing provider) and usage statistics are kept in `chrome.storage.sync`, so they sync with your browser account if browser sync is on; provider API keys and PDF parsing task state stay in `chrome.storage.local` on this device. A MinerU token saved by an older version is moved to local storage (copied, then deleted from sync); keys never sync, so on another device you are asked to re-enter the key |
 | `downloads` | Saves Markdown, PDF or PDF parsing results |
 | `activeTab` | Reads the arXiv page you are on so it can be converted |
 | `notifications` | Desktop notice when a PDF parsing task finishes or fails |

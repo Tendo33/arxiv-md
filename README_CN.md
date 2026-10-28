@@ -90,7 +90,7 @@ npm run build
 
 | 权限 | 用途 |
 | --- | --- |
-| `storage` | 设置（含选定的 PDF 解析后端）和使用统计存在 `chrome.storage.sync`，开启浏览器同步时会随浏览器账号同步；各后端的 API Key 和 PDF 解析任务状态存在 `chrome.storage.local`，只留在本机。旧版本存在同步区的 MinerU Token 会在每台设备上复制到本机；同步区的旧副本暂时保留（不再使用），供其他设备迁移，在设置页清除 Key 时删除 |
+| `storage` | 设置（含选定的 PDF 解析后端）和使用统计存在 `chrome.storage.sync`，开启浏览器同步时会随浏览器账号同步；各后端的 API Key 和 PDF 解析任务状态存在 `chrome.storage.local`，只留在本机。旧版本存在同步区的 MinerU Key 会移到本机（先复制到 local，再从同步区删除）；Key 不跨设备同步，其他设备上会提示在本设备重新填写 Key |
 | `downloads` | 把 Markdown、PDF 或 PDF 解析结果 保存到本地 |
 | `activeTab` | 读取你当前打开的 arXiv 页面，用于转换 |
 | `notifications` | PDF 解析任务完成或失败时发桌面通知 |

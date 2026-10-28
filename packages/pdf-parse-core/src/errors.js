@@ -30,6 +30,7 @@ export const ERROR_ACTIONS = Object.freeze({
 /** 可细分的原因（不新增错误码）。forbidden_empty：403 且响应体为空，通常是网关因 Origin 拒绝，不是 Key 或额度问题 */
 export const ERROR_REASONS = Object.freeze({
   FORBIDDEN_EMPTY_BODY: 'forbidden_empty',
+  KEY_NOT_ON_DEVICE: 'key_not_on_device', // Key 不跨设备同步：后端选过但本设备没有 Key
 });
 
 export class ParseError extends Error {

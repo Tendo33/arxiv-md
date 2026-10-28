@@ -24,7 +24,7 @@ export function pickPdfProvider({ pdfProvider, hasMinerUToken, isKnown = () => t
  * 步骤顺序保证中途失败可重跑：
  *  ① 先把 sync.mineruToken 写进 local.providerKeys.mineru（local 已有值时不覆盖）
  *  ② 再确定 pdfProvider（有 MinerU token 的老用户 → 'mineru'）
- *  ③ 有值的 sync.mineruToken 保留给同账号的其他设备迁移（只读不写，local 优先）；空值直接删除
+ *  ③ 写入成功后才从 sync 删除 mineruToken（其他设备靠“本设备重新填写 Key”提示补填）
  *  ④ 最后写 schemaVersion；任何一步抛错都不写版本号，下次启动重跑
  * conversionMode='always' 原样保留（含义变为“总是走 PDF 解析（当前后端）”）。
  * 任务记录的 provider 字段由 task-manager 读取时补齐，不在这里批量改写。
@@ -50,12 +50,11 @@ export async function runMigrations({ sync, local } = chrome.storage) {
     steps.push('keep-mineru');
   }
 
-  // 有值的旧 sync token 先保留：同一账号的其他设备升级后还要靠它迁移到各自的 local。
-  // 本扩展不再写入也不再读取它（local 优先）；用户在设置页清除 Key 时一并删除。
-  // 空值没有迁移价值，直接清掉。
-  if (STORAGE_KEYS.MINERU_TOKEN in syncData && !legacyToken) {
+  // Key 不进 sync：写入 local 成功后立即从 sync 删除。同账号的其他设备读不到旧 token，
+  // 但 sync 里的 pdfProvider 还在，设置页 / popup / 解析入口会提示“请在本设备重新填写 Key”。
+  if (STORAGE_KEYS.MINERU_TOKEN in syncData) {
     await sync.remove(STORAGE_KEYS.MINERU_TOKEN);
-    steps.push('remove-empty-sync-token');
+    steps.push('remove-sync-token');
   }
 
   await local.set({ [SCHEMA_VERSION_KEY]: SCHEMA_VERSION });
