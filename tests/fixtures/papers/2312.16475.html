@@ -1,0 +1,439 @@
+<!doctype html>
+<!-- source: https://arxiv.org/html/2312.16475 (abs: https://arxiv.org/abs/2312.16475) ; license: CC0 1.0 https://creativecommons.org/publicdomain/zero/1.0/ ; cropped by scripts/crop-fixtures.mjs, test use only -->
+<html><head><meta charset="utf-8"></head><body>
+<article class="ltx_document"><h1 class="ltx_title ltx_title_document">Federated Continual Learning via Knowledge Fusion: A Survey<span class="ltx_pubnotes"><span class="ltx_pubnotes_content"><span class="ltx_pubnote ltx_role_thanks"><span class="ltx_note_name">Thanks:&#160;</span>Xin Yang, Hao Yu and Xin Gao are with the School of Comput-
+ing and Artificial Intelligence, Southwestern University of Finance and Economics, Chengdu, 611130, China.
+E-mail: yangxin@swufe.edu.cn, yuhao2033@163.com, xingaocs@foxmail.com.</span><span class="ltx_pubnote ltx_role_thanks"><span class="ltx_note_name">Thanks:&#160;</span>Hao Wang is with Nanyang Technological University, Singapore.
+E-mail: cshaowang@gmail.com (primary) or h.wang@ntu.edu.sg.
+</span><span class="ltx_pubnote ltx_role_thanks"><span class="ltx_note_name">Thanks:&#160;</span>Junbo Zhang is with JD iCity, JD Technology, Beijing, China, JD Intelligent Cities Research &amp; Institute of Artificial Intelligence, Southwest
+Jiaotong University, Chengdu 611756, China.
+E-mail: msjunbozhang@outlook.com.</span><span class="ltx_pubnote ltx_role_thanks"><span class="ltx_note_name">Thanks:&#160;</span>Tianrui Li is with School of Computing and Artificial Intelligence, Southwest Jiaotong University, Chengdu, 611756, China.
+E-mail:trli@swjtu.edu.cn.</span></span></span></h1><div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Xin Yang
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Hao Yu
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Xin Gao
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Hao Wang
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation:&#160;</span>Junbo Zhang,&#160;, Tianrui Li,&#160;
+
+
+
+</span></span></span></span></div><div id="abstract1" class="ltx_abstract"><h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+    
+<p id="abstract1.1" class="ltx_p">Data privacy and silos are nontrivial and greatly challenging in many real-world applications. Federated learning is a decentralized approach to training models across multiple local clients without the exchange of raw data from client devices to global servers.
+However, existing works focus on a static data environment and ignore continual learning from streaming data with incremental tasks.
+Federated Continual Learning (FCL) is an emerging paradigm to address model learning in both federated and continual learning environments. The key objective of FCL is to fuse heterogeneous knowledge from different clients and retain knowledge of previous tasks while learning on new ones.
+In this work, we delineate federated learning and continual learning first and then discuss their integration, i.e., FCL, and particular FCL via knowledge fusion. In summary, our motivations are four-fold: we (1) raise a fundamental problem called “spatial-temporal catastrophic forgetting” and evaluate its impact on the performance using a well-known method called federated averaging (FedAvg), (2) integrate most of the existing FCL methods into two generic frameworks, namely synchronous FCL and asynchronous FCL, (3) categorize a large number of methods according to the mechanism involved in knowledge fusion, and finally (4) showcase an outlook on the future work of FCL.</p>
+  
+</div><section id="S1" class="ltx_section"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">I </span><span id="S1.2" class="ltx_text ltx_font_smallcaps">Introduction</span></h2><div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">Despite its numerous advantages, FL confronts significant challenges. The first challenge is the lack of dynamism. The setting assumptions of most existing FL methods are somewhat strong, assuming all data and classes should be known prior and will be unchanged forever. It contradicts the dynamic nature of the real world, where data are collected in streams and the data could form sequential tasks.
+However, traditional FL would suffer from terribly temporal catastrophic forgetting (<span id="S1.p2.1.1" class="ltx_text ltx_font_italic">TemporalCF</span>) when local models learning on new tasks. <span id="S1.p2.1.2" class="ltx_text ltx_font_italic">TemporalCF</span> is a major challenge in Continual Learning (CL) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite>, which refers to changes in crucial parameters of a single model when learning on consecutive tasks, resulting in poor performance on previous tasks <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>. Apparently, FL would certainly encounter <span id="S1.p2.1.3" class="ltx_text ltx_font_italic">TemporalCF</span> if each client learns on a sequence of tasks from a private local data stream.</p>
+</div><div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">Another challenge of FL is data heterogeneity <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>, also known as non-independent and identically distributed (Non-IID) data. It refers to the differences in data distributions, feature spaces and labels across clients participating in the federated training process, aroused by variations in the data sources, data collection methods, data quality, etc. Data heterogeneity results in diverse knowledge extracted by local models. Knowledge of a model is often represented by parameters. The more different the data, the greater the parameter divergence. Simply aggregating these local models, like averaging parameters, can lead to critical parameters for certain local tasks being overwritten. Such that the aggregated global model may perform worse than the local models on the local test set <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>, <a href="#bib.bib12" title="" class="ltx_ref">12</a>, <a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite>. We call this phenomenon spatial catastrophic forgetting (<span id="S1.p3.1.1" class="ltx_text ltx_font_italic">SpatialCF</span>). It is worth noting that <span id="S1.p3.1.2" class="ltx_text ltx_font_italic">SpatialCF</span> is a new concept we introduce in this paper, which is analogical to the <span id="S1.p3.1.3" class="ltx_text ltx_font_italic">TemporalCF</span>.</p>
+</div></section><section id="S2" class="ltx_section"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">II </span><span id="S2.2" class="ltx_text ltx_font_smallcaps">Federated and Continual Learning: An Overview</span></h2><div id="S2.SS2.p4" class="ltx_para">
+<p id="S2.SS2.p4.1" class="ltx_p">Based on the analysis above, many researchers have tried to adapt CL methods to FL settings and achieved quite good results. Shoham <math id="S2.SS2.p4.m1" class="ltx_Math" display="inline" alttext="et\,al."><semantics><mi>x</mi><annotation encoding="application/x-tex">et\,al.</annotation></semantics></math> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib48" title="" class="ltx_ref">48</a>]</cite> presents their adaptation of the EWC <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib38" title="" class="ltx_ref">38</a>]</cite>, a classic regularization-based approach in CL, to the FL scenario and refers to it as FedCurv. By adding a penalty term to the loss function, all local models are compelled to converge toward a shared optimal. Xin <math id="S2.SS2.p4.m2" class="ltx_Math" display="inline" alttext="et\,al."><semantics><mi>x</mi><annotation encoding="application/x-tex">et\,al.</annotation></semantics></math> propose a new framework called FedCL <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib49" title="" class="ltx_ref">49</a>]</cite>. FedCL follows the parameter-regularization continual training paradigm on clients, in other words, penalizing the important parameters of the global model for changing. Nevertheless, it is quite different from FedCurv because it estimates the importance weights on the proxy dataset on the server and then distributes them to the clients instead of estimating the importance weight of model parameters on clients and exchanging them as in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib48" title="" class="ltx_ref">48</a>]</cite>, which will bring at least twice the extra communication costs.</p>
+</div><div id="S2.SS2.p5" class="ltx_para">
+<p id="S2.SS2.p5.1" class="ltx_p"><span id="S2.SS2.p5.1.1" class="ltx_text ltx_font_italic">SpatialCF</span> in FL and the close relationship between FL and CL are also observed and demonstrated by other researchers. Casado <math id="S2.SS2.p5.m1" class="ltx_Math" display="inline" alttext="et\,al."><semantics><mi>x</mi><annotation encoding="application/x-tex">et\,al.</annotation></semantics></math> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib50" title="" class="ltx_ref">50</a>]</cite> creatively modifies the traditional FedAvg algorithm by adopting the concept detection and concept drift adaptation methods that deal with concept drift in CL and prove that their extended method outperforms the original one. Criado <math id="S2.SS2.p5.m2" class="ltx_Math" display="inline" alttext="et\,al."><semantics><mi>x</mi><annotation encoding="application/x-tex">et\,al.</annotation></semantics></math> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib51" title="" class="ltx_ref">51</a>]</cite> dig deeply the connection between concept drift in CL and Non-IID in FL, and provide an enlightening survey on handling Non-IID problem. Usmanova <math id="S2.SS2.p5.m3" class="ltx_Math" display="inline" alttext="et\,al."><semantics><mi>x</mi><annotation encoding="application/x-tex">et\,al.</annotation></semantics></math> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib52" title="" class="ltx_ref">52</a>]</cite> shows that the problem of catastrophic forgetting is critical in a pervasive computing application using FL. It is evident that the close relationship between CL and FL has been confirmed.</p>
+</div></section><section id="S3" class="ltx_section"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">III </span><span id="S3.2" class="ltx_text ltx_font_smallcaps">Spatial-Temporal Catastrophic Forgetting</span></h2><figure id="S3.T1" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">TABLE I: </span>Mathematical Notations.</figcaption>
+<table id="S3.T1.2" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S3.T1.2.1" class="ltx_tr">
+<th id="S3.T1.2.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_t">Notation</th>
+<th id="S3.T1.2.1.2" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_t">      Description</th></tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S3.T1.2.2" class="ltx_tr">
+<th id="S3.T1.2.2.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_t"><math id="S3.T1.m1" class="ltx_Math" display="inline" alttext="S"><semantics><mi>x</mi><annotation encoding="application/x-tex">S</annotation></semantics></math></th>
+<td id="S3.T1.2.2.2" class="ltx_td ltx_align_left ltx_border_t">Central server of FL system.</td></tr>
+<tr id="S3.T1.2.3" class="ltx_tr">
+<th id="S3.T1.2.3.1" class="ltx_td ltx_align_center ltx_th ltx_th_row"><math id="S3.T1.m2" class="ltx_Math" display="inline" alttext="C"><semantics><mi>x</mi><annotation encoding="application/x-tex">C</annotation></semantics></math></th>
+<td id="S3.T1.2.3.2" class="ltx_td ltx_align_left">Total number of clients.</td></tr>
+<tr id="S3.T1.2.4" class="ltx_tr">
+<th id="S3.T1.2.4.1" class="ltx_td ltx_align_center ltx_th ltx_th_row"><math id="S3.T1.m3" class="ltx_Math" display="inline" alttext="\mathcal{T}^{c}"><semantics><mi>x</mi><annotation encoding="application/x-tex">\mathcal{T}^{c}</annotation></semantics></math></th>
+<td id="S3.T1.2.4.2" class="ltx_td ltx_align_left">Entire task sequence of client <math id="S3.T1.m4" class="ltx_Math" display="inline" alttext="c"><semantics><mi>x</mi><annotation encoding="application/x-tex">c</annotation></semantics></math>.</td></tr>
+<tr id="S3.T1.2.5" class="ltx_tr">
+<th id="S3.T1.2.5.1" class="ltx_td ltx_align_center ltx_th ltx_th_row"><math id="S3.T1.m5" class="ltx_Math" display="inline" alttext="\mathcal{T}^{c}_{t}"><semantics><mi>x</mi><annotation encoding="application/x-tex">\mathcal{T}^{c}_{t}</annotation></semantics></math></th>
+<td id="S3.T1.2.5.2" class="ltx_td ltx_align_left"><math id="S3.T1.m6" class="ltx_Math" display="inline" alttext="t"><semantics><mi>x</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>-th task on client <math id="S3.T1.m7" class="ltx_Math" display="inline" alttext="c"><semantics><mi>x</mi><annotation encoding="application/x-tex">c</annotation></semantics></math>.</td></tr>
+<tr id="S3.T1.2.6" class="ltx_tr">
+<th id="S3.T1.2.6.1" class="ltx_td ltx_align_center ltx_th ltx_th_row"><math id="S3.T1.m8" class="ltx_Math" display="inline" alttext="T"><semantics><mi>x</mi><annotation encoding="application/x-tex">T</annotation></semantics></math></th>
+<td id="S3.T1.2.6.2" class="ltx_td ltx_align_left">Total number of tasks of all clients.</td></tr>
+<tr id="S3.T1.2.7" class="ltx_tr">
+<th id="S3.T1.2.7.1" class="ltx_td ltx_align_center ltx_th ltx_th_row"><math id="S3.T1.m9" class="ltx_Math" display="inline" alttext="N_{c}"><semantics><mi>x</mi><annotation encoding="application/x-tex">N_{c}</annotation></semantics></math></th>
+<td id="S3.T1.2.7.2" class="ltx_td ltx_align_left">Number of tasks in the task sequence of client <math id="S3.T1.m10" class="ltx_Math" display="inline" alttext="c"><semantics><mi>x</mi><annotation encoding="application/x-tex">c</annotation></semantics></math>.</td></tr>
+<tr id="S3.T1.2.8" class="ltx_tr">
+<th id="S3.T1.2.8.1" class="ltx_td ltx_align_center ltx_th ltx_th_row"><math id="S3.T1.m11" class="ltx_Math" display="inline" alttext="r"><semantics><mi>x</mi><annotation encoding="application/x-tex">r</annotation></semantics></math></th>
+<td id="S3.T1.2.8.2" class="ltx_td ltx_align_left">Communication round.</td></tr>
+<tr id="S3.T1.2.9" class="ltx_tr">
+<th id="S3.T1.2.9.1" class="ltx_td ltx_align_center ltx_th ltx_th_row"><math id="S3.T1.m12" class="ltx_Math" display="inline" alttext="\theta_{g}^{r}"><semantics><mi>x</mi><annotation encoding="application/x-tex">\theta_{g}^{r}</annotation></semantics></math></th>
+<td id="S3.T1.2.9.2" class="ltx_td ltx_align_left">Global model at round <math id="S3.T1.m13" class="ltx_Math" display="inline" alttext="r"><semantics><mi>x</mi><annotation encoding="application/x-tex">r</annotation></semantics></math>.</td></tr>
+<tr id="S3.T1.2.10" class="ltx_tr">
+<th id="S3.T1.2.10.1" class="ltx_td ltx_align_center ltx_th ltx_th_row"><math id="S3.T1.m14" class="ltx_Math" display="inline" alttext="\theta_{c}^{r}"><semantics><mi>x</mi><annotation encoding="application/x-tex">\theta_{c}^{r}</annotation></semantics></math></th>
+<td id="S3.T1.2.10.2" class="ltx_td ltx_align_left">Local model of client <math id="S3.T1.m15" class="ltx_Math" display="inline" alttext="c"><semantics><mi>x</mi><annotation encoding="application/x-tex">c</annotation></semantics></math> at round <math id="S3.T1.m16" class="ltx_Math" display="inline" alttext="r"><semantics><mi>x</mi><annotation encoding="application/x-tex">r</annotation></semantics></math>.</td></tr>
+<tr id="S3.T1.2.11" class="ltx_tr">
+<th id="S3.T1.2.11.1" class="ltx_td ltx_align_center ltx_th ltx_th_row"><math id="S3.T1.m17" class="ltx_Math" display="inline" alttext="O_{c}"><semantics><mi>x</mi><annotation encoding="application/x-tex">O_{c}</annotation></semantics></math></th>
+<td id="S3.T1.2.11.2" class="ltx_td ltx_align_left">Order of tasks on client <math id="S3.T1.m18" class="ltx_Math" display="inline" alttext="c"><semantics><mi>x</mi><annotation encoding="application/x-tex">c</annotation></semantics></math>.</td></tr>
+<tr id="S3.T1.2.12" class="ltx_tr">
+<th id="S3.T1.2.12.1" class="ltx_td ltx_align_center ltx_th ltx_th_row"><math id="S3.T1.m19" class="ltx_Math" display="inline" alttext="A_{i}^{k}"><semantics><mi>x</mi><annotation encoding="application/x-tex">A_{i}^{k}</annotation></semantics></math></th>
+<td id="S3.T1.2.12.2" class="ltx_td ltx_align_left">Class set of Client <math id="S3.T1.m20" class="ltx_Math" display="inline" alttext="i"><semantics><mi>x</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> on its <span id="S3.T1.2.12.2.1" class="ltx_text ltx_font_italic">k-th</span> task.</td></tr>
+<tr id="S3.T1.2.13" class="ltx_tr">
+<th id="S3.T1.2.13.1" class="ltx_td ltx_align_center ltx_th ltx_th_row"><math id="S3.T1.m21" class="ltx_Math" display="inline" alttext="KR_{t}"><semantics><mi>x</mi><annotation encoding="application/x-tex">KR_{t}</annotation></semantics></math></th>
+<td id="S3.T1.2.13.2" class="ltx_td ltx_align_left">Temporal knowledge retention.</td></tr>
+<tr id="S3.T1.2.14" class="ltx_tr">
+<th id="S3.T1.2.14.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_b"><math id="S3.T1.m22" class="ltx_Math" display="inline" alttext="KR_{s}"><semantics><mi>x</mi><annotation encoding="application/x-tex">KR_{s}</annotation></semantics></math></th>
+<td id="S3.T1.2.14.2" class="ltx_td ltx_align_left ltx_border_b">Spatial knowledge retention.</td></tr>
+</tbody>
+</table>
+</figure><div id="S3.SS2.SSS1.p3" class="ltx_para">
+<p id="S3.SS2.SSS1.p3.1" class="ltx_p">Tab.&#160;<a href="#S3.T2" title="TABLE II ‣ III-B1 Settings ‣ III-B Performance Evaluation ‣ III Spatial-Temporal Catastrophic Forgetting ‣ Federated Continual Learning via Knowledge Fusion: A Survey" class="ltx_ref"><span class="ltx_text ltx_ref_tag">II</span></a> illustrates our experimental settings. For our model, we set the first convolution layer in the Res-Net 18 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib58" title="" class="ltx_ref">58</a>]</cite> to 3<math id="S3.SS2.SSS1.p3.m1" class="ltx_Math" display="inline" alttext="\times"><semantics><mi>x</mi><annotation encoding="application/x-tex">\times</annotation></semantics></math>3 in experiments.</p>
+</div><figure id="S3.F1" class="ltx_figure"><object type="image/svg+xml" data="2312.16475v1/experiments.svg" id="S3.F1.g1" class="ltx_graphics ltx_centering ltx_img_square" width="333" height="283"></object>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Fig. 1: </span>Experiment Results. Solid lines represent knowledge retention of clients in time, and dashed lines represent knowledge retention of clients in space. When the data distribution among clients is identical, and the distribution among local tasks is also the same, spatial-temporal catastrophic forgetting does not occur, and the model’s performance improves. However, severe performance degradation occurs after aggregation when clients have training data with different classes. Additionally, when the local task sequence follows a class-incremental pattern, the model forgets all knowledge from previous tasks, resulting in temporal knowledge retention to zero.</figcaption>
+</figure></section><section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+      
+
+      
+
+      
+
+      
+<li id="bib.bib4" class="ltx_bibitem"><span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+C.&#160;Zhang, Y.&#160;Xie, H.&#160;Bai, B.&#160;Yu, W.&#160;Li, and Y.&#160;Gao, “A survey on federated learning,” <em id="bib.bib4.2" class="ltx_emph ltx_font_italic">Knowledge-Based Systems</em>, vol. 216, p. 106775, 2021.
+
+</span></li>
+      
+
+      
+
+      
+
+      
+
+      
+<li id="bib.bib9" class="ltx_bibitem"><span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+T.&#160;Diethe, T.&#160;Borchert, E.&#160;Thereska, B.&#160;Balle, and N.&#160;Lawrence, “Continual learning in practice,” <em id="bib.bib9.2" class="ltx_emph ltx_font_italic">stat</em>, vol. 1050, p.&#160;18, 2019.
+
+</span></li>
+      
+<li id="bib.bib10" class="ltx_bibitem"><span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+M.&#160;McCloskey and N.&#160;J. Cohen, “Catastrophic interference in connectionist networks: The sequential learning problem,” in <em id="bib.bib10.2" class="ltx_emph ltx_font_italic">Psychology of learning and motivation</em>. Elsevier, 1989, vol.&#160;24, pp. 109–165.
+
+</span></li>
+      
+<li id="bib.bib11" class="ltx_bibitem"><span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+A.&#160;Ghosh, J.&#160;Hong, D.&#160;Yin, and K.&#160;Ramchandran, “Robust federated learning in a heterogeneous environment,” <em id="bib.bib11.2" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:1906.06629</em>, 2019.
+
+</span></li>
+      
+<li id="bib.bib12" class="ltx_bibitem"><span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+B.&#160;Luo, W.&#160;Xiao, S.&#160;Wang, J.&#160;Huang, and L.&#160;Tassiulas, “Tackling system and statistical heterogeneity for federated learning with adaptive client sampling,” in <em id="bib.bib12.2" class="ltx_emph ltx_font_italic">IEEE INFOCOM 2022-IEEE conference on computer communications</em>. IEEE, 2022, pp. 1739–1748.
+
+</span></li>
+      
+<li id="bib.bib13" class="ltx_bibitem"><span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+Z.&#160;Zhu, J.&#160;Hong, and J.&#160;Zhou, “Data-free knowledge distillation for heterogeneous federated learning,” in <em id="bib.bib13.2" class="ltx_emph ltx_font_italic">International Conference on Machine Learning</em>. PMLR, 2021, pp. 12 878–12 889.
+
+</span></li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+<li id="bib.bib38" class="ltx_bibitem"><span class="ltx_tag ltx_tag_bibitem">[38]</span>
+<span class="ltx_bibblock">
+J.&#160;Kirkpatrick, R.&#160;Pascanu, N.&#160;Rabinowitz, J.&#160;Veness, G.&#160;Desjardins, A.&#160;A. Rusu, K.&#160;Milan, J.&#160;Quan, T.&#160;Ramalho, A.&#160;Grabska-Barwinska <em id="bib.bib38.2" class="ltx_emph ltx_font_italic">et&#160;al.</em>, “Overcoming catastrophic forgetting in neural networks,” <em id="bib.bib38.3" class="ltx_emph ltx_font_italic">Proceedings of the national academy of sciences</em>, vol. 114, no.&#160;13, pp. 3521–3526, 2017.
+
+</span></li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+<li id="bib.bib48" class="ltx_bibitem"><span class="ltx_tag ltx_tag_bibitem">[48]</span>
+<span class="ltx_bibblock">
+N.&#160;Shoham, T.&#160;Avidor, A.&#160;Keren, N.&#160;Israel, D.&#160;Benditkis, L.&#160;Mor-Yosef, and I.&#160;Zeitak, “Overcoming forgetting in federated learning on non-iid data,” <em id="bib.bib48.2" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:1910.07796</em>, 2019.
+
+</span></li>
+      
+<li id="bib.bib49" class="ltx_bibitem"><span class="ltx_tag ltx_tag_bibitem">[49]</span>
+<span class="ltx_bibblock">
+X.&#160;Yao and L.&#160;Sun, “Continual local training for better initialization of federated models,” in <em id="bib.bib49.2" class="ltx_emph ltx_font_italic">2020 IEEE International Conference on Image Processing (ICIP)</em>. IEEE, 2020, pp. 1736–1740.
+
+</span></li>
+      
+<li id="bib.bib50" class="ltx_bibitem"><span class="ltx_tag ltx_tag_bibitem">[50]</span>
+<span class="ltx_bibblock">
+F.&#160;E. Casado, D.&#160;Lema, R.&#160;Iglesias, C.&#160;V. Regueiro, and S.&#160;Barro, “Concept drift detection and adaptation for robotics and mobile devices in federated and continual settings,” in <em id="bib.bib50.2" class="ltx_emph ltx_font_italic">Advances in Physical Agents II: Proceedings of the 21st International Workshop of Physical Agents (WAF 2020), November 19-20, 2020, Alcalá de Henares, Madrid, Spain</em>. Springer, 2021, pp. 79–93.
+
+</span></li>
+      
+<li id="bib.bib51" class="ltx_bibitem"><span class="ltx_tag ltx_tag_bibitem">[51]</span>
+<span class="ltx_bibblock">
+M.&#160;F. Criado, F.&#160;E. Casado, R.&#160;Iglesias, C.&#160;V. Regueiro, and S.&#160;Barro, “Non-iid data and continual learning processes in federated learning: A long road ahead,” <em id="bib.bib51.2" class="ltx_emph ltx_font_italic">Information Fusion</em>, vol.&#160;88, pp. 263–280, 2022.
+
+</span></li>
+      
+<li id="bib.bib52" class="ltx_bibitem"><span class="ltx_tag ltx_tag_bibitem">[52]</span>
+<span class="ltx_bibblock">
+A.&#160;Usmanova, F.&#160;Portet, P.&#160;Lalanda, and G.&#160;Vega, “Federated learning and catastrophic forgetting in pervasive computing: demonstration in har domain,” in <em id="bib.bib52.2" class="ltx_emph ltx_font_italic">2022 IEEE International Conference on Pervasive Computing and Communications Workshops and other Affiliated Events (PerCom Workshops)</em>. IEEE, 2022, pp. 310–315.
+
+</span></li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+<li id="bib.bib58" class="ltx_bibitem"><span class="ltx_tag ltx_tag_bibitem">[58]</span>
+<span class="ltx_bibblock">
+K.&#160;He, X.&#160;Zhang, S.&#160;Ren, and J.&#160;Sun, “Deep residual learning for image recognition,” in <em id="bib.bib58.2" class="ltx_emph ltx_font_italic">Proceedings of the IEEE conference on computer vision and pattern recognition</em>, 2016, pp. 770–778.
+
+</span></li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+    
+</ul>
+</section></article>
+</body></html>

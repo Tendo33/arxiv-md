@@ -1,0 +1,236 @@
+<!doctype html>
+<!-- source: https://arxiv.org/html/2402.18994 (abs: https://arxiv.org/abs/2402.18994) ; license: CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ ; cropped by scripts/crop-fixtures.mjs, test use only -->
+<html><head><meta charset="utf-8"></head><body>
+<article class="ltx_document"><h1 class="ltx_title ltx_title_document">Spyx: A Library for Just-In-Time Compiled Optimization of Spiking Neural Networks
+</h1><div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Kade M. Heckel
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation:&#160;</span>University of Cambridge
+</span>
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation:&#160;</span>Department of Engineering
+</span>
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation:&#160;</span>Cambridge, UK
+</span>
+<span class="ltx_contact ltx_role_email"><span class="ltx_contact_name">Email:&#160;</span><a href="mailto:"><span id="id1" class="ltx_text ltx_font_typewriter">kmh70@cam.ac.uk</span></a>
+</span></span></span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Thomas Nowotny
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation:&#160;</span>Sussex AI
+</span>
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation:&#160;</span>School of Engineering and Informatics
+</span>
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation:&#160;</span>University of Sussex
+</span>
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation:&#160;</span>Brighton, UK
+</span>
+<span class="ltx_contact ltx_role_email"><span class="ltx_contact_name">Email:&#160;</span><a href="mailto:"><span id="id2" class="ltx_text ltx_font_typewriter">t.nowotny@sussex.ac.uk</span></a>
+</span></span></span></span></div><div id="abstract1" class="ltx_abstract"><h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+    
+<p id="abstract1.1" class="ltx_p">As the role of artificial intelligence becomes increasingly pivotal in modern society, the efficient training and deployment of deep neural networks have emerged as critical areas of focus. Recent advancements in attention-based large neural architectures have spurred the development of AI accelerators, facilitating the training of extensive, multi-billion parameter models. Despite their effectiveness, these powerful networks often incur high execution costs in production environments. Neuromorphic computing, inspired by biological neural processes, offers a promising alternative. By utilizing temporally-sparse computations, Spiking Neural Networks (SNNs) offer to enhance energy efficiency through a reduced and low-power hardware footprint. However, the training of SNNs can be challenging due to their recurrent nature which cannot as easily leverage the massive parallelism of modern AI accelerators. To facilitate the investigation of SNN architectures and dynamics researchers have sought to bridge Python-based deep learning frameworks such as PyTorch or TensorFlow with custom-implemented compute kernels. This paper introduces Spyx, a new and lightweight SNN simulation and optimization library designed in JAX. By pre-staging data in the expansive vRAM of contemporary accelerators and employing extensive JIT compilation, Spyx allows for SNN optimization to be executed as a unified, low-level program on NVIDIA GPUs or Google TPUs. This approach achieves optimal hardware utilization, surpassing the performance of many existing SNN training frameworks while maintaining considerable flexibility.</p>
+  
+</div><section id="S1" class="ltx_section"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2><div id="S1.p1" class="ltx_para ltx_noindent">
+<p id="S1.p1.1" class="ltx_p">Since the avalanche of research into transformer neural network architectures resulting from the publication of "Attention is All You Need" <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>, the capacity and capability of modern AI accelerators has exploded. A direct result of this is a self-reinforcing cycle deemed the "Hardware Lottery"<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>, where the demand to train increasingly massive deep neural networks drives tremendous investment in AI hardware which prioritizes parallel and dense matrix computations which then facilitate even greater performance of DNN models. A significant area of concern with the current trajectory of deep learning research and industrial adoption lies in its equally dramatic energy and environmental cost for training and deploying such models<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite>. Taking inspiration from biology, the field of neuromorphic computing and the investigation of Spiking Neural Network architectures aim to drastically reduce the computational resources required of ML tools by leveraging sparsity and event-based computation executed on low-power custom hardware.</p>
+</div><div id="S1.p6" class="ltx_para ltx_noindent">
+<p id="S1.p6.1" class="ltx_p">Concurrent with other JAX-based SNN work and inspired by the approach of snnTorch<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>, the Spyx<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib22" title="" class="ltx_ref">22</a>]</cite> library was developed to facilitate the efficient investigation of modern evolutionary strategies for optimizing SNNs<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib23" title="" class="ltx_ref">23</a>]</cite>. Spyx combines the flexibility advantages of PyTorch-based frameworks with the performance and efficiency of libraries backed by low-level kernel implementations. Specifically, Spyx allows the user to specify their own surrogate gradient functions or neuron models in only a few lines of code, while the entire training and evaluation loop can be reliably traced and executed on either a GPU or TPU with maximum utilization.</p>
+</div></section><section id="S2" class="ltx_section"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">2 </span>Methods</h2><div id="S2.SS1.p2" class="ltx_para ltx_noindent">
+<p id="S2.SS1.p2.1" class="ltx_p">Spyx is designed to maximize JIT compilation opportunities and adheres to the same functional programming paradigm JAX follows to enable much of its powerful capabilities. Due to this, Spyx avoids defining classes except when necessary for the implementation of neuron models using the Haiku library; this is done to avoid the possibility of introducing bugs resulting from the mixture of object-oriented programming with the function-oriented rules imposed by function tracing for JIT compilation. Unexpected behavior can occur when compiling a method of a class that incorporates multiple class members. For example, if an "adaptive surrogate gradient" was implemented as a class with a member variable <math id="S2.SS1.p2.m1" class="ltx_Math" display="inline" alttext="k"><semantics><mi>x</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> that parametrizes the slope of the surrogate function as illustrated in Listing <span class="ltx_ref ltx_missing_label ltx_ref_self"></span> and the user were to JIT compile code which called the adaptive_spike’s compute_gradient function, the evaluation would always use the value of <math id="S2.SS1.p2.m2" class="ltx_Math" display="inline" alttext="k=2"><semantics><mi>x</mi><annotation encoding="application/x-tex">k=2</annotation></semantics></math>.</p>
+</div><div id="S2.SS1.SSS2.p2" class="ltx_para ltx_noindent">
+<table id="S2.EGx1" class="ltx_equationgroup ltx_eqn_align ltx_eqn_table">
+
+<tbody id="S2.E1"><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_td ltx_align_right ltx_eqn_cell"><math id="S2.E1.m1" class="ltx_Math" display="inline" alttext="\displaystyle S_{t}"><semantics><mi>x</mi><annotation encoding="application/x-tex">\displaystyle S_{t}</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_left ltx_eqn_cell"><math id="S2.E1.m2" class="ltx_Math" display="inline" alttext="\displaystyle=\phi\left(V_{t}-\theta\right)"><semantics><mi>x</mi><annotation encoding="application/x-tex">\displaystyle=\phi\left(V_{t}-\theta\right)</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td></tr></tbody>
+<tbody id="S2.E2"><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_td ltx_align_right ltx_eqn_cell"><math id="S2.E2.m1" class="ltx_Math" display="inline" alttext="\displaystyle V_{t+1}"><semantics><mi>x</mi><annotation encoding="application/x-tex">\displaystyle V_{t+1}</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_left ltx_eqn_cell"><math id="S2.E2.m2" class="ltx_Math" display="inline" alttext="\displaystyle=\beta V_{t}+X-S_{t}\theta"><semantics><mi>x</mi><annotation encoding="application/x-tex">\displaystyle=\beta V_{t}+X-S_{t}\theta</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td></tr></tbody>
+</table>
+<p id="S2.SS1.SSS2.p2.1" class="ltx_p">where <math id="S2.SS1.SSS2.p2.m1" class="ltx_Math" display="inline" alttext="S_{t}"><semantics><mi>x</mi><annotation encoding="application/x-tex">S_{t}</annotation></semantics></math> denotes the spikes for the current iteration <math id="S2.SS1.SSS2.p2.m2" class="ltx_Math" display="inline" alttext="t"><semantics><mi>x</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>, <math id="S2.SS1.SSS2.p2.m3" class="ltx_Math" display="inline" alttext="V_{t}"><semantics><mi>x</mi><annotation encoding="application/x-tex">V_{t}</annotation></semantics></math> the neuron membrane potential, <math id="S2.SS1.SSS2.p2.m4" class="ltx_Math" display="inline" alttext="\theta"><semantics><mi>x</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math> the firing threshold, <math id="S2.SS1.SSS2.p2.m5" class="ltx_Math" display="inline" alttext="\beta"><semantics><mi>x</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math> the inverse time constant or the voltage decay rate <math id="S2.SS1.SSS2.p2.m6" class="ltx_math_unparsed" display="inline" alttext="\beta=\exp(-\Delta t/\tau_{m})"><semantics><mi>x</mi><annotation encoding="application/x-tex">\beta=\exp(-\Delta t/\tau_{m})</annotation></semantics></math>, and <math id="S2.SS1.SSS2.p2.m7" class="ltx_Math" display="inline" alttext="X"><semantics><mi>x</mi><annotation encoding="application/x-tex">X</annotation></semantics></math> the neuron inputs; the weighting of different inputs is offloaded to the preceding use of a haiku.Linear layer to build off existing tools and minimize redundancy. When training with surrogate gradient methods, the activation function <math id="S2.SS1.SSS2.p2.m8" class="ltx_Math" display="inline" alttext="\phi"><semantics><mi>x</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math> is the Heaviside Step Function whose gradient is replaced by a suitable finite surrogate gradient function.</p>
+</div><div id="S2.SS1.SSS4.p1" class="ltx_para ltx_noindent">
+<p id="S2.SS1.SSS4.p1.1" class="ltx_p">To optimize GPU usage, several optimizations must also be made to the handling of data. To enable full JIT compilation and on-accelerator training, the full data needs to be loaded into the GPU vRAM and the operations on the data need to be traceable by JAX; the incentive to do so is that streaming data from the CPU induces I/O latency thereby reducing training throughput. The user is free to use any loading and preprocessing pipeline to read their data into CPU memory. From there, the dataset should be converted to a single Numpy array organized with the shape <math id="S2.SS1.SSS4.p1.m1" class="ltx_Math" display="inline" alttext="[\#Batches,BatchSize,Time,...]"><semantics><mi>x</mi><annotation encoding="application/x-tex">[\#Batches,BatchSize,Time,...]</annotation></semantics></math>. Calling the numpy.packbits() function with the temporal axis specified compresses the dataset by 87.5% prior to its transfer to the GPU. The compressed data is then used directly with dynamic decompression during simulations (see Listing <span class="ltx_ref ltx_missing_label ltx_ref_self"></span> below). Spyx offers data-specific utility functions for randomly shifting inputs along the specified data axes as well as shuffling batches inside of JIT compiled training loops without needing to involve the CPU-based dataloader utilities as shown in Listings <span class="ltx_ref ltx_missing_label ltx_ref_self"></span> and <span class="ltx_ref ltx_missing_label ltx_ref_self"></span>.</p>
+</div></section><section id="S3" class="ltx_section"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">3 </span>Experiments &amp; Results</h2><figure id="S3.T1" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 1: </span>Timing (in seconds) benchmark for training a feed-forward SNN for 100 epochs on the SHD dataset.</figcaption>
+<table id="S3.T1.2" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S3.T1.2.1" class="ltx_tr">
+<th id="S3.T1.2.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_tt">Batch Size:</th>
+<td id="S3.T1.2.1.2" class="ltx_td ltx_align_center ltx_border_tt">64</td>
+<td id="S3.T1.2.1.3" class="ltx_td ltx_align_center ltx_border_tt">128</td>
+<td id="S3.T1.2.1.4" class="ltx_td ltx_align_center ltx_border_tt">256</td></tr>
+<tr id="S3.T1.2.2" class="ltx_tr">
+<th id="S3.T1.2.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t">snnTorch-128</th>
+<td id="S3.T1.2.2.2" class="ltx_td ltx_align_center ltx_border_t">4543.3<math id="S3.T1.m1" class="ltx_Math" display="inline" alttext="\pm"><semantics><mi>x</mi><annotation encoding="application/x-tex">\pm</annotation></semantics></math>41.0</td>
+<td id="S3.T1.2.2.3" class="ltx_td ltx_align_center ltx_border_t">2313.2<math id="S3.T1.m2" class="ltx_Math" display="inline" alttext="\pm"><semantics><mi>x</mi><annotation encoding="application/x-tex">\pm</annotation></semantics></math>12.0</td>
+<td id="S3.T1.2.2.4" class="ltx_td ltx_align_center ltx_border_t">1212.03<math id="S3.T1.m3" class="ltx_Math" display="inline" alttext="\pm"><semantics><mi>x</mi><annotation encoding="application/x-tex">\pm</annotation></semantics></math> 0.9</td></tr>
+<tr id="S3.T1.2.3" class="ltx_tr">
+<th id="S3.T1.2.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">snnTorch-128 Compiled</th>
+<td id="S3.T1.2.3.2" class="ltx_td ltx_align_center">195.6 <math id="S3.T1.m4" class="ltx_Math" display="inline" alttext="\pm"><semantics><mi>x</mi><annotation encoding="application/x-tex">\pm</annotation></semantics></math> 1.2</td>
+<td id="S3.T1.2.3.3" class="ltx_td ltx_align_center">103.3 <math id="S3.T1.m5" class="ltx_Math" display="inline" alttext="\pm"><semantics><mi>x</mi><annotation encoding="application/x-tex">\pm</annotation></semantics></math> 1.0</td>
+<td id="S3.T1.2.3.4" class="ltx_td ltx_align_center">58.8 <math id="S3.T1.m6" class="ltx_Math" display="inline" alttext="\pm"><semantics><mi>x</mi><annotation encoding="application/x-tex">\pm</annotation></semantics></math> 0.1</td></tr>
+<tr id="S3.T1.2.4" class="ltx_tr">
+<th id="S3.T1.2.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">Spyx-128 (ours)</th>
+<td id="S3.T1.2.4.2" class="ltx_td ltx_align_center"><span id="S3.T1.2.4.2.1" class="ltx_text ltx_font_bold">69.3<math id="S3.T1.m7" class="ltx_Math" display="inline" alttext="\pm"><semantics><mi>x</mi><annotation encoding="application/x-tex">\pm</annotation></semantics></math>0.1</span></td>
+<td id="S3.T1.2.4.3" class="ltx_td ltx_align_center"><span id="S3.T1.2.4.3.1" class="ltx_text ltx_font_bold">46.0<math id="S3.T1.m8" class="ltx_Math" display="inline" alttext="\pm"><semantics><mi>x</mi><annotation encoding="application/x-tex">\pm</annotation></semantics></math>0.1</span></td>
+<td id="S3.T1.2.4.4" class="ltx_td ltx_align_center"><span id="S3.T1.2.4.4.1" class="ltx_text ltx_font_bold">35.5<math id="S3.T1.m9" class="ltx_Math" display="inline" alttext="\pm"><semantics><mi>x</mi><annotation encoding="application/x-tex">\pm</annotation></semantics></math>0.1</span></td></tr>
+<tr id="S3.T1.2.5" class="ltx_tr">
+<th id="S3.T1.2.5.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">mlGeNN-128</th>
+<td id="S3.T1.2.5.2" class="ltx_td ltx_align_center">215.7<math id="S3.T1.m10" class="ltx_Math" display="inline" alttext="\pm"><semantics><mi>x</mi><annotation encoding="application/x-tex">\pm</annotation></semantics></math>1.6</td>
+<td id="S3.T1.2.5.3" class="ltx_td ltx_align_center">160.8<math id="S3.T1.m11" class="ltx_Math" display="inline" alttext="\pm"><semantics><mi>x</mi><annotation encoding="application/x-tex">\pm</annotation></semantics></math>1.6</td>
+<td id="S3.T1.2.5.4" class="ltx_td ltx_align_center">123.5<math id="S3.T1.m12" class="ltx_Math" display="inline" alttext="\pm"><semantics><mi>x</mi><annotation encoding="application/x-tex">\pm</annotation></semantics></math>1.0</td></tr>
+<tr id="S3.T1.2.6" class="ltx_tr">
+<th id="S3.T1.2.6.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t">snnTorch-512 Compiled</th>
+<td id="S3.T1.2.6.2" class="ltx_td ltx_align_center ltx_border_t">269.9<math id="S3.T1.m13" class="ltx_Math" display="inline" alttext="\pm"><semantics><mi>x</mi><annotation encoding="application/x-tex">\pm</annotation></semantics></math>6.0</td>
+<td id="S3.T1.2.6.3" class="ltx_td ltx_align_center ltx_border_t">137.5<math id="S3.T1.m14" class="ltx_Math" display="inline" alttext="\pm"><semantics><mi>x</mi><annotation encoding="application/x-tex">\pm</annotation></semantics></math>3.8</td>
+<td id="S3.T1.2.6.4" class="ltx_td ltx_align_center ltx_border_t">78.7<math id="S3.T1.m15" class="ltx_Math" display="inline" alttext="\pm"><semantics><mi>x</mi><annotation encoding="application/x-tex">\pm</annotation></semantics></math>0.6</td></tr>
+<tr id="S3.T1.2.7" class="ltx_tr">
+<th id="S3.T1.2.7.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">Spyx-512 (ours)</th>
+<td id="S3.T1.2.7.2" class="ltx_td ltx_align_center"><span id="S3.T1.2.7.2.1" class="ltx_text ltx_font_bold">98.7<math id="S3.T1.m16" class="ltx_Math" display="inline" alttext="\pm"><semantics><mi>x</mi><annotation encoding="application/x-tex">\pm</annotation></semantics></math>0.2</span></td>
+<td id="S3.T1.2.7.3" class="ltx_td ltx_align_center"><span id="S3.T1.2.7.3.1" class="ltx_text ltx_font_bold">80.2<math id="S3.T1.m17" class="ltx_Math" display="inline" alttext="\pm"><semantics><mi>x</mi><annotation encoding="application/x-tex">\pm</annotation></semantics></math>0.2</span></td>
+<td id="S3.T1.2.7.4" class="ltx_td ltx_align_center"><span id="S3.T1.2.7.4.1" class="ltx_text ltx_font_bold">64.1<math id="S3.T1.m18" class="ltx_Math" display="inline" alttext="\pm"><semantics><mi>x</mi><annotation encoding="application/x-tex">\pm</annotation></semantics></math>0.2</span></td></tr>
+<tr id="S3.T1.2.8" class="ltx_tr">
+<th id="S3.T1.2.8.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb">mlGeNN-512</th>
+<td id="S3.T1.2.8.2" class="ltx_td ltx_align_center ltx_border_bb">690.9<math id="S3.T1.m19" class="ltx_Math" display="inline" alttext="\pm"><semantics><mi>x</mi><annotation encoding="application/x-tex">\pm</annotation></semantics></math>84.9</td>
+<td id="S3.T1.2.8.3" class="ltx_td ltx_align_center ltx_border_bb">418.4<math id="S3.T1.m20" class="ltx_Math" display="inline" alttext="\pm"><semantics><mi>x</mi><annotation encoding="application/x-tex">\pm</annotation></semantics></math>39.4</td>
+<td id="S3.T1.2.8.4" class="ltx_td ltx_align_center ltx_border_bb">339.5<math id="S3.T1.m21" class="ltx_Math" display="inline" alttext="\pm"><semantics><mi>x</mi><annotation encoding="application/x-tex">\pm</annotation></semantics></math>23.7</td></tr>
+</tbody>
+</table>
+</figure></section><section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+      
+<li id="bib.bib1" class="ltx_bibitem"><span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones,
+Aidan&#160;N Gomez, Ł&#160;ukasz Kaiser, and Illia Polosukhin.
+
+</span>
+<span class="ltx_bibblock">Attention is all you need.
+
+</span>
+<span class="ltx_bibblock">In I.&#160;Guyon, U.&#160;Von Luxburg, S.&#160;Bengio, H.&#160;Wallach, R.&#160;Fergus,
+S.&#160;Vishwanathan, and R.&#160;Garnett, editors, <span id="bib.bib1.2" class="ltx_text ltx_font_italic">Advances in Neural Information
+Processing Systems</span>, volume&#160;30. Curran Associates, Inc., 2017.
+
+</span></li>
+      
+<li id="bib.bib2" class="ltx_bibitem"><span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+Sara Hooker.
+
+</span>
+<span class="ltx_bibblock">The hardware lottery.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib2.2" class="ltx_text ltx_font_italic">CoRR</span>, abs/2009.06489, 2020.
+
+</span></li>
+      
+<li id="bib.bib3" class="ltx_bibitem"><span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+Emma Strubell, Ananya Ganesh, and Andrew McCallum.
+
+</span>
+<span class="ltx_bibblock">Energy and policy considerations for deep learning in nlp, 2019.
+
+</span></li>
+      
+
+      
+
+      
+<li id="bib.bib6" class="ltx_bibitem"><span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+Jason&#160;K Eshraghian, Max Ward, Emre Neftci, Xinxin Wang, Gregor Lenz, Girish
+Dwivedi, Mohammed Bennamoun, Doo&#160;Seok Jeong, and Wei&#160;D Lu.
+
+</span>
+<span class="ltx_bibblock">Training spiking neural networks using lessons from deep learning.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib6.2" class="ltx_text ltx_font_italic">Proceedings of the IEEE</span>, 111(9):1016–1054, 2023.
+
+</span></li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+<li id="bib.bib22" class="ltx_bibitem"><span class="ltx_tag ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock">
+Kade Heckel, Steven Abreu, Gregor Lenz, and Thomas Nowotny.
+
+</span>
+<span class="ltx_bibblock">kmheckel/spyx: v0.1.17, February 2024.
+
+</span></li>
+      
+<li id="bib.bib23" class="ltx_bibitem"><span class="ltx_tag ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock">
+Kade Heckel.
+
+</span>
+<span class="ltx_bibblock">Neuroevolution of spiking neural networks, February 2024.
+
+</span></li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+    
+</ul>
+</section></article>
+</body></html>

@@ -1,0 +1,148 @@
+<!doctype html>
+<!-- source: https://arxiv.org/html/2402.19308 (abs: https://arxiv.org/abs/2402.19308) ; license: CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ ; cropped by scripts/crop-fixtures.mjs, test use only -->
+<html><head><meta charset="utf-8"></head><body>
+<article class="ltx_document"><h1 class="ltx_title ltx_title_document">Loss-Free Machine Unlearning</h1><div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Jack Foster
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation:&#160;</span>The Alan Turing Institute*Indicates equal contribution
+</span></span></span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Stefan Schoepf &amp; Alexandra Brintrup
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_email"><span class="ltx_contact_name">Email:&#160;</span><a href="mailto:"><span id="id1" class="ltx_text ltx_font_typewriter">{jwf40,ss2823,ab702}@cam.ac.uk</span></a>
+</span>
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation:&#160;</span>Department of Engineering, University of Cambridge
+</span>
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation:&#160;</span>The Alan Turing Institute*Indicates equal contribution
+</span></span></span></span></div><div id="abstract1" class="ltx_abstract"><h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+    
+<p id="abstract1.1" class="ltx_p">We present a machine unlearning approach that is both retraining- and label-free. Most existing machine unlearning approaches require a model to be fine-tuned to remove information while preserving performance. This is computationally expensive and necessitates the storage of the whole dataset for the lifetime of the model. Retraining-free approaches often utilise Fisher information, which is derived from the loss and requires labelled data which may not be available. Thus, we present an extension to the Selective Synaptic Dampening algorithm, substituting the diagonal of the Fisher information matrix for the gradient of the <math id="abstract1.m1" class="ltx_Math" display="inline" alttext="l_{2}"><semantics><mi>x</mi><annotation encoding="application/x-tex">l_{2}</annotation></semantics></math> norm of the model output to approximate sensitivity. We evaluate our method in a range of experiments using ResNet18 and Vision Transformer. Results show our label-free method is competitive with existing state-of-the-art approaches.</p>
+  
+</div><section id="A1" class="ltx_appendix"><h2 class="ltx_title ltx_title_appendix"><span class="ltx_tag ltx_tag_appendix">Appendix A </span>Appendix</h2><div id="A1.p1" class="ltx_para ltx_noindent">
+<p id="A1.p1.1" class="ltx_p"><span id="A1.p1.1.1" class="ltx_text ltx_font_bold">Benchmarks.</span> We evaluate LFSSD in the same manner as <cite class="ltx_cite ltx_citemacro_citet"><a href="#bib.bib4" title="" class="ltx_ref">Chundawat et&#160;al. (2023a)</a>; <a href="#bib.bib6" title="" class="ltx_ref">Foster et&#160;al. (2023)</a></cite>, comparing against a baseline model without any unlearning, a model retrained from scratch on only <math id="A1.p1.m1" class="ltx_Math" display="inline" alttext="\mathcal{D}_{r}"><semantics><mi>x</mi><annotation encoding="application/x-tex">\mathcal{D}_{r}</annotation></semantics></math>, a model finetuned for 2 epochs on <math id="A1.p1.m2" class="ltx_Math" display="inline" alttext="\mathcal{D}_{r}"><semantics><mi>x</mi><annotation encoding="application/x-tex">\mathcal{D}_{r}</annotation></semantics></math>, and several existing state-of-the-art methods <cite class="ltx_cite ltx_citemacro_citep">(<a href="#bib.bib4" title="" class="ltx_ref">Chundawat et&#160;al., 2023a</a>; <a href="#bib.bib8" title="" class="ltx_ref">Graves et&#160;al., 2021</a>; <a href="#bib.bib6" title="" class="ltx_ref">Foster et&#160;al., 2023</a>)</cite> (teacher, amnesiac, SSD). Three key tasks are evaluated using ResNet18 (RN) and Vision Transformer (ViT): full class, subclass, and random forgetting. Fullclass entails forgetting an entire class from the dataset (e.g. rocket from Cifar100), subclass involves forgetting a related subclass from the dataset (e.g. all rockets from class Vehicle2 in Cifar20), and random forgetting selects a random subset of samples across all classes. Datasets used include the Cifar suite <cite class="ltx_cite ltx_citemacro_citep">(<a href="#bib.bib9" title="" class="ltx_ref">Krizhevsky &amp; Hinton, 2010</a>)</cite>, and the PINS face recognition dataset <cite class="ltx_cite ltx_citemacro_citep">(<a href="#bib.bib2" title="" class="ltx_ref">Burak, 2020</a>)</cite>. Runs are repeated 10 times for each method, with the mean and standard deviation shown in the tables. <math id="A1.p1.m3" class="ltx_Math" display="inline" alttext="D_{r}"><semantics><mi>x</mi><annotation encoding="application/x-tex">D_{r}</annotation></semantics></math> and <math id="A1.p1.m4" class="ltx_Math" display="inline" alttext="D_{f}"><semantics><mi>x</mi><annotation encoding="application/x-tex">D_{f}</annotation></semantics></math> in the tables denote the accuracy on the respective subset of data in percent. Since SSD (and therefore LFSSD) is deterministic, there is no standard deviation across repeated runs. We use the same membership inference attack as in <cite class="ltx_cite ltx_citemacro_citet"><a href="#bib.bib4" title="" class="ltx_ref">Chundawat et&#160;al. (2023a)</a>; <a href="#bib.bib6" title="" class="ltx_ref">Foster et&#160;al. (2023)</a></cite>, where logistic regression is used to classify samples as seen or unseen for a given model, based the entropy of the model outputs for that sample.</p>
+</div><div id="A1.p4" class="ltx_para ltx_noindent">
+<p id="A1.p4.1" class="ltx_p">Other methods are retraining-based and depend on the number of epochs <math id="A1.p4.m1" class="ltx_Math" display="inline" alttext="N"><semantics><mi>x</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>, generally on the order of <math id="A1.p4.m2" class="ltx_Math" display="inline" alttext="O(N\cdot b_{retain}\cdot p)"><semantics><mi>x</mi><annotation encoding="application/x-tex">O(N\cdot b_{retain}\cdot p)</annotation></semantics></math>, which is much larger.</p>
+</div><div id="A1.p5" class="ltx_para ltx_noindent">
+<p id="A1.p5.1" class="ltx_p"><span id="A1.p5.1.1" class="ltx_text ltx_font_bold">Sensitivity analysis</span>. The values for alpha and lambda for SSD are taken from <cite class="ltx_cite ltx_citemacro_citet"><a href="#bib.bib6" title="" class="ltx_ref">Foster et&#160;al. (2023)</a></cite> where the authors used Optuna to search for ideal parameters. For LFSSD we performed a simplified hyperparameter search keeping lambda fixed at 1 and alpha values [1, 50]. We pick one value per unlearning task (e.g. full class, sub-class, random) to show robustness across classes and do not use the best alpha per individual class/subclass (e.g., taking alpha 25 for rocket, alpha 5 for another class, etc.). A sensitivity analysis in Table <a href="#A1.T2" title="Table 2 ‣ Appendix A Appendix ‣ Loss-Free Machine Unlearning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> on CIFAR100 rocket class unlearning shows that there is a significant drop off in performance when picking an alpha that is too aggressive or conservative but the method has a wide plateau in which it performs well.</p>
+</div><figure id="A1.T2" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 2: </span>Sensitivity analysis for LFSSD parameter <math id="A1.T2.m4" class="ltx_Math" display="inline" alttext="\alpha"><semantics><mi>x</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math> with <math id="A1.T2.m5" class="ltx_Math" display="inline" alttext="\lambda=1"><semantics><mi>x</mi><annotation encoding="application/x-tex">\lambda=1</annotation></semantics></math> on CIFAR100 rocket class unlearning. LFSSD is deterministic, thus no <math id="A1.T2.m6" class="ltx_Math" display="inline" alttext="\pm"><semantics><mi>x</mi><annotation encoding="application/x-tex">\pm</annotation></semantics></math> reported.
+<br class="ltx_break"></figcaption>
+<table id="A1.T2.2" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="A1.T2.2.1" class="ltx_tr">
+<th id="A1.T2.2.1.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_r ltx_border_t"><math id="A1.T2.m7" class="ltx_Math" display="inline" alttext="\alpha"><semantics><mi>x</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></th>
+<th id="A1.T2.2.1.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t"><math id="A1.T2.m8" class="ltx_Math" display="inline" alttext="D_{r}"><semantics><mi>x</mi><annotation encoding="application/x-tex">D_{r}</annotation></semantics></math> Accuracy</th>
+<th id="A1.T2.2.1.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t"><math id="A1.T2.m9" class="ltx_Math" display="inline" alttext="D_{f}"><semantics><mi>x</mi><annotation encoding="application/x-tex">D_{f}</annotation></semantics></math> Accuracy</th>
+<th id="A1.T2.2.1.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_t">MIA</th></tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="A1.T2.2.2" class="ltx_tr">
+<th id="A1.T2.2.2.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_t">1</th>
+<td id="A1.T2.2.2.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_r ltx_border_t">16.87%</td>
+<td id="A1.T2.2.2.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_r ltx_border_t">0.00%</td>
+<td id="A1.T2.2.2.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t">26.60</td></tr>
+<tr id="A1.T2.2.3" class="ltx_tr">
+<th id="A1.T2.2.3.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_t">5</th>
+<td id="A1.T2.2.3.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_r ltx_border_t">74.72%</td>
+<td id="A1.T2.2.3.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_r ltx_border_t">0.00%</td>
+<td id="A1.T2.2.3.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t">0.00</td></tr>
+<tr id="A1.T2.2.4" class="ltx_tr">
+<th id="A1.T2.2.4.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_t">10</th>
+<td id="A1.T2.2.4.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_r ltx_border_t">75.67%</td>
+<td id="A1.T2.2.4.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_r ltx_border_t">0.00%</td>
+<td id="A1.T2.2.4.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t">0.00</td></tr>
+<tr id="A1.T2.2.5" class="ltx_tr">
+<th id="A1.T2.2.5.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_t">25</th>
+<td id="A1.T2.2.5.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_r ltx_border_t">76.10%</td>
+<td id="A1.T2.2.5.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_r ltx_border_t">0.00%</td>
+<td id="A1.T2.2.5.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t">0.00</td></tr>
+<tr id="A1.T2.2.6" class="ltx_tr">
+<th id="A1.T2.2.6.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_row ltx_border_b ltx_border_r ltx_border_t">50</th>
+<td id="A1.T2.2.6.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_b ltx_border_r ltx_border_t">76.32%</td>
+<td id="A1.T2.2.6.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_b ltx_border_r ltx_border_t">71.88%</td>
+<td id="A1.T2.2.6.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_b ltx_border_t">29.40</td></tr>
+</tbody>
+</table>
+</figure></section><section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+      
+
+      
+<li id="bib.bib2" class="ltx_bibitem"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Burak (2020)</span>
+<span class="ltx_bibblock">
+Burak.
+
+</span>
+<span class="ltx_bibblock">Pinterest face recognition dataset.
+
+</span>
+<span class="ltx_bibblock">www.kaggle.com/datasets/hereisburak/pins-face-recognition, 2020.
+
+</span></li>
+      
+
+      
+<li id="bib.bib4" class="ltx_bibitem"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Chundawat et&#160;al. (2023a)</span>
+<span class="ltx_bibblock">
+Vikram&#160;S Chundawat, Ayush&#160;K Tarun, Murari Mandal, and Mohan Kankanhalli.
+
+</span>
+<span class="ltx_bibblock">Can bad teaching induce forgetting? unlearning in deep networks using an incompetent teacher.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib4.1" class="ltx_emph ltx_font_italic">Proceedings of the AAAI Conference on Artificial Intelligence</em>, volume&#160;37, pp.  7210–7217, 2023a.
+
+</span></li>
+      
+
+      
+<li id="bib.bib6" class="ltx_bibitem"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Foster et&#160;al. (2023)</span>
+<span class="ltx_bibblock">
+Jack Foster, Stefan Schoepf, and Alexandra Brintrup.
+
+</span>
+<span class="ltx_bibblock">Fast machine unlearning without retraining through selective synaptic dampening.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib6.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2308.07707</em>, 2023.
+
+</span></li>
+      
+
+      
+<li id="bib.bib8" class="ltx_bibitem"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Graves et&#160;al. (2021)</span>
+<span class="ltx_bibblock">
+Laura Graves, Vineel Nagisetty, and Vijay Ganesh.
+
+</span>
+<span class="ltx_bibblock">Amnesiac machine learning.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib8.1" class="ltx_emph ltx_font_italic">Proceedings of the AAAI Conference on Artificial Intelligence</em>, volume&#160;35, pp.  11516–11524, 2021.
+
+</span></li>
+      
+<li id="bib.bib9" class="ltx_bibitem"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Krizhevsky &amp; Hinton (2010)</span>
+<span class="ltx_bibblock">
+Alex Krizhevsky and Geoff Hinton.
+
+</span>
+<span class="ltx_bibblock">Convolutional deep belief networks on cifar-10.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib9.1" class="ltx_emph ltx_font_italic">Unpublished manuscript</em>, 40(7):1–9, 2010.
+
+</span></li>
+      
+
+      
+
+      
+
+    
+</ul>
+</section></article>
+</body></html>

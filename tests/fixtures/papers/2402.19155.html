@@ -1,0 +1,388 @@
+<!doctype html>
+<!-- source: https://arxiv.org/html/2402.19155 (abs: https://arxiv.org/abs/2402.19155) ; license: CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ ; cropped by scripts/crop-fixtures.mjs, test use only -->
+<html><head><meta charset="utf-8"></head><body>
+<article class="ltx_document"><h1 class="ltx_title ltx_title_document">Beyond Language Models: Byte Models are Digital World Simulators</h1><div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Shangda Wu
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation:&#160;</span>Microsoft Research Asia
+</span>
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation:&#160;</span>Central Conservatory of Music, China
+</span></span></span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Xu Tan
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation:&#160;</span>Microsoft Research Asia
+</span></span></span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Zili Wang
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation:&#160;</span>Independent researcher
+</span></span></span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Rui Wang
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation:&#160;</span>Microsoft Research Asia
+</span></span></span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Xiaobing Li
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation:&#160;</span>Central Conservatory of Music, China
+</span></span></span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Maosong Sun
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation:&#160;</span>Central Conservatory of Music, China
+</span>
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation:&#160;</span>Tsinghua University, China
+</span>
+<span class="ltx_contact ltx_role_email"><span class="ltx_contact_name">Correspondence to: </span><a href="mailto:tsinghua.edu.cn">tsinghua.edu.cn</a>
+</span></span></span></span></div><div id="abstract1" class="ltx_abstract"><h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+    
+<p id="abstract1.1" class="ltx_p">Traditional deep learning often overlooks bytes, the basic units of the digital world, where all forms of information and operations are encoded and manipulated in binary format. Inspired by the success of next token prediction in natural language processing, we introduce bGPT, a model with next byte prediction to simulate the digital world. bGPT matches specialized models in performance across various modalities, including text, audio, and images, and offers new possibilities for predicting, simulating, and diagnosing algorithm or hardware behaviour. It has almost flawlessly replicated the process of converting symbolic music data, achieving a low error rate of 0.0011 bits per byte in converting ABC notation to MIDI format. In addition, bGPT demonstrates exceptional capabilities in simulating CPU behaviour, with an accuracy exceeding 99.99% in executing various operations. Leveraging next byte prediction, models like bGPT can directly learn from vast binary data, effectively simulating the intricate patterns of the digital world.</p>
+  
+</div><section id="S1" class="ltx_section"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2><div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">These deep learning models, however, predominantly operate within the realm of media data, overlooking the omnipresent native binary data in the digital world. Bytes are the foundation of all digital data, devices, and software, from computer processors to operating systems in everyday electronics. Therefore, training models for next byte prediction can potentially lead to a paradigm shift in deep learning, allowing them to truly understand and simulate all activities in the digital world. This has practical benefits not only in conventional areas, but also in some underexplored areas such as boosting cybersecurity <cite class="ltx_cite ltx_citemacro_citep">(<a href="#bib.bib36" title="" class="ltx_ref">Raff et&#160;al., 2018</a>)</cite>, improving computer diagnostics <cite class="ltx_cite ltx_citemacro_citep">(<a href="#bib.bib15" title="" class="ltx_ref">Guo et&#160;al., 2019</a>)</cite>, optimizing data compression <cite class="ltx_cite ltx_citemacro_citep">(<a href="#bib.bib8" title="" class="ltx_ref">Delétang et&#160;al., 2023</a>)</cite>, and even advancing complex tasks like reverse-engineering the source code of that software from its binary representation.</p>
+</div></section><section id="S2" class="ltx_section"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">2 </span>Background</h2><div id="S2.SS2.p3" class="ltx_para">
+<p id="S2.SS2.p3.1" class="ltx_p">Several studies have validated the utility of byte-level encoding for language tasks. For instance, Byte-level Byte Pair Encoding (BBPE) has been used to enhance multilingual model pre-training <cite class="ltx_cite ltx_citemacro_citep">(<a href="#bib.bib48" title="" class="ltx_ref">Wei et&#160;al., 2021</a>)</cite> and has also shown promise in machine translation <cite class="ltx_cite ltx_citemacro_citep">(<a href="#bib.bib44" title="" class="ltx_ref">Wang et&#160;al., 2020</a>)</cite>, striking a balance between processing efficiency and linguistic breadth. ByT5 <cite class="ltx_cite ltx_citemacro_citep">(<a href="#bib.bib54" title="" class="ltx_ref">Xue et&#160;al., 2022</a>)</cite> builds on this by using standard Transformer models for byte sequences, promoting a token-free encoding method that improves noise robustness and spelling sensitivity in multilingual scenarios.</p>
+</div></section><section id="S3" class="ltx_section"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">3 </span>Methodology</h2><div id="S3.SS1.p2" class="ltx_para">
+<p id="S3.SS1.p2.1" class="ltx_p">To address computational limitations in Transformer-based models with long byte sequences, inspired by previous work <cite class="ltx_cite ltx_citemacro_citep">(<a href="#bib.bib52" title="" class="ltx_ref">Wu et&#160;al., 2023b</a>; <a href="#bib.bib56" title="" class="ltx_ref">Yu et&#160;al., 2023</a>; <a href="#bib.bib51" title="" class="ltx_ref">Wu et&#160;al., 2023a</a>; <a href="#bib.bib55" title="" class="ltx_ref">Yang et&#160;al., 2023</a>)</cite>, bGPT adapts a hierarchical Transformer architecture and segments a sequence of bytes <math id="S3.SS1.p2.m1" class="ltx_Math" display="inline" alttext="B=\{b_{1},b_{2},...,b_{T}\}"><semantics><mi>x</mi><annotation encoding="application/x-tex">B=\{b_{1},b_{2},...,b_{T}\}</annotation></semantics></math> of length <math id="S3.SS1.p2.m2" class="ltx_Math" display="inline" alttext="T"><semantics><mi>x</mi><annotation encoding="application/x-tex">T</annotation></semantics></math> into a sequence of patches <math id="S3.SS1.p2.m3" class="ltx_Math" display="inline" alttext="\mathcal{P}"><semantics><mi>x</mi><annotation encoding="application/x-tex">\mathcal{P}</annotation></semantics></math>, where each patch contains exactly <math id="S3.SS1.p2.m4" class="ltx_Math" display="inline" alttext="S"><semantics><mi>x</mi><annotation encoding="application/x-tex">S</annotation></semantics></math> bytes:</p>
+</div><div id="S3.SS1.p3" class="ltx_para">
+<table id="S3.E1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E1.m1" class="ltx_Math" display="block" alttext="\mathcal{P}=[P_{1},P_{2},\ldots,P_{N}],"><semantics><mi>x</mi><annotation encoding="application/x-tex">\mathcal{P}=[P_{1},P_{2},\ldots,P_{N}],</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td></tr></tbody>
+</table>
+</div><div id="S3.SS1.p4" class="ltx_para">
+<p id="S3.SS1.p4.1" class="ltx_p">where <math id="S3.SS1.p4.m1" class="ltx_Math" display="inline" alttext="N=\lceil\frac{T}{S}\rceil"><semantics><mi>x</mi><annotation encoding="application/x-tex">N=\lceil\frac{T}{S}\rceil</annotation></semantics></math> is the number of patches, and <math id="S3.SS1.p4.m2" class="ltx_Math" display="inline" alttext="P_{i}=[b_{(i-1)S+1},\ldots,b_{iS}]"><semantics><mi>x</mi><annotation encoding="application/x-tex">P_{i}=[b_{(i-1)S+1},\ldots,b_{iS}]</annotation></semantics></math> for <math id="S3.SS1.p4.m3" class="ltx_Math" display="inline" alttext="1\leq i\leq N"><semantics><mi>x</mi><annotation encoding="application/x-tex">1\leq i\leq N</annotation></semantics></math>. If <math id="S3.SS1.p4.m4" class="ltx_Math" display="inline" alttext="T\mod S\neq 0"><semantics><mi>x</mi><annotation encoding="application/x-tex">T\mod S\neq 0</annotation></semantics></math>, the last patch <math id="S3.SS1.p4.m5" class="ltx_Math" display="inline" alttext="P_{N}"><semantics><mi>x</mi><annotation encoding="application/x-tex">P_{N}</annotation></semantics></math> is defined as:</p>
+</div><figure id="S3.F2" class="ltx_figure"><object type="image/svg+xml" data="2402.19155v1/model.svg" id="S3.F2.g1" class="ltx_graphics ltx_img_landscape" width="324" height="249"></object>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>bGPT segments byte sequences into patches, predicts next patch features with a patch-level decoder, and reconstructs bytes within patches using these features with a byte-level decoder.</figcaption>
+</figure></section><section id="S4" class="ltx_section"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">4 </span>Applications</h2><div id="S4.SS2.p2" class="ltx_para">
+<p id="S4.SS2.p2.1" class="ltx_p"><span id="S4.SS2.p2.1.1" class="ltx_text ltx_font_bold">Data Conversion</span>: The process involves converting data from one format to another, with symbolic music formats such as ABC notation and MIDI files serving as our main examples. For background information on ABC notation and MIDI, please refer to Appendix A. In this task, bGPT employs the generative modelling approach on concatenated byte sequences of paired ABC and MIDI files, separated by a special patch. The bGPT model learns to convert text-based ABC notation music scores into binary MIDI performance signals and, reversely, convert MIDI back into ABC notation. This necessitates the ability to simulate and reverse-engineer the conversion algorithm<span id="footnote1" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup>
+              <span class="ltx_tag ltx_tag_note">1</span>
+              
+              
+              
+              
+              
+              
+              
+            <a href="https://github.com/xlvector/abcmidi" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://github.com/xlvector/abcmidi</a></span></span></span>, which indicates an essential capability for modelling the digital world.</p>
+</div></section><section id="S5" class="ltx_section"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">5 </span>Experiments</h2><figure id="S5.T2" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2: </span>Hyperparameter settings for pre-training and fine-tuning.</figcaption>
+<div id="S5.T2.2" class="ltx_inline-block ltx_align_center ltx_transformed_outer"><span class="ltx_transformed_inner">
+<table id="S5.T2.2.1" class="ltx_tabular ltx_align_middle">
+<tr id="S5.T2.2.1.1" class="ltx_tr">
+<td id="S5.T2.2.1.1.1" class="ltx_td ltx_align_left ltx_border_tt"><span id="S5.T2.2.1.1.1.1" class="ltx_text ltx_font_bold">Hyperparameter</span></td>
+<td id="S5.T2.2.1.1.2" class="ltx_td ltx_align_center ltx_border_tt"><span id="S5.T2.2.1.1.2.1" class="ltx_text ltx_font_bold">Pre-training</span></td>
+<td id="S5.T2.2.1.1.3" class="ltx_td ltx_align_center ltx_border_tt"><span id="S5.T2.2.1.1.3.1" class="ltx_text ltx_font_bold">Fine-tuning</span></td></tr>
+<tr id="S5.T2.2.1.2" class="ltx_tr">
+<td id="S5.T2.2.1.2.1" class="ltx_td ltx_align_left ltx_border_t">Patch Size</td>
+<td id="S5.T2.2.1.2.2" class="ltx_td ltx_align_center ltx_border_t">16</td>
+<td id="S5.T2.2.1.2.3" class="ltx_td ltx_align_center ltx_border_t">16</td></tr>
+<tr id="S5.T2.2.1.3" class="ltx_tr">
+<td id="S5.T2.2.1.3.1" class="ltx_td ltx_align_left">Patch Length</td>
+<td id="S5.T2.2.1.3.2" class="ltx_td ltx_align_center">512</td>
+<td id="S5.T2.2.1.3.3" class="ltx_td ltx_align_center">512</td></tr>
+<tr id="S5.T2.2.1.4" class="ltx_tr">
+<td id="S5.T2.2.1.4.1" class="ltx_td ltx_align_left">Patch-Level Layers</td>
+<td id="S5.T2.2.1.4.2" class="ltx_td ltx_align_center">12</td>
+<td id="S5.T2.2.1.4.3" class="ltx_td ltx_align_center">12</td></tr>
+<tr id="S5.T2.2.1.5" class="ltx_tr">
+<td id="S5.T2.2.1.5.1" class="ltx_td ltx_align_left">Byte-Level Layers</td>
+<td id="S5.T2.2.1.5.2" class="ltx_td ltx_align_center">3</td>
+<td id="S5.T2.2.1.5.3" class="ltx_td ltx_align_center">3</td></tr>
+<tr id="S5.T2.2.1.6" class="ltx_tr">
+<td id="S5.T2.2.1.6.1" class="ltx_td ltx_align_left">Hidden Size</td>
+<td id="S5.T2.2.1.6.2" class="ltx_td ltx_align_center">768</td>
+<td id="S5.T2.2.1.6.3" class="ltx_td ltx_align_center">768</td></tr>
+<tr id="S5.T2.2.1.7" class="ltx_tr">
+<td id="S5.T2.2.1.7.1" class="ltx_td ltx_align_left">Epochs</td>
+<td id="S5.T2.2.1.7.2" class="ltx_td ltx_align_center">32</td>
+<td id="S5.T2.2.1.7.3" class="ltx_td ltx_align_center">32</td></tr>
+<tr id="S5.T2.2.1.8" class="ltx_tr">
+<td id="S5.T2.2.1.8.1" class="ltx_td ltx_align_left">Learning Rate</td>
+<td id="S5.T2.2.1.8.2" class="ltx_td ltx_align_center">1e-04</td>
+<td id="S5.T2.2.1.8.3" class="ltx_td ltx_align_center">1e-05</td></tr>
+<tr id="S5.T2.2.1.9" class="ltx_tr">
+<td id="S5.T2.2.1.9.1" class="ltx_td ltx_align_left ltx_border_bb">Batch Size</td>
+<td id="S5.T2.2.1.9.2" class="ltx_td ltx_align_center ltx_border_bb">16</td>
+<td id="S5.T2.2.1.9.3" class="ltx_td ltx_align_center ltx_border_bb">1</td></tr>
+</table>
+</span></div>
+</figure></section><section id="A1" class="ltx_appendix"><h2 class="ltx_title ltx_title_appendix"><span class="ltx_tag ltx_tag_appendix">Appendix A </span>Symbolic Music Formats</h2><div id="A1.SS1.p7" class="ltx_para">
+<p id="A1.SS1.p7.1" class="ltx_p">This notation describes the tune with sufficient information, from its rhythmic structure down to the details of its melody and harmony. As such, ABC notation serves as a bridge between the traditional form of musical scores and the modern digital world, offering a text-based alternative that is both efficient and widely accessible. For a detailed documentation of ABC notation, please refer to the ABC notation standard<span id="footnote2" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">2</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">2</sup>
+              <span class="ltx_tag ltx_tag_note">2</span>
+              
+              
+              
+              
+              
+              
+              
+            <a href="https://abcnotation.com/wiki/abc:standard:v2.1" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://abcnotation.com/wiki/abc:standard:v2.1</a></span></span></span>.</p>
+</div></section><section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+<li id="bib.bib8" class="ltx_bibitem"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Delétang et&#160;al. (2023)</span>
+<span class="ltx_bibblock">
+Delétang, G., Ruoss, A., Duquenne, P., Catt, E., Genewein, T., Mattern, C., Grau-Moya, J., Wenliang, L.&#160;K., Aitchison, M., Orseau, L., Hutter, M., and Veness, J.
+
+</span>
+<span class="ltx_bibblock">Language modeling is compression.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib8.1" class="ltx_emph ltx_font_italic">CoRR</em>, abs/2309.10668, 2023.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.48550/ARXIV.2309.10668</span>.
+
+</span>
+<span class="ltx_bibblock">URL <a href="https://doi.org/10.48550/arXiv.2309.10668" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://doi.org/10.48550/arXiv.2309.10668</a>.
+
+</span></li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+<li id="bib.bib15" class="ltx_bibitem"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Guo et&#160;al. (2019)</span>
+<span class="ltx_bibblock">
+Guo, W., Mu, D., Xing, X., Du, M., and Song, D.
+
+</span>
+<span class="ltx_bibblock">DEEPVSA: facilitating value-set analysis with deep learning for postmortem program analysis.
+
+</span>
+<span class="ltx_bibblock">In Heninger, N. and Traynor, P. (eds.), <em id="bib.bib15.1" class="ltx_emph ltx_font_italic">28th USENIX Security Symposium, USENIX Security 2019, Santa Clara, CA, USA, August 14-16, 2019</em>, pp.  1787–1804. USENIX Association, 2019.
+
+</span>
+<span class="ltx_bibblock">URL <a href="https://www.usenix.org/conference/usenixsecurity19/presentation/guo" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://www.usenix.org/conference/usenixsecurity19/presentation/guo</a>.
+
+</span></li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+<li id="bib.bib36" class="ltx_bibitem"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Raff et&#160;al. (2018)</span>
+<span class="ltx_bibblock">
+Raff, E., Barker, J., Sylvester, J., Brandon, R., Catanzaro, B., and Nicholas, C.&#160;K.
+
+</span>
+<span class="ltx_bibblock">Malware detection by eating a whole EXE.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib36.1" class="ltx_emph ltx_font_italic">The Workshops of the The Thirty-Second AAAI Conference on Artificial Intelligence, New Orleans, Louisiana, USA, February 2-7, 2018</em>, volume WS-18 of <em id="bib.bib36.2" class="ltx_emph ltx_font_italic">AAAI Technical Report</em>, pp.  268–276. AAAI Press, 2018.
+
+</span>
+<span class="ltx_bibblock">URL <a href="https://aaai.org/ocs/index.php/WS/AAAIW18/paper/view/16422" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://aaai.org/ocs/index.php/WS/AAAIW18/paper/view/16422</a>.
+
+</span></li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+<li id="bib.bib44" class="ltx_bibitem"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Wang et&#160;al. (2020)</span>
+<span class="ltx_bibblock">
+Wang, C., Cho, K., and Gu, J.
+
+</span>
+<span class="ltx_bibblock">Neural machine translation with byte-level subwords.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib44.1" class="ltx_emph ltx_font_italic">The Thirty-Fourth AAAI Conference on Artificial Intelligence, AAAI 2020, The Thirty-Second Innovative Applications of Artificial Intelligence Conference, IAAI 2020, The Tenth AAAI Symposium on Educational Advances in Artificial Intelligence, EAAI 2020, New York, NY, USA, February 7-12, 2020</em>, pp.  9154–9160. AAAI Press, 2020.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1609/AAAI.V34I05.6451</span>.
+
+</span>
+<span class="ltx_bibblock">URL <a href="https://doi.org/10.1609/aaai.v34i05.6451" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://doi.org/10.1609/aaai.v34i05.6451</a>.
+
+</span></li>
+      
+
+      
+
+      
+
+      
+<li id="bib.bib48" class="ltx_bibitem"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Wei et&#160;al. (2021)</span>
+<span class="ltx_bibblock">
+Wei, J., Liu, Q., Guo, Y., and Jiang, X.
+
+</span>
+<span class="ltx_bibblock">Training multilingual pre-trained language model with byte-level subwords.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib48.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2101.09469</em>, 2021.
+
+</span></li>
+      
+
+      
+
+      
+<li id="bib.bib51" class="ltx_bibitem"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Wu et&#160;al. (2023a)</span>
+<span class="ltx_bibblock">
+Wu, S., Li, X., Yu, F., and Sun, M.
+
+</span>
+<span class="ltx_bibblock">Tunesformer: Forming irish tunes with control codes by bar patching.
+
+</span>
+<span class="ltx_bibblock">In Porcaro, L., Batlle-Roca, R., and Gómez, E. (eds.), <em id="bib.bib51.1" class="ltx_emph ltx_font_italic">Proceedings of the 2nd Workshop on Human-Centric Music Information Retrieval 2023 co-located with the 24th International Society for Music Information Retrieval Conference (ISMIR 2023), Milan, Italy, November 10, 2023</em>, volume 3528 of <em id="bib.bib51.2" class="ltx_emph ltx_font_italic">CEUR Workshop Proceedings</em>. CEUR-WS.org, 2023a.
+
+</span>
+<span class="ltx_bibblock">URL <a href="https://ceur-ws.org/Vol-3528/paper1.pdf" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://ceur-ws.org/Vol-3528/paper1.pdf</a>.
+
+</span></li>
+      
+<li id="bib.bib52" class="ltx_bibitem"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Wu et&#160;al. (2023b)</span>
+<span class="ltx_bibblock">
+Wu, S., Yu, D., Tan, X., and Sun, M.
+
+</span>
+<span class="ltx_bibblock">Clamp: Contrastive language-music pre-training for cross-modal symbolic music information retrieval.
+
+</span>
+<span class="ltx_bibblock">In Sarti, A., Antonacci, F., Sandler, M., Bestagini, P., Dixon, S., Liang, B., Richard, G., and Pauwels, J. (eds.), <em id="bib.bib52.1" class="ltx_emph ltx_font_italic">Proceedings of the 24th International Society for Music Information Retrieval Conference, ISMIR 2023, Milan, Italy, November 5-9, 2023</em>, pp.  157–165, 2023b.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.5281/ZENODO.10265247</span>.
+
+</span>
+<span class="ltx_bibblock">URL <a href="https://doi.org/10.5281/zenodo.10265247" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://doi.org/10.5281/zenodo.10265247</a>.
+
+</span></li>
+      
+
+      
+<li id="bib.bib54" class="ltx_bibitem"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Xue et&#160;al. (2022)</span>
+<span class="ltx_bibblock">
+Xue, L., Barua, A., Constant, N., Al-Rfou, R., Narang, S., Kale, M., Roberts, A., and Raffel, C.
+
+</span>
+<span class="ltx_bibblock">Byt5: Towards a token-free future with pre-trained byte-to-byte models.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib54.1" class="ltx_emph ltx_font_italic">Trans. Assoc. Comput. Linguistics</em>, 10:291–306, 2022.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1162/TACL\_A\_00461</span>.
+
+</span>
+<span class="ltx_bibblock">URL <a href="https://doi.org/10.1162/tacl_a_00461" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://doi.org/10.1162/tacl_a_00461</a>.
+
+</span></li>
+      
+<li id="bib.bib55" class="ltx_bibitem"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yang et&#160;al. (2023)</span>
+<span class="ltx_bibblock">
+Yang, D., Tian, J., Tan, X., Huang, R., Liu, S., Chang, X., Shi, J., Zhao, S., Bian, J., Wu, X., et&#160;al.
+
+</span>
+<span class="ltx_bibblock">Uniaudio: An audio foundation model toward universal audio generation.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib55.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2310.00704</em>, 2023.
+
+</span></li>
+      
+<li id="bib.bib56" class="ltx_bibitem"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yu et&#160;al. (2023)</span>
+<span class="ltx_bibblock">
+Yu, L., Simig, D., Flaherty, C., Aghajanyan, A., Zettlemoyer, L., and Lewis, M.
+
+</span>
+<span class="ltx_bibblock">MEGABYTE: Predicting million-byte sequences with multiscale transformers.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib56.1" class="ltx_emph ltx_font_italic">Thirty-seventh Conference on Neural Information Processing Systems</em>, 2023.
+
+</span>
+<span class="ltx_bibblock">URL <a href="https://openreview.net/forum?id=JTmO2V9Xpz" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://openreview.net/forum?id=JTmO2V9Xpz</a>.
+
+</span></li>
+      
+
+      
+
+      
+
+    
+</ul>
+</section></article>
+</body></html>

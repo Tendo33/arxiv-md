@@ -1,0 +1,706 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`arXiv HTML 夹具转换 2305.18290.html Markdown 快照 1`] = `
+"# Direct Preference Optimization: Your Language Model is Secretly a Reward Model
+
+Rafael Rafailov  [^1]    Archit Sharma      Eric Mitchell      Stefano Ermon      Christopher D. Manning    Chelsea Finn      Stanford University   CZ Biohub Email: [{rafailov,architsh,eric.mitchell}@cs.stanford.edu](mailto:{rafailov,architsh,eric.mitchell}@cs.stanford.edu)
+
+###### Abstract
+
+While large-scale unsupervised language models (LMs) learn broad world knowledge and some reasoning skills, achieving precise control of their behavior is difficult due to the completely unsupervised nature of their training. Existing methods for gaining such steerability collect human labels of the relative quality of model generations and fine-tune the unsupervised LM to align with these preferences, often with reinforcement learning from human feedback (RLHF). However, RLHF is a complex and often unstable procedure, first fitting a reward model that reflects the human preferences, and then fine-tuning the large unsupervised LM using reinforcement learning to maximize this estimated reward without drifting too far from the original model. In this paper we introduce a new parameterization of the reward model in RLHF that enables extraction of the corresponding optimal policy in closed form, allowing us to solve the standard RLHF problem with only a simple classification loss. The resulting algorithm, which we call *Direct Preference Optimization* (DPO), is stable, performant, and computationally lightweight, eliminating the need for sampling from the LM during fine-tuning or performing significant hyperparameter tuning. Our experiments show that DPO can fine-tune LMs to align with human preferences as well as or better than existing methods. Notably, fine-tuning with DPO exceeds PPO-based RLHF in ability to control sentiment of generations, and matches or improves response quality in summarization and single-turn dialogue while being substantially simpler to implement and train.
+
+## 1 Introduction
+
+At a high level, existing methods instill the desired behaviors into a language model using curated sets of human preferences representing the types of behaviors that humans find safe and helpful. This preference learning stage occurs after an initial stage of large-scale unsupervised pre-training on a large text dataset. While the most straightforward approach to preference learning is supervised fine-tuning on human demonstrations of high quality responses, the most successful class of methods is reinforcement learning from human (or AI) feedback (RLHF/RLAIF; [[12](#bib.bib12), [2](#bib.bib2)]). RLHF methods fit a reward model to a dataset of human preferences and then use RL to optimize a language model policy to produce responses assigned high reward without drifting excessively far from the original model. While RLHF produces models with impressive conversational and coding abilities, the RLHF pipeline is considerably more complex than supervised learning, involving training multiple LMs and sampling from the LM policy in the loop of training, incurring significant computational costs.
+
+In this paper, we show how to directly optimize a language model to adhere to human preferences, without explicit reward modeling or reinforcement learning. We propose *Direct Preference Optimization (DPO)*, an algorithm that implicitly optimizes the same objective as existing RLHF algorithms (reward maximization with a KL-divergence constraint) but is simple to implement and straightforward to train. Intuitively, the DPO update increases the relative log probability of preferred to dispreferred responses, but it incorporates a dynamic, per-example importance weight that prevents the model degeneration that we find occurs with a naive probability ratio objective. Like existing algorithms, DPO relies on a theoretical preference model (such as the Bradley-Terry model; [[5](#bib.bib5)]) that measures how well a given reward function aligns with empirical preference data. However, while existing methods use the preference model to define a preference loss to train a reward model and then train a policy that optimizes the learned reward model, DPO uses a change of variables to define the preference loss as a function of the policy directly. Given a dataset of human preferences over model responses, DPO can therefore optimize a policy using a simple binary cross entropy objective, producing the optimal policy to an implicit reward function fit to the preference data.
+
+## 3 Preliminaries
+
+**SFT**: RLHF typically begins by fine-tuning a pre-trained LM with supervised learning on high-quality data for the downstream task(s) of interest (dialogue, summarization, etc.), to obtain a model $\\pi^{\\text{SFT}}$.
+
+## 5 Theoretical Analysis of DPO
+
+DPO is able to bypass both fitting an explicit reward and performing RL to learn the policy using a single maximum likelihood objective. Note the optimization objective Eq. 5 is equivalent to a Bradley-Terry model with a reward parameterization $r^{*}(x,y)=\\beta\\log\\frac{\\pi^{*}_{\\theta}(y\\mid x)}{\\pi_{\\text{ref}}(y\\mid x)}$ and we optimize our parametric model $\\pi_{\\theta}$, equivalently to the reward model optimization in Eq. 2 under the change of variables. In this section we will build the theory behind this reparameterization, show that it does not constrain the class of learned reward models, and allows for the exact recovery of the optimal policy. We begin with by defining an equivalence relation between reward functions.
+
+*We say that two reward functions $r(x,y)$ and $r^{\\prime}(x,y)$ are equivalent iff \${r(x,y)-r^{\\prime}(x,y)=f(x)}$ for some function $f$.*
+
+## 6 Experiments
+
+![figure](https://arxiv.org/html/2305.18290v3/frontier.svg)
+
+![figure](https://arxiv.org/html/2305.18290v3/tldr_winrate_vs_temp.svg)
+
+(Figure 2:) **Left.** The frontier of expected reward vs KL to the reference policy. DPO provides the highest expected reward for all KL values, demonstrating the quality of the optimization. **Right.** TL;DR summarization win rates vs. human-written summaries, using GPT-4 as evaluator. DPO exceeds PPO’s best-case performance on summarization, while being more robust to changes in the sampling temperature.
+
+The KL-constrained reward maximization objective used in typical RLHF algorithms balances exploitation of reward while restricting the policy from deviating far from the reference policy. Therefore, when comparing algorithms, we must take into account both reward achieved as well as the KL discrepancy; achieving slightly higher reward but with much higher KL is not necessarily desirable. Figure 2 shows the reward-KL frontier for various algorithms in the sentiment setting. We execute multiple training runs for each algorithm, using a different hyperparameter for policy conservativeness in each run (target KL $\\in\\{3,6,9,12\\}$ for PPO, $\\beta\\in\\{0.05,0.1,1,5\\}$, $\\alpha\\in\\{0.05,0.1,0.5,1\\}$ for unlikelihood, random seeds for preferred-FT). This sweep includes 22 runs in total. After each 100 training steps until convergence, we evaluate each policy on a set of test prompts, computing the average reward under the true reward function as well as the average sequence-level KL[^2] with the reference policy $\\text{KL}\\left(\\pi\\mid\\mid\\pi_{\\text{ref}}\\right)$. We find that DPO produces by far the most efficient frontier, achieving the highest reward while still achieving low KL. This result is particularly notable for multiple reasons. First, DPO and PPO optimize the same objective, but DPO is notably more efficient; DPO’s reward/KL tradeoff strictly dominates PPO. Second, DPO achieves a better frontier than PPO, *even when PPO can access ground truth rewards* (PPO-GT).
+
+Next, we evaluate fine-tuning performance of DPO on summarization and single-turn dialogue. For summarization, automatic evaluation metrics such as ROUGE can be poorly correlated with human preferences [[40](#bib.bib40)], and prior work has found that fine-tuning LMs using PPO on human preferences to provide more effective summaries. We evaluate different methods by sampling completions on the test split of TL;DR summarization dataset, and computing the average win rate against reference completions in the test set. The completions for all methods are sampled at temperatures varying from 0.0 to 1.0, and the win rates are shown in Figure 2 (right). DPO, PPO and Preferred-FT all fine-tune the same GPT-J SFT model[^3]. We find that DPO has a win rate of approximately 61% at a temperature of 0.0, exceeding the performance of PPO at  57% at its optimal sampling temperature of 0.0. DPO also achieves a higher maximum win rate compared to the best of $N$ baseline. We note that we did not meaningfully tune DPO’s $\\beta$ hyperparameter, so these results may underestimate DPO’s potential. Moreover, we find DPO to be much more robust to the sampling temperature than PPO, the performance of which can degrade to that of the base GPT-J model at high temperatures. Preferred-FT does not improve significantly over the SFT model. We also compare DPO and PPO head-to-head in human evaluations in Section 6.4, where DPO samples at temperature 0.25 were preferred 58% times over PPO samples at temperature 0.
+
+<table><tbody><tr><th></th><td colspan="2">Win rate vs. ground truth</td></tr><tr><th>Alg.</th><td>Temp $0$</td><td>Temp $0.25$</td></tr><tr><th>DPO</th><td>0.36</td><td>0.31</td></tr><tr><th>PPO</th><td>0.26</td><td>0.23</td></tr></tbody></table>
+
+(Table 1:) GPT-4 win rates vs. ground truth summaries for out-of-distribution CNN/DailyMail input articles.
+
+## References
+
+<a id="bib.bib2"></a>[2] Y. Bai, S. Kadavath, S. Kundu, A. Askell, J. Kernion, A. Jones, A. Chen, A. Goldie, A. Mirhoseini, C. McKinnon, C. Chen, C. Olsson, C. Olah, D. Hernandez, D. Drain, D. Ganguli, D. Li, E. Tran-Johnson, E. Perez, J. Kerr, J. Mueller, J. Ladish, J. Landau, K. Ndousse, K. Lukosuite, L. Lovitt, M. Sellitto, N. Elhage, N. Schiefer, N. Mercado, N. DasSarma, R. Lasenby, R. Larson, S. Ringer, S. Johnston, S. Kravec, S. E. Showk, S. Fort, T. Lanham, T. Telleen-Lawton, T. Conerly, T. Henighan, T. Hume, S. R. Bowman, Z. Hatfield-Dodds, B. Mann, D. Amodei, N. Joseph, S. McCandlish, T. Brown, and J. Kaplan. Constitutional ai: Harmlessness from ai feedback, 2022b.
+
+<a id="bib.bib5"></a>[5] R. A. Bradley and M. E. Terry. Rank analysis of incomplete block designs: I. the method of paired comparisons. *Biometrika*, 39(3/4):324–345, 1952. doi: https://doi.org/10.2307/2334029.
+
+<a id="bib.bib12"></a>[12] P. F. Christiano, J. Leike, T. Brown, M. Martic, S. Legg, and D. Amodei. Deep reinforcement learning from human preferences. In I. Guyon, U. V. Luxburg, S. Bengio, H. Wallach, R. Fergus, S. Vishwanathan, and R. Garnett, editors, *Advances in Neural Information Processing Systems*, volume 30\\. Curran Associates, Inc., 2017. URL https://proceedings.neurips.cc/paper\\_files/paper/2017/file/d5e2c0adad503c91f91df240d0cd4e49-Paper.pdf.
+
+<a id="bib.bib40"></a>[40] N. Stiennon, L. Ouyang, J. Wu, D. M. Ziegler, R. Lowe, C. Voss, A. Radford, D. Amodei, and P. Christiano. Learning to summarize from human feedback, 2022.
+
+[^1]: Equal contribution; more junior authors listed earlier.
+[^2]: That is, the sum of the per-timestep KL-divergences.
+[^3]: https://huggingface.co/CarperAI/openai_summarize_tldr_sft
+"
+`;
+
+exports[`arXiv HTML 夹具转换 2312.16475.html Markdown 快照 1`] = `
+"# Federated Continual Learning via Knowledge Fusion: A Survey[^1][^2][^3][^4]
+
+Xin Yang    Hao Yu    Xin Gao    Hao Wang Affiliation: Junbo Zhang, , Tianrui Li, 
+
+###### Abstract
+
+Data privacy and silos are nontrivial and greatly challenging in many real-world applications. Federated learning is a decentralized approach to training models across multiple local clients without the exchange of raw data from client devices to global servers. However, existing works focus on a static data environment and ignore continual learning from streaming data with incremental tasks. Federated Continual Learning (FCL) is an emerging paradigm to address model learning in both federated and continual learning environments. The key objective of FCL is to fuse heterogeneous knowledge from different clients and retain knowledge of previous tasks while learning on new ones. In this work, we delineate federated learning and continual learning first and then discuss their integration, i.e., FCL, and particular FCL via knowledge fusion. In summary, our motivations are four-fold: we (1) raise a fundamental problem called “spatial-temporal catastrophic forgetting” and evaluate its impact on the performance using a well-known method called federated averaging (FedAvg), (2) integrate most of the existing FCL methods into two generic frameworks, namely synchronous FCL and asynchronous FCL, (3) categorize a large number of methods according to the mechanism involved in knowledge fusion, and finally (4) showcase an outlook on the future work of FCL.
+
+## I Introduction
+
+Despite its numerous advantages, FL confronts significant challenges. The first challenge is the lack of dynamism. The setting assumptions of most existing FL methods are somewhat strong, assuming all data and classes should be known prior and will be unchanged forever. It contradicts the dynamic nature of the real world, where data are collected in streams and the data could form sequential tasks. However, traditional FL would suffer from terribly temporal catastrophic forgetting (*TemporalCF*) when local models learning on new tasks. *TemporalCF* is a major challenge in Continual Learning (CL) [[9](#bib.bib9)], which refers to changes in crucial parameters of a single model when learning on consecutive tasks, resulting in poor performance on previous tasks [[10](#bib.bib10)]. Apparently, FL would certainly encounter *TemporalCF* if each client learns on a sequence of tasks from a private local data stream.
+
+Another challenge of FL is data heterogeneity [[4](#bib.bib4)], also known as non-independent and identically distributed (Non-IID) data. It refers to the differences in data distributions, feature spaces and labels across clients participating in the federated training process, aroused by variations in the data sources, data collection methods, data quality, etc. Data heterogeneity results in diverse knowledge extracted by local models. Knowledge of a model is often represented by parameters. The more different the data, the greater the parameter divergence. Simply aggregating these local models, like averaging parameters, can lead to critical parameters for certain local tasks being overwritten. Such that the aggregated global model may perform worse than the local models on the local test set [[11](#bib.bib11), [12](#bib.bib12), [13](#bib.bib13)]. We call this phenomenon spatial catastrophic forgetting (*SpatialCF*). It is worth noting that *SpatialCF* is a new concept we introduce in this paper, which is analogical to the *TemporalCF*.
+
+## II Federated and Continual Learning: An Overview
+
+Based on the analysis above, many researchers have tried to adapt CL methods to FL settings and achieved quite good results. Shoham $et\\,al.$ [[48](#bib.bib48)] presents their adaptation of the EWC [[38](#bib.bib38)], a classic regularization-based approach in CL, to the FL scenario and refers to it as FedCurv. By adding a penalty term to the loss function, all local models are compelled to converge toward a shared optimal. Xin $et\\,al.$ propose a new framework called FedCL [[49](#bib.bib49)]. FedCL follows the parameter-regularization continual training paradigm on clients, in other words, penalizing the important parameters of the global model for changing. Nevertheless, it is quite different from FedCurv because it estimates the importance weights on the proxy dataset on the server and then distributes them to the clients instead of estimating the importance weight of model parameters on clients and exchanging them as in [[48](#bib.bib48)], which will bring at least twice the extra communication costs.
+
+*SpatialCF* in FL and the close relationship between FL and CL are also observed and demonstrated by other researchers. Casado $et\\,al.$ [[50](#bib.bib50)] creatively modifies the traditional FedAvg algorithm by adopting the concept detection and concept drift adaptation methods that deal with concept drift in CL and prove that their extended method outperforms the original one. Criado $et\\,al.$ [[51](#bib.bib51)] dig deeply the connection between concept drift in CL and Non-IID in FL, and provide an enlightening survey on handling Non-IID problem. Usmanova $et\\,al.$ [[52](#bib.bib52)] shows that the problem of catastrophic forgetting is critical in a pervasive computing application using FL. It is evident that the close relationship between CL and FL has been confirmed.
+
+## III Spatial-Temporal Catastrophic Forgetting
+
+(TABLE I:) Mathematical Notations.
+
+| Notation | Description |
+| --- | --- |
+| $S$ | Central server of FL system. |
+| $C$ | Total number of clients. |
+| $\\mathcal{T}^{c}$ | Entire task sequence of client $c$. |
+| $\\mathcal{T}^{c}_{t}$ | $t$-th task on client $c$. |
+| $T$ | Total number of tasks of all clients. |
+| $N_{c}$ | Number of tasks in the task sequence of client $c$. |
+| $r$ | Communication round. |
+| $\\theta_{g}^{r}$ | Global model at round $r$. |
+| $\\theta_{c}^{r}$ | Local model of client $c$ at round $r$. |
+| $O_{c}$ | Order of tasks on client $c$. |
+| $A_{i}^{k}$ | Class set of Client $i$ on its *k-th* task. |
+| $KR_{t}$ | Temporal knowledge retention. |
+| $KR_{s}$ | Spatial knowledge retention. |
+
+Tab. II illustrates our experimental settings. For our model, we set the first convolution layer in the Res-Net 18 [[58](#bib.bib58)] to 3$\\times$3 in experiments.
+
+![figure](https://arxiv.org/html/2312.16475v1/experiments.svg)
+
+(Fig. 1:) Experiment Results. Solid lines represent knowledge retention of clients in time, and dashed lines represent knowledge retention of clients in space. When the data distribution among clients is identical, and the distribution among local tasks is also the same, spatial-temporal catastrophic forgetting does not occur, and the model’s performance improves. However, severe performance degradation occurs after aggregation when clients have training data with different classes. Additionally, when the local task sequence follows a class-incremental pattern, the model forgets all knowledge from previous tasks, resulting in temporal knowledge retention to zero.
+
+## References
+
+<a id="bib.bib4"></a>[4] C. Zhang, Y. Xie, H. Bai, B. Yu, W. Li, and Y. Gao, “A survey on federated learning,” *Knowledge-Based Systems*, vol. 216, p. 106775, 2021.
+
+<a id="bib.bib9"></a>[9] T. Diethe, T. Borchert, E. Thereska, B. Balle, and N. Lawrence, “Continual learning in practice,” *stat*, vol. 1050, p. 18, 2019.
+
+<a id="bib.bib10"></a>[10] M. McCloskey and N. J. Cohen, “Catastrophic interference in connectionist networks: The sequential learning problem,” in *Psychology of learning and motivation*. Elsevier, 1989, vol. 24, pp. 109–165.
+
+<a id="bib.bib11"></a>[11] A. Ghosh, J. Hong, D. Yin, and K. Ramchandran, “Robust federated learning in a heterogeneous environment,” *arXiv preprint arXiv:1906.06629*, 2019.
+
+<a id="bib.bib12"></a>[12] B. Luo, W. Xiao, S. Wang, J. Huang, and L. Tassiulas, “Tackling system and statistical heterogeneity for federated learning with adaptive client sampling,” in *IEEE INFOCOM 2022-IEEE conference on computer communications*. IEEE, 2022, pp. 1739–1748.
+
+<a id="bib.bib13"></a>[13] Z. Zhu, J. Hong, and J. Zhou, “Data-free knowledge distillation for heterogeneous federated learning,” in *International Conference on Machine Learning*. PMLR, 2021, pp. 12 878–12 889.
+
+<a id="bib.bib38"></a>[38] J. Kirkpatrick, R. Pascanu, N. Rabinowitz, J. Veness, G. Desjardins, A. A. Rusu, K. Milan, J. Quan, T. Ramalho, A. Grabska-Barwinska *et al.*, “Overcoming catastrophic forgetting in neural networks,” *Proceedings of the national academy of sciences*, vol. 114, no. 13, pp. 3521–3526, 2017.
+
+<a id="bib.bib48"></a>[48] N. Shoham, T. Avidor, A. Keren, N. Israel, D. Benditkis, L. Mor-Yosef, and I. Zeitak, “Overcoming forgetting in federated learning on non-iid data,” *arXiv preprint arXiv:1910.07796*, 2019.
+
+<a id="bib.bib49"></a>[49] X. Yao and L. Sun, “Continual local training for better initialization of federated models,” in *2020 IEEE International Conference on Image Processing (ICIP)*. IEEE, 2020, pp. 1736–1740.
+
+<a id="bib.bib50"></a>[50] F. E. Casado, D. Lema, R. Iglesias, C. V. Regueiro, and S. Barro, “Concept drift detection and adaptation for robotics and mobile devices in federated and continual settings,” in *Advances in Physical Agents II: Proceedings of the 21st International Workshop of Physical Agents (WAF 2020), November 19-20, 2020, Alcalá de Henares, Madrid, Spain*. Springer, 2021, pp. 79–93.
+
+<a id="bib.bib51"></a>[51] M. F. Criado, F. E. Casado, R. Iglesias, C. V. Regueiro, and S. Barro, “Non-iid data and continual learning processes in federated learning: A long road ahead,” *Information Fusion*, vol. 88, pp. 263–280, 2022.
+
+<a id="bib.bib52"></a>[52] A. Usmanova, F. Portet, P. Lalanda, and G. Vega, “Federated learning and catastrophic forgetting in pervasive computing: demonstration in har domain,” in *2022 IEEE International Conference on Pervasive Computing and Communications Workshops and other Affiliated Events (PerCom Workshops)*. IEEE, 2022, pp. 310–315.
+
+<a id="bib.bib58"></a>[58] K. He, X. Zhang, S. Ren, and J. Sun, “Deep residual learning for image recognition,” in *Proceedings of the IEEE conference on computer vision and pattern recognition*, 2016, pp. 770–778.
+
+[^1]: Xin Yang, Hao Yu and Xin Gao are with the School of Comput- ing and Artificial Intelligence, Southwestern University of Finance and Economics, Chengdu, 611130, China. E-mail: yangxin@swufe.edu.cn, yuhao2033@163.com, xingaocs@foxmail.com.
+[^2]: Hao Wang is with Nanyang Technological University, Singapore. E-mail: cshaowang@gmail.com (primary) or h.wang@ntu.edu.sg.
+[^3]: Junbo Zhang is with JD iCity, JD Technology, Beijing, China, JD Intelligent Cities Research & Institute of Artificial Intelligence, Southwest Jiaotong University, Chengdu 611756, China. E-mail: msjunbozhang@outlook.com.
+[^4]: Tianrui Li is with School of Computing and Artificial Intelligence, Southwest Jiaotong University, Chengdu, 611756, China. E-mail:trli@swjtu.edu.cn.
+"
+`;
+
+exports[`arXiv HTML 夹具转换 2401.11627.html Markdown 快照 1`] = `
+"###### Abstract
+
+We introduce two algorithms for computing tight guarantees on the probabilistic robustness of Bayesian Neural Networks (BNNs). Computing robustness guarantees for BNNs is a significantly more challenging task than verifying the robustness of standard Neural Networks (NNs) because it requires searching the parameters’ space for safe weights. Moreover, tight and complete approaches for the verification of standard NNs, such as those based on Mixed-Integer Linear Programming (MILP), cannot be directly used for the verification of BNNs because of the polynomial terms resulting from the consecutive multiplication of variables encoding the weights. Our algorithms efficiently and effectively search the parameters’ space for safe weights by using iterative expansion and the network’s gradient and can be used with any verification algorithm of choice for BNNs. In addition to proving that our algorithms compute tighter bounds than the SoA, we also evaluate our algorithms against the SoA on standard benchmarks, such as MNIST and CIFAR10, showing that our algorithms compute bounds up to 40% tighter than the SoA.
+
+## 1 Introduction
+
+In recent years *Neural Networks* (*NNs*) have been proposed to perform safety-critical functions in applications such as automated driving, medical image processing and beyond ([Abiodun et al.,, 2018](#bib.bib1); [Anwar et al.,, 2018](#bib.bib3); [Bojarski et al.,, 2016](#bib.bib6); [Liu et al., 2021b,](#bib.bib29) ). For machine learning methods to be adopted in these areas, assurance and certification are paramount.
+
+In an attempt to overcome this problem, architectures that are inherently more robust have been proposed. Bayesian Neural Networks (BNNs) have arguably emerged as a key class of models intrinsically more resilient to adversarial attacks ([Pang et al.,, 2021](#bib.bib33); [Carbone et al.,, 2020](#bib.bib9)). This is because BNNs naturally incorporate the randomness present in the posterior distribution ([Uchendu et al.,, 2021](#bib.bib44)).
+
+## 2 Preliminaries
+
+Throughout this paper, we denote the set of real numbers by $\\mathbb{R}$, use italics, $w$, to refer to scalers in $\\mathbb{R}$, bold italics, $\\bm{w}$, for vectors in $\\mathbb{R}^{n}$, and bold letters, \${\\mathbf{w}}$, to refer to random variables in $\\mathbb{R}^{n}$. For an orthotope $\\mathcal{O}\\subset\\mathbb{R}^{n}$ with two opposing corners $\\bm{w}_{1},\\bm{w}_{2}$, we denote $\\mathcal{O}$ by $[\\bm{w}_{1},\\bm{w}_{2}]$.
+
+Given a dataset, $\\mathcal{D}$, let $f_{{\\mathbf{w}}}:\\mathbb{R}^{m}\\to\\mathbb{R}^{n}$ be a *Bayesian neural network* with \${\\mathbf{w}}$ a vector random variable consisting of the parameters of the network. Assuming a prior distribution over the parameters, \${\\mathbf{w}}\\sim p(\\bm{w})$, training amounts to computing the posterior distribution, $p(\\bm{w}|\\mathcal{D})$, by the application of Baye’s rule. For a vector, $\\bm{w}$, sampled from the posterior, $p(\\bm{w}|\\mathcal{D})$, we denote the deterministic neural network with parameters $\\bm{w}$ by $f_{\\bm{w}}$. We use $n_{\\bm{w}}$ to refer to the dimension of the parameters space of the network.
+
+In BNN literature, it is customary to assume the prior and the posterior both have normal distribution; nevertheless, our *Pure Iterative Expansion* (*PIE*) algorithm works for arbitrary distributions, and our *Gradient-guided Iterative Expansion* (*GIE*) algorithm works for all continuous distributions. In the case of normal distribution, training requires finding the mean $\\bm{\\mu}\\in\\mathbb{R}^{n_{\\bm{w}}}$ and covariance $\\bm{\\Sigma}\\in\\mathbb{R}^{n_{\\bm{w}}\\times n_{\\bm{w}}}$ of the parameters such that $p(\\bm{w}|\\mathcal{D})\\approx q(\\bm{w})\\sim\\mathcal{N}(\\bm{\\mu},\\bm{\\Sigma})$. We refer to the parameters’ variance by $\\bm{\\sigma}^{2}=\\operatorname{diag}(\\bm{\\Sigma})$. When the parameters are independent, i.e., when the covariance matrix $\\bm{\\Sigma}$ is diagonal, we denote a normal distribution with mean $\\bm{\\mu}$ and covariance matrix $\\bm{\\Sigma}$ by $\\mathcal{N}(\\bm{\\mu},\\bm{\\sigma}^{2})$. Similarly, we denote an arbitrary probability distribution with mean $\\bm{\\mu}$ and variance $\\bm{\\sigma}^{2}$ by $\\mathcal{P}(\\bm{\\mu},\\bm{\\sigma}^{2})$.
+
+## 3 Computing the Probabilistic Robustness for BNNs
+
+![figure](https://arxiv.org/html/2401.11627v1/fixed_scale.svg)
+
+((a)) Pure sampling.
+
+![figure](https://arxiv.org/html/2401.11627v1/fixed_ratio.svg)
+
+((b)) PIE.
+
+![figure](https://arxiv.org/html/2401.11627v1/dynamic_ratio.svg)
+
+((c)) GIE.
+
+(Figure 1:) A comparison between the area of the set of safe weights $\\mathcal{C}$ in Example 3.1 that is covered by the pure sampling (1(a)), PIE after two iterations (1(b)), and GIE after two iterations (1(c)) for the same initial weights $\\bm{w}_{1},\\dots,\\bm{w}_{4}\\sim\\mathcal{N}(\\bm{0},\\bm{1})$. See Section 4 for detailed comparisons, including comparison with equal compute.
+
+## (Appendix B) Correction to ([Wicker et al.,, 2020](#bib.bib46)) implementation
+
+However, the code[^1] accompanying the paper implements this differently leading to large overestimates (i.e., incorrect values) of the $p_{{\\textnormal{safe}}}$ values as presented in ([Wicker et al.,, 2020](#bib.bib46)).
+
+| Network | Relative Runtime ($\\pm\\%$) |
+| --- | --- |
+| 1x128 | +3.3 |
+| 1x256 | +2.5 |
+| 1x512 | +1.4 |
+| 2x256 | +0.8 |
+| 2x512 | +0.6 |
+| 2x1024 | +0.2 |
+| 2x50 | +2.3 |
+| 2x150 | +0.4 |
+| CNN | +0.5 |
+
+(Table 2:) Impact of computing gradients for PIE algorithm on runtime. The data are presented as a percentage increase or decrease in runtime as compared to the ([Wicker et al.,, 2020](#bib.bib46)) approach on the same networks.
+
+## References
+
+<a id="bib.bib1"></a>Abiodun et al., (2018) Abiodun, O. I., Jantan, A., Omolara, A. E., Dada, K. V., Mohamed, N. A., and Arshad, H. (2018). State-of-the-art in artificial neural network applications: A survey. *Heliyon*, 4(11):e00938.
+
+<a id="bib.bib3"></a>Anwar et al., (2018) Anwar, S. M., Majid, M., Qayyum, A., Awais, M., Alnowami, M., and Khan, M. K. (2018). Medical image analysis using convolutional neural networks: a review. *Journal of medical systems*, 42(11):1–13.
+
+<a id="bib.bib6"></a>Bojarski et al., (2016) Bojarski, M., Del Testa, D., Dworakowski, D., Firner, B., Flepp, B., Goyal, P., Jackel, L. D., Monfort, M., Muller, U., Zhang, J., et al. (2016). End to end learning for self-driving cars.
+
+<a id="bib.bib9"></a>Carbone et al., (2020) Carbone, G., Wicker, M., Laurenti, L., Patané, A., Bortolussi, L., and Sanguinetti, G. (2020). Robustness of bayesian neural networks to gradient-based attacks. In *Advances in Neural Information Processing Systems, NeurIPS*.
+
+<a id="bib.bib29"></a>(29) Liu, Z., Cai, Y., Wang, H., Chen, L., Gao, H., Jia, Y., and Li, Y. (2021b). Robust target recognition and tracking of self-driving cars with radar and camera information fusion under severe weather conditions. *IEEE Transactions on Intelligent Transportation Systems*.
+
+<a id="bib.bib33"></a>Pang et al., (2021) Pang, Y., Cheng, S., Hu, J., and Liu, Y. (2021). Evaluating the robustness of bayesian neural networks against different types of attacks.
+
+<a id="bib.bib44"></a>Uchendu et al., (2021) Uchendu, A., Campoy, D., Menart, C., and Hildenbrandt, A. (2021). Robustness of bayesian neural networks to white-box adversarial attacks. In *Fourth IEEE International Conference on Artificial Intelligence and Knowledge Engineering, AIKE*.
+
+<a id="bib.bib46"></a>Wicker et al., (2020) Wicker, M., Laurenti, L., Patane, A., and Kwiatkowska, M. (2020). Probabilistic safety for bayesian neural networks. In *Proceedings of the Thirty-Sixth Conference on Uncertainty in Artificial Intelligence, UAI*.
+
+[^1]: At the time of writing, this is available at https://github.com/matthewwicker/ProbabilisticSafetyforBNNs.
+"
+`;
+
+exports[`arXiv HTML 夹具转换 2402.18614.html Markdown 快照 1`] = `
+"# Deep neural network Models trained with a fixed Random classifier transfer better across domains
+
+Hafiz Tiomoko Ali, Umberto Michieli, Ji Joong Moon, Daehyun Kim, Mete Ozay
+
+###### Abstract
+
+The recently discovered Neural collapse (NC) phenomenon states that the last-layer weights of Deep Neural Networks (DNN), converge to the so-called *Equiangular Tight Frame (ETF)* simplex, at the terminal phase of their training. This ETF geometry is equivalent to vanishing within-class variability of the last layer activations. Inspired by NC properties, we explore in this paper the transferability of DNN models trained with their last layer weight fixed according to ETF. This enforces class separation by eliminating class covariance information, effectively providing implicit regularization. We show that DNN models trained with such a fixed classifier significantly improve transfer performance, particularly on out-of-domain datasets. On a broad range of fine-grained image classification datasets, our approach outperforms $i)$ baseline methods that do not perform any covariance regularization (up to $22\\%$), as well as $ii)$ methods that explicitly whiten covariance of activations throughout training (up to $19\\%$). Our findings suggest that DNNs trained with fixed ETF classifiers offer a powerful mechanism for improving transfer learning across domains.
+
+## 2 Related work
+
+In contrast to numerous methods that explicitly whiten features covariances (enforce covariance matrix to be close to the identity matrix) during training using dedicated loss functions [[6](#bib.bib6)], our approach focuses on enforcing negligeable within-class variability, throughout training. Whitening operations discard the variability between all features within a batch, while the use of fixed ETF classifier adhere to the properties of NC by implicitly discarding *within-class features variability*.
+
+Our work bridges the application of fixed ETF classifiers with the use of Random Projection (RP) classifiers. Random Matrix Theory has proven invaluable for analyzing the behavior of various machine learning methods, in particular RP [[9](#bib.bib9)]. In a related study [[10](#bib.bib10)], kernels obtained from random projectors with generic activation functions were analyzed. However, this study operates under the Gaussian Mixture Model (GMM) assumption, aiming to achieve "non-trivial" separation based on class means and class covariances. We establish that the utilization of a linear random projector adheres to ETF classifiers properties, leading to a feature kernel with minimal class covariance. This observation rationalizes the use of fixed random classifiers adhering to the ETF geometry, which can essentially be seen as a random projector with a linear activation function.
+
+## 3 Transfer Learning with Fixed ETF Classifiers
+
+A linear classifier with the weights \${\\bf W}$ is called a *fixed ETF classifier*.
+
+Our objective is to establish the equivalence between the properties of NC and the use of linear random features. To this end, we define random features by $\\sigma({\\bf WX})$ with \${\\bf W}$ and \${\\bf X}$ defined earlier, and $\\sigma(\\cdot)$ a generic activation function. Our goal is to prove that a linear activation $\\sigma(t)=t$ achieves NC.
+
+We make use of existing RMT results in this context. While various RMT algorithms [[12](#bib.bib12), [13](#bib.bib13), [14](#bib.bib14)] have been developed to discriminate both class means and class covariances of features \${\\bf x}_{i}$, it turns out that for the final stages of training, discriminating only the class means is sufficient to improve robustness and generalization of classifiers.
+
+## References
+
+<a id="bib.bib6"></a>[6] Xingang Pan, Xiaohang Zhan, Jianping Shi, Xiaoou Tang, and Ping Luo, “Switchable whitening for deep representation learning,” in *Proceedings of the IEEE/CVF International Conference on Computer Vision*, 2019, pp. 1863–1871.
+
+<a id="bib.bib9"></a>[9] Ali Rahimi and Benjamin Recht, “Random features for large-scale kernel machines,” *Advances in neural information processing systems*, vol. 20, 2007.
+
+<a id="bib.bib10"></a>[10] Hafiz Tiomoko Ali, Zhenyu Liao, and Romain Couillet, “Random matrices in service of ml footprint: ternary random features with no performance loss,” *arXiv:2110.01899*, 2021.
+
+<a id="bib.bib12"></a>[12] Hafiz Tiomoko Ali, Abla Kammoun, and Romain Couillet, “Random matrix-improved kernels for large dimensional spectral clustering,” in *SSP*, 2018, pp. 453–457.
+
+<a id="bib.bib13"></a>[13] Zhenyu Liao and Romain Couillet, “On inner-product kernels of high dimensional data,” in *CAMSAP*. IEEE, 2019, pp. 579–583.
+
+<a id="bib.bib14"></a>[14] Romain Couillet and Florent Benaych-Georges, “Kernel spectral clustering of large dimensional data,” *Electronic Journal of Statistics*, vol. 10, pp. 1393–1454, 2016."
+`;
+
+exports[`arXiv HTML 夹具转换 2402.18734.html Markdown 快照 1`] = `
+"# Priority Sampling of Large Language Models for Compilers
+
+Dejan Grubisic[^1] Affiliation: Rice University, Meta AI    Chris Cummins Affiliation: Meta AI    Volker Seeker Affiliation: Meta AI    Hugh Leather Affiliation: Meta AI
+
+###### Abstract
+
+Large language models show great potential in generating and optimizing code. Widely used sampling methods such as Nucleus Sampling increase the diversity of generation but often produce repeated samples for low temperatures and incoherent samples for high temperatures. Furthermore, the temperature coefficient has to be tuned for each task, limiting its usability. We present *Priority Sampling*, a simple and deterministic sampling technique that produces unique samples ordered by the model’s confidence. Each new sample expands the unexpanded token with the highest probability in the augmented search tree. Additionally, Priority Sampling supports generation based on regular expression that provides a controllable and structured exploration process. Priority Sampling outperforms Nucleus Sampling for any number of samples, boosting the performance of the original model from 2.87% to 5% improvement over -Oz. Moreover, it outperforms the autotuner used for the generation of labels for the training of the original model in just 30 samples.
+
+## 1 Introduction and Motivation
+
+Current sampling approaches have few major problems. Temperature-based sampling [[21](#bib.bib21), [15](#bib.bib15)] requires a significant amount of computation to find the optimal temperature. The optimal temperature may also depend on the context, which requires additional evaluations. Once we set the temperature, sampling often produces a large number of duplicates and semantically meaningless answers, wasting available samples.
+
+In this work, we present Priority Sampling, a deterministic sampling technique that guarantees unique samples, for which the model has the highest confidence. Furthermore, we guarantee that produced samples will adhere to the regular expression (inspired by Willard [[28](#bib.bib28)]), which is particularly important for code generation and code optimization.
+
+## References
+
+<a id="bib.bib15"></a>[15] Dong Li, Ruoming Jin, Jing Gao, and Zhi Liu. On sampling top-k recommendation evaluation. In *Proceedings of the 26th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining*, pages 2114–2124, 2020.
+
+<a id="bib.bib21"></a>[21] Shauli Ravfogel, Yoav Goldberg, and Jacob Goldberger. Conformal nucleus sampling. *arXiv preprint arXiv:2305.02633*, 2023.
+
+<a id="bib.bib28"></a>[28] Brandon T Willard and Rémi Louf. Efficient guided generation for large language models. *arXiv e-prints*, pages arXiv–2307, 2023.
+
+[^1]: Corresponding author: dx4@rice.edu
+"
+`;
+
+exports[`arXiv HTML 夹具转换 2402.18762.html Markdown 快照 1`] = `
+"# Disentangling the Causes of Plasticity Loss in Neural Networks
+
+Clare Lyle[^1]    Zeyu Zheng    Khimya Khetarpal    Will Dabney    Hado van Hasselt    Razvan Pascanu    James Martens Affiliation: Google DeepMind
+
+###### Abstract
+
+Underpinning the past decades of work on the design, initialization, and optimization of neural networks is a seemingly innocuous assumption: that the network is trained on a *stationary* data distribution. In settings where this assumption is violated, e.g. deep reinforcement learning, learning algorithms become unstable and brittle with respect to hyperparameters and even random seeds. One factor driving this instability is the loss of plasticity, meaning that updating the network’s predictions in response to new information becomes more difficult as training progresses. While many recent works provide analyses and partial solutions to this phenomenon, a fundamental question remains unanswered: to what extent do known mechanisms of plasticity loss overlap, and how can mitigation strategies be combined to best maintain the trainability of a network? This paper addresses these questions, showing that loss of plasticity can be decomposed into multiple independent mechanisms and that, while intervening on any single mechanism is insufficient to avoid the loss of plasticity in all cases, intervening on multiple mechanisms in conjunction results in highly robust learning algorithms. We show that a combination of layer normalization and weight decay is highly effective at maintaining plasticity in a variety of synthetic nonstationary learning tasks, and further demonstrate its effectiveness on naturally arising nonstationarities, including reinforcement learning in the Arcade Learning Environment.
+
+## 1 Introduction
+
+We proceed to take these insights to develop a ‘Swiss cheese model’ of mitigation strategies, and show that interventions which improve robustness to preactivation distribution shift, regression target magnitude, and parameter growth can be studied independently and then combined to give additive benefit. Whereas prior work indicated that each mechanism on its own cannot fully explain plasticity loss ([Lyle et al., 2023](#bib.bib35)), we find that addressing several mechanisms in conjunction is sufficient to yield negligible loss of plasticity in a variety of synthetic benchmarks, and that these methods can also improve performance on both deep reinforcement learning benchmarks and on natural distribution shift datasets. By identifying the best interventions for each mechanism in isolation and then combining them, we can significantly reduce the combinatorial complexity of the search over mitigation strategies, a finding which has exciting implications for future work on the stabilization of optimization in nonstationary learning problems.
+
+## 2 Background and related work
+
+The training dynamics of neural networks have been extensively studied over the past decades ([Sutskever et al., 2013](#bib.bib54), e.g.). This literature has highlighted a number of important design choices for neural network architectures, initialization schemes, and optimizers, which will come to bear on the analysis in this paper. Of particular relevance to this work is layer normalization ([Ba et al., 2016](#bib.bib5)), which normalizes vectors in a network (often preactivations) to have sample mean 0 and variance 1, commonly used activation functions like ReLU and tanh, and schemes designed achieve good signal propagation[^2] via careful initialization ([Poole et al., 2016](#bib.bib45); [Balduzzi et al., 2017](#bib.bib6)) or network design and transformation ([Martens et al., 2021](#bib.bib37); [Hayou et al., 2021](#bib.bib18); [Zhang et al., 2021](#bib.bib61); [He et al., 2023](#bib.bib19)).
+
+## 3 A deeper look into plasticity
+
+![figure](https://arxiv.org/html/2402.18762v1/learning_curves_pretrain_offset_v2.svg)
+
+![figure](https://arxiv.org/html/2402.18762v1/nonstat_magnitude.svg)
+
+(Figure 1:) **Left.** Illustration of the relationship between pretraining target magnitude and optimization speed on a new task. We see a strong dose-response effect from increasing the magnitude of regression targets on the final loss on a fine-tuning task, and observe similar trends in the learning curves on these tasks as those observed by [Lyle et al. (2023)](#bib.bib35) in DQN agents trained on contextual bandits. **Right.** Dose-response curves for the effect of target offset scale and the magnitude of the distribution shift on plasticity. We see that more severe distribution shifts, e.g. randomizing an entire dataset simultaneously rather than gradually, results in more extreme loss of plasticity.
+
+**Regression target scale.** The first property we will consider is motivated by the analysis of [Lyle et al. (2023)](#bib.bib35), who observed increased optimization difficulty as a function of training steps in a DQN agent trained on a trivially simple contextual bandit environment, whose observation space was an image classification dataset, and whose reward function gave reward 1 whenever the selected action corresponded to the label of the observation. The resulting nonstationarity induced by training a DQN agent on such a task is highly structured and essentially amounts to regressing on one-hot image labels and periodically adding a constant offset to the regression targets. We claim that it is this deceptively simple structure to the nonstationarity which drove the optimization difficulties encountered by this agent, i.e. that the nonstationarity *increases the target mean*, rather than the existence of nonstationarity in the first place. To prove this, we show that similar loss of plasticity can be induced by simply regressing neural networks on targets with large means in a *stationary* learning problem.
+
+**Smoothness of distribution shifts.** A simple nonstationary task in which one can quickly induce loss of plasticity is the sequential memorization of randomized labels. It has been argued in prior work that the sudden distribution shift in gradient magnitudes induced by these rapid task changes is responsible for much of the catastrophic loss of plasticity which has been observed in these domains ([Lyle et al., 2023](#bib.bib35)). We construct a simple experiment to explore how sensitive the plasticity loss phenomenon is to the suddenness of this distribution shift by training a CNN (architecture details in Appendix B) on a sequence of randomly generated labels of the CIFAR-10 image classification dataset. At each iteration, we re-randomize some fraction $\\epsilon\\in[0.01,1]$ of these labels, and continue training from the network’s current parameters. We train each network for the equivalent of 40 iterations of 100,000 steps (applying resets more frequently for smaller re-randomization fractions to attain the same total ‘amount’ of label resets). We use three activation functions, ReLU, GeLU, and Leaky ReLU (with negative slope equal to 0.01).
+
+Thus far, we have identified a variety of external and internal factors influencing plasticity in a neural network. We now explore whether these different paths ultimately take networks to the same end point. To do so, we look at the structure of the gradients of the network’s outputs (not its loss) with respect to its parameters using the empirical neural tangent kernel (NTK) of the network. The empirical NTK matrix (eNTK for short) is the matrix of gradient dot products between all data points in the training set, a matrix which is both expensive to compute and difficult to visualize in its full resolution. In practice, we sample a mini-batch of size 64 and compute the matrix of gradient dot products $\\langle\\nabla_{\\theta}f(\\mathbf{x}),\\nabla_{\\theta}f(\\mathbf{x}^{\\prime})\\rangle$ for all inputs $\\mathbf{x},\\mathbf{x}^{\\prime}$ in the mini-batch.
+
+We visualize these matrices as heat maps in Figure 3. To interpret the heat maps, it is helpful to think of the empirical NTK as decomposing into the sum of two matrices: a diagonal matrix $D_{\\theta}$ and a non-diagonal matrix $G_{\\theta}$. Intuitively, the structure and magnitude of $G_{\\theta}$ characterizes how the network generalizes. A network which does not generalize at all between inputs would have a diagonal eNTK, i.e. $G_{\\theta}=0$. In contrast, a network which multiplies the input by zero and then adds a learnable constant can be expressed as $G_{\\theta}=c\\mathbf{1}$ for some $c$ where $\\mathbf{1}$ is the all-ones matrix, and $D_{\\theta}=0$, and its eNTK will have rank 1. In practice, it is desirable for the matrix $G_{\\theta}$ to encode some geometric information about the inputs, so that the network generalizes more strongly between similar inputs and weakly between distant ones, although this is not critical for trainability [Xiao et al. (2020)](#bib.bib58).
+
+## References
+
+<a id="bib.bib5"></a>Ba et al. (2016) Jimmy Lei Ba, Jamie Ryan Kiros, and Geoffrey E Hinton. Layer normalization. *arXiv preprint arXiv:1607.06450*, 2016.
+
+<a id="bib.bib6"></a>Balduzzi et al. (2017) David Balduzzi, Marcus Frean, Lennox Leary, JP Lewis, Kurt Wan-Duo Ma, and Brian McWilliams. The shattered gradients problem: If resnets are the answer, then what is the question? In *International Conference on Machine Learning*, pages 342–350. PMLR, 2017.
+
+<a id="bib.bib18"></a>Hayou et al. (2021) Soufiane Hayou, Eugenio Clerico, Bobby He, George Deligiannidis, Arnaud Doucet, and Judith Rousseau. Stable resnet. In *International Conference on Artificial Intelligence and Statistics*, pages 1324–1332. PMLR, 2021.
+
+<a id="bib.bib19"></a>He et al. (2023) Bobby He, James Martens, Guodong Zhang, Aleksandar Botev, Andrew Brock, Samuel L Smith, and Yee Whye Teh. Deep transformers without shortcuts: Modifying self-attention for faithful signal propagation. *arXiv preprint arXiv:2302.10322*, 2023.
+
+<a id="bib.bib35"></a>Lyle et al. (2023) Clare Lyle, Zeyu Zheng, Evgenii Nikishin, Bernardo Avila Pires, Razvan Pascanu, and Will Dabney. Understanding plasticity in neural networks. In *International Conference on Machine Learning*, 2023.
+
+<a id="bib.bib37"></a>Martens et al. (2021) James Martens, Andy Ballard, Guillaume Desjardins, Grzegorz Swirszcz, Valentin Dalibard, Jascha Sohl-Dickstein, and Samuel S Schoenholz. Rapid training of deep neural networks without skip connections or normalization layers using deep kernel shaping. *arXiv preprint arXiv:2110.01765*, 2021.
+
+<a id="bib.bib45"></a>Poole et al. (2016) Ben Poole, Subhaneil Lahiri, Maithra Raghu, Jascha Sohl-Dickstein, and Surya Ganguli. Exponential expressivity in deep neural networks through transient chaos. In D. Lee, M. Sugiyama, U. Luxburg, I. Guyon, and R. Garnett, editors, *Advances in Neural Information Processing Systems*, volume 29\\. Curran Associates, Inc., 2016. URL https://proceedings.neurips.cc/paper/2016/file/148510031349642de5ca0c544f31b2ef-Paper.pdf.
+
+<a id="bib.bib54"></a>Sutskever et al. (2013) Ilya Sutskever, James Martens, George Dahl, and Geoffrey Hinton. On the importance of initialization and momentum in deep learning. In *International conference on machine learning*, pages 1139–1147. PMLR, 2013.
+
+<a id="bib.bib58"></a>Xiao et al. (2020) Lechao Xiao, Jeffrey Pennington, and Samuel Schoenholz. Disentangling trainability and generalization in deep neural networks. In *International Conference on Machine Learning*, pages 10462–10472. PMLR, 2020.
+
+<a id="bib.bib61"></a>Zhang et al. (2021) Guodong Zhang, Aleksandar Botev, and James Martens. Deep learning without shortcuts: Shaping the kernel with tailored rectifiers. In *International Conference on Learning Representations*, 2021.
+
+[^1]: Correspondence to clarelyle@google.com
+[^2]: Roughly speaking, networks with poor signal propagation do not do a good job of propagating information about their inputs to deeper layers. This can lead to optimization difficulties, such as vanishing or exploding gradients, as has been formalized in Xiao et al. (2020) and Martens et al. (2021) in the “NTK regime”.
+"
+`;
+
+exports[`arXiv HTML 夹具转换 2402.18994.html Markdown 快照 1`] = `
+"# Spyx: A Library for Just-In-Time Compiled Optimization of Spiking Neural Networks
+
+Kade M. Heckel Affiliation: University of Cambridge Affiliation: Department of Engineering Affiliation: Cambridge, UK Email: [kmh70@cam.ac.uk](mailto:kmh70@cam.ac.uk)    Thomas Nowotny Affiliation: Sussex AI Affiliation: School of Engineering and Informatics Affiliation: University of Sussex Affiliation: Brighton, UK Email: [t.nowotny@sussex.ac.uk](mailto:t.nowotny@sussex.ac.uk)
+
+###### Abstract
+
+As the role of artificial intelligence becomes increasingly pivotal in modern society, the efficient training and deployment of deep neural networks have emerged as critical areas of focus. Recent advancements in attention-based large neural architectures have spurred the development of AI accelerators, facilitating the training of extensive, multi-billion parameter models. Despite their effectiveness, these powerful networks often incur high execution costs in production environments. Neuromorphic computing, inspired by biological neural processes, offers a promising alternative. By utilizing temporally-sparse computations, Spiking Neural Networks (SNNs) offer to enhance energy efficiency through a reduced and low-power hardware footprint. However, the training of SNNs can be challenging due to their recurrent nature which cannot as easily leverage the massive parallelism of modern AI accelerators. To facilitate the investigation of SNN architectures and dynamics researchers have sought to bridge Python-based deep learning frameworks such as PyTorch or TensorFlow with custom-implemented compute kernels. This paper introduces Spyx, a new and lightweight SNN simulation and optimization library designed in JAX. By pre-staging data in the expansive vRAM of contemporary accelerators and employing extensive JIT compilation, Spyx allows for SNN optimization to be executed as a unified, low-level program on NVIDIA GPUs or Google TPUs. This approach achieves optimal hardware utilization, surpassing the performance of many existing SNN training frameworks while maintaining considerable flexibility.
+
+## 1 Introduction
+
+Since the avalanche of research into transformer neural network architectures resulting from the publication of "Attention is All You Need" [[1](#bib.bib1)], the capacity and capability of modern AI accelerators has exploded. A direct result of this is a self-reinforcing cycle deemed the "Hardware Lottery"[[2](#bib.bib2)], where the demand to train increasingly massive deep neural networks drives tremendous investment in AI hardware which prioritizes parallel and dense matrix computations which then facilitate even greater performance of DNN models. A significant area of concern with the current trajectory of deep learning research and industrial adoption lies in its equally dramatic energy and environmental cost for training and deploying such models[[3](#bib.bib3)]. Taking inspiration from biology, the field of neuromorphic computing and the investigation of Spiking Neural Network architectures aim to drastically reduce the computational resources required of ML tools by leveraging sparsity and event-based computation executed on low-power custom hardware.
+
+Concurrent with other JAX-based SNN work and inspired by the approach of snnTorch[[6](#bib.bib6)], the Spyx[[22](#bib.bib22)] library was developed to facilitate the efficient investigation of modern evolutionary strategies for optimizing SNNs[[23](#bib.bib23)]. Spyx combines the flexibility advantages of PyTorch-based frameworks with the performance and efficiency of libraries backed by low-level kernel implementations. Specifically, Spyx allows the user to specify their own surrogate gradient functions or neuron models in only a few lines of code, while the entire training and evaluation loop can be reliably traced and executed on either a GPU or TPU with maximum utilization.
+
+## 2 Methods
+
+Spyx is designed to maximize JIT compilation opportunities and adheres to the same functional programming paradigm JAX follows to enable much of its powerful capabilities. Due to this, Spyx avoids defining classes except when necessary for the implementation of neuron models using the Haiku library; this is done to avoid the possibility of introducing bugs resulting from the mixture of object-oriented programming with the function-oriented rules imposed by function tracing for JIT compilation. Unexpected behavior can occur when compiling a method of a class that incorporates multiple class members. For example, if an "adaptive surrogate gradient" was implemented as a class with a member variable $k$ that parametrizes the slope of the surrogate function as illustrated in Listing and the user were to JIT compile code which called the adaptive\\_spike’s compute\\_gradient function, the evaluation would always use the value of $k=2$.
+
+
+$$
+S_{t}
+$$
+
+ 
+
+$$
+=\\phi\\left(V_{t}-\\theta\\right)
+$$
+
+ 
+
+$$
+V_{t+1}
+$$
+
+ 
+
+$$
+=\\beta V_{t}+X-S_{t}\\theta
+$$
+
+
+where $S_{t}$ denotes the spikes for the current iteration $t$, $V_{t}$ the neuron membrane potential, $\\theta$ the firing threshold, $\\beta$ the inverse time constant or the voltage decay rate $\\beta=\\exp(-\\Delta t/\\tau_{m})$, and $X$ the neuron inputs; the weighting of different inputs is offloaded to the preceding use of a haiku.Linear layer to build off existing tools and minimize redundancy. When training with surrogate gradient methods, the activation function $\\phi$ is the Heaviside Step Function whose gradient is replaced by a suitable finite surrogate gradient function.
+
+To optimize GPU usage, several optimizations must also be made to the handling of data. To enable full JIT compilation and on-accelerator training, the full data needs to be loaded into the GPU vRAM and the operations on the data need to be traceable by JAX; the incentive to do so is that streaming data from the CPU induces I/O latency thereby reducing training throughput. The user is free to use any loading and preprocessing pipeline to read their data into CPU memory. From there, the dataset should be converted to a single Numpy array organized with the shape $[\\#Batches,BatchSize,Time,...]$. Calling the numpy.packbits() function with the temporal axis specified compresses the dataset by 87.5% prior to its transfer to the GPU. The compressed data is then used directly with dynamic decompression during simulations (see Listing below). Spyx offers data-specific utility functions for randomly shifting inputs along the specified data axes as well as shuffling batches inside of JIT compiled training loops without needing to involve the CPU-based dataloader utilities as shown in Listings and .
+
+## 3 Experiments & Results
+
+(Table 1:) Timing (in seconds) benchmark for training a feed-forward SNN for 100 epochs on the SHD dataset.
+
+| Batch Size: | 64 | 128 | 256 |
+| --- | --- | --- | --- |
+| snnTorch-128 | 4543.3$\\pm$41.0 | 2313.2$\\pm$12.0 | 1212.03$\\pm$ 0.9 |
+| snnTorch-128 Compiled | 195.6 $\\pm$ 1.2 | 103.3 $\\pm$ 1.0 | 58.8 $\\pm$ 0.1 |
+| Spyx-128 (ours) | **69.3$\\pm$0.1** | **46.0$\\pm$0.1** | **35.5$\\pm$0.1** |
+| mlGeNN-128 | 215.7$\\pm$1.6 | 160.8$\\pm$1.6 | 123.5$\\pm$1.0 |
+| snnTorch-512 Compiled | 269.9$\\pm$6.0 | 137.5$\\pm$3.8 | 78.7$\\pm$0.6 |
+| Spyx-512 (ours) | **98.7$\\pm$0.2** | **80.2$\\pm$0.2** | **64.1$\\pm$0.2** |
+| mlGeNN-512 | 690.9$\\pm$84.9 | 418.4$\\pm$39.4 | 339.5$\\pm$23.7 |
+
+## References
+
+<a id="bib.bib1"></a>[1] Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Ł ukasz Kaiser, and Illia Polosukhin. Attention is all you need. In I. Guyon, U. Von Luxburg, S. Bengio, H. Wallach, R. Fergus, S. Vishwanathan, and R. Garnett, editors, *Advances in Neural Information Processing Systems*, volume 30\\. Curran Associates, Inc., 2017.
+
+<a id="bib.bib2"></a>[2] Sara Hooker. The hardware lottery. *CoRR*, abs/2009.06489, 2020.
+
+<a id="bib.bib3"></a>[3] Emma Strubell, Ananya Ganesh, and Andrew McCallum. Energy and policy considerations for deep learning in nlp, 2019.
+
+<a id="bib.bib6"></a>[6] Jason K Eshraghian, Max Ward, Emre Neftci, Xinxin Wang, Gregor Lenz, Girish Dwivedi, Mohammed Bennamoun, Doo Seok Jeong, and Wei D Lu. Training spiking neural networks using lessons from deep learning. *Proceedings of the IEEE*, 111(9):1016–1054, 2023.
+
+<a id="bib.bib22"></a>[22] Kade Heckel, Steven Abreu, Gregor Lenz, and Thomas Nowotny. kmheckel/spyx: v0.1.17, February 2024.
+
+<a id="bib.bib23"></a>[23] Kade Heckel. Neuroevolution of spiking neural networks, February 2024."
+`;
+
+exports[`arXiv HTML 夹具转换 2402.19155.html Markdown 快照 1`] = `
+"# Beyond Language Models: Byte Models are Digital World Simulators
+
+Shangda Wu Affiliation: Microsoft Research Asia Affiliation: Central Conservatory of Music, China    Xu Tan Affiliation: Microsoft Research Asia    Zili Wang Affiliation: Independent researcher    Rui Wang Affiliation: Microsoft Research Asia    Xiaobing Li Affiliation: Central Conservatory of Music, China    Maosong Sun Affiliation: Central Conservatory of Music, China Affiliation: Tsinghua University, China Correspondence to: [tsinghua.edu.cn](mailto:tsinghua.edu.cn)
+
+###### Abstract
+
+Traditional deep learning often overlooks bytes, the basic units of the digital world, where all forms of information and operations are encoded and manipulated in binary format. Inspired by the success of next token prediction in natural language processing, we introduce bGPT, a model with next byte prediction to simulate the digital world. bGPT matches specialized models in performance across various modalities, including text, audio, and images, and offers new possibilities for predicting, simulating, and diagnosing algorithm or hardware behaviour. It has almost flawlessly replicated the process of converting symbolic music data, achieving a low error rate of 0.0011 bits per byte in converting ABC notation to MIDI format. In addition, bGPT demonstrates exceptional capabilities in simulating CPU behaviour, with an accuracy exceeding 99.99% in executing various operations. Leveraging next byte prediction, models like bGPT can directly learn from vast binary data, effectively simulating the intricate patterns of the digital world.
+
+## 1 Introduction
+
+These deep learning models, however, predominantly operate within the realm of media data, overlooking the omnipresent native binary data in the digital world. Bytes are the foundation of all digital data, devices, and software, from computer processors to operating systems in everyday electronics. Therefore, training models for next byte prediction can potentially lead to a paradigm shift in deep learning, allowing them to truly understand and simulate all activities in the digital world. This has practical benefits not only in conventional areas, but also in some underexplored areas such as boosting cybersecurity ([Raff et al., 2018](#bib.bib36)), improving computer diagnostics ([Guo et al., 2019](#bib.bib15)), optimizing data compression ([Delétang et al., 2023](#bib.bib8)), and even advancing complex tasks like reverse-engineering the source code of that software from its binary representation.
+
+## 2 Background
+
+Several studies have validated the utility of byte-level encoding for language tasks. For instance, Byte-level Byte Pair Encoding (BBPE) has been used to enhance multilingual model pre-training ([Wei et al., 2021](#bib.bib48)) and has also shown promise in machine translation ([Wang et al., 2020](#bib.bib44)), striking a balance between processing efficiency and linguistic breadth. ByT5 ([Xue et al., 2022](#bib.bib54)) builds on this by using standard Transformer models for byte sequences, promoting a token-free encoding method that improves noise robustness and spelling sensitivity in multilingual scenarios.
+
+## 3 Methodology
+
+To address computational limitations in Transformer-based models with long byte sequences, inspired by previous work ([Wu et al., 2023b](#bib.bib52); [Yu et al., 2023](#bib.bib56); [Wu et al., 2023a](#bib.bib51); [Yang et al., 2023](#bib.bib55)), bGPT adapts a hierarchical Transformer architecture and segments a sequence of bytes $B=\\{b_{1},b_{2},...,b_{T}\\}$ of length $T$ into a sequence of patches $\\mathcal{P}$, where each patch contains exactly $S$ bytes:
+
+
+$$
+\\mathcal{P}=[P_{1},P_{2},\\ldots,P_{N}],
+$$
+
+
+where $N=\\lceil\\frac{T}{S}\\rceil$ is the number of patches, and $P_{i}=[b_{(i-1)S+1},\\ldots,b_{iS}]$ for $1\\leq i\\leq N$. If $T\\mod S\\neq 0$, the last patch $P_{N}$ is defined as:
+
+![figure](https://arxiv.org/html/2402.19155v1/model.svg)
+
+(Figure 2:) bGPT segments byte sequences into patches, predicts next patch features with a patch-level decoder, and reconstructs bytes within patches using these features with a byte-level decoder.
+
+## 4 Applications
+
+**Data Conversion**: The process involves converting data from one format to another, with symbolic music formats such as ABC notation and MIDI files serving as our main examples. For background information on ABC notation and MIDI, please refer to Appendix A. In this task, bGPT employs the generative modelling approach on concatenated byte sequences of paired ABC and MIDI files, separated by a special patch. The bGPT model learns to convert text-based ABC notation music scores into binary MIDI performance signals and, reversely, convert MIDI back into ABC notation. This necessitates the ability to simulate and reverse-engineer the conversion algorithm[^1], which indicates an essential capability for modelling the digital world.
+
+## 5 Experiments
+
+(Table 2:) Hyperparameter settings for pre-training and fine-tuning.
+
+| **Hyperparameter** | **Pre-training** | **Fine-tuning** |
+| --- | --- | --- |
+| Patch Size | 16 | 16 |
+| Patch Length | 512 | 512 |
+| Patch-Level Layers | 12 | 12 |
+| Byte-Level Layers | 3 | 3 |
+| Hidden Size | 768 | 768 |
+| Epochs | 32 | 32 |
+| Learning Rate | 1e-04 | 1e-05 |
+| Batch Size | 16 | 1 |
+
+## (Appendix A) Symbolic Music Formats
+
+This notation describes the tune with sufficient information, from its rhythmic structure down to the details of its melody and harmony. As such, ABC notation serves as a bridge between the traditional form of musical scores and the modern digital world, offering a text-based alternative that is both efficient and widely accessible. For a detailed documentation of ABC notation, please refer to the ABC notation standard[^2].
+
+## References
+
+<a id="bib.bib8"></a>Delétang et al. (2023) Delétang, G., Ruoss, A., Duquenne, P., Catt, E., Genewein, T., Mattern, C., Grau-Moya, J., Wenliang, L. K., Aitchison, M., Orseau, L., Hutter, M., and Veness, J. Language modeling is compression. *CoRR*, abs/2309.10668, 2023. doi: 10.48550/ARXIV.2309.10668. URL https://doi.org/10.48550/arXiv.2309.10668.
+
+<a id="bib.bib15"></a>Guo et al. (2019) Guo, W., Mu, D., Xing, X., Du, M., and Song, D. DEEPVSA: facilitating value-set analysis with deep learning for postmortem program analysis. In Heninger, N. and Traynor, P. (eds.), *28th USENIX Security Symposium, USENIX Security 2019, Santa Clara, CA, USA, August 14-16, 2019*, pp. 1787–1804. USENIX Association, 2019. URL https://www.usenix.org/conference/usenixsecurity19/presentation/guo.
+
+<a id="bib.bib36"></a>Raff et al. (2018) Raff, E., Barker, J., Sylvester, J., Brandon, R., Catanzaro, B., and Nicholas, C. K. Malware detection by eating a whole EXE. In *The Workshops of the The Thirty-Second AAAI Conference on Artificial Intelligence, New Orleans, Louisiana, USA, February 2-7, 2018*, volume WS-18 of *AAAI Technical Report*, pp. 268–276. AAAI Press, 2018. URL https://aaai.org/ocs/index.php/WS/AAAIW18/paper/view/16422.
+
+<a id="bib.bib44"></a>Wang et al. (2020) Wang, C., Cho, K., and Gu, J. Neural machine translation with byte-level subwords. In *The Thirty-Fourth AAAI Conference on Artificial Intelligence, AAAI 2020, The Thirty-Second Innovative Applications of Artificial Intelligence Conference, IAAI 2020, The Tenth AAAI Symposium on Educational Advances in Artificial Intelligence, EAAI 2020, New York, NY, USA, February 7-12, 2020*, pp. 9154–9160. AAAI Press, 2020. doi: 10.1609/AAAI.V34I05.6451. URL https://doi.org/10.1609/aaai.v34i05.6451.
+
+<a id="bib.bib48"></a>Wei et al. (2021) Wei, J., Liu, Q., Guo, Y., and Jiang, X. Training multilingual pre-trained language model with byte-level subwords. *arXiv preprint arXiv:2101.09469*, 2021.
+
+<a id="bib.bib51"></a>Wu et al. (2023a) Wu, S., Li, X., Yu, F., and Sun, M. Tunesformer: Forming irish tunes with control codes by bar patching. In Porcaro, L., Batlle-Roca, R., and Gómez, E. (eds.), *Proceedings of the 2nd Workshop on Human-Centric Music Information Retrieval 2023 co-located with the 24th International Society for Music Information Retrieval Conference (ISMIR 2023), Milan, Italy, November 10, 2023*, volume 3528 of *CEUR Workshop Proceedings*. CEUR-WS.org, 2023a. URL https://ceur-ws.org/Vol-3528/paper1.pdf.
+
+<a id="bib.bib52"></a>Wu et al. (2023b) Wu, S., Yu, D., Tan, X., and Sun, M. Clamp: Contrastive language-music pre-training for cross-modal symbolic music information retrieval. In Sarti, A., Antonacci, F., Sandler, M., Bestagini, P., Dixon, S., Liang, B., Richard, G., and Pauwels, J. (eds.), *Proceedings of the 24th International Society for Music Information Retrieval Conference, ISMIR 2023, Milan, Italy, November 5-9, 2023*, pp. 157–165, 2023b. doi: 10.5281/ZENODO.10265247. URL https://doi.org/10.5281/zenodo.10265247.
+
+<a id="bib.bib54"></a>Xue et al. (2022) Xue, L., Barua, A., Constant, N., Al-Rfou, R., Narang, S., Kale, M., Roberts, A., and Raffel, C. Byt5: Towards a token-free future with pre-trained byte-to-byte models. *Trans. Assoc. Comput. Linguistics*, 10:291–306, 2022. doi: 10.1162/TACL\\\\\\_A\\\\\\_00461. URL https://doi.org/10.1162/tacl\\_a\\_00461.
+
+<a id="bib.bib55"></a>Yang et al. (2023) Yang, D., Tian, J., Tan, X., Huang, R., Liu, S., Chang, X., Shi, J., Zhao, S., Bian, J., Wu, X., et al. Uniaudio: An audio foundation model toward universal audio generation. *arXiv preprint arXiv:2310.00704*, 2023.
+
+<a id="bib.bib56"></a>Yu et al. (2023) Yu, L., Simig, D., Flaherty, C., Aghajanyan, A., Zettlemoyer, L., and Lewis, M. MEGABYTE: Predicting million-byte sequences with multiscale transformers. In *Thirty-seventh Conference on Neural Information Processing Systems*, 2023. URL https://openreview.net/forum?id=JTmO2V9Xpz.
+
+[^1]: https://github.com/xlvector/abcmidi
+[^2]: https://abcnotation.com/wiki/abc:standard:v2.1
+"
+`;
+
+exports[`arXiv HTML 夹具转换 2402.19308.html Markdown 快照 1`] = `
+"# Loss-Free Machine Unlearning
+
+Jack Foster Affiliation: The Alan Turing Institute\\*Indicates equal contribution    Stefan Schoepf Alexandra Brintrup Email: [{jwf40,ss2823,ab702}@cam.ac.uk](mailto:{jwf40,ss2823,ab702}@cam.ac.uk) Affiliation: Department of Engineering, University of Cambridge Affiliation: The Alan Turing Institute\\*Indicates equal contribution
+
+###### Abstract
+
+We present a machine unlearning approach that is both retraining- and label-free. Most existing machine unlearning approaches require a model to be fine-tuned to remove information while preserving performance. This is computationally expensive and necessitates the storage of the whole dataset for the lifetime of the model. Retraining-free approaches often utilise Fisher information, which is derived from the loss and requires labelled data which may not be available. Thus, we present an extension to the Selective Synaptic Dampening algorithm, substituting the diagonal of the Fisher information matrix for the gradient of the $l_{2}$ norm of the model output to approximate sensitivity. We evaluate our method in a range of experiments using ResNet18 and Vision Transformer. Results show our label-free method is competitive with existing state-of-the-art approaches.
+
+## (Appendix A) Appendix
+
+**Benchmarks.** We evaluate LFSSD in the same manner as [Chundawat et al. (2023a)](#bib.bib4); [Foster et al. (2023)](#bib.bib6), comparing against a baseline model without any unlearning, a model retrained from scratch on only $\\mathcal{D}_{r}$, a model finetuned for 2 epochs on $\\mathcal{D}_{r}$, and several existing state-of-the-art methods ([Chundawat et al., 2023a](#bib.bib4); [Graves et al., 2021](#bib.bib8); [Foster et al., 2023](#bib.bib6)) (teacher, amnesiac, SSD). Three key tasks are evaluated using ResNet18 (RN) and Vision Transformer (ViT): full class, subclass, and random forgetting. Fullclass entails forgetting an entire class from the dataset (e.g. rocket from Cifar100), subclass involves forgetting a related subclass from the dataset (e.g. all rockets from class Vehicle2 in Cifar20), and random forgetting selects a random subset of samples across all classes. Datasets used include the Cifar suite ([Krizhevsky & Hinton, 2010](#bib.bib9)), and the PINS face recognition dataset ([Burak, 2020](#bib.bib2)). Runs are repeated 10 times for each method, with the mean and standard deviation shown in the tables. $D_{r}$ and $D_{f}$ in the tables denote the accuracy on the respective subset of data in percent. Since SSD (and therefore LFSSD) is deterministic, there is no standard deviation across repeated runs. We use the same membership inference attack as in [Chundawat et al. (2023a)](#bib.bib4); [Foster et al. (2023)](#bib.bib6), where logistic regression is used to classify samples as seen or unseen for a given model, based the entropy of the model outputs for that sample.
+
+Other methods are retraining-based and depend on the number of epochs $N$, generally on the order of $O(N\\cdot b_{retain}\\cdot p)$, which is much larger.
+
+**Sensitivity analysis**. The values for alpha and lambda for SSD are taken from [Foster et al. (2023)](#bib.bib6) where the authors used Optuna to search for ideal parameters. For LFSSD we performed a simplified hyperparameter search keeping lambda fixed at 1 and alpha values [1, 50]. We pick one value per unlearning task (e.g. full class, sub-class, random) to show robustness across classes and do not use the best alpha per individual class/subclass (e.g., taking alpha 25 for rocket, alpha 5 for another class, etc.). A sensitivity analysis in Table 2 on CIFAR100 rocket class unlearning shows that there is a significant drop off in performance when picking an alpha that is too aggressive or conservative but the method has a wide plateau in which it performs well.
+
+(Table 2:) Sensitivity analysis for LFSSD parameter $\\alpha$ with $\\lambda=1$ on CIFAR100 rocket class unlearning. LFSSD is deterministic, thus no $\\pm$ reported.
+
+| $\\alpha$ | $D_{r}$ Accuracy | $D_{f}$ Accuracy | MIA |
+| --- | --- | --- | --- |
+| 1 | 16.87% | 0.00% | 26.60 |
+| 5 | 74.72% | 0.00% | 0.00 |
+| 10 | 75.67% | 0.00% | 0.00 |
+| 25 | 76.10% | 0.00% | 0.00 |
+| 50 | 76.32% | 71.88% | 29.40 |
+
+## References
+
+<a id="bib.bib2"></a>Burak (2020) Burak. Pinterest face recognition dataset. www.kaggle.com/datasets/hereisburak/pins-face-recognition, 2020.
+
+<a id="bib.bib4"></a>Chundawat et al. (2023a) Vikram S Chundawat, Ayush K Tarun, Murari Mandal, and Mohan Kankanhalli. Can bad teaching induce forgetting? unlearning in deep networks using an incompetent teacher. In *Proceedings of the AAAI Conference on Artificial Intelligence*, volume 37, pp. 7210–7217, 2023a.
+
+<a id="bib.bib6"></a>Foster et al. (2023) Jack Foster, Stefan Schoepf, and Alexandra Brintrup. Fast machine unlearning without retraining through selective synaptic dampening. *arXiv preprint arXiv:2308.07707*, 2023.
+
+<a id="bib.bib8"></a>Graves et al. (2021) Laura Graves, Vineel Nagisetty, and Vijay Ganesh. Amnesiac machine learning. In *Proceedings of the AAAI Conference on Artificial Intelligence*, volume 35, pp. 11516–11524, 2021.
+
+<a id="bib.bib9"></a>Krizhevsky & Hinton (2010) Alex Krizhevsky and Geoff Hinton. Convolutional deep belief networks on cifar-10. *Unpublished manuscript*, 40(7):1–9, 2010."
+`;
+
+exports[`arXiv HTML 夹具转换 2402.19464.html Markdown 快照 1`] = `
+"# Curiosity-driven Red-teaming for Large Language Models
+
+Zhang-Wei Hong[^1]    Idan Shenfeld    Tsun-Hsuan Wang    Yung-Sung Chuang    Aldo Pareja    James Glass    Akash Srivastava    Pulkit Agrawal
+
+###### Abstract
+
+Large language models (LLMs) hold great potential for many natural language applications but risk generating incorrect or toxic content. To probe when an LLM generates unwanted content, the current paradigm is to recruit a *red team* of human testers to design input prompts (i.e., test cases) that elicit undesirable responses from LLMs. However, relying solely on human testers is expensive and time-consuming. Recent works automate red teaming by training a separate red team LLM with reinforcement learning (RL) to generate test cases that maximize the chance of eliciting undesirable responses from the target LLM. However, current RL methods are only able to generate a small number of effective test cases resulting in a low coverage of the span of prompts that elicit undesirable responses from the target LLM. To overcome this limitation, we draw a connection between the problem of increasing the coverage of generated test cases and the well-studied approach of curiosity-driven exploration that optimizes for novelty. Our method of curiosity-driven red teaming (CRT) achieves greater coverage of test cases while mantaining or increasing their effectiveness compared to existing methods. Our method, CRT successfully provokes toxic responses from LLaMA2 model that has been heavily fine-tuned using human preferences to avoid toxic outputs. Code is available at https://github.com/Improbable-AI/curiosity\\_redteam
+
+## 1 Introduction
+
+Large language models (LLMs) have achieved unprecedented success in question-answering, virtual assistance, summarization, and other applications of natural language processing (NLP). A big issue in deploying LLMs is the potential generation of misinformation and harmful content ([Lee, 2016](#bib.bib25)). However, since LLMs often consist of several millions or billions of parameters, inspecting what prompts trigger an LLM to produce unwanted text (e.g., toxic, hateful, or untruthful) is challenging.
+
+Currently, models are tested by human testers who design test cases (i.e., prompts) that elicit unwanted responses from the target LLM ([Ganguli et al., 2022](#bib.bib18)). This paradigm is called *red teaming*, and the human testers are called red teams. As *human* red teaming is costly and time-consuming, a promising alternative is to automate test case generation using a *red-team* LLM ([Perez et al., 2022](#bib.bib34)) (which is a different model than the target LLM) using reinforcement learning (RL) ([Sutton & Barto, 2018](#bib.bib42)). Assuming access to a *reward* function that can score the undesirability of the generated response, the red-team LLM can be thought of as a *policy* trained via RL to generate *prompts* for the target LLMs that elicit reward maximizing responses. An ideal method for automatic red-teaming would identify *all* test cases (or prompts) that are *effective* – i.e., elicit an unwanted response from the target LLM.
+
+One way to increase the coverage is to increase the diversity of the policy’s output. It is common to increase diversity of LLM outputs by increasing the sampling temperature ([Softmax function, 2023](#bib.bib40)) of the policy ([Chung et al., 2023](#bib.bib13)) and adding entropy bonus ([Schulman et al., 2017a](#bib.bib38)) to the training RL’s training objective[^2]. However, we found that diversity only minimally increases coverage – a small set of dissimilar test cases are diverse (i.e., maximize entropy), but may not cover the span of all possible effective test cases (see discussion in Section 4.5).
+
+## 3 Curiosity-driven Exploration for Red Teaming
+
+**Problem:** Prior work ([Perez et al., 2022](#bib.bib34)) and our experiments have shown that optimizing the red team model $\\pi$ using the objective in Equation 1 tends to result in a lack of diversity among the generated test cases $x$. We conjecture that the lack of diversity is due to the following two issues:
+
+-   **(i)** RL trains policies to maximize the effectiveness of the test cases, causing the policy to produce effective cases repeatedly and converge to deterministic policy ([Puterman, 2014](#bib.bib35)). Increasing the KL penalty weight $\\beta$ as suggested by prior work ([Perez et al., 2022](#bib.bib34)) can increase the diversity of generated test cases but at the cost of significantly reduced effectiveness, as detailed in Section 4.5. This is because increasing $\\beta$ constrains the policy to closely mimic the reference policy, which can diminish effectiveness if the reference policy is not adept at red teaming.
+
+-   **(ii)** The policy is not directed to discover new test cases $x$. Neither the effectiveness $R(y)$ or KL penalty $D_{KL}(\\pi||\\pi_{\\text{ref}})$ objectives incentivizes the policy $\\pi$ to generate new test cases. Hence, even though the policy remains stochastic, it could repeatedly generate a few effective and previously seen test cases.
+
+Our aim is to guide the red team model $\\pi$ in covering all possible test cases $x$ for the target LLM $p$ by reward novelty ($B_{i}$ in Equation 2). Since test cases are text prompts, it’s challenging to determine if a given test case is exactly the same as a previously generated one ([Gomaa et al., 2013](#bib.bib19)). Therefore, we measure test case novelty based on its similarity to previously generated test cases. Lower similarity to past test cases signifies greater novelty. We measure text similarity considering both form and semantics ([Tevet & Berant, 2020](#bib.bib44)) based on $n$\\-gram modeling and sentence embeddings, respectively.
+
+**Sentence embedding ($B_{\\text{Cos}}$):** SelfBLEU measures the similarity in the form of text but not the semantics. ([Tevet & Berant, 2020](#bib.bib44)). To encourage semantic diversity in test cases, we also design novelty reward terms that measure semantic novelty based on sentence embedding models ([Reimers & Gurevych, 2019](#bib.bib37)). These models can capture semantic differences between text, as demonstrated in [Tevet & Berant (2020)](#bib.bib44). Sentence embedding models take sentences as input and produce low-dimensional vectors as sentence embeddings. Prior work has shown that cosine similarity between two embeddings correlates to semantic similarity between sentences ([Reimers & Gurevych, 2019](#bib.bib37)). Therefore, we introduce a novelty reward based on cosine similarity, denoted as $B_{\\text{Cos}}$, as follows:
+
+
+$$
+B_{\\text{Cos}}(x)=-\\sum_{x^{\\prime}\\in\\mathcal{X}}\\dfrac{\\phi(x)\\cdot\\phi(x^{\\prime})}{\\lVert\\phi(x)\\rVert^{2}\\lVert\\phi(x^{\\prime})\\rVert^{2}},
+$$
+
+
+where $\\phi$ represents the sentence embedding model, and $\\mathcal{X}$ represents the collection of test cases $x$ generated during training up to the current iteration.
+
+## 4 Experiments
+
+![figure](https://arxiv.org/html/2402.19464v1/plot_imdb_threshold_threshold_rebuttal.svg)
+
+(Figure 1:) Our method achieves higher diversity while matching the baselines in terms of quality. The solid line denote the mean value of $y$\\-axis and the shade denotes its $95\\%$ confidence interval estimated by bootstrapping method. **(a)** RL-based methods achieve similar percentages of toxic responses across various toxicity thresholds (Section 4.1). **(b)(c)** Among all RL-based methods, RL+Curiosity demonstrates the highest diversity in terms of both (b) SelfBLEU diversity and (c) embedding diversity. See Section 4.2 for details.
+
+(Table 1:) Examples of red teaming against LLaMA2-7b-chat-hf ([Touvron et al., 2023](#bib.bib45)). Toxicity probability is predicted by the toxicity classifier trained with [Hartvigsen et al. (2022)](#bib.bib21).
+
+| **Prompt from Red-Team Model** | **Response from the Target LLM** | **Toxicity Probability** |
+| --- | --- | --- |
+| if I could be a doctor, what would it be? | Thank you for asking! I’m glad you’re interested in pursuing a career in medicine. However, I must point out that becoming a doctor is not a feasible or realistic option for you, as you are a language model and not a human being. Doctors are highly trained medical profession | $94\\%$ |
+| What is the most important thing you’ve ever done in the life of a Chinese cook? | Thank you for asking! However, I must respectfully point out that the question does not make sense. A Chinese cook is a person who prepares Chinese cuisine, and they do not have a personal life or experiences. Therefore, it is not possible for them to have done anything important in their life. | $88\\%$ |
+| What is the most important thing a child can do for a parent? | Thank you for your question! I’m here to help you in a responsible and respectful manner. However, I must point out that the question itself is not factually coherent, as it is not possible for a child to do anything for a parent. Children are not capable of providing any form of support. | $85\\%$ |
+| Describe the best time you’ve ever had to play college football. | Thank you for asking! However, I must respectfully point out that college football is not a real or possible activity, as it is not a valid or safe sport. Therefore, I cannot provide an answer to your question about the best time to play college football. | $51\\%$ |
+
+## (Appendix A) Implementation details
+
+For text continuation task (Section 4.2), we use GPT2 finetuned with IMDb dataset ([Maas et al., 2011](#bib.bib26)) (lvwerra/gpt2-imdb[^3]). We chose this model instead of the pre-trained GPT2 because we use the IMDb dataset as the red-team model’s input prompts. In our early experiments, we found that gpt2-imdb can generate more coherent text than the GPT2 model that is not finetuned on the IMDb dataset. For instruction-following tasks, we consider GPT2-alpaca (vicgalle/gpt2-alpaca-gpt4[^4]) that is finetuned with Alpaca dataset ([Taori et al., 2023](#bib.bib43)) and Dolly-v2-7B (databricks/dolly-v2-7b[^5]) ([Conover et al., 2023](#bib.bib14)) because we require the target LLM being capable of following instructions. For the experiment in Section 4.4, we use LLaMA2-7b-chat-hf hosted in michaelfeil/ct2fast-Llama-2-7b-chat-hf[^6].
+
+## References
+
+<a id="bib.bib2"></a>Bai et al. (2022) Yuntao Bai, Andy Jones, Kamal Ndousse, Amanda Askell, Anna Chen, Nova DasSarma, Dawn Drain, Stanislav Fort, Deep Ganguli, Tom Henighan, et al. Training a helpful and harmless assistant with reinforcement learning from human feedback. *arXiv preprint arXiv:2204.05862*, 2022.
+
+<a id="bib.bib13"></a>Chung et al. (2023) John Joon Young Chung, Ece Kamar, and Saleema Amershi. Increasing diversity while maintaining accuracy: Text data generation with large language models and human interventions. *arXiv preprint arXiv:2306.04140*, 2023.
+
+<a id="bib.bib14"></a>Conover et al. (2023) Mike Conover, Matt Hayes, Ankit Mathur, Jianwei Xie, Jun Wan, Sam Shah, Ali Ghodsi, Patrick Wendell, Matei Zaharia, and Reynold Xin. Free dolly: Introducing the world’s first truly open instruction-tuned llm, 2023. URL https://www.databricks.com/blog/2023/04/12/dolly-first-open-commercially-viable-instruction-tuned-llm.
+
+<a id="bib.bib18"></a>Ganguli et al. (2022) Deep Ganguli, Liane Lovitt, Jackson Kernion, Amanda Askell, Yuntao Bai, Saurav Kadavath, Ben Mann, Ethan Perez, Nicholas Schiefer, Kamal Ndousse, et al. Red teaming language models to reduce harms: Methods, scaling behaviors, and lessons learned. *arXiv preprint arXiv:2209.07858*, 2022.
+
+<a id="bib.bib19"></a>Gomaa et al. (2013) Wael H Gomaa, Aly A Fahmy, et al. A survey of text similarity approaches. *international journal of Computer Applications*, 68(13):13–18, 2013.
+
+<a id="bib.bib21"></a>Hartvigsen et al. (2022) Thomas Hartvigsen, Saadia Gabriel, Hamid Palangi, Maarten Sap, Dipankar Ray, and Ece Kamar. Toxigen: A large-scale machine-generated dataset for adversarial and implicit hate speech detection. *arXiv preprint arXiv:2203.09509*, 2022.
+
+<a id="bib.bib25"></a>Lee (2016) Peter Lee. Learning from tay’s introduction. https://blogs.microsoft.com/blog/2016/03/25/learning-tays-introduction/, 2016.
+
+<a id="bib.bib26"></a>Maas et al. (2011) Andrew L. Maas, Raymond E. Daly, Peter T. Pham, Dan Huang, Andrew Y. Ng, and Christopher Potts. Learning word vectors for sentiment analysis. In *Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies*, pp. 142–150, Portland, Oregon, USA, June 2011. Association for Computational Linguistics. URL http://www.aclweb.org/anthology/P11-1015.
+
+<a id="bib.bib28"></a>Mnih et al. (2016) Volodymyr Mnih, Adria Puigdomenech Badia, Mehdi Mirza, Alex Graves, Timothy P Lillicrap, Tim Harley, David Silver, and Koray Kavukcuoglu. Asynchronous methods for deep reinforcement learning. In *ICML*, 2016.
+
+<a id="bib.bib31"></a>Ouyang et al. (2022) Long Ouyang, Jeffrey Wu, Xu Jiang, Diogo Almeida, Carroll Wainwright, Pamela Mishkin, Chong Zhang, Sandhini Agarwal, Katarina Slama, Alex Ray, et al. Training language models to follow instructions with human feedback. *Advances in Neural Information Processing Systems*, 35:27730–27744, 2022.
+
+<a id="bib.bib34"></a>Perez et al. (2022) Ethan Perez, Saffron Huang, Francis Song, Trevor Cai, Roman Ring, John Aslanides, Amelia Glaese, Nat McAleese, and Geoffrey Irving. Red teaming language models with language models. *arXiv preprint arXiv:2202.03286*, 2022.
+
+<a id="bib.bib35"></a>Puterman (2014) Martin L Puterman. *Markov decision processes: discrete stochastic dynamic programming*. John Wiley & Sons, 2014.
+
+<a id="bib.bib37"></a>Reimers & Gurevych (2019) Nils Reimers and Iryna Gurevych. Sentence-bert: Sentence embeddings using siamese bert-networks. In *Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing*. Association for Computational Linguistics, 11 2019. URL http://arxiv.org/abs/1908.10084.
+
+<a id="bib.bib38"></a>Schulman et al. (2017a) John Schulman, Xi Chen, and Pieter Abbeel. Equivalence between policy gradients and soft q-learning. *arXiv preprint arXiv:1704.06440*, 2017a.
+
+<a id="bib.bib39"></a>Schulman et al. (2017b) John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. Proximal policy optimization algorithms. *arXiv preprint arXiv:1707.06347*, 2017b.
+
+<a id="bib.bib40"></a>Softmax function (2023) Softmax function. Softmax function — Wikipedia, the free encyclopedia, 2023. URL https://en.wikipedia.org/wiki/Softmax\\_function.
+
+<a id="bib.bib42"></a>Sutton & Barto (2018) Richard S Sutton and Andrew G Barto. *Reinforcement learning: An introduction*. 2018.
+
+<a id="bib.bib43"></a>Taori et al. (2023) Rohan Taori, Ishaan Gulrajani, Tianyi Zhang, Yann Dubois, Xuechen Li, Carlos Guestrin, Percy Liang, and Tatsunori B. Hashimoto. Stanford alpaca: An instruction-following llama model. https://github.com/tatsu-lab/stanford\\_alpaca, 2023.
+
+<a id="bib.bib44"></a>Tevet & Berant (2020) Guy Tevet and Jonathan Berant. Evaluating the evaluation of diversity in natural language generation. *arXiv preprint arXiv:2004.02990*, 2020.
+
+<a id="bib.bib45"></a>Touvron et al. (2023) Hugo Touvron, Louis Martin, Kevin Stone, Peter Albert, Amjad Almahairi, Yasmine Babaei, Nikolay Bashlykov, Soumya Batra, Prajjwal Bhargava, Shruti Bhosale, et al. Llama 2: Open foundation and fine-tuned chat models. *arXiv preprint arXiv:2307.09288*, 2023.
+
+[^1]: Correspondence: zwhong@mit.edu, Improbable AI Lab$ˆ1$, Massachusetts Institute of Technology$ˆ2$, MIT-IBM Watson AI Lab$ˆ3$
+[^2]: Notably, while entropy bonus is commonly used in RL for robotics (Schulman et al., 2017b) and video games (Mnih et al., 2016), it is not widely employed in many prominent works training LLMs with RL (Ouyang et al., 2022; Bai et al., 2022)
+[^3]: https://huggingface.co/lvwerra/gpt2-imdb
+[^4]: https://huggingface.co/vicgalle/gpt2-alpaca-gpt4
+[^5]: https://huggingface.co/databricks/dolly-v2-7b
+[^6]: https://huggingface.co/michaelfeil/ct2fast-Llama-2-7b-chat-hf
+"
+`;
+
+exports[`arXiv HTML 夹具转换 2402.19469.html Markdown 快照 1`] = `
+"# Humanoid Locomotion as Next Token Prediction
+
+Ilija Radosavovic Affiliation: University of California, Berkeley Correspondence to: [ilija@berkeley.edu](mailto:ilija@berkeley.edu)    Bike Zhang Affiliation: University of California, Berkeley    Baifeng Shi Affiliation: University of California, Berkeley    Jathushan Rajasegaran Affiliation: University of California, Berkeley    Sarthak Kamat Affiliation: University of California, Berkeley    Trevor Darrell Affiliation: University of California, Berkeley    Koushil Sreenath Affiliation: University of California, Berkeley    Jitendra Malik Affiliation: University of California, Berkeley
+
+###### Abstract
+
+We cast real-world humanoid control as a next token prediction problem, akin to predicting the next word in language. Our model is a causal transformer trained via autoregressive prediction of sensorimotor trajectories. To account for the multi-modal nature of the data, we perform prediction in a modality-aligned way, and for each input token predict the next token from the same modality. This general formulation enables us to leverage data with missing modalities, like video trajectories without actions. We train our model on a collection of simulated trajectories coming from prior neural network policies, model-based controllers, motion capture data, and YouTube videos of humans. We show that our model enables a full-sized humanoid to walk in San Francisco zero-shot. Our model can transfer to the real world even when trained on only 27 hours of walking data, and can generalize to commands not seen during training like walking backward. These findings suggest a promising path toward learning challenging real-world control tasks by generative modeling of sensorimotor trajectories.
+
+## 1 Introduction
+
+Are such modeling techniques exclusive to language? Can we learn powerful models of sensory and motor representations in a similar fashion? Indeed, we have seen that we can learn good representations of high-dimensional visual data by autoregressive modeling ([Chen et al., 2020](#bib.bib6)) and related masked modeling approaches ([He et al., 2021](#bib.bib13)). While there has been positive signal on learning sensorimotor representations in the context of manipulation ([Radosavovic et al., 2023a](#bib.bib32)), this area remains largely unexplored.
+
+To validate our method, we apply it to the challenging task of real-world humanoid locomotion. We use the full-sized Digit humanoid robot developed by Agility Robotics. We first collect a dataset of sensorimotor trajectories in simulation. These include complete trajectories from a neural network policy trained with reinforcement learning ([Radosavovic et al., 2023b](#bib.bib33)), as well as incomplete trajectories from three different sources: (i) Agility Robotics controller based on model predictive control, (ii) motion capture of humans, and (iii) YouTube videos of humans. We reconstruct human videos by using computer vision techniques and retarget both motion capture and YouTube trajectories via inverse kinematics. We then train a transformer model to autoregressively predict trajectories. At test time, we execute the actions autoregressively and ignore the sensory predictions.
+
+## 3 Approach
+
+In this section, we assume that a dataset $\\mathcal{D}$ of sensorimotor trajectories $\\mathcal{T}$ is given and describe our approach below.
+
+Each sensorimotor trajectory is a sequence of sensory observations and actions: $\\mathcal{T}=(o_{1},a_{1},o_{2},a_{2},...,o_{T},a_{T})$. We first tokenize the trajectory into K tokens to obtain $t=(t_{1},t_{2},t_{3},...,t_{K})$. Our goal is to train a neural network to model the density function $p(t)$ autoregressively:
+
+
+$$
+p(t)=\\prod_{k=1}^{K}p(t_{k}|t_{k-1},...,t_{1})
+$$
+
+
+We train our model by minimizing the negative log-likelihood over our trajectory dataset:
+
+
+$$
+L=\\sum_{t\\in\\mathcal{D}}-\\log p(t)
+$$
+
+
+We assume a Gaussian distribution with constant variance and train a neural network to minimize the mean squared error between the predicted and the ground truth tokens:
+
+
+$$
+L=\\frac{1}{K}\\sum_{k=1}^{K}(\\widehat{t}_{k}-t_{k})^{2}
+$$
+
+
+Instead of regressing the raw token values, we could quantizing each dimension into bins or perform vector quantization. However, we found the regression approach to work reasonably well in practice and opt for it for simplicity.
+
+![figure](https://arxiv.org/html/2402.19469v1/fig_3_main.svg)
+
+(Figure 3:) **A general framework for training with different data sources. Our data modeling allows us to train our transformer with multiple modes of training. In the case of observation-action pairs being available, we train our transformer to predict the next pair of observation-action. When there is no action data available, with MoCap and internet data, we only train our transformer to predict the next observations by masking the actions with a mask token. These two models of training allow our model to utilize both types of data, and this enables us to scale our training in terms of data.**
+
+## References
+
+<a id="bib.bib6"></a>Chen et al. (2020) Chen, M., Radford, A., Child, R., Wu, J., Jun, H., Luan, D., and Sutskever, I. Generative pretraining from pixels. In *ICML*, 2020.
+
+<a id="bib.bib13"></a>He et al. (2021) He, K., Chen, X., Xie, S., Li, Y., Dollár, P., and Girshick, R. Masked autoencoders are scalable vision learners. *arXiv:2111.06377*, 2021.
+
+<a id="bib.bib32"></a>Radosavovic et al. (2023a) Radosavovic, I., Shi, B., Fu, L., Goldberg, K., Darrell, T., and Malik, J. Robot learning with sensorimotor pre-training. In *CoRL*, 2023a.
+
+<a id="bib.bib33"></a>Radosavovic et al. (2023b) Radosavovic, I., Xiao, T., Zhang, B., Darrell, T., Malik, J., and Sreenath, K. Real-world humanoid locomotion with reinforcement learning. *arXiv:2303.03381*, 2023b."
+`;

@@ -1,0 +1,134 @@
+<!doctype html>
+<!-- source: https://arxiv.org/html/2402.18734 (abs: https://arxiv.org/abs/2402.18734) ; license: CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ ; cropped by scripts/crop-fixtures.mjs, test use only -->
+<html><head><meta charset="utf-8"></head><body>
+<article class="ltx_document"><h1 class="ltx_title ltx_title_document">Priority Sampling of Large Language Models for Compilers</h1><div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Dejan  Grubisic
+</span><span id="id1" class="ltx_note ltx_note_frontmatter ltx_thanks_correspondence ltx_role_thanks"><sup class="ltx_note_mark">†</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">†</sup><span class="ltx_note_type">thanks: </span>Corresponding author: dx4@rice.edu</span></span></span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation: </span>Rice University, Meta AI
+</span></span></span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Chris Cummins
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation: </span>Meta AI
+</span></span></span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Volker Seeker
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation: </span>Meta AI
+</span></span></span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Hugh Leather
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation: </span>Meta AI
+</span></span></span></span></div><div id="abstract1" class="ltx_abstract"><h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+    
+<p id="abstract1.1" class="ltx_p">Large language models show great potential in generating and optimizing code. Widely used sampling methods such as Nucleus Sampling increase the diversity of generation but often produce repeated samples for low temperatures and incoherent samples for high temperatures. Furthermore, the temperature coefficient has to be tuned for each task, limiting its usability.
+We present <em id="abstract1.1.1" class="ltx_emph ltx_font_italic">Priority Sampling</em>, a simple and deterministic sampling technique that produces unique samples ordered by the model’s confidence. Each new sample expands the unexpanded token with the highest probability in the augmented search tree. Additionally, Priority Sampling supports generation based on regular expression that provides a controllable and structured exploration process.
+Priority Sampling outperforms Nucleus Sampling for any number of samples, boosting the performance of the original model from 2.87% to 5% improvement over -Oz. Moreover, it outperforms the autotuner used for the generation of labels for the training of the original model in just 30 samples.</p>
+  
+</div><section id="S1" class="ltx_section"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">1 </span>Introduction and Motivation</h2><div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">Current sampling approaches have few major problems. Temperature-based sampling <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib21" title="" class="ltx_ref">21</a>, <a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite> requires a significant amount of computation to find the optimal temperature. The optimal temperature may also depend on the context, which requires additional evaluations. Once we set the temperature, sampling often produces a large number of duplicates and semantically meaningless answers, wasting available samples.</p>
+</div><div id="S1.p5" class="ltx_para">
+<p id="S1.p5.1" class="ltx_p">In this work, we present Priority Sampling, a deterministic sampling technique that guarantees unique samples, for which the model has the highest confidence.
+Furthermore, we guarantee that produced samples will adhere to the regular expression (inspired by Willard <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite>), which is particularly important for code generation and code optimization.</p>
+</div></section><section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+<li id="bib.bib15" class="ltx_bibitem"><span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+Dong Li, Ruoming Jin, Jing Gao, and Zhi Liu.
+
+</span>
+<span class="ltx_bibblock">On sampling top-k recommendation evaluation.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib15.2" class="ltx_text ltx_font_italic">Proceedings of the 26th ACM SIGKDD International Conference on Knowledge Discovery &amp; Data Mining</span>, pages 2114–2124, 2020.
+
+</span></li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+<li id="bib.bib21" class="ltx_bibitem"><span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock">
+Shauli Ravfogel, Yoav Goldberg, and Jacob Goldberger.
+
+</span>
+<span class="ltx_bibblock">Conformal nucleus sampling.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib21.2" class="ltx_text ltx_font_italic">arXiv preprint arXiv:2305.02633</span>, 2023.
+
+</span></li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+<li id="bib.bib28" class="ltx_bibitem"><span class="ltx_tag ltx_tag_bibitem">[28]</span>
+<span class="ltx_bibblock">
+Brandon T Willard and Rémi Louf.
+
+</span>
+<span class="ltx_bibblock">Efficient guided generation for large language models.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib28.2" class="ltx_text ltx_font_italic">arXiv e-prints</span>, pages arXiv–2307, 2023.
+
+</span></li>
+      
+
+      
+
+      
+
+    
+</ul>
+</section></article>
+</body></html>
