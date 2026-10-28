@@ -221,6 +221,17 @@ export function cleanLatexFormula(latex) {
   result = result.replace(/\\mbox\s*\{([^}]*)\}/g, '$1'); // \mbox{text} -> text
   result = result.replace(/\\text\s*\{([^}]*)\}/g, '\\text{$1}'); // 保留 \text
 
+  // 6b. KaTeX 不支持的文本命令 / 交叉引用
+  result = result.replace(/\\textsc\b/g, '\\text');
+  result = result.replace(/~?\\(?:eqref|ref|autoref|cref|Cref|label)\s*\{[^}]*\}/g, '');
+
+  // LaTeXML 输出的 \\begin{array}[]{c} 空可选参数 KaTeX 不认
+  result = result.replace(/\\begin\{(array|tabular)\}\s*\[\s*\]/g, '\\begin{$1}');
+
+  // 6c. \text{3$\times$3} 这类文本组里的行内 $...$ 会破坏 Markdown 公式定界符，拆成 }…\text{
+  result = splitDollarsInTextGroups(result);
+  result = result.replace(/\\text(?:rm|bf|it|tt|sf)?\s*\{\s*\}/g, '');
+
   // 7. 清理多余空格和空大括号
   result = result.replace(/\{\s*\}/g, ''); // 移除空大括号 {}
   result = result.replace(/\s{2,}/g, ' ').trim();
@@ -252,4 +263,32 @@ export function restoreMathPlaceholders(markdown, mathMap) {
   });
 
   return result;
+}
+
+const TEXT_GROUP_RE = /\\(?:text|textrm|textbf|textit|texttt|textsf|mbox)\s*\{/g;
+
+function splitDollarsInTextGroups(latex) {
+  if (!latex.includes('$')) return latex;
+  let out = '';
+  let last = 0;
+  TEXT_GROUP_RE.lastIndex = 0;
+  let match;
+  while ((match = TEXT_GROUP_RE.exec(latex))) {
+    const cmd = match[0].replace(/\s*\{$/, '');
+    const start = match.index + match[0].length;
+    let depth = 1;
+    let i = start;
+    for (; i < latex.length && depth > 0; i += 1) {
+      if (latex[i] === '\\') { i += 1; continue; }
+      if (latex[i] === '{') depth += 1;
+      else if (latex[i] === '}') depth -= 1;
+    }
+    if (depth !== 0) break;
+    const body = latex.slice(start, i - 1);
+    const fixed = body.replace(/\$([^$]*)\$/g, (_, m) => `}${m}${cmd}{`);
+    out += latex.slice(last, start) + fixed + '}';
+    last = i;
+    TEXT_GROUP_RE.lastIndex = i;
+  }
+  return out + latex.slice(last);
 }
