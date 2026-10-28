@@ -2,7 +2,7 @@
 
 import { parseHTML } from 'linkedom';
 import logger from '@utils/logger';
-import { isNetworkError } from '@utils/network-error';
+import { isNetworkError, offlineError } from '@utils/network-error';
 import { HTML_PAPER_SOURCES, loadHtmlPaper, selectConversionSource } from '../html-paper';
 
 class Ar5ivConverter {
@@ -150,10 +150,13 @@ class Ar5ivConverter {
     let lastError = new Error('HTML version not available');
 
     let networkFailures = 0;
+    let networkError = null;
     for (const source of HTML_PAPER_SOURCES) {
       const paper = await loadHtmlPaper(source, arxivId, undefined, (error) => {
         if (isNetworkError(error)) {
           networkFailures += 1;
+          networkError = error;
+        } else {
           lastError = error;
         }
       });
@@ -194,8 +197,9 @@ class Ar5ivConverter {
     // 所有来源都是网络层失败：交给上层显示"网络连接失败"，而不是退回 PDF
     if (networkFailures === HTML_PAPER_SOURCES.length) {
       logger.warn(`HTML conversion failed for ${arxivId}: network unavailable`);
-      throw lastError;
+      throw offlineError(networkError);
     }
+    // 部分来源可达（如 arXiv HTML 404、ar5iv 连接失败）：不是断网，抛普通错误让上层退回 PDF
     logger.error(`HTML conversion failed for ${arxivId}:`, lastError);
     throw lastError;
   }

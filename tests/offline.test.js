@@ -12,11 +12,42 @@ describe('离线 / 网络错误', () => {
     expect(isNetworkError(new Error('Cannot find main content'), { onLine: true })).toBe(false);
   });
 
+  test('收窄判断：带 fetch 字样的普通 TypeError、HTTP 错误不算断网', () => {
+    const on = { onLine: true };
+    expect(isNetworkError(new TypeError("Cannot read properties of undefined (reading 'fetch')"), on)).toBe(false);
+    expect(isNetworkError(new TypeError('fetchImpl is not a function'), on)).toBe(false);
+    expect(isNetworkError(new Error('API returned 404'), on)).toBe(false);
+    expect(isNetworkError(new Error('HTML version not available'), on)).toBe(false);
+    expect(isNetworkError(new TypeError('NetworkError when attempting to fetch resource.'), on)).toBe(true);
+    expect(isNetworkError(new Error('net::ERR_NAME_NOT_RESOLVED'), on)).toBe(true);
+    expect(isNetworkError(Object.assign(new Error('x'), { code: 'NETWORK_OFFLINE' }), on)).toBe(true);
+  });
+
+  test('部分来源 404 + 部分来源网络错误：不报断网，交给上层退回 PDF', async () => {
+    const original = global.fetch;
+    const originalNav = global.navigator;
+    global.fetch = jest.fn(async (url) => {
+      if (String(url).includes('ar5iv')) throw new TypeError('Failed to fetch');
+      return { ok: false, status: 404, url: String(url), headers: { get: () => 'text/html' }, text: async () => 'Not Found' };
+    });
+    try {
+      const err = await converter.convert('1706.03762', null).catch((e) => e);
+      expect(err).toBeInstanceOf(Error);
+      expect(isNetworkError(err, { onLine: true })).toBe(false);
+      expect(err.code).toBeUndefined();
+    } finally {
+      global.fetch = original;
+      global.navigator = originalNav;
+    }
+  });
+
   test('所有 HTML 来源都断网时抛出网络错误，而不是“版本不存在”', async () => {
     const original = global.fetch;
     global.fetch = jest.fn(async () => { throw new TypeError('Failed to fetch'); });
     try {
-      await expect(converter.convert('1706.03762', null)).rejects.toThrow('Failed to fetch');
+      const err = await converter.convert('1706.03762', null).catch((e) => e);
+      expect(err.message).toBe('Failed to fetch');
+      expect(err.code).toBe('NETWORK_OFFLINE');
     } finally {
       global.fetch = original;
     }
