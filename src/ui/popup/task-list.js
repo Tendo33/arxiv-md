@@ -55,7 +55,7 @@ export function createTaskCard(task) {
 
   const title = paperInfo.title || paperInfo.arxivId;
   const truncatedTitle =
-    title.length > 50 ? title.substring(0, 50) + '...' : title;
+    title.length > 50 ? title.substring(0, 50) + '…' : title;
   const timeAgo = formatTimeAgo(createdAt, currentLang, translations[currentLang].popup_time_just_now);
 
   // 状态显示
@@ -165,6 +165,6 @@ export function getTaskActions(task) {
     `;
   }
 
-  return `<span class="action-placeholder">${t.popup_status_processing}...</span>`;
+  return `<span class="action-placeholder">${t.popup_status_processing}…</span>`;
 }
 

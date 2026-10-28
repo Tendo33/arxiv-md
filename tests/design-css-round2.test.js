@@ -45,3 +45,9 @@ describe('Round 2 设计验收建议（S 级）', () => {
     }
   });
 });
+
+test('任务卡占位与标题截断用 … 而非 ASCII ...', () => {
+  for (const f of ['src/ui/popup/task-list.js', 'src/background/mineru-task-runner.js']) {
+    expect(read(f)).not.toMatch(/['"`]\.\.\.|\}\.\.\.</);
+  }
+});

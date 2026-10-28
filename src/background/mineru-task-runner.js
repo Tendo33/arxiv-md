@@ -123,7 +123,7 @@ export async function processMinerUTaskInBackground(taskId) {
  */
 function showTaskNotification(task, status, detail = '') {
   const title = task.paperInfo.title || task.paperInfo.arxivId;
-  const truncatedTitle = title.length > 40 ? title.substring(0, 40) + '...' : title;
+  const truncatedTitle = title.length > 40 ? title.substring(0, 40) + '…' : title;
 
   let notificationConfig = {
     type: 'basic',
