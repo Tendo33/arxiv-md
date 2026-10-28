@@ -20,7 +20,7 @@ export const translations = {
     popup_action_download: 'Download',
     popup_action_copy: 'Copy link',
     popup_action_retry: 'Retry',
-    popup_status_awaiting: 'Needs confirmation',
+    popup_status_awaiting: 'Awaiting',
     popup_action_consent: 'Confirm',
     popup_confirm_send_title: 'Send to {provider} for parsing?',
     popup_confirm_send: 'The PDF link for “{title}” will be sent to {provider}. This link is not on arXiv, so it needs your confirmation before it is sent.',
