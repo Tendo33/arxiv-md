@@ -48,6 +48,15 @@
     },
     "default_title": "arXiv to Markdown"
   },
+  "commands": {
+    "convert-current-paper": {
+      "suggested_key": {
+        "default": "Alt+Shift+M",
+        "mac": "Alt+Shift+M"
+      },
+      "description": "Convert the current arXiv paper to Markdown"
+    }
+  },
   "options_ui": {
     "page": "settings.html",
     "open_in_tab": true
