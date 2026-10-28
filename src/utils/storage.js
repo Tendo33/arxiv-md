@@ -47,28 +47,43 @@ class StorageManager {
   // === 业务特定方法 ===
 
   /**
-   * 获取 MinerU Token（R4-05 起只存 storage.local 的 providerKeys.mineru）
+   * R4-06：所有 provider 的 Key 只存 storage.local.providerKeys，绝不进 sync
+   * @param {string} providerId
    * @returns {Promise<string|null>}
    */
-  async getMinerUToken() {
+  async getProviderKey(providerId) {
     try {
       const { [PROVIDER_KEYS_KEY]: keys = {} } = await chrome.storage.local.get(PROVIDER_KEYS_KEY);
-      return keys.mineru || null;
+      return keys[providerId] || null;
     } catch (error) {
       logger.error('Storage get error:', error);
       return null;
     }
   }
 
-  /**
-   * 设置 MinerU Token（写 local，不进 sync）
-   * @param {string} token
-   */
-  async setMinerUToken(token) {
+  /** @param {string} providerId @param {string} key 空值即删除 */
+  async setProviderKey(providerId, key) {
     const { [PROVIDER_KEYS_KEY]: keys = {} } = await chrome.storage.local.get(PROVIDER_KEYS_KEY);
     const next = { ...keys };
-    if (token) next.mineru = token; else delete next.mineru;
+    const v = typeof key === 'string' ? key.trim() : '';
+    if (v) next[providerId] = v; else delete next[providerId];
     await chrome.storage.local.set({ [PROVIDER_KEYS_KEY]: next });
+  }
+
+  /** 清除全部 Key（local），同时兜底删掉 sync 里可能残留的旧 mineruToken */
+  async clearProviderKeys() {
+    await chrome.storage.local.remove(PROVIDER_KEYS_KEY);
+    await chrome.storage.sync.remove(STORAGE_KEYS.MINERU_TOKEN).catch(() => {});
+  }
+
+  /** 兼容旧调用：等价于 getProviderKey('mineru') */
+  async getMinerUToken() {
+    return this.getProviderKey('mineru');
+  }
+
+  /** 兼容旧调用：等价于 setProviderKey('mineru', token) */
+  async setMinerUToken(token) {
+    await this.setProviderKey('mineru', token);
   }
 
   /**

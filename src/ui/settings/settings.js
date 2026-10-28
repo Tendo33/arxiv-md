@@ -181,9 +181,9 @@ async function resetSettings() {
       `input[name="conversionMode"][value="${CONVERSION_MODE.FAST}"]`,
     ).checked = true;
 
-    // 清空 Token（即时保存后，清空输入框也要清掉已保存的 Token）
+    // R4-06：清除全部 Key（只在 storage.local）
     document.getElementById('mineruToken').value = '';
-    await storage.setMinerUToken('');
+    await storage.clearProviderKeys();
     document.getElementById('tokenStatus').style.display = 'none';
 
     // 重置高级选项
