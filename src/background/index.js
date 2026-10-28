@@ -10,7 +10,7 @@ import { arxivApiUrl } from '@core/metadata-extractor';
 import { deletedTaskGuard, processMinerUTaskInBackground } from './mineru-task-runner';
 import { KEEP_ALIVE_ALARM, syncKeepAlive } from './keep-alive';
 import { isTrustedArxivSender, isValidArxivId, triggerConversionInActiveTab } from './message-guards';
-import { createActionBadge, handleShortcutResult, conversionSucceeded } from './action-badge';
+import { createActionBadge, handleShortcutResult, conversionBadgeState } from './action-badge';
 import { createContextMenus } from './context-menu';
 
 const actionBadge = createActionBadge(chrome.action);
@@ -155,7 +155,7 @@ async function handleConvertPaper(paperInfo, sendResponse, sender) {
     }
     // H-01：MainConverter 多数失败返回 { success:false } 而不抛异常，按结果决定「✓」还是「!」
     if (result && result.duplicate) actionBadge.hold(tabId);
-    else actionBadge.finish(tabId, conversionSucceeded(result));
+    else actionBadge.finish(tabId, conversionBadgeState(result));
   } catch (error) {
     logger.error('Conversion failed:', error);
     actionBadge.finish(tabId, false);

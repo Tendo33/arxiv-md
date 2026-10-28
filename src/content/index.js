@@ -257,6 +257,7 @@ async function handleConversionTrigger(type = 'markdown') {
           showResult({
             filename: response.data.filename,
             markdown: response.data.markdown || '',
+            integrity: response.data.incomplete ? response.data.integrity : null,
           });
         } else {
           showSuccess(t.content_progress_completed);

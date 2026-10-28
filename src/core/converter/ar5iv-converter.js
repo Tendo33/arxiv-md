@@ -3,6 +3,7 @@
 import { parseHTML } from 'linkedom';
 import logger from '@utils/logger';
 import { isNetworkError, offlineError } from '@utils/network-error';
+import { measureSource, measureMarkdown, assessIntegrity } from './integrity';
 import { HTML_PAPER_SOURCES, loadHtmlPaper, selectConversionSource } from '../html-paper';
 
 class Ar5ivConverter {
@@ -51,6 +52,8 @@ class Ar5ivConverter {
   cleanHtml(html) {
     try {
       const { document } = parseHTML(html);
+      // AF3-01：在删节点之前统计页面章节和正文量，供导出后核对完整性
+      const integritySource = measureSource(document);
 
       // 提取标题
       let title = '';
@@ -126,7 +129,7 @@ class Ar5ivConverter {
         length: content.length,
       });
 
-      return { title, content, excerpt };
+      return { title, content, excerpt, integritySource };
     } catch (error) {
       logger.error('HTML cleaning failed:', error);
       throw error;
@@ -171,6 +174,10 @@ class Ar5ivConverter {
       try {
         const cleaned = this.cleanHtml(paper.html);
         const markdown = await this.toMarkdown(cleaned.content, tabId, paper.finalUrl);
+        const integrity = assessIntegrity(cleaned.integritySource, measureMarkdown(markdown));
+        if (!integrity.complete) {
+          logger.warn(`HTML export may be incomplete for ${arxivId}:`, integrity);
+        }
         const markdownWithMeta = includeMetadata
           ? this._addMetadata(markdown, {
             title: cleaned.title,
@@ -187,6 +194,7 @@ class Ar5ivConverter {
           markdown: markdownWithMeta,
           title: cleaned.title || `arXiv ${arxivId}`,
           excerpt: cleaned.excerpt,
+          integrity,
           metadata: {
             arxivId: arxivId,
             source: paper.source,

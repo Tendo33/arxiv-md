@@ -84,9 +84,13 @@ class MainConverter {
           stage: 'completed',
           progress: 100,
         });
+      // AF3-01：导出明显少于页面时仍然保存，但通知、徽标和页内提示都改为「可能不完整」
+      const incomplete = !!(result.integrity && result.integrity.complete === false);
       showNotification(
-        '✅ 转换完成',
-        `已保存：${filename}\n方式：${sourceLabel}`,
+        incomplete ? '⚠️ 导出可能不完整' : '✅ 转换完成',
+        incomplete
+          ? `已保存：${filename}\n页面约 ${result.integrity.source.headings} 个章节，只导出了 ${result.integrity.exported.headings} 个，请核对`
+          : `已保存：${filename}\n方式：${sourceLabel}`,
         'basic',
       );
       logger.info('Tier 1 success:', filename);
@@ -96,6 +100,13 @@ class MainConverter {
         tier: CONVERSION_TIER.AR5IV_LOCAL,
         filename,
         markdown: result.markdown,
+        ...(incomplete ? {
+          incomplete: true,
+          integrity: {
+            expectedSections: result.integrity.source.headings,
+            exportedSections: result.integrity.exported.headings,
+          },
+        } : {}),
       };
     } catch (ar5ivError) {
       logger.warn('Tier 1 failed:', ar5ivError.message);

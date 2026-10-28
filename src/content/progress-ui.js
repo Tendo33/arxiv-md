@@ -38,8 +38,8 @@ export function setProgressState({ text, percent = null, detail = '', state = ''
 
   progressIndicator.style.display = 'flex';
   removeResultActions(progressIndicator);
-  progressIndicator.classList.remove('error', 'success');
-  if (state === 'error' || state === 'success') {
+  progressIndicator.classList.remove('error', 'success', 'warning');
+  if (state === 'error' || state === 'success' || state === 'warning') {
     progressIndicator.classList.add(state);
   }
   // 读屏：进度/成功用 polite 播报，错误用 alert 立即播报
@@ -182,13 +182,20 @@ export async function copyTextToClipboard(text, doc = document) {
  * 转换完成后的结果态：保留在页面上直到用户关闭或开始下一次转换，
  * 显示文件名，有 Markdown 时提供“复制 Markdown”按钮。
  */
-export function showResult({ filename = '', markdown = '' } = {}) {
-  notifyOutcome({ ok: true, filename });
+export function showResult({ filename = '', markdown = '', integrity = null } = {}) {
+  notifyOutcome({ ok: true, filename, incomplete: !!integrity });
+  const saved = filename ? t.content_result_saved.replace('{filename}', filename) : '';
+  // AF3-01：导出明显少于页面——文件照常保存，提示改为警告并给出节数
+  const warning = integrity
+    ? t.content_result_incomplete
+      .replace('{expected}', String(integrity.expectedSections))
+      .replace('{actual}', String(integrity.exportedSections))
+    : '';
   setProgressState({
-    text: t.content_progress_completed,
-    detail: filename ? t.content_result_saved.replace('{filename}', filename) : '',
+    text: integrity ? t.content_progress_incomplete : t.content_progress_completed,
+    detail: [warning, saved].filter(Boolean).join(' '),
     percent: null,
-    state: 'success',
+    state: integrity ? 'warning' : 'success',
   });
 
   const progressIndicator = document.querySelector('.arxiv-md-progress');

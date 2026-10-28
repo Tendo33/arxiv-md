@@ -6,6 +6,7 @@ export const PAGE_BUTTON_STYLES = `
       --amd-surface: #ffffff; --amd-surface-2: #f1f3f5; --amd-border: #dde1e6; --amd-border-strong: #c3c9d1;
       --amd-text: #1b1f24; --amd-text-2: #5b6270; --amd-text-disabled: #8b929c;
       --amd-success: #0f7a3d; --amd-success-bg: #e7f5ec; --amd-danger: #b42318; --amd-danger-bg: #fdecea;
+      --amd-warning: #92400e; --amd-warning-bg: #fef3c7;
       --amd-focus: #b31b1b;
       display: flex;
       gap: 12px;
@@ -20,6 +21,7 @@ export const PAGE_BUTTON_STYLES = `
         --amd-surface: #1b1d22; --amd-surface-2: #24272d; --amd-border: #33373e; --amd-border-strong: #4a4f57;
         --amd-text: #e8eaed; --amd-text-2: #a1a7b3; --amd-text-disabled: #6b717b;
         --amd-success: #4ade80; --amd-success-bg: #13301f; --amd-danger: #f87171; --amd-danger-bg: #3a1717;
+        --amd-warning: #fbbf24; --amd-warning-bg: #33270a;
         --amd-focus: #f87171;
     }
 
@@ -120,6 +122,12 @@ export const PAGE_BUTTON_STYLES = `
       color: var(--amd-success);
     }
 
+    .arxiv-md-progress.warning {
+      background: var(--amd-warning-bg);
+      border-color: var(--amd-warning);
+      color: var(--amd-warning);
+    }
+
     .progress-row {
       display: flex;
       align-items: center;
@@ -132,7 +140,8 @@ export const PAGE_BUTTON_STYLES = `
       color: var(--amd-text-2);
     }
     .arxiv-md-progress.error .progress-detail,
-    .arxiv-md-progress.success .progress-detail { color: var(--amd-text); }
+    .arxiv-md-progress.success .progress-detail,
+    .arxiv-md-progress.warning .progress-detail { color: var(--amd-text); }
 
     .arxiv-md-result-actions {
       display: flex;

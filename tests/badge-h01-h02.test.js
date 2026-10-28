@@ -26,7 +26,7 @@ describe('H-01 conversionSucceeded', () => {
 describe('H-01 background/index.js 接线：CONVERT_PAPER 返回 success:false → 「!」', () => {
   const src = fs.readFileSync(path.join(__dirname, '../src/background/index.js'), 'utf8');
   test('handleConvertPaper 按 result 决定徽标，不再固定 finish(tabId, true)', () => {
-    expect(src).toMatch(/if \(result && result\.duplicate\) actionBadge\.hold\(tabId\);\s*else actionBadge\.finish\(tabId, conversionSucceeded\(result\)\)/);
+    expect(src).toMatch(/if \(result && result\.duplicate\) actionBadge\.hold\(tabId\);\s*else actionBadge\.finish\(tabId, conversionBadgeState\(result\)\)/);
     expect(src).not.toMatch(/actionBadge\.finish\(tabId, true\)/);
   });
   test('端到端：SW 侧 fetch 失败 → 转换返回失败 → 徽标「!」，6000 ms 后清除', async () => {

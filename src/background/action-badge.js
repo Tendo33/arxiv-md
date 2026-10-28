@@ -6,8 +6,10 @@ export const BADGE = {
   running: { text: '…', color: '#1d4ed8' },
   success: { text: '✓', color: '#15803d' },
   error: { text: '!', color: '#b91c1c' },
+  // AF3-01：已下载但可能不完整
+  warning: { text: '⚠', color: '#b45309' },
 };
-export const BADGE_CLEAR_MS = { running: 120000, success: 4000, error: 6000 };
+export const BADGE_CLEAR_MS = { running: 120000, success: 4000, error: 6000, warning: 6000 };
 
 // A2-01：Chrome 里 setTimeout/clearTimeout 脱离 globalThis 调用会抛 "Illegal invocation"，
 // 所以默认实现用箭头函数包一层，调用时 this 仍是全局对象。
@@ -67,7 +69,8 @@ export function createActionBadge(actionApi, timers = defaultTimers) {
     finish(tabId, ok) {
       if (!shortcutTabs.has(tabId)) return false;
       shortcutTabs.delete(tabId);
-      show(tabId, ok ? 'success' : 'error');
+      // ok 也可以直接传状态名（AF3-01：'warning'）
+      show(tabId, typeof ok === 'string' && BADGE[ok] ? ok : (ok ? 'success' : 'error'));
       return true;
     },
     /**
@@ -128,4 +131,10 @@ export function handleShortcutResult(badge, message, sender, runtimeId) {
 export function conversionSucceeded(result) {
   if (!result || typeof result !== 'object' || result.duplicate) return false;
   return result.success !== false;
+}
+
+/** AF3-01：转换结果对应的徽标状态；成功但可能不完整时是 'warning'，不显示 ✓ */
+export function conversionBadgeState(result) {
+  if (!conversionSucceeded(result)) return 'error';
+  return result.incomplete ? 'warning' : 'success';
 }
