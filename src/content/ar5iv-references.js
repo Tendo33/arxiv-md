@@ -67,27 +67,70 @@ export function preprocessNotes(doc) {
   const notes = Array.from(doc.querySelectorAll('.ltx_note'))
     .filter((note) => !note.parentElement?.closest('.ltx_note'));
 
-  notes.forEach((note) => {
-    const markEl = note.querySelector('.ltx_note_mark');
-    const mark = markEl ? collapse(markEl.textContent) : '';
+  const noteText = (note) => {
     const contentEl = note.querySelector('.ltx_note_content');
-    let text = '';
-    if (contentEl) {
-      const clone = contentEl.cloneNode(true);
-      clone.querySelectorAll('.ltx_note_mark, .ltx_note_type, .ltx_tag_note').forEach((el) => el.remove());
-      text = collapse(clone.textContent);
-    }
+    if (!contentEl) return '';
+    const clone = contentEl.cloneNode(true);
+    clone.querySelectorAll('.ltx_note_mark, .ltx_note_type, .ltx_tag_note').forEach((el) => el.remove());
+    return collapse(clone.textContent);
+  };
+  const markOf = (note) => {
+    const markEl = note.querySelector('.ltx_note_mark');
+    return markEl ? collapse(markEl.textContent) : '';
+  };
+  const isMarkOnly = (note) => note.classList.contains('ltx_role_footnotemark') || !noteText(note);
+  const isTextOnly = (note) => note.classList.contains('ltx_role_footnotetext');
 
-    const isMarkOnly = note.classList.contains('ltx_role_footnotemark') || !text;
+  // \footnotemark 可能出现在对应 \footnotetext 之前：先按 mark 收集 footnotetext
+  const textByMark = new Map();
+  notes.forEach((note) => {
+    if (isTextOnly(note) && noteText(note)) {
+      const mark = markOf(note);
+      if (mark && !textByMark.has(mark)) textByMark.set(mark, note);
+    }
+  });
+  const usedTextNotes = new Set();
+  const markOnlyMarks = new Set(notes.filter((n) => !isTextOnly(n) && isMarkOnly(n)).map(markOf).filter(Boolean));
+
+  notes.forEach((note) => {
+    const mark = markOf(note);
     let number;
-    if (isMarkOnly) {
-      number = byMark.get(mark);
-      if (!number) {
+    if (isTextOnly(note)) {
+      if (usedTextNotes.has(note)) {
         note.remove();
         return;
       }
+      if (mark && markOnlyMarks.has(mark) && !byMark.has(mark)) {
+        // 引用点（footnotemark）在后面：先登记定义，引用点到时复用编号
+        definitions.push(noteText(note));
+        byMark.set(mark, definitions.length);
+        note.remove();
+        return;
+      }
+      // R1-02：\footnotetext 在正文里没有引用点（如 LoRA 的版本说明、BERT 表注），
+      // 输出成就地的引用块，不生成孤立的 [^n] 定义
+      const text = noteText(note);
+      const block = doc.createElement('blockquote');
+      block.textContent = text;
+      note.replaceWith(block);
+      return;
+    }
+    if (isMarkOnly(note)) {
+      number = byMark.get(mark);
+      if (!number) {
+        const textNote = mark && textByMark.get(mark);
+        if (textNote && !usedTextNotes.has(textNote)) {
+          definitions.push(noteText(textNote));
+          number = definitions.length;
+          byMark.set(mark, number);
+          usedTextNotes.add(textNote);
+        } else {
+          note.remove();
+          return;
+        }
+      }
     } else {
-      definitions.push(text);
+      definitions.push(noteText(note));
       number = definitions.length;
       if (mark && !byMark.has(mark)) byMark.set(mark, number);
     }
