@@ -4,3 +4,5 @@ export * from './provider.js';
 export { createRegistry } from './registry.js';
 export * from './errors.js';
 export * from './normalize/index.js';
+export { createZip, crc32 } from './output/zip.js';
+export { toDownloadUrl, buildDeliverable, saveDeliverable, canUseBlobUrl } from './output/save.js';
