@@ -191,11 +191,12 @@
 - `ar5iv.labs.arxiv.org`
 - `mineru.net`
 - `cdn-mineru.openxlab.org.cn`
+- `paddleocr.aistudio-app.com`（可选，`optional_host_permissions`：只有选了 PaddleOCR 并在设置页授权后才访问，可随时撤销；与可选权限 `declarativeNetRequestWithHostAccess` 一起申请，仅用于去掉发往该域名请求的 `Origin` 头）
 
 其中最关键的边界差异是：
 
 - 标准模式：先从 `arxiv.org/html` 拉 HTML，没有可转换正文时再从 ar5iv 拉，然后本地转 Markdown
-- PDF 解析模式：把 arXiv PDF URL 和 Token 发给 MinerU
+- PDF 解析模式：把 arXiv PDF 链接和当前后端（MinerU 或 PaddleOCR）的 Key 发给该后端；Key 只存于本设备 `chrome.storage.local`，非 arXiv 托管的 PDF 需在弹窗确认后才发送
 
 ## 最容易误读的几点
 
