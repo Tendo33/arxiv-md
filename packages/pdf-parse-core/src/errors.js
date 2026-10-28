@@ -88,7 +88,7 @@ function parseRetryAfter(v) {
  * HTTP 非 2xx 的通用分类（各 provider 的 mapError 可先做自己的判断，再回落到这里）。
  * 关键区分：401 → AUTH_INVALID；403 空 body → PROVIDER_FAILED(reason=forbidden_empty)；
  * 403 带 body → QUOTA_EXCEEDED（Paddle 超每日额度），body 明确说鉴权的除外；
- * 429 带 Retry-After → RATE_LIMITED，不带 → QUOTA_EXCEEDED。
+ * 429 带 Retry-After → RATE_LIMITED，不带 → QUOTA_EXCEEDED；503 带 Retry-After → RATE_LIMITED。
  * @param {{status:number, bodyText?:string, json?:any, retryAfter?:string|null}} res
  */
 export function classifyHttpError(res, provider) {
@@ -110,6 +110,10 @@ export function classifyHttpError(res, provider) {
     const retryAfterMs = parseRetryAfter(res.retryAfter);
     if (retryAfterMs != null) return new ParseError('RATE_LIMITED', { ...base, retryAfterMs });
     return new ParseError('QUOTA_EXCEEDED', base);
+  }
+  if (status === 503) {
+    const retryAfterMs = parseRetryAfter(res.retryAfter);
+    if (retryAfterMs != null) return new ParseError('RATE_LIMITED', { ...base, retryAfterMs });
   }
   if (status === 413) return new ParseError('TOO_LARGE', base);
   if (status === 415) return new ParseError('FILE_UNSUPPORTED', base);

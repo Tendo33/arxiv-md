@@ -86,6 +86,10 @@ describe('classifyHttpError：403 空 body vs 401 vs 额度', () => {
     expect(classifyHttpError({ status: 429, bodyText: '', retryAfter: new Date(Date.now() + 5000).toUTCString() }, 'p').code).toBe('RATE_LIMITED');
     expect(classifyHttpError({ status: 429, bodyText: '' }, 'p').code).toBe('QUOTA_EXCEEDED');
   });
+  test('503 带 Retry-After → RATE_LIMITED', () => {
+    expect(classifyHttpError({ status: 503, retryAfter: '1' }, 'p').code).toBe('RATE_LIMITED');
+    expect(classifyHttpError({ status: 503 }, 'p').code).toBe('PROVIDER_FAILED');
+  });
   test('413/415/5xx', () => {
     expect(classifyHttpError({ status: 413 }, 'p').code).toBe('TOO_LARGE');
     expect(classifyHttpError({ status: 415 }, 'p').code).toBe('FILE_UNSUPPORTED');

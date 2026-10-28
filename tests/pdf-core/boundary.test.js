@@ -30,6 +30,13 @@ describe('R4-01 pdf-parse-core 包结构', () => {
     }
   });
 
+  test('core 是 type:module，相对 import 必须写全 .js 扩展名（webpack fullySpecified）', () => {
+    for (const f of walk(path.join(CORE, 'src'))) {
+      const bad = (fs.readFileSync(f, 'utf8').match(/from\s+'\.\.?\/[^']+'/g) || []).filter((m) => !m.endsWith(".js'"));
+      expect([path.relative(ROOT, f), bad]).toEqual([path.relative(ROOT, f), []]);
+    }
+  });
+
   test('eslint no-restricted-imports 会拦住反向 import', async () => {
     const eslint = new ESLint({ cwd: ROOT });
     const file = path.join(CORE, 'src/__probe__.js');

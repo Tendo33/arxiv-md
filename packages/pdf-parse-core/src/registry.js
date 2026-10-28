@@ -1,5 +1,5 @@
 // R4-02：Provider 注册表。list() 按注册顺序返回（固定顺序）。
-import { defineProvider } from './provider';
+import { defineProvider } from './provider.js';
 
 export function createRegistry() {
   const map = new Map();
