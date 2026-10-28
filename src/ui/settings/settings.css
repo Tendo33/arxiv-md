@@ -290,6 +290,7 @@ body {
 
 .input-field {
   flex: 1;
+  background: var(--surface); /* 设计验收必须改 1：深色不再用 UA 灰底 */
   padding: 12px 16px;
   border: 1px solid var(--border);
   border-radius: 10px;
