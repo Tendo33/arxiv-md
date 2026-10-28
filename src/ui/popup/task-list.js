@@ -1,5 +1,6 @@
 import { translations } from '@config/locales';
 import { TASK_STATUS } from '@config/constants';
+import { formatTimeAgo } from '@utils/time-ago';
 
 let currentLang = 'en';
 
@@ -17,22 +18,6 @@ export function setTaskListLanguage(lang) {
   currentLang = lang || 'en';
 }
 
-/**
- * 格式化时间
- */
-function formatTimeAgo(timestamp) {
-  const t = translations[currentLang];
-  const now = Date.now();
-  const diff = now - timestamp;
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-
-  if (minutes < 1) return t.popup_time_just_now;
-  if (minutes < 60) return `${minutes}${t.popup_time_mins_ago}`;
-  if (hours < 24) return `${hours}${t.popup_time_hours_ago}`;
-  return `${days}${t.popup_time_days_ago}`;
-}
 /**
  * 渲染任务列表
  */
@@ -71,7 +56,7 @@ export function createTaskCard(task) {
   const title = paperInfo.title || paperInfo.arxivId;
   const truncatedTitle =
     title.length > 50 ? title.substring(0, 50) + '...' : title;
-  const timeAgo = formatTimeAgo(createdAt);
+  const timeAgo = formatTimeAgo(createdAt, currentLang, translations[currentLang].popup_time_just_now);
 
   // 状态显示
   const statusDisplay = getStatusDisplay(status);
