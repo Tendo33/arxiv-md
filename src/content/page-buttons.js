@@ -88,6 +88,9 @@ export async function injectConvertButton() {
   // 创建进度指示器
   const progressIndicator = document.createElement('div');
   progressIndicator.className = 'arxiv-md-progress';
+  progressIndicator.setAttribute('role', 'status');
+  progressIndicator.setAttribute('aria-live', 'polite');
+  progressIndicator.setAttribute('aria-atomic', 'true');
   progressIndicator.innerHTML = `
     <div class="progress-row">
       <span class="progress-text">${t.content_progress_processing}</span>
@@ -98,6 +101,7 @@ export async function injectConvertButton() {
 
   const hintIndicator = document.createElement('div');
   hintIndicator.className = 'arxiv-md-hint';
+  hintIndicator.setAttribute('role', 'status');
 
   const autoPrompt = document.createElement('div');
   autoPrompt.className = 'arxiv-md-auto';

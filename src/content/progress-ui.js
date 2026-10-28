@@ -42,6 +42,10 @@ export function setProgressState({ text, percent = null, detail = '', state = ''
   if (state === 'error' || state === 'success') {
     progressIndicator.classList.add(state);
   }
+  // 读屏：进度/成功用 polite 播报，错误用 alert 立即播报
+  progressIndicator.setAttribute('role', state === 'error' ? 'alert' : 'status');
+  progressIndicator.setAttribute('aria-live', state === 'error' ? 'assertive' : 'polite');
+  progressIndicator.setAttribute('aria-atomic', 'true');
 
   if (textEl) textEl.textContent = text || t.content_progress_processing;
   if (percentEl) {
@@ -81,6 +85,10 @@ export function showError(message) {
   });
 }
 
+/** 成功提示至少停留这么久（WCAG 2.2.1：给足阅读时间），同时提供关闭按钮 */
+export const SUCCESS_VISIBLE_MS = 8000;
+let successTimer = null;
+
 export function showSuccess(message) {
   setProgressState({
     text: t.content_progress_completed,
@@ -89,9 +97,29 @@ export function showSuccess(message) {
     state: 'success',
   });
 
-  setTimeout(() => {
-    clearProgressState();
-  }, 1600);
+  const progressIndicator = document.querySelector('.arxiv-md-progress');
+  if (progressIndicator) {
+    const actions = document.createElement('div');
+    actions.className = 'arxiv-md-result-actions';
+    actions.appendChild(createCloseButton());
+    progressIndicator.appendChild(actions);
+  }
+
+  clearTimeout(successTimer);
+  successTimer = setTimeout(() => {
+    // 期间若已开始下一次转换（状态不再是 success），不要误清
+    const el = document.querySelector('.arxiv-md-progress');
+    if (el && el.classList.contains('success')) clearProgressState();
+  }, SUCCESS_VISIBLE_MS);
+}
+
+function createCloseButton() {
+  const closeButton = document.createElement('button');
+  closeButton.type = 'button';
+  closeButton.className = 'arxiv-md-result-btn arxiv-md-result-close';
+  closeButton.textContent = t.content_btn_close;
+  closeButton.addEventListener('click', () => clearProgressState());
+  return closeButton;
 }
 
 function removeResultActions(progressIndicator) {
@@ -162,12 +190,7 @@ export function showResult({ filename = '', markdown = '' } = {}) {
     actions.appendChild(copyButton);
   }
 
-  const closeButton = document.createElement('button');
-  closeButton.type = 'button';
-  closeButton.className = 'arxiv-md-result-btn arxiv-md-result-close';
-  closeButton.textContent = t.content_btn_close;
-  closeButton.addEventListener('click', () => clearProgressState());
-  actions.appendChild(closeButton);
+  actions.appendChild(createCloseButton());
   actions.appendChild(status);
 
   progressIndicator.appendChild(actions);
