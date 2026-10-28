@@ -48,9 +48,22 @@ describe('页面进度区可访问性与停留时间', () => {
   test('样式：品牌色、暗色、focus-visible、减少动效，无 hover 位移', () => {
     expect(PAGE_BUTTON_STYLES).toContain('#b31b1b');
     expect(PAGE_BUTTON_STYLES).toContain('#f87171');
-    expect(PAGE_BUTTON_STYLES).toContain('prefers-color-scheme: dark');
+    expect(PAGE_BUTTON_STYLES).toContain('[data-theme="dark"]');
     expect(PAGE_BUTTON_STYLES).toContain(':focus-visible');
     expect(PAGE_BUTTON_STYLES).toContain('prefers-reduced-motion: reduce');
     expect(PAGE_BUTTON_STYLES).not.toMatch(/translateY/);
+  });
+});
+
+import { detectPageTheme, isDarkColor } from '../src/content/page-theme';
+describe('注入 UI 跟随宿主页面明暗', () => {
+  const doc = (bodyBg, htmlBg) => ({ body: { bg: bodyBg }, documentElement: { bg: htmlBg } });
+  const style = (el) => ({ backgroundColor: el.bg });
+  test('白底 arXiv 页面 → light；深色背景 → dark；透明 body 取 html', () => {
+    expect(detectPageTheme(doc('rgb(255, 255, 255)', ''), style)).toBe('light');
+    expect(detectPageTheme(doc('rgb(17, 19, 23)', ''), style)).toBe('dark');
+    expect(detectPageTheme(doc('rgba(0, 0, 0, 0)', 'rgb(20, 20, 20)'), style)).toBe('dark');
+    expect(detectPageTheme(doc('rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0)'), style)).toBe('light');
+    expect(isDarkColor('garbage')).toBeNull();
   });
 });

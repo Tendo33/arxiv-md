@@ -1,5 +1,5 @@
 // 注入到 arxiv.org 页面的样式。变量都挂在 .arxiv-md-btn-container 上并带 --amd- 前缀，
-// 不依赖页面 :root，避免被 arXiv 自身样式污染。取值来自 design/tokens.css（arXiv 品牌）。
+// 不依赖页面 :root，避免被 arXiv 自身样式污染。暗色由 data-theme=dark 打开（见 page-theme.js）。取值来自 design/tokens.css（arXiv 品牌）。
 export const PAGE_BUTTON_STYLES = `
     .arxiv-md-btn-container {
       --amd-brand: #b31b1b; --amd-brand-hover: #931616; --amd-brand-press: #7a1212; --amd-brand-on: #ffffff;
@@ -14,14 +14,13 @@ export const PAGE_BUTTON_STYLES = `
       flex-wrap: wrap;
       color: var(--amd-text);
     }
-    @media (prefers-color-scheme: dark) {
-      .arxiv-md-btn-container {
+    /* 暗色跟随宿主页面而不是系统：arxiv.org 本身没有暗色，系统暗色时在白底页面上放暗色按钮反而突兀、焦点环对比度不足 */
+    .arxiv-md-btn-container[data-theme="dark"] {
         --amd-brand: #f87171; --amd-brand-hover: #fb9191; --amd-brand-press: #f05252; --amd-brand-on: #1b0606;
         --amd-surface: #1b1d22; --amd-surface-2: #24272d; --amd-border: #33373e; --amd-border-strong: #4a4f57;
         --amd-text: #e8eaed; --amd-text-2: #a1a7b3; --amd-text-disabled: #6b717b;
         --amd-success: #4ade80; --amd-success-bg: #13301f; --amd-danger: #f87171; --amd-danger-bg: #3a1717;
         --amd-focus: #f87171;
-      }
     }
 
     .arxiv-md-btn {

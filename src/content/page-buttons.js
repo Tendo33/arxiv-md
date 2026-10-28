@@ -2,6 +2,7 @@ import metadataExtractor from '@core/metadata-extractor';
 import logger from '@utils/logger';
 import { buildArxivBibtex, chooseBibtex } from './bibtex';
 import { PAGE_BUTTON_STYLES } from './page-button-styles';
+import { detectPageTheme } from './page-theme';
 import storage from '@utils/storage';
 import { REGEX } from '@config/constants';
 import { translations } from '@config/locales';
@@ -52,6 +53,7 @@ export async function injectConvertButton() {
   // 创建按钮容器
   const container = document.createElement('div');
   container.className = 'arxiv-md-btn-container';
+  container.dataset.theme = detectPageTheme();
 
   // 创建 Markdown 按钮
   const mdButton = document.createElement('button');
