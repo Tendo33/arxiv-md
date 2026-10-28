@@ -14,3 +14,15 @@ describe('M9 待确认行在英文窄宽下不挤掉标题', () => {
     expect(css).toMatch(/\.row\[data-status=awaiting_consent\] \.row-act \.btn\[data-action=consent\]\{max-width:7em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap\}/);
   });
 });
+
+describe('建议：待确认有单独的等待样式', () => {
+  test('task-list 用 wait；CSS 有 .badge.wait 且与 run 不同色', () => {
+    const { createTaskRow, setTaskListLanguage } = require('../src/ui/popup/task-list');
+    setTaskListLanguage('zh');
+    const wait = createTaskRow({ id: 'a', status: 'awaiting_consent', provider: 'paddleocr', paperInfo: { title: 'T' }, createdAt: Date.now() });
+    const run = createTaskRow({ id: 'b', status: 'processing', provider: 'paddleocr', paperInfo: { title: 'T' }, createdAt: Date.now() });
+    expect(wait).toContain('class="badge wait"');
+    expect(run).toContain('class="badge run"');
+    expect(css).toMatch(/\.badge\.wait\{background:var\(--info-bg\);color:var\(--info\)/);
+  });
+});

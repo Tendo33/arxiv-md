@@ -197,7 +197,7 @@ export function createTaskRow(task) {
     [TASK_STATUS.PROCESSING]: ['run', t.popup_status_processing],
     [TASK_STATUS.COMPLETED]: ['ok', t.popup_status_completed],
     [TASK_STATUS.FAILED]: ['err', t.popup_status_failed],
-    [TASK_STATUS.AWAITING_CONSENT]: ['run', t.popup_status_awaiting],
+    [TASK_STATUS.AWAITING_CONSENT]: ['wait', t.popup_status_awaiting], // 在等用户，和“处理中”区分
   };
   const [cls, label] = map[status] || ['idle', t.popup_status_unknown];
   const busy = status === TASK_STATUS.PENDING || status === TASK_STATUS.PROCESSING;
