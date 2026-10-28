@@ -1,0 +1,1 @@
+{ "code": 0, "msg": "ok", "data": { "task_id": "00000000-0000-4000-8000-00000000m001", "state": "running", "err_msg": "", "extract_progress": { "extracted_pages": 3, "total_pages": 12, "start_time": "2026-10-28 20:00:00" } } }
