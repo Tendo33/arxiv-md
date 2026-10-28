@@ -30,14 +30,26 @@ test('src：每个 __MSG_ key 在所有 locale 里都有，default_locale 目录
 });
 
 const dist = path.join(root, 'dist');
-(fs.existsSync(path.join(dist, 'manifest.json')) ? test : test.skip)('dist：_locales 已拷入且与 src 一致（未构建时跳过，先 npm run build）', () => {
+const built = fs.existsSync(path.join(dist, 'manifest.json'));
+// 复审 P3-B：CI 里先 build 再 test，dist 缺失说明流程被改坏 → 直接失败，不能静默跳过
+const inCI = !!process.env.CI && process.env.CI !== 'false';
+(built || inCI ? test : test.skip)('dist：_locales 已拷入且与 src 一致（本地未构建时跳过；CI 必须执行）', () => {
+  if (!built) throw new Error('CI=true 但 dist/manifest.json 不存在：ci.yml 须先 npm run build 再 npm test');
   expect(checkLocales(dist).errors).toEqual([]);
   expect(localeDirs(dist).sort()).toEqual(localeDirs(path.join(root, 'src')).sort());
 });
-if (!fs.existsSync(path.join(dist, 'manifest.json'))) {
+if (!built && !inCI) {
   // eslint-disable-next-line no-console
   console.warn('manifest-locales: dist/ 不存在，跳过 dist/_locales 校验；运行 npm run build 后再跑');
 }
+
+test('ci.yml：build 在 test 之前（dist 校验才会真正执行）', () => {
+  const ci = fs.readFileSync(path.join(root, '.github/workflows/ci.yml'), 'utf8');
+  const b = ci.indexOf('npm run build');
+  const t = ci.indexOf('npm test');
+  expect(b).toBeGreaterThan(-1);
+  expect(t).toBeGreaterThan(b);
+});
 
 test('反例：缺 key 或缺 default_locale 目录时报错', () => {
   const tmp = fs.mkdtempSync(path.join(require('os').tmpdir(), 'loc-'));

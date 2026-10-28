@@ -20,6 +20,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
-      - run: npm test
+      # 先 build：tests/manifest-locales 要校验 dist/_locales（CI=true 时 dist 缺失直接失败）
       - run: npm run build
+      - run: npm test
       - run: npm run check:keys
