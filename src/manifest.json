@@ -2,7 +2,8 @@
   "manifest_version": 3,
   "name": "arXiv to Markdown",
   "version": "1.1.12",
-  "description": "Save arXiv papers as Markdown in one click: math, tables and references kept, PDFs named by title.",
+  "description": "__MSG_extDescription__",
+  "default_locale": "en",
   "author": "SimonSun",
   "icons": {
     "16": "assets/icon-16.png",
