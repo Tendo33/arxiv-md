@@ -18,15 +18,17 @@ export const defaultTimers = {
   clearTimeout: (id) => clearTimeout(id),
 };
 
-// setBadgeText 等在 MV3 返回 Promise，标签页已关闭时会 reject；同步抛错也一并吞掉
-const safeCall = (fn) => {
+// setBadgeText 等在 MV3 返回 Promise，标签页已关闭时会 reject；同步抛错也一并吞掉。
+// onError 只用于测试观察被吞掉的错误（默认空函数，行为不变）。
+const makeSafeCall = (onError) => (fn) => {
   try {
     const r = fn();
-    if (r && typeof r.catch === 'function') r.catch(() => {});
-  } catch (_) { /* tab 已关闭 */ }
+    if (r && typeof r.catch === 'function') r.catch((e) => onError(e));
+  } catch (e) { onError(e); /* tab 已关闭 */ }
 };
 
-export function createActionBadge(actionApi, timers = defaultTimers) {
+export function createActionBadge(actionApi, timers = defaultTimers, { onError = () => {} } = {}) {
+  const safeCall = makeSafeCall(onError);
   const pending = new Map(); // tabId -> clear timer
   const shortcutTabs = new Set();
 

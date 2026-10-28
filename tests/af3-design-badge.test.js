@@ -40,10 +40,22 @@ describe('AF3 设计验收：徽标', () => {
 
   test('没有 setBadgeTextColor 时不抛错，照常设底色和文字', () => {
     const { api, log } = mockAction({ withTextColor: false });
-    const b = createActionBadge(api, timers);
+    // 被 safeCall 吞掉的错误也要看见：去掉存在性检查时这里会收到 TypeError
+    const swallowed = [];
+    const b = createActionBadge(api, timers, { onError: (e) => swallowed.push(e) });
     b.shortcutStarted(5);
     expect(() => b.finish(5, 'warning')).not.toThrow();
+    expect(swallowed).toEqual([]);
     expect(log).toContainEqual(['bg', { tabId: 5, color: '#f59e0b' }]);
     expect(log).toContainEqual(['text', { tabId: 5, text: '⚠' }]);
+    expect(log.some(([k]) => k === 'fg')).toBe(false);
+  });
+
+  test('onError 能观察到被吞掉的同步错误（保证上一条用例有效）', () => {
+    const swallowed = [];
+    const api = { setBadgeText: () => { throw new Error('tab closed'); }, setBadgeBackgroundColor: () => {} };
+    const b = createActionBadge(api, timers, { onError: (e) => swallowed.push(e) });
+    b.shortcutStarted(1);
+    expect(swallowed.length).toBeGreaterThan(0);
   });
 });
