@@ -54,6 +54,9 @@ describe('快捷键未设置引导', () => {
       expect(d.getElementById('shortcutKbd').classList.contains('hidden')).toBe(true);
       expect(d.getElementById('shortcutPrefix').classList.contains('hidden')).toBe(true);
       expect(box.textContent).toContain(tr.popup_shortcut_unset);
+      const sep = box.querySelector('.sc-sep');
+      expect(sep.textContent).toBe('·');
+      expect(sep.getAttribute('aria-hidden')).toBe('true');
       const btn = d.getElementById('shortcutSetup');
       if (b === 'firefox') {
         expect(btn).toBeNull();
@@ -65,6 +68,12 @@ describe('快捷键未设置引导', () => {
         expect(opened).toEqual([URLS[b]]);
       }
     });
+  });
+
+  test('分隔点两侧间距对称：gap 4px，按钮左移抵消 4px 内边距，点击高度 24px', () => {
+    const css = read('src/ui/popup/popup.css');
+    expect(css).toMatch(/\.sc-guide\{[^}]*gap:4px/);
+    expect(css).toMatch(/\.sc-link\{[^}]*margin-left:-4px[^}]*min-height:24px[^}]*padding:0 4px/);
   });
 
   test('语言切换后从空恢复为非空也能复位', () => {

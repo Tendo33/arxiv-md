@@ -43,7 +43,11 @@ export function renderShortcutGuide(doc, cmds, ua, tr, openTab) {
   const label = doc.createElement('span');
   label.className = 'sc-label';
   label.textContent = tr.popup_shortcut_unset;
-  box.replaceChildren(label, doc.createTextNode(' · '));
+  const sep = doc.createElement('span');
+  sep.className = 'sc-sep';
+  sep.setAttribute('aria-hidden', 'true');
+  sep.textContent = '·';
+  box.replaceChildren(label, sep);
   if (g.url) {
     const btn = doc.createElement('button');
     btn.type = 'button';
