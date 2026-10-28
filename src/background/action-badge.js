@@ -71,5 +71,19 @@ export function createActionBadge(actionApi, timers = defaultTimers) {
       return true;
     },
     isTracking: (tabId) => shortcutTabs.has(tabId),
+    /** 页面跳转/刷新：清掉残留徽标（含 service worker 被回收后丢了计时器的情况，复审建议 3） */
+    tabLoading(tabId) {
+      shortcutTabs.delete(tabId);
+      clear(tabId);
+    },
   };
+}
+
+/**
+ * content 侧提前结束的失败（断网、扩展刚重载、元数据失败等）不会发 CONVERT_PAPER，
+ * 由 showError 上报 SHORTCUT_RESULT，后台据此把「…」换成「!」（复审建议 1）。
+ */
+export function handleShortcutResult(badge, message, sender, runtimeId) {
+  if (!sender || sender.id !== runtimeId || !sender.tab || sender.tab.id == null) return false;
+  return badge.finish(sender.tab.id, !!message.ok);
 }

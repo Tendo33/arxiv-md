@@ -10,9 +10,14 @@ import { arxivApiUrl } from '@core/metadata-extractor';
 import { deletedTaskGuard, processMinerUTaskInBackground } from './mineru-task-runner';
 import { KEEP_ALIVE_ALARM, syncKeepAlive } from './keep-alive';
 import { isTrustedArxivSender, isValidArxivId, triggerConversionInActiveTab } from './message-guards';
-import { createActionBadge } from './action-badge';
+import { createActionBadge, handleShortcutResult } from './action-badge';
 
 const actionBadge = createActionBadge(chrome.action);
+if (chrome.tabs && chrome.tabs.onUpdated) {
+  chrome.tabs.onUpdated.addListener((tabId, info) => {
+    if (info && info.status === 'loading') actionBadge.tabLoading(tabId);
+  });
+}
 
 logger.info('Background service worker initialized');
 
@@ -23,6 +28,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   case 'CONVERT_PAPER':
     handleConvertPaper(message.data, sendResponse, sender);
     return true;
+
+  case 'SHORTCUT_RESULT':
+    handleShortcutResult(actionBadge, message, sender, chrome.runtime.id);
+    return false;
 
   case 'DOWNLOAD_PDF':
     handleDownloadPdf(message.data, sendResponse, sender);

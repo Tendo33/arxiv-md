@@ -83,6 +83,15 @@ export function showError(message) {
     percent: null,
     state: 'error',
   });
+  reportShortcutFailure();
+}
+
+/** 让后台把快捷键徽标从「…」换成「!」；不是快捷键发起的转换，后台会忽略 */
+function reportShortcutFailure() {
+  try {
+    const r = chrome.runtime.sendMessage({ type: 'SHORTCUT_RESULT', ok: false });
+    if (r && typeof r.catch === 'function') r.catch(() => {});
+  } catch (_) { /* 扩展已重载，消息发不出去 */ }
 }
 
 /** 成功提示至少停留这么久（WCAG 2.2.1：给足阅读时间），同时提供关闭按钮 */
