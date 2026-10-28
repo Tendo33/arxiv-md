@@ -2,6 +2,8 @@
 
 **Last updated: September 28, 2026**
 
+> **Pending review (Round 4 draft):** the PDF parsing sections below follow `pdf-parser-privacy-draft.md` v2 and are not final. Provider retention periods and the MinerU legal operator are still to be verified. Update the date above at release.
+
 ## Overview
 
 `arXiv to Markdown` is a browser extension for arXiv abstract pages. It does not operate a project-owned backend service, but it does communicate with third-party services that are required for paper retrieval and optional conversion features.
@@ -15,18 +17,25 @@ The extension uses two Chrome storage areas.
 Used for settings and lightweight preferences, including:
 
 - conversion mode
-- MinerU API token
+- selected PDF parsing provider
 - language
 - notification preference
 - auto-convert prompt preference
+- PDF floating button preference
 - Markdown metadata preference
 - usage statistics
 
-If you use browser account sync, this data may sync through your browser account across devices.
+Usage statistics are counters only and are never sent to a project server.
+
+These settings, including usage statistics, live in `chrome.storage.sync`: if you use browser account sync, your browser vendor syncs them through your browser account across devices. Provider credentials are not stored here and never sync (see below).
 
 ### `chrome.storage.local`
 
-Used for MinerU task state, including:
+Used for:
+
+- API keys for the PDF parsing provider you choose (PaddleOCR, MinerU). Keys are never synced and are sent only to the matching provider. Older versions kept the MinerU token in `chrome.storage.sync`; the update moves it here and deletes the synced copy.
+
+It also holds PDF parsing task state, including:
 
 - task IDs
 - task status and progress
@@ -34,7 +43,7 @@ Used for MinerU task state, including:
 - result ZIP URLs
 - download IDs
 - error messages
-- ids of MinerU tasks you deleted, so a restarted background worker does not download them
+- ids of PDF parsing tasks you deleted, so a restarted background worker does not download them
 
 This data is local to the browser profile that created the tasks.
 
@@ -50,6 +59,7 @@ Depending on the feature you use, the extension may make requests to:
 - `https://ar5iv.labs.arxiv.org/*`
 - `https://mineru.net/*`
 - `https://cdn-mineru.openxlab.org.cn/*`
+- `https://paddleocr.aistudio-app.com/*`, only after you select PaddleOCR and grant permission (the result-file domain is pending QA)
 
 ### Standard Mode
 
@@ -62,17 +72,19 @@ In standard mode, the extension:
 
 Markdown generation itself happens locally in the browser.
 
-### MinerU Mode
+### PDF Parsing Mode
 
-MinerU mode is optional and only used when you enable it and provide a token.
+PDF parsing is used only when you choose "PDF high-quality parsing". The extension contacts the **single** provider you selected in Settings. It never switches providers automatically; on failure it only offers a button to open Settings.
 
-In MinerU mode, the extension sends information to MinerU, including:
+#### PaddleOCR (default)
 
-- your MinerU bearer token
-- the arXiv PDF URL for the selected paper
-- the arXiv ID as task metadata
+The extension sends the paper's public PDF URL and your access token to `paddleocr.aistudio-app.com`, operated by Baidu (AI Studio). If the service cannot fetch the URL, the PDF file itself may be uploaded instead (pending QA). Access to this domain is requested only when you select PaddleOCR, and you can revoke it at any time.
 
-MinerU then processes that paper on its own service and returns a ZIP result URL, which the extension downloads.
+#### MinerU
+
+The extension sends your MinerU bearer token, the arXiv PDF URL for the selected paper, and the arXiv ID as task metadata to `mineru.net`. It does not upload the PDF file. MinerU processes the paper on its own service and returns a ZIP result URL (`cdn-mineru.openxlab.org.cn`), which the extension downloads. MinerU's domain access is unchanged from earlier versions and is granted at install.
+
+Parsing providers are third parties, and their own terms govern how they process and retain what you submit. Retention periods for both providers are still to be verified.
 
 ## What The Extension Does Not Do
 
@@ -85,19 +97,21 @@ MinerU then processes that paper on its own service and returns a ZIP result URL
 | Permission | Why it is needed |
 | --- | --- |
 | `storage` | Save settings, statistics, and task state |
-| `downloads` | Save Markdown, PDF, and MinerU ZIP results |
+| `downloads` | Save Markdown, PDF, and PDF parsing results |
 | `activeTab` | Read metadata from the current arXiv page |
 | `notifications` | Show optional task and completion notifications |
-| `alarms` | Periodically wake the background worker while MinerU tasks are running, to poll their progress; cleared when no task is active |
-| `contextMenus` | Add right-click menu items on arXiv abs/pdf/html pages and on links to arXiv papers |
+| `alarms` | Periodically wake the background worker while PDF parsing tasks are running, to poll their progress; cleared when no task is active |
+| `contextMenus` | Add right-click menu items on arXiv abs/pdf/html pages and on links to arXiv papers (PDF parsing items appear only when a key is set for the selected provider) |
+| `https://paddleocr.aistudio-app.com/*` (optional) | Requested only when you select PaddleOCR |
+| `declarativeNetRequestWithHostAccess` (optional) | Requested together with PaddleOCR access; removes the `Origin` header on requests to that domain only |
 
 ## Your Choices
 
 You can:
 
-- remove the MinerU token from settings
+- remove any provider key, or revoke PaddleOCR access, in Settings
 - disable notifications
-- clear completed or failed MinerU tasks from the popup
+- clear completed or failed PDF parsing tasks from the popup
 - uninstall the extension to remove its local extension data from the profile
 
 If browser sync is enabled, synced settings may also need to be cleared from the same browser account.
