@@ -703,3 +703,11 @@ body {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
+
+/* A3-3 即时保存提示，占原「保存」按钮的位置 */
+.autosave-note {
+  align-self: center;
+  margin-left: auto;
+  color: var(--text-secondary);
+  font-size: 13px;
+}

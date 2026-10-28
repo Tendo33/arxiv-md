@@ -5,6 +5,7 @@ import { CONVERSION_MODE } from '@config/constants';
 import logger from '@utils/logger';
 
 import { translations } from '@config/locales';
+import { bindInstantSave } from './instant-save';
 
 let currentLang = 'en'; // init() 中会换成已保存的语言，未保存时跟随浏览器（storage.getLanguage）
 
@@ -134,8 +135,14 @@ function bindEvents() {
     updateLanguage(newLang);
   });
 
-  // 保存设置
-  document.getElementById('saveBtn').addEventListener('click', saveSettings);
+  // 即时保存（A3-3）：每项改动立刻写入，不再有「保存」按钮
+  bindInstantSave(document, storage, {
+    onSaved: () => showToast(translations[currentLang].toast_saved, 'success'),
+    onError: (error) => {
+      logger.error('Failed to save setting:', error);
+      showToast(`${translations[currentLang].toast_save_failed} ${error.message}`, 'error');
+    },
+  });
 
   // 恢复默认
   document.getElementById('resetBtn').addEventListener('click', resetSettings);
@@ -161,44 +168,6 @@ function bindEvents() {
     .addEventListener('click', testMinerUToken);
 }
 
-async function saveSettings() {
-  const btn = document.getElementById('saveBtn');
-  const t = translations[currentLang];
-  try {
-    btn.disabled = true;
-    btn.textContent = t.saving;
-
-    const mode = document.querySelector(
-      'input[name="conversionMode"]:checked',
-    ).value;
-    await storage.setConversionMode(mode);
-
-    const token = document.getElementById('mineruToken').value.trim();
-    if (token) {
-      await storage.setMinerUToken(token);
-    }
-
-    const showNotifications =
-      document.getElementById('showNotifications').checked;
-    await storage.setShowNotifications(showNotifications);
-
-    const autoConvert = document.getElementById('autoConvert').checked;
-    await storage.setAutoConvert(autoConvert);
-
-    const includeMetadata = document.getElementById('includeMetadata').checked;
-    await storage.setIncludeMetadata(includeMetadata);
-
-    logger.info('Settings saved');
-    showToast(t.toast_saved, 'success');
-  } catch (error) {
-    logger.error('Failed to save settings:', error);
-    showToast('Failed to save: ' + error.message, 'error');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = t.btn_save;
-  }
-}
-
 async function resetSettings() {
   const t = translations[currentLang];
   if (!confirm(t.confirm_reset)) return;
@@ -210,8 +179,9 @@ async function resetSettings() {
       `input[name="conversionMode"][value="${CONVERSION_MODE.FAST}"]`,
     ).checked = true;
 
-    // 清空 Token
+    // 清空 Token（即时保存后，清空输入框也要清掉已保存的 Token）
     document.getElementById('mineruToken').value = '';
+    await storage.setMinerUToken('');
     document.getElementById('tokenStatus').style.display = 'none';
 
     // 重置高级选项
