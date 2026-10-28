@@ -189,7 +189,8 @@ export function createTaskRow(task) {
   const t = translations[currentLang];
   const { id, status, progress, paperInfo = {}, createdAt, zipUrl, error } = task;
   const title = paperInfo.title || paperInfo.arxivId || '';
-  const timeAgo = formatTimeAgo(createdAt, currentLang, t.popup_time_just_now);
+  // 设计验收 R3 建议 1：行内用短格式（11 min. ago），给标题留宽度
+  const timeAgo = formatTimeAgo(createdAt, currentLang, t.popup_time_just_now, Date.now(), 'narrow');
   const map = {
     [TASK_STATUS.PENDING]: ['run', t.popup_status_pending],
     [TASK_STATUS.PROCESSING]: ['run', t.popup_status_processing],

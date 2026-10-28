@@ -2,11 +2,11 @@
 const CSS = `
 :host{all:initial}
 .fab{position:fixed;right:24px;bottom:24px;z-index:2147483646;width:44px;height:44px;border-radius:50%;border:0;display:grid;place-items:center;
-  background:var(--brand);color:var(--brand-on);box-shadow:0 4px 12px rgb(0 0 0/.12);cursor:pointer;font:700 14px/1 system-ui,-apple-system,"Segoe UI",sans-serif;
+  background:var(--brand);color:var(--brand-on);box-shadow:0 0 0 2px #fff,0 4px 12px rgb(0 0 0/.45);cursor:pointer;font:700 14px/1 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei","Noto Sans",sans-serif;letter-spacing:0;
   --brand:#b31b1b;--brand-on:#fff;--success:#0f7a3d;--danger:#b42318;transition:transform .15s ease}
-@media (prefers-color-scheme:dark){.fab{--brand:#f87171;--brand-on:#1b0606;--success:#4ade80;--danger:#f87171;box-shadow:0 4px 12px rgb(0 0 0/.5)}}
+/* 设计验收 R3：PDF 查看器槽位固定 #282828、纸面白，不随系统深浅色；统一浅色方案 + 2px 白环 */
 .fab:hover{transform:translateY(-2px)}
-.fab:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.fab:focus-visible{outline:3px solid #8ab4f8;outline-offset:3px}
 .fab .ring{position:absolute;inset:-4px;border-radius:50%;border:3px solid transparent;pointer-events:none}
 .fab.run .ring{border-color:var(--brand) transparent transparent transparent;animation:spin 1s linear infinite}
 .fab.ok{background:var(--success)}

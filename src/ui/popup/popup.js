@@ -26,6 +26,10 @@ async function init() {
   $('settingsBtn').addEventListener('click', openSettings);
   $('clearCompletedBtn').addEventListener('click', clearCompleted);
   $('recentAll').addEventListener('click', () => { showAll = !showAll; renderRecent(); });
+  $('refreshBtn').addEventListener('click', () => {
+    if (tabId != null) Promise.resolve(chrome.tabs.reload(tabId)).catch(() => {});
+    window.close();
+  });
   $('exportBtn').addEventListener('click', () => runExport('markdown'));
   $('mineruBtn').addEventListener('click', () => runExport('mineru'));
   $('pdfBtn').addEventListener('click', () => runExport('pdf'));
@@ -129,9 +133,15 @@ function showOk(text) {
 function showErr(title, hint) {
   hideAlerts();
   ctx.state = 'err';
+  showRefresh(false);
   $('errTitle').textContent = title;
   $('errHint').textContent = hint ? ` ${hint}` : '';
   $('alertErr').classList.remove('hidden');
+}
+
+/** 设计验收 R3：「无法连接页面」补刷新按钮（与 zhihu 一致） */
+function showRefresh(show) {
+  $('refreshBtn').classList.toggle('hidden', !show);
 }
 
 async function runExport(mode) {
@@ -160,6 +170,7 @@ async function runExport(mode) {
     showOk(mode === 'mineru' ? tr.popup_saved_bg : (res.filename || res.message || ''));
   } else {
     showErr(res?.error || tr.popup_badge_err, res?.unreachable ? '' : tr.popup_err_generic_hint);
+    showRefresh(!!res?.unreachable);
   }
   renderContext();
 }
@@ -182,8 +193,11 @@ function renderRecent() {
   const wrap = $('recent');
   if (!wrap) return;
   const tr = t();
-  if (!currentTasks.length) { wrap.classList.add('hidden'); return; }
   wrap.classList.remove('hidden');
+  const empty = !currentTasks.length;
+  $('recentEmpty').classList.toggle('hidden', !empty);
+  $('taskList').classList.toggle('hidden', empty);
+  if (empty) { $('recentAll').classList.add('hidden'); $('clearCompletedBtn').classList.add('hidden'); return; }
   const list = showAll ? recentTasks(currentTasks, Infinity) : recentTasks(currentTasks, 3);
   $('taskList').innerHTML = list.map(createTaskRow).join('');
   const more = currentTasks.length > 3;

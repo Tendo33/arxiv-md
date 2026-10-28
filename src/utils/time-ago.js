@@ -6,14 +6,14 @@
  */
 export const TIME_AGO_PLACEHOLDER = '—';
 
-export function formatTimeAgo(timestamp, lang, justNow, now = Date.now()) {
+export function formatTimeAgo(timestamp, lang, justNow, now = Date.now(), style = 'long') {
   // A2-02：缺 createdAt / 存储数据损坏时不抛 RangeError，显示占位
   if (typeof timestamp !== 'number' || !Number.isFinite(timestamp) || !Number.isFinite(now)) {
     return TIME_AGO_PLACEHOLDER;
   }
   const minutes = Math.floor((now - timestamp) / 60000);
   if (minutes < 1) return justNow;
-  const rtf = new Intl.RelativeTimeFormat(lang === 'zh' ? 'zh-CN' : 'en', { numeric: 'auto' });
+  const rtf = new Intl.RelativeTimeFormat(lang === 'zh' ? 'zh-CN' : 'en', { numeric: 'auto', style });
   if (minutes < 60) return rtf.format(-minutes, 'minute');
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return rtf.format(-hours, 'hour');

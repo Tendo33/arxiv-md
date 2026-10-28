@@ -35,7 +35,7 @@
         </div>
         <div id="alertErr" class="alert err hidden" role="alert">
           <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/></svg>
-          <div><b id="errTitle"></b><span id="errHint"></span></div>
+          <div><b id="errTitle"></b><span id="errHint"></span><button id="refreshBtn" class="btn btn-secondary btn-xxs btn-refresh hidden" data-i18n="popup_btn_refresh">刷新</button></div>
         </div>
         <div id="alertInfo" class="alert info hidden">
           <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/></svg>
@@ -51,7 +51,8 @@
         </div>
 
         <div id="recent" class="recent hidden">
-          <div class="sec-h"><span data-i18n="popup_recent">最近导出</span><span class="sec-x"><button id="clearCompletedBtn" class="btn btn-ghost btn-xxs hidden" data-i18n="popup_btn_clear_completed">清空已完成</button><button id="recentAll" class="btn btn-ghost btn-xxs hidden" aria-expanded="false"></button></span></div>
+          <div class="sec-h"><span data-i18n="popup_recent">MinerU 任务</span><span class="sec-x"><button id="clearCompletedBtn" class="btn btn-ghost btn-xxs hidden" data-i18n="popup_btn_clear_completed">清空已完成</button><button id="recentAll" class="btn btn-ghost btn-xxs hidden" aria-expanded="false"></button></span></div>
+          <div id="recentEmpty" class="card recent-empty hidden" data-i18n="popup_recent_empty">用 MinerU 高质量导出后，任务进度会显示在这里</div>
           <div id="taskList" class="card list" aria-live="polite" data-i18n-aria="popup_task_list" aria-label="任务列表"></div>
         </div>
       </main>
