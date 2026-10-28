@@ -76,7 +76,16 @@ export function clearProgressState() {
   }
 }
 
+/** Round 3 C-2：popup 发起的转换要拿到结果（成功文件名 / 失败原因），一次性回调 */
+let outcomeWaiters = [];
+export function onNextOutcome(cb) { outcomeWaiters.push(cb); }
+export function notifyOutcome(outcome) {
+  const list = outcomeWaiters; outcomeWaiters = [];
+  list.forEach((cb) => { try { cb(outcome); } catch (_) { /* popup 已关闭 */ } });
+}
+
 export function showError(message) {
+  notifyOutcome({ ok: false, error: message || t.content_error_generic });
   setProgressState({
     text: t.content_progress_failed,
     detail: message || t.content_error_generic,
@@ -99,6 +108,7 @@ export const SUCCESS_VISIBLE_MS = 8000;
 let successTimer = null;
 
 export function showSuccess(message) {
+  notifyOutcome({ ok: true, message: message || '' });
   setProgressState({
     text: t.content_progress_completed,
     detail: message || '',
@@ -170,6 +180,7 @@ export async function copyTextToClipboard(text, doc = document) {
  * 显示文件名，有 Markdown 时提供“复制 Markdown”按钮。
  */
 export function showResult({ filename = '', markdown = '' } = {}) {
+  notifyOutcome({ ok: true, filename });
   setProgressState({
     text: t.content_progress_completed,
     detail: filename ? t.content_result_saved.replace('{filename}', filename) : '',

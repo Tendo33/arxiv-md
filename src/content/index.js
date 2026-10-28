@@ -11,6 +11,8 @@ import { handleHtmlToMarkdown } from './markdown-convert';
 import { clearHint, injectConvertButton, setConversionHandler, setPageButtonText } from './page-buttons';
 import {
   clearProgressState,
+  notifyOutcome,
+  onNextOutcome,
   setProgressState,
   setProgressText,
   showError,
@@ -57,7 +59,13 @@ async function init() {
 
     switch (message.type) {
     case 'TRIGGER_CONVERSION':
-      handleConversionTrigger();
+      // popup（C-2）带 mode：markdown | mineru | pdf，并要求回传结果；快捷键不带参数
+      if (message.reply) {
+        onNextOutcome(sendResponse);
+        handleConversionTrigger(message.mode || 'markdown');
+        return true;
+      }
+      handleConversionTrigger(message.mode || 'markdown');
       break;
 
     case 'CONVERSION_PROGRESS':
@@ -105,7 +113,7 @@ async function handleConversionTrigger(type = 'markdown') {
     const pdfButton = document.querySelector('.arxiv-pdf-download-btn');
     const hintIndicator = document.querySelector('.arxiv-md-hint');
 
-    const activeButton = type === 'markdown' ? mdButton : pdfButton;
+    const activeButton = type === 'pdf' ? pdfButton : mdButton;
 
     if (activeButton) {
       activeButton.disabled = true;
@@ -141,6 +149,7 @@ async function handleConversionTrigger(type = 'markdown') {
     const metadata = isArxivAbsPage
       ? metadataExtractor.extractFromAbsPage()
       : await fetchMetadataFromAbsPage();
+    if (type === 'mineru') metadata.forceMineru = true;
 
     logger.debug('Extracted metadata:', metadata);
 
@@ -192,6 +201,7 @@ async function handleConversionTrigger(type = 'markdown') {
                   activeButton.style.cursor = 'pointer';
                 }
                 clearProgressState();
+                notifyOutcome({ ok: !!(forceResponse && forceResponse.success), background: true });
                 if (forceResponse && forceResponse.success) {
                   logger.info('Duplicate task created successfully:', forceResponse.taskId);
                 }
@@ -200,6 +210,7 @@ async function handleConversionTrigger(type = 'markdown') {
           } else {
             // 用户取消
             logger.info('User cancelled duplicate task creation');
+            notifyOutcome({ ok: false, cancelled: true });
             if (activeButton) {
               activeButton.disabled = false;
               activeButton.style.opacity = '1';
@@ -248,9 +259,9 @@ async function handleConversionTrigger(type = 'markdown') {
 
     // 恢复按钮状态
     const activeButton =
-      type === 'markdown'
-        ? document.querySelector('.arxiv-md-convert-btn')
-        : document.querySelector('.arxiv-pdf-download-btn');
+      type === 'pdf'
+        ? document.querySelector('.arxiv-pdf-download-btn')
+        : document.querySelector('.arxiv-md-convert-btn');
     if (activeButton) {
       activeButton.disabled = false;
       activeButton.style.opacity = '1';

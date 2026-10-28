@@ -6,7 +6,7 @@ const { translations } = require('../src/config/locales');
 test('popup .toast 不再硬编码 rgba(36,27,25,.9)，改用 token', () => {
   const css = fs.readFileSync(path.join(__dirname, '../src/ui/popup/popup.css'), 'utf8');
   expect(css).not.toMatch(/rgba\(36,\s*27,\s*25/);
-  expect(css).toMatch(/\.toast\{[^}]*background:var\(--text-primary\);color:var\(--surface\)/);
+  expect(css).toMatch(/\.toast\{[^}]*background:var\(--text\);color:var\(--surface\)/);
 });
 
 test('英文统计区标签统一句首大写', () => {

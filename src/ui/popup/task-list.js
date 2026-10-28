@@ -181,3 +181,31 @@ export function getTaskActions(task) {
   return `<span class="action-placeholder">${t.popup_status_processing}…</span>`;
 }
 
+
+/**
+ * Round 3 C-2：popup v2 的紧凑行（徽标 · 标题 · 时间 · 操作）
+ */
+export function createTaskRow(task) {
+  const t = translations[currentLang];
+  const { id, status, progress, paperInfo = {}, createdAt, zipUrl, error } = task;
+  const title = paperInfo.title || paperInfo.arxivId || '';
+  const timeAgo = formatTimeAgo(createdAt, currentLang, t.popup_time_just_now);
+  const map = {
+    [TASK_STATUS.PENDING]: ['run', t.popup_status_pending],
+    [TASK_STATUS.PROCESSING]: ['run', t.popup_status_processing],
+    [TASK_STATUS.COMPLETED]: ['ok', t.popup_status_completed],
+    [TASK_STATUS.FAILED]: ['err', t.popup_status_failed],
+  };
+  const [cls, label] = map[status] || ['idle', t.popup_status_unknown];
+  const busy = status === TASK_STATUS.PENDING || status === TASK_STATUS.PROCESSING;
+  const eid = escapeHtml(id);
+  let act = '';
+  if (status === TASK_STATUS.COMPLETED && zipUrl) {
+    act = `<button class="btn btn-ghost" data-action="download" data-url="${escapeHtml(zipUrl)}">${t.popup_action_download}</button>`;
+  } else if (status === TASK_STATUS.FAILED) {
+    act = `<button class="btn btn-ghost" data-action="retry" data-task-id="${eid}">${t.popup_action_retry}</button>`;
+  }
+  act += `<button class="btn btn-ghost" data-action="delete" data-task-id="${eid}" title="${t.popup_action_delete}" aria-label="${t.popup_action_delete}">×</button>`;
+  const side = busy ? `<small class="pct">${Number(progress) || 0}%</small>` : `<small>${escapeHtml(timeAgo)}</small>`;
+  return `<div class="row" data-task-id="${eid}" data-status="${escapeHtml(status)}"${error ? ` title="${escapeHtml(error)}"` : ''}><span class="badge ${cls}">${escapeHtml(label)}</span><span class="n" title="${escapeHtml(title)}">${escapeHtml(title)}</span>${side}<span class="row-act">${act}</span></div>`;
+}

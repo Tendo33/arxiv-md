@@ -3,76 +3,65 @@
   <head>
     <meta charset="UTF-8" />
     <title data-i18n="popup_page_title">arXiv to Markdown</title>
+    <link rel="stylesheet" href="ui-v2.css" />
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <div class="popup-container">
-      <!-- Header -->
-      <header class="header">
-        <div class="header-left">
-          <img src="../../assets/icon.svg" alt="" width="24" height="24" />
-          <h1 data-i18n="popup_title">arXiv to Markdown</h1>
-        </div>
-        <div class="header-actions">
-          <button class="icon-btn settings-btn" id="settingsBtn" data-i18n-title="popup_btn_settings" data-i18n-aria="popup_btn_settings" title="打开设置" aria-label="打开设置">
-            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path
-                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-              </path>
-            </svg>
-          </button>
-          <button class="icon-btn" id="clearCompletedBtn" data-i18n-title="popup_btn_clear_completed" data-i18n-aria="popup_btn_clear_completed" title="清空已完成" aria-label="清空已完成">
-            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-              <path
-                d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5ZM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H2.506a.58.58 0 0 0-.01 0H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1h-.995a.59.59 0 0 0-.01 0H11Zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5h9.916Z" />
-            </svg>
-          </button>
-        </div>
+    <div class="pop" id="pop">
+      <header class="hd">
+        <div class="logo"><img src="assets/icon-48.png" alt="" width="24" height="24" /></div>
+        <h1 data-i18n="popup_title">arXiv to Markdown</h1>
+        <button class="icon-btn" id="settingsBtn" data-i18n-title="popup_btn_settings" data-i18n-aria="popup_btn_settings" title="打开设置" aria-label="打开设置">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        </button>
       </header>
-        
-        <!-- Stats Summary -->
-        <section class="stats-summary" id="statsSummary" data-i18n-aria="popup_stats_region" aria-label="转换统计">
-          <div class="stat-item">
-            <span class="stat-label" data-i18n="stats_total">总任务</span>
-            <span class="stat-value" id="statsTotal">0</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label" data-i18n="popup_status_processing">处理中</span>
-            <span class="stat-value processing" id="statsProcessing">0</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label" data-i18n="popup_status_completed">已完成</span>
-            <span class="stat-value completed" id="statsCompleted">0</span>
-          </div>
+
+      <main class="body">
+        <section id="ctxCard" class="card ctx" data-i18n-aria="popup_ctx_region" aria-label="当前页面">
+          <span id="ctxBadge" class="badge idle" role="status" aria-live="polite">…</span>
+          <div id="ctxTitle" class="t">…</div>
+          <div id="ctxMeta" class="m"></div>
+          <div id="ctxProg" class="prog hidden" aria-live="polite"><div class="l"><span id="ctxProgText"></span><span id="ctxProgPct"></span></div><div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"><i id="ctxProgBar"></i></div></div>
         </section>
-        
-        <!-- Task List -->
-        <main class="task-list-container" data-i18n-aria="popup_task_list" aria-label="任务列表">
-          <div class="task-list" id="taskList" aria-live="polite" aria-busy="false">
-            <!-- 任务卡片将动态插入 -->
-          </div>
-        
-          <!-- Empty State -->
-          <div class="empty-state" id="emptyState" style="display: none">
-            <svg aria-hidden="true" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <path d="M9 9h6M9 13h6M9 17h3" />
-            </svg>
-            <p data-i18n="popup_empty_title">暂无 MinerU 任务</p>
-            <small data-i18n="popup_empty_desc">Markdown 转换会直接下载，并计入上方总数；MinerU 任务会显示在这里</small>
-          </div>
+        <div id="unsupported" class="card empty hidden">
+          <div class="ic"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg></div>
+          <b class="empty-title" data-i18n="popup_unsupported_title">当前页面暂不支持</b><br /><span data-i18n="popup_unsupported_desc">打开 arXiv 论文页（/abs、/pdf、/html）后可用</span>
+        </div>
+
+        <div id="alertOk" class="alert ok hidden" role="status">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
+          <div><b data-i18n="popup_saved">已保存</b><span id="okFile"></span></div>
+          <div class="x"><button id="okOpen" class="btn btn-ghost btn-xs hidden" data-i18n="popup_btn_open">打开</button></div>
+        </div>
+        <div id="alertErr" class="alert err hidden" role="alert">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/></svg>
+          <div><b id="errTitle"></b><span id="errHint"></span></div>
+        </div>
+        <div id="alertInfo" class="alert info hidden">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/></svg>
+          <div id="infoText" data-i18n="popup_dis_loading">页面仍在加载，就绪后可导出</div>
+        </div>
+
+        <div class="acts">
+          <button id="exportBtn" class="btn btn-primary" disabled>
+            <svg class="btn-icon" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg><span class="spinner hidden" aria-hidden="true"></span><span class="label" data-i18n="popup_btn_export">导出 Markdown</span>
+          </button>
+          <button id="mineruBtn" class="btn btn-secondary" disabled data-i18n="popup_btn_mineru">MinerU 高质量</button>
+          <button id="pdfBtn" class="btn btn-secondary" disabled data-i18n="popup_btn_pdf">下载 PDF</button>
+        </div>
+
+        <div id="recent" class="recent hidden">
+          <div class="sec-h"><span data-i18n="popup_recent">最近导出</span><span class="sec-x"><button id="clearCompletedBtn" class="btn btn-ghost btn-xxs hidden" data-i18n="popup_btn_clear_completed">清空已完成</button><button id="recentAll" class="btn btn-ghost btn-xxs hidden" aria-expanded="false"></button></span></div>
+          <div id="taskList" class="card list" aria-live="polite" data-i18n-aria="popup_task_list" aria-label="任务列表"></div>
+        </div>
       </main>
 
-      <!-- Footer -->
-      <footer class="footer">
-        <span class="footer-text">arXiv to Markdown</span>
-        <button type="button" id="refreshBtn" class="footer-link" data-i18n="popup_btn_refresh" data-i18n-aria="popup_btn_refresh" aria-label="刷新">刷新</button>
+      <footer class="ft">
+        <span><span data-i18n="popup_shortcut">快捷键</span> <kbd id="shortcutKbd">Alt+Shift+M</kbd></span>
+        <span id="footerVersion">v</span>
       </footer>
     </div>
 
-    <!-- 确认对话框 -->
     <div class="confirm-overlay" id="confirmOverlay" hidden inert>
       <div class="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirmMessage" tabindex="-1">
         <p class="confirm-message" id="confirmMessage" data-i18n="popup_confirm_delete">确定要删除吗？</p>
