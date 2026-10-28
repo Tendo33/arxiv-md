@@ -315,12 +315,25 @@ export function addAr5ivTurndownRules(turndownService, options = {}) {
   });
 }
 
+const PYTHON_HINTS = [
+  /\bre\.(?:compile|match|search|sub|findall|fullmatch)\(/, // 标准库 re
+  /[=(,]\s*(?:rf|fr|rb|br|[rfb])"/i, // r"" f"" rf"" 字符串前缀
+  /^\w+ = [[{(]\s*$/m, // 多行列表 / 字典 / 元组赋值的开头
+  /,\s+#\s?\S/, // 元素后的 # 行内注释
+  /\bre\.(?:IGNORECASE|MULTILINE|DOTALL|VERBOSE)\b/,
+  /\bself\.\w+/,
+  /'\S*'\.join\(|"\S*"\.join\(/,
+];
+
 /**
  * R1-03：LaTeXML 的 verbatim/listing 不带语言，按内容保守猜测；拿不准就不写。
  */
 export function guessCodeLanguage(code) {
   const text = String(code || '');
   if (/^\s*(?:import [\w.]+(?: as \w+)?|from [\w.]+ import |def \w+\(.*\):|class \w+(?:\(.*\))?:)\s*$/m.test(text)) return 'python';
+  // AA3-01：没有 import/def 的 Python 片段（如 2402.19173 附录 A.3 的 license_file_names 列表 + re.compile）。
+  // 至少命中两条 Python 特有写法才标注，避免把伪代码或其他语言误标成 python。
+  if (PYTHON_HINTS.filter((re) => re.test(text)).length >= 2) return 'python';
   if (/^\s*(?:\$ )?(?:pip|conda|git|python3?|bash|sh|cd|export) \S/m.test(text) && !/[;{}]\s*$/m.test(text)) return 'bash';
   if (/^\s*#include\s*[<"]/m.test(text)) return 'cpp';
   if (/^\s*(?:const|let|function) \w+/m.test(text) && /[;{}]\s*$/m.test(text)) return 'javascript';
