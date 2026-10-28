@@ -1,5 +1,27 @@
 {
   "extDescription": {
     "message": "Save arXiv papers as Markdown in one click: math, tables and references kept, PDFs named by title."
+  },
+  "notify_incomplete_title": {
+    "message": "⚠ Export may be incomplete",
+    "description": "AF3-01: notification title when the export may be incomplete"
+  },
+  "notify_incomplete_body": {
+    "message": "Only $ACTUAL$ of ~$EXPECTED$ headings exported — please check.\nSaved: $FILENAME$",
+    "description": "AF3-01: notification body; $EXPECTED$ = headings on page, $ACTUAL$ = headings exported, $FILENAME$ = saved file",
+    "placeholders": {
+      "expected": {
+        "content": "$1",
+        "example": "58"
+      },
+      "actual": {
+        "content": "$2",
+        "example": "25"
+      },
+      "filename": {
+        "content": "$3",
+        "example": "paper.md"
+      }
+    }
   }
 }
