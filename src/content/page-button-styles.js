@@ -142,6 +142,11 @@ export const PAGE_BUTTON_STYLES = `
     .arxiv-md-progress.error .progress-detail,
     .arxiv-md-progress.success .progress-detail,
     .arxiv-md-progress.warning .progress-detail { color: var(--amd-text); }
+    .progress-file {
+      font-size: 12px;
+      color: var(--amd-text-2);
+      overflow-wrap: anywhere;
+    }
 
     .arxiv-md-result-actions {
       display: flex;

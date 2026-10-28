@@ -28,7 +28,7 @@ export function updateProgressUI(progress) {
 
 // Toast 通知已被移除，通知由 background script 的系统通知处理
 
-export function setProgressState({ text, percent = null, detail = '', state = '' }) {
+export function setProgressState({ text, percent = null, detail = '', file = '', state = '' }) {
   const progressIndicator = document.querySelector('.arxiv-md-progress');
   if (!progressIndicator) return;
 
@@ -56,6 +56,23 @@ export function setProgressState({ text, percent = null, detail = '', state = ''
     detailEl.textContent = detail || '';
     detailEl.style.display = detail ? 'block' : 'none';
   }
+  setFileLine(progressIndicator, detailEl, file);
+}
+
+// AF3 设计验收：「已保存：文件名」单独一行、浅色，不和说明挤在同一段
+function setFileLine(progressIndicator, detailEl, file) {
+  let fileEl = progressIndicator.querySelector('.progress-file');
+  if (!file) {
+    if (fileEl) fileEl.remove();
+    return;
+  }
+  if (!fileEl) {
+    fileEl = document.createElement('div');
+    fileEl.className = 'progress-file';
+    if (detailEl) detailEl.after(fileEl);
+    else progressIndicator.appendChild(fileEl);
+  }
+  fileEl.textContent = file;
 }
 
 export function clearProgressState() {
@@ -74,6 +91,7 @@ export function clearProgressState() {
     detailEl.textContent = '';
     detailEl.style.display = 'none';
   }
+  setFileLine(progressIndicator, detailEl, '');
 }
 
 /** Round 3 C-2：popup 发起的转换要拿到结果（成功文件名 / 失败原因），一次性回调 */
@@ -193,7 +211,8 @@ export function showResult({ filename = '', markdown = '', integrity = null } = 
     : '';
   setProgressState({
     text: integrity ? t.content_progress_incomplete : t.content_progress_completed,
-    detail: [warning, saved].filter(Boolean).join(' '),
+    detail: integrity ? warning : saved,
+    file: integrity ? saved : '',
     percent: null,
     state: integrity ? 'warning' : 'success',
   });
