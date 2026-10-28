@@ -43,10 +43,18 @@ describe('design S3: row actions right-aligned, awaiting title >= 80px', () => {
   });
 });
 
-describe('design S4: requires-key chip not uppercased', () => {
-  test('settings.css sets text-transform:none on the key chip', () => {
-    const css = require('fs').readFileSync(require('path').join(__dirname, '../src/ui/settings/settings.css'), 'utf8');
-    expect(css).toMatch(/\.mode-badge\[data-i18n="mode_requires_token"\]\s*\{\s*text-transform:\s*none;/);
+describe('design S4 + suggestion B: chips keep sentence case', () => {
+  const css = require('fs').readFileSync(require('path').join(__dirname, '../src/ui/settings/settings.css'), 'utf8');
+  test('.mode-badge has no uppercase / letter-spacing and no per-chip override', () => {
+    const block = css.match(/\.mode-badge \{[^}]*\}/)[0];
+    expect(block).not.toMatch(/text-transform/);
+    expect(block).not.toMatch(/letter-spacing/);
+    expect(css).not.toMatch(/\.mode-badge\[data-i18n="mode_requires_token"\]/);
+    expect(css).not.toMatch(/text-transform:\s*uppercase/);
+  });
+  test('en copy is sentence case', () => {
+    expect(translations.en.mode_requires_token).toBe('Requires key');
+    expect(translations.en.mode_recommended).toBe('Recommended');
   });
 });
 
