@@ -1,5 +1,5 @@
 import { KEEP_ALIVE_ALARM, syncKeepAlive } from '../src/background/keep-alive';
-import { resolveTotalConversions } from '../src/ui/popup/popup-stats';
+import { resolveTotalConversions, shouldShowTaskStats } from '../src/ui/popup/popup-stats';
 
 function fakeAlarms() {
   const alarms = new Map();
@@ -32,5 +32,13 @@ describe('popup total conversions', () => {
   test('falls back to task count when statistics are unavailable', () => {
     expect(resolveTotalConversions({ total: 1 }, null)).toBe(1);
     expect(resolveTotalConversions(undefined, undefined)).toBe(0);
+  });
+});
+
+describe('popup 空状态', () => {
+  test('没有 MinerU 任务时隐藏“处理中/已完成”', () => {
+    expect(shouldShowTaskStats({ total: 0, completed: 0 })).toBe(false);
+    expect(shouldShowTaskStats(null)).toBe(false);
+    expect(shouldShowTaskStats({ total: 2, completed: 1 })).toBe(true);
   });
 });

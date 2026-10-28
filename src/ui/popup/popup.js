@@ -5,7 +5,7 @@ import storage from '@utils/storage';
 import { translations } from '@config/locales';
 import { showConfirm } from './confirm-dialog';
 import { renderTaskList, setTaskListLanguage } from './task-list';
-import { resolveTotalConversions } from './popup-stats';
+import { resolveTotalConversions, shouldShowTaskStats } from './popup-stats';
 
 let currentTasks = [];
 let currentLang = 'en';
@@ -135,6 +135,12 @@ function updateStats(stats, globalStats = null) {
   document.getElementById('statsProcessing').textContent =
     stats.processing || 0;
   document.getElementById('statsCompleted').textContent = stats.completed || 0;
+
+  const showTaskStats = shouldShowTaskStats(stats);
+  ['statsProcessing', 'statsCompleted'].forEach((id) => {
+    const item = document.getElementById(id)?.closest('.stat-item');
+    if (item) item.style.display = showTaskStats ? '' : 'none';
+  });
 }
 
 /**
