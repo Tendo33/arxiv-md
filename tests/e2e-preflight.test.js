@@ -45,4 +45,20 @@ describe('e2e-shortcut 环境前置检查', () => {
     expect(r.stderr).toMatch(/请先构建（npm run build）/);
     expect(r.stderr).not.toMatch(/ENOENT|\n\s+at /);
   });
+  // batch6 AB5-02：CHROME_PATH 指向目录 / 没有 DISPLAY 时提示并退出 2，不带堆栈
+  test('CHROME_PATH 指向目录：提示并退出 2', () => {
+    const r = run({ E2E_PLAYWRIGHT_DIR: fake, CHROME_PATH: fake, DISPLAY: ':99' });
+    expect(r.status).toBe(2);
+    expect(r.stderr).toMatch(/CHROME_PATH 指向的是目录/);
+    expect(r.stderr).not.toMatch(/\n\s+at /);
+  });
+  (process.platform === 'linux' ? test : test.skip)('没有 DISPLAY：提示用 xvfb-run 并退出 2', () => {
+    const chrome = path.join(fake, 'chrome');
+    fs.writeFileSync(chrome, '');
+    const r = run({ E2E_PLAYWRIGHT_DIR: fake, CHROME_PATH: chrome, DISPLAY: undefined, WAYLAND_DISPLAY: undefined });
+    expect(r.status).toBe(2);
+    expect(r.stderr).toMatch(/没有可用的显示器（DISPLAY 未设置）/);
+    expect(r.stderr).toMatch(/xvfb-run/);
+    expect(r.stderr).not.toMatch(/\n\s+at /);
+  });
 });
