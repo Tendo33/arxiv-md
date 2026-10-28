@@ -224,7 +224,11 @@ export function cleanLatexFormula(latex) {
   // 6b. KaTeX 不支持的文本命令 / 交叉引用
   result = result.replace(/\\textsc\b/g, '\\text');
   // 论文里常见的自定义算子宏（\newcommand\diag{\operatorname{diag}} 之类），KaTeX 不认识
-  result = result.replace(/\\(diag|argmax|argmin|Tr|tr|rank|sign|sgn)(?![a-zA-Z])/g, '\\operatorname{$1}');
+  // \text{\diag} 里不能用数学命令：直接换成纯文字
+  result = result.replace(/\\text\{([^{}]*)\}/g, (m, inner) => `\\text{${inner.replace(/\\(diag|argmax|argmin|Tr|tr|rank|sign|sgn)(?![a-zA-Z])\s*/g, '$1')}}`);
+  // argmax/argmin 习惯用 \DeclareMathOperator*（下标在正下方）；前面是奇数个 \ 才是命令，\\diag 是换行 + 字母
+  result = result.replace(/(?<=(?:^|[^\\])(?:\\\\)*)\\(argmax|argmin)(?![a-zA-Z])/g, '\\operatorname*{$1}');
+  result = result.replace(/(?<=(?:^|[^\\])(?:\\\\)*)\\(diag|Tr|tr|rank|sign|sgn)(?![a-zA-Z])/g, '\\operatorname{$1}');
   result = result.replace(/~?\\(?:eqref|ref|autoref|cref|Cref|label)\s*\{[^}]*\}/g, '');
 
   // LaTeXML 输出的 \\begin{array}[]{c} 空可选参数 KaTeX 不认
