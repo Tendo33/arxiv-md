@@ -3,11 +3,11 @@
  * chrome.action.setBadgeText / setBadgeBackgroundColor 不需要额外权限。
  */
 export const BADGE = {
-  running: { text: '…', color: '#1d4ed8' },
-  success: { text: '✓', color: '#15803d' },
-  error: { text: '!', color: '#b91c1c' },
-  // AF3-01：已下载但可能不完整
-  warning: { text: '⚠', color: '#b45309' },
+  running: { text: '…', color: '#1d4ed8', textColor: '#ffffff' },
+  success: { text: '✓', color: '#15803d', textColor: '#ffffff' },
+  error: { text: '!', color: '#b91c1c', textColor: '#ffffff' },
+  // AF3-01：已下载但可能不完整。设计验收：亮琥珀底 + 深字（8.49:1），与其余三态的深底白字明暗相反
+  warning: { text: '⚠', color: '#f59e0b', textColor: '#1f1300' },
 };
 export const BADGE_CLEAR_MS = { running: 120000, success: 4000, error: 6000, warning: 6000 };
 
@@ -45,6 +45,10 @@ export function createActionBadge(actionApi, timers = defaultTimers) {
       if (pending.has(tabId)) timers.clearTimeout(pending.get(tabId));
       pending.delete(tabId);
       safeCall(() => actionApi.setBadgeBackgroundColor({ tabId, color: badge.color }));
+      // 设计验收：四态都显式设文字色，不让 Chrome 按平台自动选；旧版 Chrome 没有这个 API
+      if (typeof actionApi.setBadgeTextColor === 'function') {
+        safeCall(() => actionApi.setBadgeTextColor({ tabId, color: badge.textColor }));
+      }
       safeCall(() => actionApi.setBadgeText({ tabId, text: badge.text }));
       pending.set(tabId, timers.setTimeout(() => {
         pending.delete(tabId);
