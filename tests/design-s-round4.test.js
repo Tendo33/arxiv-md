@@ -26,15 +26,20 @@ describe('design S3: row actions right-aligned, awaiting title >= 80px', () => {
   test('row-act has margin-left:auto', () => {
     expect(css).toMatch(/\.row \.row-act\{[^}]*margin-left:auto/);
   });
-  test('provider label hidden below 379px', () => {
-    expect(css).toMatch(/@media \(max-width:378px\)\{\.row \.prov\{display:none\}\}/);
+  test('N1: provider label only visually hidden below 379px (never display:none)', () => {
+    expect(css).toMatch(/@media \(max-width:378px\)\{\.row \.prov\{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect\(0 0 0 0\);white-space:nowrap;border:0;padding:0\}\}/);
+    expect(css).not.toMatch(/\.prov\{display:none/);
+    expect(css).toMatch(/\.row\{position:relative\}/);
   });
   test('awaiting title min-width 80px', () => {
     expect(css).toMatch(/\.row\[data-status="awaiting_consent"\] \.n\{min-width:80px\}/);
   });
-  test('provider name kept in title tooltip', () => {
-    const js = require('fs').readFileSync(require('path').join(__dirname, '../src/ui/popup/task-list.js'), 'utf8');
-    expect(js).toMatch(/\$\{title\} · \$\{providerLabel\(task\.provider\)\}/);
+  test('N1: provider name read once (in .prov), not repeated in the title tooltip', () => {
+    const { createTaskRow } = require('../src/ui/popup/task-list');
+    const html = createTaskRow({ id: 'p', status: 'awaiting_consent', provider: 'mineru', paperInfo: { title: 'Paper T' }, createdAt: Date.now() });
+    expect(html).toContain('title="Paper T"');
+    expect(html).toContain('<span class="prov">MinerU</span>');
+    expect(html.split('MinerU').length - 1).toBe(1);
   });
 });
 

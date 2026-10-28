@@ -12,7 +12,7 @@
     "dev": "webpack --mode development --watch",
     "lint": "eslint src/**/*.js \"packages/pdf-parse-core/src/**/*.js\"",
     "test": "jest --runInBand",
-    "test:e2e": "npm run build && node scripts/e2e-shortcut.js",
+    "test:e2e": "npm run build && node scripts/e2e-shortcut.js && node scripts/e2e-popup-a11y.js",
     "package": "npm run build && node scripts/package.js",
     "check:keys": "node scripts/check-no-keys.js",
     "test:core-coverage": "jest --runInBand tests/pdf-core --coverage --collectCoverageFrom='packages/pdf-parse-core/src/**/*.js' --coverageThreshold='{\"global\":{\"lines\":85}}'"
