@@ -14,6 +14,7 @@ import {
   setProgressState,
   setProgressText,
   showError,
+  showResult,
   showSuccess,
   updateProgressUI,
 } from './progress-ui';
@@ -209,6 +210,11 @@ async function handleConversionTrigger(type = 'markdown') {
 
         if (response?.data?.background) {
           showSuccess(t.content_progress_submitted);
+        } else if (response?.data?.filename) {
+          showResult({
+            filename: response.data.filename,
+            markdown: response.data.markdown || '',
+          });
         } else {
           showSuccess(t.content_progress_completed);
         }

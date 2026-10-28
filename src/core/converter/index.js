@@ -89,7 +89,12 @@ class MainConverter {
       );
       logger.info('Tier 1 success:', filename);
 
-      return { success: true, tier: CONVERSION_TIER.AR5IV_LOCAL, filename };
+      return {
+        success: true,
+        tier: CONVERSION_TIER.AR5IV_LOCAL,
+        filename,
+        markdown: result.markdown,
+      };
     } catch (ar5ivError) {
       logger.warn('Tier 1 failed:', ar5ivError.message);
 

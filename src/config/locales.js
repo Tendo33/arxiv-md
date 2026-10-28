@@ -115,6 +115,11 @@ export const translations = {
     content_progress_completed: 'Completed',
     content_progress_failed: 'Failed',
     content_progress_submitted: 'Submitted',
+    content_result_saved: 'Saved: {filename}',
+    content_btn_copy_md: 'Copy Markdown',
+    content_copy_done: 'Copied to clipboard',
+    content_copy_failed: 'Copy failed. Please open the downloaded file.',
+    content_btn_close: 'Close',
     content_error_extension_reloaded:
       'Extension was updated or reloaded. Please refresh and try again.',
     content_error_generic: 'Conversion failed',
@@ -241,6 +246,11 @@ export const translations = {
     content_progress_completed: '已完成',
     content_progress_failed: '失败',
     content_progress_submitted: '已提交',
+    content_result_saved: '已保存：{filename}',
+    content_btn_copy_md: '复制 Markdown',
+    content_copy_done: '已复制到剪贴板',
+    content_copy_failed: '复制失败，请打开已下载的文件',
+    content_btn_close: '关闭',
     content_error_extension_reloaded:
       '扩展已更新或重载，请刷新页面后重试。',
     content_error_generic: '转换失败',

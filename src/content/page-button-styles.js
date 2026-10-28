@@ -127,6 +127,34 @@ export const PAGE_BUTTON_STYLES = `
       color: #6b7280;
     }
 
+    .arxiv-md-result-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .arxiv-md-result-btn {
+      padding: 3px 10px;
+      font-size: 12px;
+      border-radius: 4px;
+      border: 1px solid #a7f3d0;
+      background: #ffffff;
+      color: #065f46;
+      cursor: pointer;
+    }
+
+    .arxiv-md-result-btn.primary {
+      background: #059669;
+      border-color: #059669;
+      color: #ffffff;
+    }
+
+    .arxiv-md-result-status {
+      font-size: 12px;
+      color: #047857;
+    }
+
     .arxiv-md-hint {
       display: none;
       font-size: 12px;
