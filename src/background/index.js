@@ -7,6 +7,7 @@ import logger from '@utils/logger';
 import storage from '@utils/storage';
 import { TASK_STATUS } from '@config/constants';
 import { arxivApiUrl } from '@core/metadata-extractor';
+import { installPaddleOriginRuleListeners } from './paddle-origin-rule';
 import { deletedTaskGuard, processMinerUTaskInBackground, providerRegistry, resumeParseTasks } from './mineru-task-runner';
 import { KEEP_ALIVE_ALARM, syncKeepAlive } from './keep-alive';
 import { isTrustedArxivSender, isValidArxivId, triggerConversionInActiveTab } from './message-guards';
@@ -422,5 +423,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   }
 });
 resumeAndRefresh();
+// DNR（已批）：授权后才装星河 Origin 规则
+installPaddleOriginRuleListeners();
 
 export { processMinerUTaskInBackground };

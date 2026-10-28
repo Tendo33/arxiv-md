@@ -46,6 +46,8 @@ export const paddleocrProvider = defineProvider({
   hosts: [`${PADDLEOCR_BASE}/*`],
   // R4-08：optional_host_permissions，选中 PaddleOCR 时在用户手势里申请
   permissionMode: 'optional',
+  // DNR（已批）：和域名权限一起申请，用于删除星河请求的 Origin 头（否则网关返回空 body 403）
+  optionalPermissions: ['declarativeNetRequestWithHostAccess'],
   credentialFields: [{ key: 'token', label: 'Access Token', secret: true }],
   keyUrl: 'https://aistudio.baidu.com/account/accessToken',
   dataHost: 'paddleocr.aistudio-app.com',

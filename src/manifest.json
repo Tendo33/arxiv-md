@@ -18,6 +18,9 @@
     "alarms",
     "contextMenus"
   ],
+  "optional_permissions": [
+    "declarativeNetRequestWithHostAccess"
+  ],
   "host_permissions": [
     "https://arxiv.org/*",
     "https://ar5iv.org/*",
