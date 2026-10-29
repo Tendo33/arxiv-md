@@ -230,7 +230,8 @@
           <button class="btn btn-secondary" id="resetBtn" data-i18n="btn_reset">
             Reset to default
           </button>
-          <span class="autosave-note" data-i18n="autosave_note">Changes are saved automatically</span>
+          <span class="autosave-note" id="saveStatus" role="status" aria-live="polite" aria-atomic="true"><span data-i18n="autosave_note">Changes are saved automatically</span></span>
+          <span class="sr-only" id="saveAlert" role="alert"></span>
         </div>
       </main>
 
@@ -256,10 +257,6 @@
       </footer>
     </div>
 
-    <!-- Toast Notification -->
-    <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true">
-      <span class="toast-message"></span>
-    </div>
 
     <script src="settings.js"></script>
   </body>

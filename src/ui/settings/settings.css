@@ -599,42 +599,6 @@ body {
   color: var(--text-secondary);
 }
 
-/* Toast */
-/* release-polish 设计 NTF1：toast 浮在吸底操作栏上方，不再盖住「恢复默认」；--footer-h = 操作栏高度 */
-:root {
-  --footer-h: 80px;
-}
-
-.toast {
-  position: fixed;
-  bottom: calc(var(--footer-h, 72px) + 12px);
-  right: 32px;
-  background: var(--text-primary); /* 设计建议 6：反色 token */
-  color: var(--surface);
-  padding: 16px 24px;
-  border-radius: 10px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  pointer-events: none;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.toast.show {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-.toast-message {
-  font-size: 14px;
-  font-weight: 500;
-}
-
 @media (max-width: 720px) {
   .header {
     padding: 16px 20px;
@@ -662,7 +626,6 @@ body {
   .actions-bar {
     margin: 8px -20px 0;
     padding: 16px 20px;
-    flex-direction: column;
   }
 
   .btn {
@@ -673,15 +636,6 @@ body {
     padding: 24px 20px;
   }
 
-  /* 窄宽下操作栏是纵向两行（按钮 + 自动保存说明） */
-  :root {
-    --footer-h: 112px;
-  }
-
-  .toast {
-    right: 20px;
-    left: 20px;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -712,13 +666,22 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* A3-3 即时保存提示，占原「保存」按钮的位置 */
+/* A3-3 即时保存提示；B7：保存结果也显示在这里（不再用浮层 toast），操作栏单行左右分组 */
+.actions-bar { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.actions-bar .btn { width: auto; }
 .autosave-note {
-  align-self: center;
-  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 20px;
+  margin: 0;
   color: var(--text-secondary);
   font-size: 13px;
+  white-space: nowrap;
 }
+.autosave-note svg { width: 14px; height: 14px; flex: none; }
+.autosave-note.saved { color: var(--success); font-weight: 600; }
+.autosave-note.error { color: var(--danger); font-weight: 600; white-space: normal; }
 
 /* R4-14：PDF 解析分组 */
 select.input-field { appearance: auto; cursor: pointer; width: 100%; }

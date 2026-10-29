@@ -24,9 +24,8 @@ describe('Round 2 设计验收建议（S 级）', () => {
     expect(rule(settings, '.btn')).toMatch(/min-height: 36px/);
     expect(rule(settings, '.btn-icon')).toMatch(/border: 1px solid/);
     expect(rule(settings, '.btn-test:hover')).not.toMatch(/rgba\(5, 150, 105/);
-    const toast = rule(settings, '.toast');
-    expect(toast).not.toMatch(/#1F2937|#fff\b/i);
-    expect(toast).toMatch(/transition: opacity/);
+    // design-abs-buttons-2026-10-29 B7：浮层 toast 已删除，保存提示在 .autosave-note（见 settings-save-status-b7.test.js）
+    expect(rule(settings, '.toast')).toBe('');
   });
   test('popup：删除按钮 600 + 文案 Delete/删除，确认消息 balance，无斜体', () => {
     expect(popup).toMatch(/\.confirm-ok\{font-weight:600\}/);

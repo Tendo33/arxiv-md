@@ -10,6 +10,9 @@ import { bindInstantSave } from './instant-save';
 import { createDefaultRegistry } from '@pdf-core/providers/index';
 import { createPdfProviderSection } from './pdf-provider';
 import { renderCopyrightYear } from './copyright';
+import { createSaveStatus } from './save-status';
+
+const showSaveStatus = createSaveStatus({ doc: document, t: () => translations[currentLang] });
 
 const pdfSection = createPdfProviderSection({
   doc: document,
@@ -17,7 +20,7 @@ const pdfSection = createPdfProviderSection({
   permissions: chrome.permissions,
   registry: createDefaultRegistry(),
   t: () => translations[currentLang],
-  toast: (m, type) => showToast(m, type),
+  toast: (m, type) => showSaveStatus(m, type),
 });
 
 let currentLang = 'en'; // init() 中会换成已保存的语言，未保存时跟随浏览器（storage.getLanguage）
@@ -121,7 +124,7 @@ async function loadSettings() {
     logger.info('Settings loaded');
   } catch (error) {
     logger.error('Failed to load settings:', error);
-    showToast('Failed to load settings', 'error');
+    showSaveStatus('Failed to load settings', 'error');
   }
 }
 
@@ -154,10 +157,10 @@ function bindEvents() {
 
   // 即时保存（A3-3）：每项改动立刻写入，不再有「保存」按钮
   bindInstantSave(document, storage, {
-    onSaved: () => showToast(translations[currentLang].toast_saved, 'success'),
+    onSaved: () => showSaveStatus(translations[currentLang].toast_saved, 'success'),
     onError: (error) => {
       logger.error('Failed to save setting:', error);
-      showToast(`${translations[currentLang].toast_save_failed} ${error.message}`, 'error');
+      showSaveStatus(`${translations[currentLang].toast_save_failed} ${error.message}`, 'error');
     },
   });
 
@@ -212,10 +215,10 @@ async function resetSettings() {
     document.getElementById('showPdfFab').checked = true;
     await storage.setShowPdfFab(true);
 
-    showToast(t.toast_reset, 'success');
+    showSaveStatus(t.toast_reset, 'success');
   } catch (error) {
     logger.error('Failed to reset settings:', error);
-    showToast('Failed to reset: ' + error.message, 'error');
+    showSaveStatus('Failed to reset: ' + error.message, 'error');
   }
 }
 
@@ -283,29 +286,9 @@ async function resetStatistics() {
     });
 
     await loadStatistics();
-    showToast(t.toast_stats_reset, 'success');
+    showSaveStatus(t.toast_stats_reset, 'success');
   } catch (error) {
     logger.error('Failed to reset statistics:', error);
-    showToast('Failed to reset: ' + error.message, 'error');
+    showSaveStatus('Failed to reset: ' + error.message, 'error');
   }
-}
-
-function showToast(message, type = 'info') {
-  const toast = document.getElementById('toast');
-  const messageEl = toast.querySelector('.toast-message');
-
-  messageEl.textContent = message;
-  if (type === 'error') {
-    toast.setAttribute('role', 'alert');
-    toast.setAttribute('aria-live', 'assertive');
-  } else {
-    toast.setAttribute('role', 'status');
-    toast.setAttribute('aria-live', 'polite');
-  }
-  toast.setAttribute('aria-atomic', 'true');
-  toast.classList.add('show');
-
-  setTimeout(() => {
-    toast.classList.remove('show');
-  }, 3000);
 }
