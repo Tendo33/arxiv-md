@@ -8,9 +8,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
-### Added
+## [1.2.0] - 2026-10-29
 
-- The popup footer shows a "Shortcut not set · Set up" guide when Chrome did not register the convert shortcut (e.g. it was taken by another extension or reserved by the browser). The button opens the browser's shortcuts page: `chrome://extensions/shortcuts` in Chrome, Brave and Opera, `edge://extensions/shortcuts` in Edge. Firefox shows a text hint instead. No new permissions.
+### 新增
+
+- 快捷键没注册上（被别的扩展占用或浏览器保留）时，弹窗底部提示「快捷键未设置 · 去设置」，一键打开浏览器的快捷键页面（Chrome / Brave / Opera 为 `chrome://extensions/shortcuts`，Edge 为 `edge://extensions/shortcuts`，Firefox 显示文字说明）。不需要新权限。
+- 下载 PDF 时，如果服务器给出文件大小，进度条显示真实进度；不知道大小时不再显示假的 0%。
+
+### 改进
+
+- 下载失败的原因分得更细：文件不存在、服务器拒绝、服务器出错分别提示。
+- 弹窗任务列表：窄窗口下标题单独一行；失败原因最多两行，鼠标悬停看全文；PDF 解析提交后显示「已提交」，不再误显示「已保存」。
+- 设置页：提示条不再被底部操作栏挡住；链接的焦点框和点击区域更明显；页脚版权年份自动更新。
+- 中文进度文案统一为「正在…」「导出」，按钮名用「」标出；英文 PDF 按钮写作 “by title”，并为读屏软件提供完整说明。
+- 语言跟随规则统一：没选语言时一律跟随浏览器。
+- 快捷键说明（扩展快捷键页面里看到的那句）跟随中英文界面。
+
+### 修复
+
+- ar5iv 返回「No content available」空页面或转换结果为空时，自动改用 PDF，不再保存空的 Markdown。
+- 旧式 arXiv 编号（如 `math/0211159`）的 `/html/` 页面也能用快捷键转换。
+- 取消下载后，如果页面上已经显示了下载卡片，就不再额外弹系统通知；卡片按下载任务对应，不会串号。
+
+### 其他
+
+- 可以提交到 Firefox 附加组件商店：加入 Firefox 扩展 ID，后台脚本兼容 Firefox；页面里不再用 `innerHTML` 写入内容。最低 Chrome 版本为 121。
+- 安装包更小：去掉约 200KB 的 `icon.svg` 和零散的许可证文件，第三方许可证合并为 `THIRD_PARTY_NOTICES.txt`。
 
 ## [1.1.12] - 2026-10-10
 

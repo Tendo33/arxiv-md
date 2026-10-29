@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "arXiv to Markdown",
-  "version": "1.1.12",
+  "version": "1.2.0",
   "description": "__MSG_extDescription__",
   "default_locale": "en",
   "author": "SimonSun",
