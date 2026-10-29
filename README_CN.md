@@ -107,7 +107,7 @@ npm run build
 
 - 扩展没有自己的服务器，不收集、不上传你的数据，也没有统计或埋点。
 - 标准模式下，转换完全在你的浏览器里完成，只访问 arXiv 和 ar5iv。
-- 只有你主动使用 PDF 解析时，论文的 arXiv PDF 链接才会和你的 Key 一起发给你选定的那一个后端（PaddleOCR 或 MinerU，均为第三方服务，受其条款约束），扩展不会自动切换后端。
+- 只有你主动使用 PDF 解析时，论文才会和你的 Key 一起发给你选定的那一个后端（PaddleOCR 或 MinerU，均为第三方服务，受其条款约束）：MinerU 收到 arXiv PDF 链接；PaddleOCR 收到 arXiv PDF 文件本身（上传，50 MB 以内），非 arXiv 的 PDF 只发链接。扩展不会自动切换后端。
 - 详见 [PRIVACY.md](./PRIVACY.md)。
 
 ## 常见问题

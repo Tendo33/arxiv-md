@@ -59,7 +59,7 @@ Depending on the feature you use, the extension may make requests to:
 - `https://ar5iv.labs.arxiv.org/*`
 - `https://mineru.net/*`
 - `https://cdn-mineru.openxlab.org.cn/*`
-- `https://paddleocr.aistudio-app.com/*`, only after you select PaddleOCR and grant permission (the result-file domain is pending QA)
+- `https://paddleocr.aistudio-app.com/*` and its result-file domain `https://*.bj.bcebos.com/*`, only after you select PaddleOCR and grant permission
 
 ### Standard Mode
 
@@ -76,13 +76,16 @@ Markdown generation itself happens locally in the browser.
 
 PDF parsing is used only when you choose "PDF high-quality parsing". The extension contacts the **single** provider you selected in Settings. It never switches providers automatically; on failure it only offers a button to open Settings.
 
-Neither provider receives the PDF file from your browser: the extension sends only the PDF's link, and the provider downloads the paper itself.
+What is sent depends on where the PDF is hosted and which provider you chose:
 
-**Open access.** All papers on arXiv are treated as open access; the extension does not check each paper's individual license. When the PDF is hosted on arXiv (`https://arxiv.org/pdf/…` or `https://export.arxiv.org/pdf/…`), the extension sends its link to the provider you selected and parsing starts right away, with no confirmation prompt. For a PDF from any other source, or when the source cannot be determined, nothing is sent until you confirm: the task waits as "Awaiting" and its PDF link is sent only after you choose "Send & parse" in the popup. Your confirmation applies to that task only (retrying the same task does not ask again) and is not remembered for other PDFs. Every way of starting a parse (popup, right-click menu, floating button and keyboard shortcut) goes through this same check before anything is sent; when a parse started outside the popup needs confirmation, you get a notification and confirm in the popup.
+- **PDF hosted on arXiv** (`arxiv.org`, `export.arxiv.org`): PaddleOCR receives the PDF file itself (the extension downloads it from arXiv and uploads it, up to 50 MB). MinerU receives only the PDF link and downloads the paper itself.
+- **Any other PDF**: both providers receive only the PDF link, never the file, and only after you confirm (see below).
+
+**Open access.** All papers on arXiv are treated as open access; the extension does not check each paper's individual license. When the PDF is hosted on arXiv (`https://arxiv.org/pdf/…` or `https://export.arxiv.org/pdf/…`), the extension sends it to the provider you selected (the file for PaddleOCR, the link for MinerU) and parsing starts right away, with no confirmation prompt. For a PDF from any other source, or when the source cannot be determined, nothing is sent until you confirm: the task waits as "Awaiting" and its PDF link is sent only after you choose "Send & parse" in the popup. Your confirmation applies to that task only (retrying the same task does not ask again) and is not remembered for other PDFs. Every way of starting a parse (popup, right-click menu, floating button and keyboard shortcut) goes through this same check before anything is sent; when a parse started outside the popup needs confirmation, you get a notification and confirm in the popup.
 
 #### PaddleOCR (default)
 
-The extension sends your access token and the model name to `paddleocr.aistudio-app.com`, operated by Baidu (AI Studio). For papers hosted on arXiv (`arxiv.org`, `export.arxiv.org`), the extension downloads the public PDF itself and uploads the PDF file (up to 50 MB), because AI Studio does not accept arXiv links; for any other PDF it sends only the PDF link (`fileUrl`) and does not upload the file. The parse result (Markdown text and figure images) is then downloaded from Baidu's storage domain `*.bj.bcebos.com`. Access to both domains is requested together only when you select PaddleOCR, and you can revoke it at any time. Access to this domain is requested only when you select PaddleOCR, and you can revoke it at any time.
+The extension sends your access token and the model name to `paddleocr.aistudio-app.com`, operated by Baidu (AI Studio). For papers hosted on arXiv (`arxiv.org`, `export.arxiv.org`), the extension downloads the public PDF itself and uploads the PDF file (up to 50 MB), because AI Studio does not accept arXiv links; for any other PDF it sends only the PDF link (`fileUrl`) and does not upload the file. The parse result (Markdown text and figure images) is then downloaded from Baidu's storage domain `*.bj.bcebos.com`. Access to both domains is requested together only when you select PaddleOCR, and you can revoke it at any time.
 
 #### MinerU
 
@@ -107,6 +110,7 @@ Parsing providers are third parties, and their own terms govern how they process
 | `alarms` | Periodically wake the background worker while PDF parsing tasks are running, to poll their progress; cleared when no task is active |
 | `contextMenus` | Add right-click menu items on arXiv abs/pdf/html pages and on links to arXiv papers (PDF parsing items appear only when a key is set for the selected provider) |
 | `https://paddleocr.aistudio-app.com/*` (optional) | Requested only when you select PaddleOCR |
+| `https://*.bj.bcebos.com/*` (optional) | Requested together with PaddleOCR access; downloads the parse result (Markdown and figure images) from Baidu's storage |
 | `declarativeNetRequestWithHostAccess` (optional) | Requested together with PaddleOCR access; removes the `Origin` header on requests to that domain only |
 
 ## Your Choices

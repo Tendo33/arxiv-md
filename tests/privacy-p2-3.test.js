@@ -38,3 +38,27 @@ describe('路线 2：界面 / README / ARCHITECTURE 与实际行为一致（arXi
     expect(rd('docs/ARCHITECTURE.md')).toMatch(/≤50 MB/);
   });
 });
+
+describe('隐私说明（Simon：arXiv 论文都算 OA，直接解析）和实际发送内容一致', () => {
+  const rd = (f) => require('fs').readFileSync(require('path').join(__dirname, '..', f), 'utf8');
+  test('PRIVACY.md：arXiv PDF → PaddleOCR 收文件（≤50 MB）、MinerU 只收链接；其他 PDF 只发链接；bcebos 在权限表里', () => {
+    const p = rd('PRIVACY.md');
+    expect(p).not.toMatch(/Neither provider receives the PDF file/);
+    expect(p).toMatch(/PDF hosted on arXiv[^\n]*PaddleOCR receives the PDF file itself[^\n]*50 MB[^\n]*MinerU receives only the PDF link/);
+    expect(p).toMatch(/Any other PDF\*\*: both providers receive only the PDF link/);
+    expect(p).toMatch(/\| `https:\/\/\*\.bj\.bcebos\.com\/\*` \(optional\) \|/);
+    expect(p).not.toMatch(/pending QA/);
+    expect(p.match(/Access to (both domains|this domain) is requested/g)).toHaveLength(1);
+  });
+  test('README_CN 隐私段同一说法', () => {
+    expect(rd('README_CN.md')).toMatch(/MinerU 收到 arXiv PDF 链接；PaddleOCR 收到 arXiv PDF 文件本身（上传，50 MB 以内），非 arXiv 的 PDF 只发链接/);
+  });
+  test('代码事实：MinerU submit 只发 url；PaddleOCR 只对 arXiv 主机上传', () => {
+    const m = rd('packages/pdf-parse-core/src/providers/mineru.js');
+    expect(m).toMatch(/url: input\.url/);
+    expect(m).not.toMatch(/FormData/);
+    const { shouldUploadFile } = require('@pdf-core/providers/paddleocr');
+    expect(shouldUploadFile('https://arxiv.org/pdf/1706.03762')).toBe(true);
+    expect(shouldUploadFile('https://example.org/a.pdf')).toBe(false);
+  });
+});
