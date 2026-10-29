@@ -1,8 +1,6 @@
 # Privacy Policy
 
-**Last updated: September 28, 2026**
-
-> **Pending review (Round 4 draft):** the PDF parsing sections below follow `pdf-parser-privacy-draft.md` v2 and are not final. MinerU is operated by 上海人工智能创新中心 (Shanghai Artificial Intelligence Innovation Center), the operator named in the 「OpenDataLab」个人信息保护政策 (Chinese only): https://sso.openxlab.org.cn/protocol/privacy Update the date above at release.
+**Last updated: 2026-10-29**
 
 ## Overview
 
@@ -88,6 +86,8 @@ What is sent depends on where the PDF is hosted and which provider you chose:
 The extension sends your access token and the model name to `paddleocr.aistudio-app.com`, operated by Baidu (AI Studio). For papers hosted on arXiv (`arxiv.org`, `export.arxiv.org`), the extension downloads the public PDF itself and uploads the PDF file (up to 50 MB), because AI Studio does not accept arXiv links. A PDF larger than 50 MB is stopped before upload: nothing is sent to AI Studio, and the extension suggests switching to MinerU, which takes the link; for any other PDF it sends only the PDF link (`fileUrl`) and does not upload the file. The parse result (Markdown text and figure images) is then downloaded from Baidu's storage domain `*.bj.bcebos.com`. Access to both domains is requested together only when you select PaddleOCR, and you can revoke it at any time.
 
 #### MinerU
+
+MinerU is operated by 上海人工智能创新中心（上海人工智能实验室） (Shanghai Artificial Intelligence Innovation Center / Shanghai AI Laboratory), the operator named in its 「OpenDataLab」个人信息保护政策 (Chinese only): https://sso.openxlab.org.cn/protocol/privacy
 
 The extension sends your MinerU bearer token, the PDF link for the selected paper, the model and language options, and the arXiv ID as task metadata to `mineru.net`. It does not upload the PDF file. MinerU processes the paper on its own service and returns a ZIP result URL (`cdn-mineru.openxlab.org.cn`), which the extension downloads. MinerU's domain access is unchanged from earlier versions and is granted at install.
 
