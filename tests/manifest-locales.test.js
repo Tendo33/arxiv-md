@@ -51,6 +51,41 @@ test('ci.yml：build 在 test 之前（dist 校验才会真正执行）', () => 
   expect(t).toBeGreaterThan(b);
 });
 
+// 复审 P3②：ci.yml 在 R4 合入时有冲突，下面几项删掉或跳过时 jest 要能发现
+describe('ci.yml：e2e 脚本清单、rendered-check、selftest-live 都在', () => {
+  const ci = fs.readFileSync(path.join(root, '.github/workflows/ci.yml'), 'utf8');
+  const lines = ci.split('\n');
+  const jobs = lines.filter((l) => /^ {2}[A-Za-z0-9_-]+:\s*$/.test(l)).map((l) => l.trim().slice(0, -1));
+  const jobBody = (name) => {
+    const i = lines.findIndex((l) => l === `  ${name}:`);
+    if (i < 0) return '';
+    const rest = lines.slice(i + 1);
+    const end = rest.findIndex((l) => /^ {2}[A-Za-z0-9_-]+:\s*$/.test(l) || /^\S/.test(l));
+    return (end < 0 ? rest : rest.slice(0, end)).join('\n');
+  };
+  test('E2E_SCRIPTS 含 3 个 e2e 脚本，且循环真的执行它们', () => {
+    const i = lines.findIndex((l) => /^\s+E2E_SCRIPTS: \|\s*$/.test(l));
+    expect(i).toBeGreaterThan(-1);
+    const ind = lines[i].match(/^\s*/)[0].length;
+    const items = [];
+    for (const l of lines.slice(i + 1)) {
+      if (l.trim() && l.match(/^\s*/)[0].length <= ind) break;
+      if (l.trim() && !l.trim().startsWith('#')) items.push(l.trim());
+    }
+    expect(items).toEqual(expect.arrayContaining(['scripts/e2e-shortcut.js', 'scripts/e2e-popup-a11y.js', 'scripts/e2e-popup-tasklist.js']));
+    items.forEach((f) => expect(fs.existsSync(path.join(root, f))).toBe(true));
+    expect(ci).toMatch(/for s in \$E2E_SCRIPTS; do/);
+  });
+  test('rendered-check job 存在并校验 markdown-it 版本行', () => {
+    expect(jobs).toContain('rendered-check');
+    expect(jobBody('rendered-check')).toContain('grep -q "^rendered check: markdown-it ${MARKDOWN_IT_VERSION}, "');
+  });
+  test('selftest-live job 存在并在 xvfb 下跑 scripts/selftest-live.js', () => {
+    expect(jobs).toContain('selftest-live');
+    expect(jobBody('selftest-live')).toMatch(/- run: xvfb-run -a node scripts\/selftest-live\.js/);
+  });
+});
+
 test('反例：缺 key 或缺 default_locale 目录时报错', () => {
   const tmp = fs.mkdtempSync(path.join(require('os').tmpdir(), 'loc-'));
   fs.writeFileSync(path.join(tmp, 'manifest.json'), JSON.stringify({ default_locale: 'en', description: '__MSG_extDescription__', name: '__MSG_extName__' }));
