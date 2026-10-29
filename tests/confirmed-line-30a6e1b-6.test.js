@@ -18,11 +18,11 @@ function setup(provider, hash) {
   const sec = createPdfProviderSection({ doc: document, storage, permissions: createPermissions({ origins: [], permissions: [], answer: true }), registry: createDefaultRegistry(), t: () => translations.en, toast, local, location: { hash } });
   return { document, sec, toast };
 }
-test('markup: <p id=pdConfirmed role=status> right after the provider fieldset', () => {
+test('markup: <p id=pdConfirmed role=status> inside the provider fieldset grid (design M2)', () => {
   const { document } = parseHTML(html);
   const el = document.getElementById('pdConfirmed');
   expect(el.getAttribute('role')).toBe('status');
-  expect(el.previousElementSibling.id).toBe('pdfProviderGroup');
+  expect(el.parentElement.id).toBe('pdfProviderGroup');
 });
 test.each([['paddleocr', '#disclose=paddleocr'], ['paddleocr', '#disclose=mineru']])('current=%s hash=%s → inline ✓ line, no toast', async (cur, hash) => {
   const h = setup(cur, hash);
@@ -31,7 +31,7 @@ test.each([['paddleocr', '#disclose=paddleocr'], ['paddleocr', '#disclose=mineru
   await h.sec.onAgree(id);
   const el = h.document.getElementById('pdConfirmed');
   expect(el.hidden).toBe(false);
-  expect(el.textContent).toBe(`✓ ${translations.en.pdf_disc_confirmed}`);
+  expect(el.textContent).toBe(`✓ ${translations.en.pdf_disc_confirmed.replace('{name}', id === 'mineru' ? 'MinerU' : 'PaddleOCR')}`);
   expect(h.toast).not.toHaveBeenCalledWith(expect.anything(), 'success');
   h.sec.openDisclosure('mineru');
   expect(el.hidden).toBe(true);

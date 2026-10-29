@@ -81,7 +81,7 @@ describe('附录 C1：首次选择后端先显示数据说明', () => {
     // 设计验收 30a6e1b #6：#disclose 指向当前已选后端，确认提示也在卡片下方内联显示（✓ 前缀），不进 toast
     const line = h.document.getElementById('pdConfirmed');
     expect(line.hidden).toBe(false);
-    expect(line.textContent).toBe(`✓ ${translations.zh.pdf_disc_confirmed}`);
+    expect(line.textContent).toBe(`✓ ${translations.zh.pdf_disc_confirmed.replace('{name}', 'PaddleOCR')}`);
     expect(h.toast).not.toHaveBeenCalledWith(translations.zh.pdf_disc_confirmed, 'success');
   });
   test('MinerU 文案不说「上传」；中英文 key 齐全', () => {

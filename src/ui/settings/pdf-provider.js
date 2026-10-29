@@ -5,6 +5,7 @@ import { shortErrorText } from '../popup/task-error-text';
 import { isDisclosureAcked, ackDisclosure, needsDisclosure, parseDisclosureHash } from '@utils/disclosure-ack';
 import { buildDisclosurePanel } from './disclosure';
 import { STORAGE_KEYS, TASK_STATUS } from '@config/constants';
+import { providerLabel } from '@config/pdf-providers';
 
 /** 与 background/paddle-origin-rule.js 的 PADDLE_ORIGIN_RULE_ID 相同（tests/reinit-check-p3-3 核对）；设置页只读规则，不写 */
 export const UI_PADDLE_RULE_ID = 4001;
@@ -131,10 +132,16 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
     openDisclosure(id, { focus: false });
   }
 
-  /** 设计验收 30a6e1b #6：确认后的提示行（✓ 前缀），在卡片组下方 */
-  function showConfirmed(text) {
+  /** 设计验收 30a6e1b #6：确认后的提示行（✓ 前缀）。
+   *  设计复验 6a49976 M2：放进 fieldset 网格，紧跟被确认的卡片；双列时 CSS 按 data-col 放到该卡片所在列的第 2 行 */
+  function showConfirmed(text, id) {
     const el = $('pdConfirmed');
     if (!el) return;
+    const card = id && doc.querySelector(`.provider-card[data-provider="${id}"]`);
+    if (card) {
+      card.after(el);
+      el.dataset.col = String([...card.parentNode.querySelectorAll('.provider-card')].indexOf(card) + 1);
+    }
     el.textContent = `✓ ${text}`;
     el.hidden = false;
   }
@@ -191,7 +198,7 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
     $('tokenStatus').style.display = 'none';
     const tr = t();
     await render();
-    showConfirmed(fromHash ? tr.pdf_disc_confirmed : tr.toast_saved); // 设计验收 30a6e1b #6：卡片下方内联，不用 toast
+    showConfirmed(fromHash ? tr.pdf_disc_confirmed.replace('{name}', providerLabel(id)) : tr.toast_saved, id); // 设计验收 30a6e1b #6：卡片下方内联，不用 toast
     return granted;
   }
 
