@@ -72,11 +72,17 @@ export function withRequiredPermissions(api, required = []) {
     return out;
   };
   const empty = (q) => !(q.origins && q.origins.length) && !(q.permissions && q.permissions.length);
-  const wrapped = Object.create(api);
-  wrapped.contains = async (q) => { const s = strip(q); return empty(s) ? true : api.contains(s); };
-  wrapped.request = async (q) => { const s = strip(q); return empty(s) ? true : api.request(s); };
-  wrapped.remove = async (q) => { const s = strip(q); return empty(s) ? false : api.remove(s); };
-  return wrapped;
+  // 不能用 Object.create(api) 再赋值：Firefox 的 API 命名空间属性是带 setter 的访问器，
+  // 赋值会把真实的 chrome.permissions.request 换掉（实测 Firefox 159 报 too much recursion）。返回独立对象，只做转发
+  return {
+    contains: async (q) => { const s = strip(q); return empty(s) ? true : api.contains(s); },
+    // request 必须同步转发，保住用户手势
+    request: (q) => { const s = strip(q); return empty(s) ? Promise.resolve(true) : api.request(s); },
+    remove: async (q) => { const s = strip(q); return empty(s) ? false : api.remove(s); },
+    getAll: (...a) => api.getAll(...a),
+    get onAdded() { return api.onAdded; },
+    get onRemoved() { return api.onRemoved; },
+  };
 }
 
 /** 从 runtime.getManifest() 取安装时必需的权限；拿不到就当空 */

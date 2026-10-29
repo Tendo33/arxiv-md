@@ -66,3 +66,14 @@ describe('Chrome（DNR 可选，行为不变）', () => {
     expect(document.getElementById('grantPermissionBtn').hidden).toBe(false);
   });
 });
+
+test('wrapper 不改动原 permissions 对象（Firefox 命名空间属性带 setter，曾把真实 request 换掉）', async () => {
+  let real = jest.fn(async () => true);
+  const api = { contains: jest.fn(async () => true), remove: jest.fn(async () => true), getAll: jest.fn(async () => ({})) };
+  Object.defineProperty(api, 'request', { get: () => real, set: (v) => { real = v; }, configurable: true });
+  const before = real;
+  const w = withRequiredPermissions(api, FF_REQ);
+  await w.request({ origins: ORIGINS, permissions: [DNR] });
+  expect(api.request).toBe(before);
+  expect(before).toHaveBeenCalledWith({ origins: ORIGINS });
+});
