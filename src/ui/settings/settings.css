@@ -600,9 +600,14 @@ body {
 }
 
 /* Toast */
+/* release-polish 设计 NTF1：toast 浮在吸底操作栏上方，不再盖住「恢复默认」；--footer-h = 操作栏高度 */
+:root {
+  --footer-h: 80px;
+}
+
 .toast {
   position: fixed;
-  bottom: 32px;
+  bottom: calc(var(--footer-h, 72px) + 12px);
   right: 32px;
   background: var(--text-primary); /* 设计建议 6：反色 token */
   color: var(--surface);
@@ -666,6 +671,11 @@ body {
 
   .footer {
     padding: 24px 20px;
+  }
+
+  /* 窄宽下操作栏是纵向两行（按钮 + 自动保存说明） */
+  :root {
+    --footer-h: 112px;
   }
 
   .toast {
