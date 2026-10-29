@@ -15,6 +15,9 @@ export const NW_ZH = {
   // 设计 C11 #3：数据说明正文按短语断行（逐字照抄）；短语间的空格单列为 ' '，放在 span 外面
   pdf_disc_body_paddleocr: ['使用 PaddleOCR 时，', '来自 arXiv 的 PDF 文件', '（50 MB 以内）', '会连同你的访问令牌', '和解析选项', '上传到百度飞桨星河社区；', '更大的 PDF 不会发送。', '其他网站的 PDF', ' ', '只发送链接，', '并且每次都要你确认。'],
   pdf_disc_body_mineru: ['使用 MinerU 时，', '论文的 PDF 链接', '（另加 arXiv ID）', '会连同你的 API Key', ' ', '和解析选项', '发给 MinerU（mineru.net），', '由它下载并解析；', 'PDF 文件本身不会上传。', '其他网站的 PDF', ' ', '每次都要你确认后才发送。'],
+  // 设计验收 30a6e1b #3：卡片描述手工分段，避免「百|度」「免|费」「页|数」拆词；空格单列放在 span 外
+  pdf_card_paddleocr: ['把来自 arXiv 的', ' ', 'PDF 文件', '（50 MB 以内）', '上传到', '百度飞桨星河社区；', '其他 PDF', ' ', '只发送链接。', '每日有免费额度。'],
+  pdf_card_mineru: ['只把 PDF 链接', '发往', ' ', 'mineru.net，', '免费账号', '每日有页数上限。'],
   advanced_pdf_fab: ['在 PDF 页显示', '悬浮导出按钮'],
 };
 
