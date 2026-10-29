@@ -7,7 +7,7 @@ import storage from '@utils/storage';
 import { translations } from '@config/locales';
 import { showConfirm } from './confirm-dialog';
 import { confirmSendFlow, refocusTask } from './send-consent';
-import { renderTaskRows, setTaskListLanguage } from './task-list';
+import { renderTaskRows, setTaskListLanguage, alignRowNotes } from './task-list';
 import { bindListScroll, fitListToHalfRow, refitOnResize } from './list-scroll';
 import { pageContext, recentTasks } from './page-context';
 import { renderShortcutGuide } from './shortcut-guide';
@@ -271,6 +271,7 @@ function renderRecent() {
   const keepId = focused && $('taskList').contains(focused) && focused.dataset ? focused.dataset.taskId : null;
   renderTaskRows($('taskList'), list, document);
   if (keepId) refocusTask(document, keepId);
+  alignRowNotes($('taskList')); // 设计裁定 R-2：备注左缘 = 标题文字左缘
   fitListToHalfRow($('taskList')); // 设计 D6（AX-10）
   const more = currentTasks.length > 3;
   const all = $('recentAll');
@@ -352,3 +353,6 @@ function showToast(message) {
   setTimeout(() => toast.classList.add('show'), 10);
   setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 2000);
 }
+
+// 设计裁定 R-2：宽度变化后标题位置会变（≤340 换行），重新对齐备注
+window.addEventListener('resize', () => alignRowNotes(document.getElementById('taskList')));

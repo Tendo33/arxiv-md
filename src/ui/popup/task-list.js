@@ -108,3 +108,20 @@ export function renderTaskRows(listEl, tasks, doc = listEl.ownerDocument) {
   listEl.replaceChildren(...rows);
   return rows;
 }
+
+/**
+ * 设计裁定 R-2（原话「左边与标题文字对齐」）：.row-note 的左缘对齐 .n 的文字左缘。
+ * 360/375 时标题在徽标之后，≤340 时标题换到整行，所以缩进量随宽度和徽标文案变化，只能量出来：
+ * 写到行上的 --note-indent，CSS 用它做 margin-left，并从 flex-basis 里扣掉，不会溢出。
+ */
+export function alignRowNotes(listEl) {
+  if (!listEl) return;
+  for (const row of listEl.querySelectorAll('.row')) {
+    const note = row.querySelector('.row-note');
+    const n = row.querySelector('.n');
+    if (!note || !n) continue;
+    row.style.removeProperty('--note-indent');
+    const indent = n.getBoundingClientRect().left - note.getBoundingClientRect().left;
+    if (indent > 0.01) row.style.setProperty('--note-indent', `${Math.round(indent * 100) / 100}px`);
+  }
+}

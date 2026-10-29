@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 // 设计裁定 R-2：P2-DNR 等待说明在同一任务行内、标题和状态/元信息之下，是行内最后一个文字元素。
 // zh/en × light/dark × 320/360/375：断言 DOM 顺序（.row-note 是 .row 的最后一个子元素）、视觉顺序（note.top ≥ 标题/徽标/操作的 bottom），
-// margin-top 4px、左缘 = .row-err 的左缘（行内容左缘）、.nw 不拆、不横向溢出；操作区 y 与无提示的同一行一致（≤1px）。
+// margin-top 4px、左缘 = 标题文字 .n 的左缘（≤0.5px）、.nw 不拆、不横向溢出；操作区 y 与无提示的同一行一致（≤1px）。
 // 说明：Playwright 打不开工具栏 action popup，这里用固定视口页面模拟。E2E_DNR_OUT=<dir> 写 JSON 和截图。
 const fs = require('fs');
 const os = require('os');
@@ -61,7 +61,7 @@ const task = (n, dnr) => ({ id: 'd', status: 'pending', progress: 0, createdAt: 
           const nr = R(note);
           const above = ['.badge', '.n', '.row-act', 'small'].map((s) => R(row.querySelector(s))).filter(Boolean);
           const nw = [...note.querySelectorAll('.nw')].map((e) => e.getClientRects().length);
-          return { ...out, last: row.lastElementChild === note, role: note.getAttribute('role'), noteTop: nr.top, noteLeft: nr.left, noteRight: nr.right, rowRight: rr.right,
+          return { ...out, last: row.lastElementChild === note, role: note.getAttribute('role'), noteTop: nr.top, noteLeft: nr.left, titleLeft: R(row.querySelector('.n')).left, noteRight: nr.right, rowRight: rr.right,
             aboveBottom: Math.max(...above.map((b) => b.bottom)), mt: getComputedStyle(note).marginTop, nw: nw.length, nwSplit: nw.filter((n) => n > 1).length,
             color: getComputedStyle(note).color, font: `${getComputedStyle(note).fontSize}/${getComputedStyle(note).lineHeight}`, text: note.textContent };
         });
@@ -72,13 +72,14 @@ const task = (n, dnr) => ({ id: 'd', status: 'pending', progress: 0, createdAt: 
       let m = null;
       for (let i = 0; i < 3 && !(m && m.status === 'pending' && m.text); i++) m = await measure(true);
       const base = await measure(false);
-      out[k] = { ...m, actNoNote: base && base.act };
+      out[k] = { ...m, actNoNote: base && base.act, leftDiff: m && m.titleLeft != null ? Math.abs(m.noteLeft - m.titleLeft) : null };
       if (!m || !m.text) { bad(k, 'no .row-note'); continue; }
       if (!m.last) bad(k, '.row-note 不是行内最后一个元素');
       if (m.role !== 'status') bad(k, 'role != status');
       if (m.noteTop < m.aboveBottom - 0.5) bad(k, `提示不在标题/元信息之下 ${m.noteTop} < ${m.aboveBottom}`);
       if (m.mt !== '4px') bad(k, `margin-top ${m.mt}`);
-      if (Math.abs(m.noteLeft - m.contentLeft) > 0.5) bad(k, `左缘 ${m.noteLeft} != ${m.contentLeft}`);
+      m.leftDiff = Math.abs(m.noteLeft - m.titleLeft);
+      if (m.leftDiff > 0.5) bad(k, `左缘 ${m.noteLeft} != 标题文字 ${m.titleLeft}`);
       if (m.noteRight > m.rowRight + 0.5 || m.scrollW > Math.max(w, m.htmlW) + 0.5) bad(k, '横向溢出');
       if (m.font !== '12px/18px') bad(k, `字号 ${m.font}`);
       if (lang === 'zh' && (m.nw !== 4 || m.nwSplit)) bad(k, `.nw ${m.nw} split ${m.nwSplit}`);

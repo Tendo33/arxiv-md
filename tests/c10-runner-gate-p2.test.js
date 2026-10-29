@@ -105,7 +105,7 @@ test('popup row: neutral badge, shared title note, Review + Retry, no error line
 test('row-note takes a full flex line (rows are flex, not grid) and uses --text-2', () => {
   const css = require('fs').readFileSync(require('path').join(__dirname, '../src/ui/popup/popup.css'), 'utf8');
   const rule = css.match(/\.row \.row-note\{[^}]*\}/)[0];
-  expect(rule).toContain('flex-basis:100%');
+  expect(rule).toMatch(/flex-basis:(100%|calc\(100% - var\(--note-indent,0px\)\))/); // R-2：从标题文字左缘起占满剩余整行
   expect(rule).not.toContain('grid-column');
   expect(rule).toContain('var(--text-2)');
 });
