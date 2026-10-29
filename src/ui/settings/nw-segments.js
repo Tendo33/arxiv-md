@@ -9,6 +9,9 @@ export const NW_ZH = {
   advanced_auto: ['自动转换', '（进入论文页面', '自动弹出转换提示）'],
   advanced_metadata: ['在 Markdown 中', '包含元数据', '（标题、作者、ID 等）'],
   pdf_desc: ['PaddleOCR 会上传', '来自 arXiv 的 PDF 文件', '（50 MB 以内）；', 'MinerU 和', '其他网站的 PDF ', '只发送链接。', 'Key 只保存在本机，', '只发给你选择的服务。'],
+  // 设计 C11 #3：数据说明正文按短语断行（逐字照抄）；短语间的空格单列为 ' '，放在 span 外面
+  pdf_disc_body_paddleocr: ['使用 PaddleOCR 时，', '来自 arXiv 的 PDF 文件', '（50 MB 以内）', '会连同你的访问令牌', '和解析选项', '上传到百度飞桨星河社区；', '更大的 PDF 不会发送。', '其他网站的 PDF', ' ', '只发送链接，', '并且每次都要你确认。'],
+  pdf_disc_body_mineru: ['使用 MinerU 时，', '论文的 PDF 链接', '（另加 arXiv ID）', '会连同你的 API Key', ' ', '和解析选项', '发给 MinerU（mineru.net），', '由它下载并解析；', 'PDF 文件本身不会上传。', '其他网站的 PDF', ' ', '每次都要你确认后才发送。'],
   advanced_pdf_fab: ['在 PDF 页显示', '悬浮导出按钮'],
 };
 
@@ -25,6 +28,7 @@ export function nwNodes(doc, key, text, lang) {
   const segs = table && table.join('') === text ? table : splitZh(text);
   if (segs.length < 2) return [text];
   return segs.map((s) => {
+    if (/^\s+$/.test(s)) return doc.createTextNode(s); // C11 #3：空格在 span 外，可在此换行
     const sp = doc.createElement('span');
     sp.className = 'nw';
     sp.textContent = s;

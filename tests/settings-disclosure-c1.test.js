@@ -81,7 +81,7 @@ describe('附录 C1：首次选择后端先显示数据说明', () => {
     expect(h.toast).toHaveBeenCalledWith(translations.zh.pdf_disc_confirmed, 'success');
   });
   test('MinerU 文案不说「上传」；中英文 key 齐全', () => {
-    for (const k of ['pdf_card_mineru', 'pdf_disc_body_mineru']) expect(translations.zh[k]).not.toMatch(/上传/);
+    for (const k of ['pdf_card_mineru', 'pdf_disc_body_mineru']) expect(translations.zh[k].replace('PDF 文件本身不会上传', '')).not.toMatch(/上传/); // C11：只允许否定句「不会上传」
     expect(translations.en.pdf_disc_body_mineru).not.toMatch(/upload(?!ed\.)/i);
     for (const k of Object.keys(translations.en).filter((x) => /^pdf_(disc|card|badge)_|^link_new_tab$/.test(x))) expect(translations.zh[k]).toBeTruthy();
   });

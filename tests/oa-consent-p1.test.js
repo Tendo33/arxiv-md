@@ -171,7 +171,7 @@ describe('弹窗确认', () => {
     const files = ['src/config/locales.js', 'src/background/mineru-task-runner.js', 'src/background/index.js', 'src/background/message-guards.js', 'src/background/parse-task-runner.js', 'src/ui/popup/popup.js', 'src/ui/popup/send-consent.js', 'src/ui/popup/confirm-dialog.js', 'src/ui/popup/popup.html'];
     for (const f of files) {
       // PaddleOCR 确实上传 arXiv PDF 文件：这几条 PaddleOCR 文案允许说「上传」；MinerU 文案一律不许
-      const src = read(f).split('\n').filter((l) => !/^\s*(pdf_desc|pdf_card_paddleocr|pdf_disc_body_paddleocr):/.test(l)).join('\n');
+      const src = read(f).split('\n').filter((l) => !/^\s*(pdf_desc|pdf_card_paddleocr|pdf_disc_body_paddleocr):/.test(l)).join('\n').replace(/PDF 文件本身不会上传/g, ''); // C11：MinerU 只允许否定句
       expect([f, /上传|CONFIRM_PDF_UPLOAD|confirmPdfUpload|confirmUpload\b|Uploading|Continue upload|Confirm upload/.test(src)]).toEqual([f, false]);
     }
     expect(read('PRIVACY.md')).toContain('"Send & parse"');
