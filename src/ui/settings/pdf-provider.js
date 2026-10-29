@@ -25,7 +25,7 @@ const hostOf = (provider) => {
 /**
  * @param {{doc:Document, storage:any, permissions:any, registry:any, t:()=>Object, toast?:(msg:string,type?:string)=>void}} deps
  */
-export function createPdfProviderSection({ doc, storage, permissions, registry, t, toast = () => {} }) {
+export function createPdfProviderSection({ doc, storage, permissions, registry, t, toast = () => {}, runtime = globalThis.chrome && globalThis.chrome.runtime }) {
   const $ = (id) => doc.getElementById(id);
   const state = { current: null, denied: null };
 
@@ -66,6 +66,9 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
     $('permissionStatus').textContent = needs ? fmt(granted ? tr.pdf_perm_granted : tr.pdf_perm_missing, vars) : '';
     $('grantPermissionBtn').hidden = !needs || granted;
     $('grantPermissionBtn').textContent = tr.pdf_grant_btn;
+    // 审查员 P3：权限已授予但网络规则没装上（dnr_not_ready）时的恢复入口：重新载入扩展，让后台带着已授予的权限重新启动
+    const reinit = $('reinitBtn');
+    if (reinit) { reinit.hidden = !(needs && granted && p.id === 'paddleocr'); reinit.textContent = tr.pdf_reinit_btn; reinit.title = tr.pdf_reinit_hint; }
 
     // 切换后端后，旧后端还有可撤销的权限 → 显示“撤销”
     const stale = [];
@@ -129,6 +132,12 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
     return ok;
   }
 
+  /** dnr_not_ready 恢复：重新载入扩展（任务记录在 storage 里，载入后可在 popup 重试）。不申请任何权限 */
+  function onReinit() {
+    if (runtime && typeof runtime.reload === 'function') { runtime.reload(); return true; }
+    return false;
+  }
+
   async function onRevoke() {
     const id = $('revokePermissionBtn').dataset.provider;
     const p = id && registry.get(id);
@@ -184,9 +193,10 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
   function bind() {
     $('pdfProvider').addEventListener('change', (ev) => { onSelect(ev.target.value); });
     $('grantPermissionBtn').addEventListener('click', () => { onGrant(); });
+    if ($('reinitBtn')) $('reinitBtn').addEventListener('click', () => { onReinit(); });
     $('revokePermissionBtn').addEventListener('click', () => { onRevoke(); });
     $('testTokenBtn').addEventListener('click', () => { onTest(); });
   }
 
-  return { init, render, bind, onSelect, onGrant, onRevoke, onTest, get current() { return state.current; } };
+  return { init, render, bind, onSelect, onGrant, onRevoke, onReinit, onTest, get current() { return state.current; } };
 }
