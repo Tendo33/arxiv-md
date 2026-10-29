@@ -1,58 +1,66 @@
-// QA P1-KA（qa-paddleocr-15fe0f9-2026-10-29.md）：popup / abs 按钮走 CONVERT_PAPER → converter 在 SW 里直接建任务，
-// 以前只调 processMinerUTaskInBackground、不挂 keepAlive alarm，SW 被停后卡在 28%。
-// 现在所有发起入口都走 startParseTask（处理 + refreshKeepAlive）。逐个入口断言。
-import fs from 'fs';
-import path from 'path';
+// QA P1-KA + 审查 P3-1（review-paddleocr-parity-6a49976）：每个发起解析的入口都必须挂上 keepAlive alarm。
+// 以前用正则扫源码、数 addTask 调用次数，挡不住「通过别名间接调用」和 CONFIRM_PDF_SEND 漏 refresh。
+// 现在加载真实的 background/index.js（chrome.* mock），逐个入口真的发消息 / 调 converter，断言：
+// 任务被处理 + chrome.alarms.create('keepAlive', ...) 被调用。
+jest.mock('@utils/logger', () => ({ __esModule: true, default: { error: jest.fn(), info: jest.fn(), warn: jest.fn(), debug: jest.fn() } }));
+import { loadBackground, flush } from './helpers/bg-harness';
 
-const rd = (f) => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
-const bg = rd('src/background/index.js');
-const conv = rd('src/core/converter/index.js');
-const caseBody = (name) => { const i = bg.indexOf(`case '${name}'`); return bg.slice(i, bg.indexOf('case ', i + 6)); };
-const fnBody = (name) => { const i = bg.indexOf(`function ${name}(`); return bg.slice(i, bg.indexOf('\n}\n', i)); };
+const paper = { arxivId: '2401.00001', title: 'T', pdfUrl: 'https://arxiv.org/pdf/2401.00001' };
+const settle = async () => { for (let i = 0; i < 5; i++) await flush(); };
 
-describe('每个发起入口都走 startParseTask', () => {
-  test('converter（CONVERT_PAPER：popup 按钮 / abs 按钮 / 快捷键 / 右键）', () => {
-    expect(conv).toMatch(/backgroundModule\.startParseTask\(task\.id\)/);
-    expect(conv).not.toMatch(/backgroundModule\.processMinerUTaskInBackground\(/);
+function withTasks(b) {
+  jest.spyOn(b.tm, 'findTaskByArxivId').mockResolvedValue(null);
+  jest.spyOn(b.tm, 'addTask').mockResolvedValue({ id: 'new1' });
+  jest.spyOn(b.tm, 'getTask').mockResolvedValue({ id: 't1', status: 'failed' });
+  jest.spyOn(b.tm, 'updateTask').mockResolvedValue({});
+  return b;
+}
+
+describe('每个入口：任务被处理且 keepAlive alarm 被创建（行为）', () => {
+  test.each([
+    ['START_PDF_TASK', { type: 'START_PDF_TASK', data: paper, provider: 'paddleocr' }, 'new1'],
+    ['START_MINERU_TASK（别名）', { type: 'START_MINERU_TASK', data: paper }, 'new1'],
+    ['START_MINERU_TASK_FORCE', { type: 'START_MINERU_TASK_FORCE', data: paper }, 'new1'],
+    ['RETRY_TASK', { type: 'RETRY_TASK', taskId: 't1' }, 't1'],
+    ['_INTERNAL_PROCESS_TASK', { type: '_INTERNAL_PROCESS_TASK', taskId: 't1' }, 't1'],
+  ])('%s', async (_n, msg, id) => {
+    const b = withTasks(loadBackground());
+    await b.ready();
+    await b.send(msg);
+    await settle();
+    expect(b.proc).toHaveBeenCalledWith(id);
+    expect(b.keepAliveCreated()).toBe(true);
   });
-  test('START_PDF_TASK / START_MINERU_TASK / START_MINERU_TASK_FORCE → _doStartPdfTask', () => {
-    expect(caseBody('START_PDF_TASK')).toMatch(/_doStartPdfTask\(/);
-    expect(fnBody('handleStartMinerUTask')).toMatch(/_doStartMinerUTask\(/);
-    expect(bg).toMatch(/const task = await taskManager\.addTask\([^)]*\);[\s\S]{0,400}startParseTask\(task\.id\)/);
+
+  test('CONFIRM_PDF_SEND（非 OA 确认后发送）', async () => {
+    const b = withTasks(loadBackground());
+    await b.ready();
+    expect(await b.send({ type: 'CONFIRM_PDF_SEND', taskId: 't1' })).toMatchObject({ success: true });
+    await settle();
+    expect(b.confirm).toHaveBeenCalledWith('t1');
+    expect(b.keepAliveCreated()).toBe(true);
   });
-  test('RETRY_TASK', () => expect(fnBody('handleRetryTask')).toMatch(/startParseTask\(taskId\)/));
-  test('_INTERNAL_PROCESS_TASK', () => expect(caseBody('_INTERNAL_PROCESS_TASK')).toMatch(/startParseTask\(message\.taskId\)/));
-  test('index.js 里 processMinerUTaskInBackground 只在 startParseTask 内被调用', () => {
-    const calls = bg.match(/processMinerUTaskInBackground\(/g) || [];
-    expect(calls).toHaveLength(1);
-    expect(fnBody('startParseTask')).toMatch(/processMinerUTaskInBackground\(taskId\);\s*return refreshKeepAlive\(\);/);
+
+  test('converter._convertWithMinerU（CONVERT_PAPER：popup / abs 按钮）——无论内部怎么调用，都要挂 alarm', async () => {
+    const b = withTasks(loadBackground());
+    await b.ready();
+    const r = await b.converter._convertWithMinerU(paper, () => {}, null, 'paddleocr');
+    expect(r).toMatchObject({ success: true, taskId: expect.any(String) });
+    await new Promise((res) => setTimeout(res, 10));
+    await settle();
+    expect(b.proc).toHaveBeenCalledWith(r.taskId);
+    expect(b.keepAliveCreated()).toBe(true);
   });
-  test('addTask 只有这两个调用点（新入口要补进上面的断言）', () => {
-    const all = ['src/background/index.js', 'src/core/converter/index.js'].map((f) => (rd(f).match(/taskManager\.addTask\(/g) || []).length);
-    expect(all).toEqual([1, 1]);
+
+  test('对照：没有入口被调用时不创建 alarm（证明断言不是恒真）', async () => {
+    const b = withTasks(loadBackground());
+    await b.ready();
+    await b.send({ type: 'PING' });
+    await settle();
+    expect(b.keepAliveCreated()).toBe(false);
   });
 });
 
-test('startParseTask：有 pending 任务时创建 keepAlive alarm（行为）', async () => {
-  const ev = () => ({ addListener: () => {} });
-  const create = jest.fn(async () => {});
-  global.chrome = {
-    runtime: { id: 'me', onMessage: ev(), onInstalled: ev(), onStartup: ev(), getURL: (p) => p, sendMessage: () => Promise.resolve(), getManifest: () => ({ version: '0' }) },
-    action: { setBadgeText: async () => {}, setBadgeBackgroundColor: async () => {} },
-    tabs: { onUpdated: ev(), onRemoved: ev(), query: async () => [] },
-    commands: { onCommand: ev() },
-    alarms: { onAlarm: ev(), create, clear: async () => true, get: async () => null },
-    storage: { local: { get: async () => ({}), set: async () => {} }, sync: { get: async () => ({}), set: async () => {} }, onChanged: ev() },
-    notifications: { onClicked: ev(), create: () => {} },
-  };
-  let mod; const proc = jest.fn();
-  jest.isolateModules(() => {
-    jest.doMock('../src/background/mineru-task-runner', () => ({ ...jest.requireActual('../src/background/mineru-task-runner'), processMinerUTaskInBackground: proc }));
-    mod = require('../src/background/index.js');
-    const tm = require('../src/core/task-manager').default;
-    jest.spyOn(tm, 'getStatistics').mockResolvedValue({ pending: 1, processing: 0 });
-  });
-  await mod.startParseTask('t1');
-  expect(proc).toHaveBeenCalledWith('t1');
-  expect(create).toHaveBeenCalledWith('keepAlive', expect.objectContaining({ periodInMinutes: expect.any(Number) }));
+test('没人用的别名 processParseTask 已删除（审查 P3-1）', () => {
+  expect(jest.requireActual('../src/background/mineru-task-runner')).not.toHaveProperty('processParseTask');
 });

@@ -67,7 +67,6 @@ export function processMinerUTaskInBackground(taskId) {
 export function confirmPdfSend(taskId) {
   return parseTaskRunner.confirmSend(taskId);
 }
-export const processParseTask = processMinerUTaskInBackground;
 
 /** R4-12：续上 SW 被杀前未完成的任务 */
 export function resumeParseTasks() {
