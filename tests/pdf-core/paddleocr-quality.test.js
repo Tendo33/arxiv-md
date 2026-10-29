@@ -267,3 +267,14 @@ describe('P-2：页图缓存用完即释放', () => {
     expect(pageCache.size).toBe(0);
   });
 });
+
+describe('P-2：图注里的 < > & 重新转义', () => {
+  const { replaceFigureTables } = require('@pdf-core/providers/paddleocr-blocks');
+  test('p &lt; 0.05 不会变成裸 <，渲染后仍显示 <', () => {
+    const tbl = '<table><tr><td>Figure 2: gains (p &lt; 0.05) for <b>x</b> &amp; y</td></tr></table>';
+    const pg = { prunedResult: { width: 10, height: 10, parsing_res_list: [{ block_label: 'table', block_content: tbl, block_bbox: [0, 0, 5, 5] }] } };
+    const r = replaceFigureTables(tbl, pg);
+    expect(r.text).toContain('Figure 2: gains (p &lt; 0.05) for x &amp; y');
+    expect(r.text).not.toMatch(/p < 0/);
+  });
+});

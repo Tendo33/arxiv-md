@@ -6,6 +6,7 @@ const decodeEntities = (s) => String(s)
   .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)))
   .replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&');
 const plain = (html) => decodeEntities(String(html).replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
+const escapeHtml = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const blocksOf = (pg) => ((pg && pg.prunedResult && pg.prunedResult.parsing_res_list) || []).filter((b) => b && Array.isArray(b.block_bbox));
 
 const CAPTION_RE = /^(?:Figure|Fig\.)\s*\d+[A-Za-z]?\s*[:.]/;
@@ -57,7 +58,7 @@ export function replaceFigureTables(text, pg) {
       replaced = true;
       const name = `imgs/img_in_image_box_${b.block_bbox.map((n) => Math.round(n)).join('_')}.jpg`;
       crops.push({ name, bbox: b.block_bbox.slice(0, 4), width: pr.width || null, height: pr.height || null });
-      return `<div style="text-align: center;"><img src="${name}" alt="Image" /></div>\n\n<div style="text-align: center;">${caption}</div>`;
+      return `<div style="text-align: center;"><img src="${name}" alt="Image" /></div>\n\n<div style="text-align: center;">${escapeHtml(caption)}</div>`;
     });
   }
   return { text: out, crops };
