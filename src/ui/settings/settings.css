@@ -725,6 +725,8 @@ a:focus-visible {
 .provider-card .pc-body { display: grid; gap: 4px; min-width: 0; }
 .provider-card .pc-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 14px; font-weight: 600; color: var(--text-primary); }
 .provider-card .pc-desc { font-size: 13px; line-height: 1.5; font-weight: 400; color: var(--text-secondary); }
+/* 设计 C12：「通常比 MinerU 慢」在 PaddleOCR 卡片 .pc-body 里单独一行；事实说明，不加图标或颜色；等高靠 .provider-group grid stretch */
+.provider-card .pc-note { display:block; font-size:12px; line-height:18px; font-weight:400; color:var(--text-secondary); }
 .pc-badge { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 999px; font-size: 12px; font-weight: 500; border: 1px solid var(--border); color: var(--text-secondary); background: var(--surface); white-space: nowrap; }
 .pc-badge.free { color: #0f6b37; border-color: #b7dfc5; background: #effaf3; }
 @media (prefers-color-scheme: dark) {

@@ -93,10 +93,11 @@
             <fieldset class="provider-group" id="pdfProviderGroup">
               <legend id="pdfProviderLegend" data-i18n="pdf_provider_label">Provider</legend>
               <label class="provider-card" data-provider="paddleocr">
-                <input type="radio" name="pdfProvider" value="paddleocr" aria-describedby="pcDesc-paddleocr" />
+                <input type="radio" name="pdfProvider" value="paddleocr" aria-describedby="pcDesc-paddleocr pcNote-paddleocr" />
                 <span class="pc-body">
                   <span class="pc-head">PaddleOCR <span class="pc-badge free" data-i18n="pdf_badge_default_free">Default · free quota</span> <span class="pc-badge" data-i18n="pdf_badge_needs_key">Needs a key</span></span>
-                  <span class="pc-desc" id="pcDesc-paddleocr"><span data-i18n="pdf_card_paddleocr">Uploads PDFs from arXiv (up to 50 MB) to Baidu AI Studio; other PDFs are sent as links. Includes a free daily quota.</span> <span class="pc-note" data-i18n="pdf_card_paddleocr_slow">Usually slower than MinerU.</span></span>
+                  <span class="pc-desc" id="pcDesc-paddleocr"><span data-i18n="pdf_card_paddleocr">Uploads PDFs from arXiv (up to 50 MB) to Baidu AI Studio; other PDFs are sent as links. Includes a free daily quota.</span></span>
+                  <span class="pc-note" id="pcNote-paddleocr" data-i18n="pdf_card_paddleocr_slow">Usually slower than MinerU.</span>
                 </span>
               </label>
               <label class="provider-card" data-provider="mineru">

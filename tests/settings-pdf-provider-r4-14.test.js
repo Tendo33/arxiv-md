@@ -44,7 +44,7 @@ describe('R4-14 设置页：后端选择 + Key', () => {
     expect(document.querySelector('label[for="providerKey"]')).toBeTruthy();
     for (const r of document.querySelectorAll('input[name="pdfProvider"]')) {
       expect(r.closest('label.provider-card')).toBeTruthy();
-      expect(document.getElementById(r.getAttribute('aria-describedby'))).toBeTruthy();
+      for (const id of r.getAttribute('aria-describedby').split(/\s+/)) expect(document.getElementById(id)).toBeTruthy(); // C12：可含多个 id
     }
     expect(document.getElementById('providerKey').getAttribute('type')).toBe('password');
     expect(document.getElementById('toggleTokenBtn').getAttribute('aria-label')).toBeTruthy();
