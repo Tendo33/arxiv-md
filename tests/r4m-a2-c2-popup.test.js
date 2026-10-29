@@ -12,8 +12,8 @@ describe('A2：#alertKey 的「打开设置」按钮独占一行', () => {
 });
 
 describe('C2：只在有待确认行时给 #taskList 最小高度', () => {
-  test('默认 min-height:0', () => {
-    expect(css).toMatch(/#taskList\{[^}]*min-height:0;/);
+  test('默认只保证一整行 46px（不能是 0：窄宽下会被 flex 压成半行）', () => {
+    expect(css).toMatch(/#taskList\{[^}]*min-height:46px;/);
     expect(css).not.toMatch(/#taskList\{[^}]*min-height:72px/);
   });
   test(':has(待确认行) 时 72px', () => {
