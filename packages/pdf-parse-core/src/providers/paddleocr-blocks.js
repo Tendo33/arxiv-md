@@ -42,29 +42,6 @@ export function addFormulaTags(text, pg) {
  * 把这张假表换成按 bbox 从预处理页图裁出来的图片 + 图注；返回待裁剪的图片描述（由 downloadImages 裁剪）。
  * @returns {{text:string, crops:{name:string, bbox:number[], width:number, height:number}[]}}
  */
-/**
- * 裁图时把压在图片框边缘的文字块（图注、正文、页眉等）排除掉：文字块和裁剪框重叠或相邻（≤4px），
- * 且贴在某一条边上（横条贴上下边、竖条贴左右边），就把那条边收到文字块外面。
- * 收缩后面积少于原来一半就放弃收缩，避免误伤。PaddleOCR 自己的 image/chart 块不经过这里，不受影响。
- */
-const TEXT_LABELS = new Set(['text', 'figure_title', 'paragraph_title', 'doc_title', 'vision_footnote', 'abstract', 'content', 'header', 'footer', 'footnote', 'aside_text', 'number', 'reference_content']);
-export function shrinkCropBox(bbox, blocks, gap = 4) {
-  let [x1, y1, x2, y2] = bbox;
-  const w = x2 - x1; const h = y2 - y1;
-  for (const t of blocks.filter((b) => TEXT_LABELS.has(b.block_label))) {
-    const [a1, b1, a2, b2] = t.block_bbox;
-    if (a1 > x2 + gap || a2 < x1 - gap || b1 > y2 + gap || b2 < y1 - gap) continue; // 不重叠也不相邻
-    const cx = (a1 + a2) / 2; const cy = (b1 + b2) / 2;
-    if (a2 - a1 >= (b2 - b1) && Math.min(a2, x2) - Math.max(a1, x1) >= 0.5 * w) { // 横条
-      if (cy < y1 + h / 2) y1 = Math.max(y1, b2); else y2 = Math.min(y2, b1);
-    } else if (Math.min(b2, y2) - Math.max(b1, y1) >= 0.5 * h) { // 竖条
-      if (cx < x1 + w / 2) x1 = Math.max(x1, a2); else x2 = Math.min(x2, a1);
-    }
-  }
-  if (x2 <= x1 || y2 <= y1 || (x2 - x1) * (y2 - y1) < 0.5 * w * h) return bbox.slice();
-  return [x1, y1, x2, y2];
-}
-
 export function replaceFigureTables(text, pg) {
   const crops = [];
   const pr = (pg && pg.prunedResult) || {};
@@ -79,7 +56,7 @@ export function replaceFigureTables(text, pg) {
       if (replaced || !plain(tbl).startsWith(key)) return tbl;
       replaced = true;
       const name = `imgs/img_in_image_box_${b.block_bbox.map((n) => Math.round(n)).join('_')}.jpg`;
-      crops.push({ name, bbox: shrinkCropBox(b.block_bbox.slice(0, 4), blocksOf(pg).filter((x) => x !== b)), width: pr.width || null, height: pr.height || null });
+      crops.push({ name, bbox: b.block_bbox.slice(0, 4), width: pr.width || null, height: pr.height || null });
       return `<div style="text-align: center;"><img src="${name}" alt="Image" /></div>\n\n<div style="text-align: center;">${caption}</div>`;
     });
   }
