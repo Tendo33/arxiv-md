@@ -11,6 +11,11 @@ import logger from '@utils/logger';
 export function statusCardErrorText(failure, t, context = 'Conversion failed', { download: fallback = false } = {}) {
   const body = failure?.data?.success === false ? failure.data : failure;
   if (body?.errorCode === 'NETWORK_OFFLINE' || failure?.errorCode === 'NETWORK_OFFLINE') return t.content_error_offline;
+  // 附录 C10：还没确认数据说明（设置页已打开）
+  if (body?.disclosureNeeded) {
+    const title = t[`pdf_disc_needed_title_${body.provider}`] || t.pdf_disc_needed_title;
+    return /[\u4e00-\u9fff]/.test(title) ? `${title}。${t.pdf_disc_needed_body}` : `${title}. ${t.pdf_disc_needed_body}`;
+  }
   const raw = body?.error || failure?.error || failure?.data?.error || failure?.message;
   if (raw) logger.error(`${context}:`, raw);
   // batch8 AB7-01/02：PDF 下载失败时状态卡和通知用同一类文案（下载失败 / 已取消 / …），不再写「转换失败」

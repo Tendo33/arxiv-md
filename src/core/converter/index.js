@@ -1,5 +1,6 @@
 // 主转换器
 
+import { isDisclosureAcked, disclosureHash } from '@utils/disclosure-ack';
 import ar5ivConverter from './ar5iv-converter';
 import { assertSavableMarkdown, isEmptyResultError } from '@pdf-core/output/pre-save';
 import storage from '@utils/storage';
@@ -229,6 +230,12 @@ class MainConverter {
       throw new ParseError('AUTH_INVALID', { provider: readiness.provider });
     }
     const provider = readiness.provider;
+
+    // 附录 C10：首次使用该后端前必须在设置页确认数据说明。没确认 → 不发任何请求，打开设置页 #disclose=<provider>
+    if (!(await isDisclosureAcked(provider))) {
+      openDisclosureSettings(provider);
+      return { success: false, disclosureNeeded: true, provider, error: 'DISCLOSURE_NEEDED' };
+    }
 
     // 检测运行环境：background 还是 content script
     const isBackgroundContext = typeof chrome !== 'undefined' &&
@@ -467,3 +474,16 @@ class MainConverter {
 
 // 导出单例
 export default new MainConverter();
+
+/** C10：打开（或切到）设置页并定位到数据说明。content script 里没有 tabs API → 交给 background */
+export function openDisclosureSettings(provider) {
+  try {
+    if (chrome.tabs && chrome.tabs.create) {
+      chrome.tabs.create({ url: chrome.runtime.getURL(`settings.html${disclosureHash(provider)}`) });
+    } else {
+      chrome.runtime.sendMessage({ type: 'OPEN_DISCLOSURE', provider });
+    }
+  } catch (e) {
+    logger.warn('Failed to open settings for disclosure:', e && e.message);
+  }
+}

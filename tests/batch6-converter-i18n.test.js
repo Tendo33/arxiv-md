@@ -53,7 +53,7 @@ describe.each([['zh'], ['en']])('语言 %s', (lang) => {
   });
   test('PDF 解析任务已提交（不再用 MinerU 旧名）', async () => {
     // content script 分支（background 分支动态 import @background，jest 下不可解析；由下方源码检查兜底）
-    global.chrome = { runtime: { sendMessage: (msg, cb) => cb({ success: true, taskId: 't1' }) } };
+    global.chrome = { runtime: { sendMessage: (msg, cb) => cb({ success: true, taskId: 't1' }) }, storage: { local: { get: async (k) => ({ [k]: 1 }) } } };
     await converter._convertWithMinerU(paper);
     await new Promise((r) => setTimeout(r, 0));
     expect(last()[0]).toBe(t.notify_task_submitted_title);

@@ -1,5 +1,7 @@
 // Background Service Worker
 
+import { isDisclosureAcked } from '@utils/disclosure-ack';
+import { openDisclosureSettings } from '@core/converter/index';
 import converter from '@core/converter';
 import ar5ivConverter from '@core/converter/ar5iv-converter';
 import taskManager from '@core/task-manager';
@@ -80,6 +82,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   case 'GET_STATISTICS':
     handleGetStatistics(sendResponse);
     return true;
+
+  case 'OPEN_DISCLOSURE':
+    // 附录 C10：content script 请求打开设置页的数据说明（只接受已知后端 id，由 disclosureHash 校验格式）
+    if (['paddleocr', 'mineru'].includes(message.provider)) openDisclosureSettings(message.provider);
+    return false;
 
   case 'START_PDF_TASK':
     // R4-11：通用入口 {data: paperInfo, provider?, force?}
@@ -243,6 +250,12 @@ async function resolvePdfProvider(requested) {
 async function _doStartPdfTask(paperInfo, sendResponse, skipDuplicateCheck, requestedProvider) {
   try {
     const provider = await resolvePdfProvider(requestedProvider);
+    // 附录 C10：没确认过数据说明 → 不建任务、不发请求，打开设置页
+    if (!(await isDisclosureAcked(provider))) {
+      openDisclosureSettings(provider);
+      sendResponse({ success: false, disclosureNeeded: true, provider, error: 'DISCLOSURE_NEEDED' });
+      return;
+    }
     if (!skipDuplicateCheck) {
       const existingTask = await taskManager.findTaskByArxivId(paperInfo.arxivId, provider);
       if (existingTask) {

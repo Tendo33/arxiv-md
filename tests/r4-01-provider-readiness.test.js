@@ -30,9 +30,10 @@ beforeEach(() => {
 });
 afterEach(() => { jest.runOnlyPendingTimers(); jest.useRealTimers(); });
 
-async function setup(provider, mode, { key = true } = {}) {
+async function setup(provider, mode, { key = true, ack = true } = {}) {
   await chrome.storage.sync.set({ pdfProvider: provider, conversionMode: mode });
   await chrome.storage.local.set({ providerKeys: key ? { [provider]: `fixture-${provider}` } : {} });
+  if (ack) await chrome.storage.local.set({ [`disclosureAck.${provider}`]: 1 }); // 附录 C10：已确认数据说明
 }
 
 describe.each(PROVIDERS)('后端 %s（只配这个后端的 Key）', (provider) => {
@@ -73,4 +74,28 @@ test('源码里不再有只看 MinerU token 的判断（converter / context-menu
   }
   const content = fs.readFileSync(path.join(__dirname, '../src/content/index.js'), 'utf8');
   expect(content).toMatch(/if \(type === 'mineru'\) metadata\.forceMineru = true/);
+});
+
+describe('附录 C10：没确认数据说明 → 四个入口都不建任务、不发请求，打开设置页 #disclose=<provider>', () => {
+  test.each(PROVIDERS)('%s', async (provider) => {
+    chrome.tabs = { ...(chrome.tabs || {}), create: jest.fn() };
+    chrome.runtime.getURL = (p) => `chrome-extension://x/${p}`;
+    for (const entry of Object.keys(ENTRIES)) {
+      mockAddTask.mockClear(); chrome.tabs.create.mockClear();
+      await chrome.storage.local.clear();
+      await setup(provider, 'always', { ack: false });
+      const r = await converter.convert({ arxivId: '2401.00001', title: 'T', ...ENTRIES[entry] }, null, 7);
+      expect([entry, mockAddTask.mock.calls.length]).toEqual([entry, 0]);
+      expect(r).toMatchObject({ success: false, disclosureNeeded: true, provider });
+      expect(chrome.tabs.create).toHaveBeenCalledWith({ url: `chrome-extension://x/settings.html#disclose=${provider}` });
+    }
+  });
+  test('状态卡文案：PaddleOCR 说「上传说明」，MinerU 不说上传', () => {
+    const { statusCardErrorText } = require('../src/content/status-error');
+    const { translations } = require('../src/config/locales');
+    const zh = translations.zh;
+    expect(statusCardErrorText({ success: false, disclosureNeeded: true, provider: 'paddleocr' }, zh)).toBe('需要先确认上传说明。已打开设置页，确认后回到这里再点一次。');
+    expect(statusCardErrorText({ data: { success: false, disclosureNeeded: true, provider: 'mineru' } }, zh)).not.toMatch(/上传/);
+    expect(statusCardErrorText({ success: false, disclosureNeeded: true, provider: 'mineru' }, translations.en)).toBe("Review what's shared first. Settings is open. Confirm there, then click again here.");
+  });
 });
