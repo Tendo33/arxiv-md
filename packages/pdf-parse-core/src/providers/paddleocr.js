@@ -5,6 +5,7 @@
 import { defineProvider } from '../provider.js';
 import { ParseError, classifyHttpError, readErrorResponse, isParseError, fromFetchFailure } from '../errors.js';
 import { fetchWithTimeout } from '../http.js';
+import { withKeepAlive } from '../keepalive.js';
 
 export const PADDLEOCR_BASE = 'https://paddleocr.aistudio-app.com';
 export const PADDLEOCR_JOBS_URL = `${PADDLEOCR_BASE}/api/v2/ocr/jobs`;
@@ -30,6 +31,8 @@ export function mapPaddleError(err) {
 
 /** 星河 multipart 上传上限 50 MB（官方文档：链接 200 MB、上传 50 MB） */
 // 实测（2026-10-29）：2.2 MB 的 arXiv PDF 从海外上传到星河用了 137s，30s 默认超时必然失败
+// 与 Chrome「单个请求 5 分钟」上限不冲突：上传期间 withKeepAlive 每 20 秒调扩展 API，按官方说明会重置该计时器，
+// 所以 5 分钟由我们自己的 AbortController 计时，先于（或不受制于）浏览器回收，用户看到的是可读的超时错误。
 export const PADDLEOCR_UPLOAD_TIMEOUT_MS = 5 * 60 * 1000;
 export const PADDLEOCR_MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
 const UPLOAD_HOSTS = new Set(['arxiv.org', 'www.arxiv.org', 'export.arxiv.org']);
@@ -149,17 +152,21 @@ export const paddleocrProvider = defineProvider({
   async submit(input, creds, ctx = {}) {
     if (!creds || !creds.token) throw new ParseError('AUTH_INVALID', { provider: ID });
     const model = (input.options && input.options.model) || PADDLEOCR_DEFAULT_MODEL;
-    let body;
-    if (shouldUploadFile(input.url)) {
-      const blob = await downloadPdf(input.url, ctx);
-      body = new FormData();
-      body.append('model', model);
-      body.append('optionalPayload', '{}');
-      body.append('file', blob, fileNameOf(input.url));
-    } else {
-      body = JSON.stringify({ fileUrl: input.url, model });
-    }
-    const json = await request(PADDLEOCR_JOBS_URL, { method: 'POST', body }, creds.token, ctx);
+    const upload = shouldUploadFile(input.url);
+    // 下载 + 上传可能持续数分钟（实测 137s）：期间保活 SW，结束即停
+    const json = await (upload ? withKeepAlive : (f) => f())(async () => {
+      let body;
+      if (shouldUploadFile(input.url)) {
+        const blob = await downloadPdf(input.url, ctx);
+        body = new FormData();
+        body.append('model', model);
+        body.append('optionalPayload', '{}');
+        body.append('file', blob, fileNameOf(input.url));
+      } else {
+        body = JSON.stringify({ fileUrl: input.url, model });
+      }
+      return request(PADDLEOCR_JOBS_URL, { method: 'POST', body }, creds.token, ctx);
+    }, ctx.keepAlive);
     const jobId = json.data && json.data.jobId;
     if (!jobId) throw new ParseError('PROVIDER_FAILED', { provider: ID, raw: json, reason: 'missing jobId' });
     return { jobId };
