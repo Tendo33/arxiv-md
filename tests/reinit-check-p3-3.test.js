@@ -59,3 +59,40 @@ test('getDynamicRules 挂起 → 超时后 reloaded', async () => {
 test('文案中英都在', () => {
   for (const l of ['zh', 'en']) { expect(translations[l].pdf_reinit_ready).toBeTruthy(); expect(translations[l].pdf_reinit_busy).toMatch(/\{n\}/); }
 });
+
+// 审查 P3-a：等待 reinit 的 PENDING 任务不算「在跑」，按钮可以继续核对 / 重载；英文单复数
+test('只有等待 reinit 的 PENDING 任务 → 不算忙，规则没有时直接 reloaded', async () => {
+  const s = setup({ rules: [], tasks: [{ status: 'pending', dnrReinitWaitSince: 1 }] });
+  expect(await s.sec.onReinit()).toBe('reloaded');
+  expect(s.runtime.reload).toHaveBeenCalledTimes(1);
+});
+test('等待 reinit 的任务 + 普通 PENDING → 仍然 busy，计数只算普通任务', async () => {
+  const s = setup({ tasks: [{ status: 'pending', dnrReinitWaitSince: 1 }, { status: 'pending' }] });
+  expect(await s.sec.onReinit()).toBe('busy');
+  expect(s.toast.mock.calls[0][0]).toBe(translations.zh.pdf_reinit_busy_one);
+});
+test('dnrReinitWaitSince 为 0 也算在等 reinit（不是 falsy 判断）', async () => {
+  const s = setup({ rules: [{ id: 4001 }], tasks: [{ status: 'pending', dnrReinitWaitSince: 0 }] });
+  expect(await s.sec.onReinit()).toBe('ready');
+});
+test('PROCESSING 任务即使带 dnrReinitWaitSince 也算忙', async () => {
+  const s = setup({ tasks: [{ status: 'processing', dnrReinitWaitSince: 1 }] });
+  expect(await s.sec.onReinit()).toBe('busy');
+});
+test('英文单复数：1 PDF task / N PDF tasks', () => {
+  expect(translations.en.pdf_reinit_busy_one).toMatch(/^1 PDF task still running/);
+  expect(translations.en.pdf_reinit_busy).toMatch(/^\{n\} PDF tasks still running/);
+  expect(translations.en.pdf_reinit_busy).not.toMatch(/\(s\)/);
+});
+test('英文 toast：1 个用单数，2 个用复数', async () => {
+  const mk = (tasks) => {
+    const { document } = parseHTML(html);
+    const toast = jest.fn();
+    const sec = createPdfProviderSection({ doc: document, storage: { getPdfProvider: async () => 'paddleocr', setPdfProvider: async () => {}, getProviderKey: async () => 'k', setProviderKey: async () => {} }, permissions: createPermissions({ origins: ORIGINS, permissions: ['declarativeNetRequestWithHostAccess'], answer: true }), registry: createDefaultRegistry(), t: () => translations.en, runtime: { reload: jest.fn() }, toast, local: { get: async () => ({ mineruTasks: tasks }) }, dnr: { getDynamicRules: async () => [] } });
+    return { sec, toast };
+  };
+  const a = mk([{ status: 'pending' }]); await a.sec.onReinit();
+  expect(a.toast.mock.calls[0][0]).toBe('1 PDF task still running. Reinitialize after it finishes so it isn\'t interrupted.');
+  const b = mk([{ status: 'pending' }, { status: 'processing' }]); await b.sec.onReinit();
+  expect(b.toast.mock.calls[0][0]).toBe('2 PDF tasks still running. Reinitialize after they finish so they aren\'t interrupted.');
+});

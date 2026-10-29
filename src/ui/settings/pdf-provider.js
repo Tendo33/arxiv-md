@@ -267,13 +267,16 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
     try {
       const r = await local.get(STORAGE_KEYS.TASKS);
       const list = (r && r[STORAGE_KEYS.TASKS]) || [];
-      return (Array.isArray(list) ? list : []).filter((x) => x && (x.status === TASK_STATUS.PENDING || x.status === TASK_STATUS.PROCESSING)).length;
+      // 审查 P3-a：等待 reinit 的 PENDING 任务（带 dnrReinitWaitSince，见 parse-task-runner L-01）本身就在等重载，不算「在跑」，
+      // 否则按钮提示忙、排队的重载又在等设置页关闭，两边互锁
+      return (Array.isArray(list) ? list : []).filter((x) => x && (x.status === TASK_STATUS.PROCESSING
+        || (x.status === TASK_STATUS.PENDING && x.dnrReinitWaitSince == null))).length;
     } catch (_) { return 0; }
   }
   async function onReinit() {
     const tr = t();
     const n = await runningTasks();
-    if (n > 0) { toast(fmt(tr.pdf_reinit_busy, { n }), 'error'); return 'busy'; }
+    if (n > 0) { toast(n === 1 ? tr.pdf_reinit_busy_one : fmt(tr.pdf_reinit_busy, { n }), 'error'); return 'busy'; }
     if (await ruleReady()) { toast(tr.pdf_reinit_ready, 'success'); return 'ready'; }
     if (runtime && typeof runtime.reload === 'function') { runtime.reload(); return 'reloaded'; }
     return 'unavailable';
