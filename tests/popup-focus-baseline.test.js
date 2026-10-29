@@ -18,5 +18,6 @@ describe('popup baseline', () => {
   });
   test('popup 没有 5px 间距', () => {
     expect(pop).not.toMatch(/padding:\s*0 5px/);
+    expect(v2).toMatch(/kbd\{[^}]*padding:2px 6px/);
   });
 });
