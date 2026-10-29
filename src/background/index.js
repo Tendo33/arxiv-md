@@ -366,6 +366,10 @@ async function handleRetryTask(taskId, sendResponse) {
 
     sendResponse({ success: true });
 
+    // QA 6a49976 R-4：没确认数据说明就点重试 → 和新建任务一样重新打开披露页（任务由 runner 停在 awaiting_disclosure，不发请求）
+    const provider = task.provider || 'mineru';
+    if (!(await isDisclosureAcked(provider))) openDisclosureSettings(provider);
+
     // 重新处理
     startParseTask(taskId);
   } catch (error) {
