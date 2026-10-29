@@ -64,9 +64,40 @@ export function replaceFigureTables(text, pg) {
 }
 
 /** 单页总入口 */
+/**
+ * P-7：版面模型把「ACKNOWLEDGMENT」这类节标题标成 header（页眉），markdown_ignore_labels 会把它整块丢掉。
+ * 只恢复两类确定是节标题的 header：致谢，以及全大写、带编号的节标题（如 GELU 附录「A NEURAL NETWORK …」）。
+ * 插到它正下方第一个能在正文里找到的块前面。「Published as a conference paper …」这类真页眉不碰。
+ * 标题大小写被模型改写（3.3 Twitter POS Tagging）来自 block_content 本身，属已知问题。
+ */
+const ACK_RE = /^\s*(?:\d+\.?\s*)?acknowledge?ments?\s*$/i;
+const CAPS_SECTION_RE = /^\s*(?:[A-Z]|\d+(?:\.\d+)*)\.?\s+[A-Z][A-Z0-9 ,:-]{8,}$/;
+export function restoreDroppedHeadings(text, pg) {
+  const blocks = blocksOf(pg);
+  let out = text;
+  for (const h of blocks.filter((b) => b.block_label === 'header')) {
+    const title = String(h.block_content || '').trim();
+    if (!ACK_RE.test(title) && !CAPS_SECTION_RE.test(title)) continue;
+    if (out.includes(`# ${title}`)) continue;
+    const below = blocks
+      .filter((b) => b !== h && b.block_bbox[1] >= h.block_bbox[3] - 2 && b.block_bbox[0] < h.block_bbox[2] && b.block_bbox[2] > h.block_bbox[0])
+      .sort((a, b) => a.block_bbox[1] - b.block_bbox[1]);
+    for (const nb of below) {
+      const head = String(nb.block_content || '').trim().slice(0, 60);
+      if (head.length < 20) continue;
+      const at = out.indexOf(head);
+      if (at < 0) continue;
+      out = `${out.slice(0, at)}## ${title}\n\n${out.slice(at)}`;
+      break;
+    }
+  }
+  return out;
+}
+
+/** 单页总入口 */
 export function fixPageFromBlocks(text, pg) {
   const r = replaceFigureTables(addFormulaTags(text, pg), pg);
-  return { text: r.text, crops: r.crops };
+  return { text: restoreDroppedHeadings(r.text, pg), crops: r.crops };
 }
 
 /**

@@ -188,3 +188,31 @@ describe('P-8：去掉居中 div 和表格展示属性', () => {
     expect(out.markdown).toMatch(/!\[[^\]]*\]\(images\//);
   });
 });
+
+describe('P-7：被当成页眉丢掉的节标题', () => {
+  const { restoreDroppedHeadings } = require('@pdf-core/providers/paddleocr-blocks');
+  const blk = (label, content, bbox) => ({ block_label: label, block_content: content, block_bbox: bbox });
+  const pg = (...b) => ({ prunedResult: { parsing_res_list: b } });
+  test('GELU 真实页：## ACKNOWLEDGMENT 回到致谢段落前', async () => {
+    const md = (await deliver(GELU)).out.markdown;
+    expect(md).toMatch(/## ACKNOWLEDGMENT\n\nWe would like to thank NVIDIA/);
+  });
+  test('全大写编号节标题也恢复', () => {
+    const p = pg(blk('header', 'A NEURAL NETWORK ARCHITECTURE FOR CIFAR-10 EXPERIMENTS', [100, 100, 900, 120]),
+      blk('text', 'We use a shallow architecture with two convolutional layers.', [100, 130, 900, 200]));
+    expect(restoreDroppedHeadings('x\n\nWe use a shallow architecture with two convolutional layers.', p))
+      .toBe('x\n\n## A NEURAL NETWORK ARCHITECTURE FOR CIFAR-10 EXPERIMENTS\n\nWe use a shallow architecture with two convolutional layers.');
+  });
+  test.each([
+    'Published as a conference paper at ICLR 2015',
+    'Scaled Dot-Product Attention',
+    'Provided proper attribution is provided, Google hereby grants',
+  ])('真页眉不动：%s', (h) => {
+    const t = 'We use a shallow architecture with two convolutional layers.';
+    expect(restoreDroppedHeadings(t, pg(blk('header', h, [100, 10, 900, 30]), blk('text', t, [100, 40, 900, 90])))).toBe(t);
+  });
+  test('已有同名标题不重复', () => {
+    const t = '## ACKNOWLEDGMENT\n\nWe would like to thank everyone involved here.';
+    expect(restoreDroppedHeadings(t, pg(blk('header', 'ACKNOWLEDGMENT', [0, 0, 500, 20]), blk('text', 'We would like to thank everyone involved here.', [0, 30, 500, 80])))).toBe(t);
+  });
+});
