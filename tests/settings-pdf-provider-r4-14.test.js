@@ -28,9 +28,12 @@ function setup({ provider = 'paddleocr', keys = {}, origins = [], answer = true,
 }
 
 describe('R4-14 设置页：后端选择 + Key', () => {
-  test('下拉框只有 PaddleOCR（默认）和 MinerU；本地服务本轮隐藏', () => {
+  test('R01：单选卡片只有 PaddleOCR（默认）和 MinerU；本地服务本轮隐藏', () => {
     const { document } = parseHTML(html);
-    const opts = [...document.querySelectorAll('#pdfProvider option')].map((o) => o.value);
+    const opts = [...document.querySelectorAll('#pdfProviderGroup input[name="pdfProvider"]')].map((o) => o.value);
+    expect(document.querySelector('select#pdfProvider')).toBeNull();
+    expect(document.querySelector('#pdfProviderGroup').tagName).toBe('FIELDSET');
+    expect(document.querySelector('#pdfProviderGroup > legend').getAttribute('data-i18n')).toBe('pdf_provider_label');
     expect(opts).toEqual(['paddleocr', 'mineru']);
     expect(UI_PROVIDERS).toEqual(['paddleocr', 'mineru']);
     expect(html).not.toMatch(/localhost|127\.0\.0\.1/);
@@ -38,9 +41,15 @@ describe('R4-14 设置页：后端选择 + Key', () => {
 
   test('每个控件都有 label；Key 是 password 输入框', () => {
     const { document } = parseHTML(html);
-    for (const id of ['pdfProvider', 'providerKey']) expect(document.querySelector(`label[for="${id}"]`)).toBeTruthy();
+    expect(document.querySelector('label[for="providerKey"]')).toBeTruthy();
+    for (const r of document.querySelectorAll('input[name="pdfProvider"]')) {
+      expect(r.closest('label.provider-card')).toBeTruthy();
+      expect(document.getElementById(r.getAttribute('aria-describedby'))).toBeTruthy();
+    }
     expect(document.getElementById('providerKey').getAttribute('type')).toBe('password');
-    for (const id of ['toggleTokenBtn', 'testTokenBtn']) expect(document.getElementById(id).getAttribute('aria-label')).toBeTruthy();
+    expect(document.getElementById('toggleTokenBtn').getAttribute('aria-label')).toBeTruthy();
+    // B5：测试连接改为可见文字按钮（文字即可访问名称）
+    expect(document.querySelector('#testTokenBtn [data-i18n="mineru_test_btn"]')).toBeTruthy();
   });
 
   test('中英文 pdf_* 文案齐全', () => {
@@ -54,8 +63,8 @@ describe('R4-14 设置页：后端选择 + Key', () => {
     const h = setup({ keys: { paddleocr: 'fixture-key' } });
     await h.sec.init();
     const d = h.document;
-    expect(d.getElementById('pdfProvider').value).toBe('paddleocr');
-    expect(d.getElementById('pdfProviderDesc').textContent).toContain('paddleocr.aistudio-app.com');
+    expect([...d.querySelectorAll('input[name="pdfProvider"]')].find((r) => r.checked).value).toBe('paddleocr');
+    expect(d.getElementById('getKeyText').textContent).toBe(translations.en.pdf_get_key.replace('{provider}', 'PaddleOCR'));
     expect(d.getElementById('providerKey').value).toBe('fixture-key');
     expect(d.getElementById('providerKey').dataset.provider).toBe('paddleocr');
     expect(d.getElementById('grantPermissionBtn').hidden).toBe(false);
@@ -76,7 +85,7 @@ describe('R4-14 设置页：后端选择 + Key', () => {
     const h = setup({ provider: 'mineru', answer: false });
     await h.sec.init();
     expect(await h.sec.onSelect('paddleocr')).toBe(false);
-    expect(h.document.getElementById('pdfProvider').value).toBe('mineru');
+    expect([...h.document.querySelectorAll('input[name="pdfProvider"]')].find((r) => r.checked).value).toBe('mineru');
     expect(h.storage.setPdfProvider).not.toHaveBeenCalled();
     expect(h.document.getElementById('permissionStatus').textContent).toContain('paddleocr.aistudio-app.com');
   });
@@ -160,7 +169,8 @@ describe('设计建议：连接测试失败', () => {
     expect(st.textContent).toMatch(/^❌ Key 无效或已过期/);
     expect(st.textContent).not.toMatch(/未填写/);
     const a = st.querySelector('a.token-status-link');
-    expect(a.textContent).toBe('获取 PaddleOCR Key');
+    expect(a.firstChild.textContent).toBe('获取 PaddleOCR Key');
+    expect(a.querySelector('.sr-only').textContent).toBe('（在新标签页打开）');
     expect(a.getAttribute('href')).toBe('https://aistudio.baidu.com/account/accessToken');
   });
   test('其他失败也带 ❌', async () => {
@@ -172,8 +182,10 @@ describe('设计建议：连接测试失败', () => {
     await h.sec.onTest();
     expect(h.document.getElementById('tokenStatus').textContent.startsWith('❌')).toBe(true);
   });
-  test('测试按钮悬停/聚焦保持 on-success 色', () => {
+  test('§2.4：测试连接是描边次按钮，不再有 on-success 覆盖和 border:none !important', () => {
     const css = fs.readFileSync(path.join(__dirname, '../src/ui/settings/settings.css'), 'utf8');
-    expect(css).toMatch(/\.btn-test:hover, \.btn-test:focus-visible \{ color: var\(--on-success\); \}/);
+    expect(css).not.toMatch(/\.btn-test:hover, \.btn-test:focus-visible \{ color: var\(--on-success\); \}/);
+    expect(css).not.toMatch(/border: none !important/);
+    expect(css).toMatch(/#testTokenBtn\.btn-test \{[^}]*height: 40px;[^}]*border: 1px solid var\(--border-strong\)/);
   });
 });

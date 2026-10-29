@@ -80,7 +80,7 @@ describe('P2-A settings', () => {
   test('PaddleOCR chosen on device A → device B still shows PaddleOCR + hint', async () => {
     const { document, sec } = setup({ chosen: 'paddleocr', provider: 'paddleocr' });
     await sec.init();
-    expect(document.getElementById('pdfProvider').value).toBe('paddleocr');
+    expect([...document.querySelectorAll('input[name="pdfProvider"]')].find((r) => r.checked).value).toBe('paddleocr');
     expect(document.getElementById('keyHereHint').hidden).toBe(false);
     expect(UI_PROVIDERS).toContain('paddleocr');
   });

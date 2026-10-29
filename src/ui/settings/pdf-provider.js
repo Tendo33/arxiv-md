@@ -2,6 +2,8 @@
 // 权限申请只发生在下拉框 change / 按钮 click（用户手势）里；用户拒绝 → 下拉框回到原来的后端。
 import { requestProviderPermission, hasProviderPermission, removeProviderPermission, canRevoke, permissionsFor } from '@pdf-core/permissions';
 import { shortErrorText } from '../popup/task-error-text';
+import { isDisclosureAcked, ackDisclosure, needsDisclosure, parseDisclosureHash } from '@utils/disclosure-ack';
+import { buildDisclosurePanel } from './disclosure';
 
 /** 本轮 UI 可选的后端（本地服务本轮隐藏，只预留接口） */
 export const UI_PROVIDERS = ['paddleocr', 'mineru'];
@@ -11,10 +13,17 @@ export const KEY_LINKS = {
 };
 
 const fmt = (s, vars) => String(s || '').replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
-// 浏览器里直接设 value；linkedom（测试）的 select.value 只有 getter，退回改 option 的 selected 属性
-function setSelect(sel, v) {
-  try { sel.value = v; if (sel.value === v) return; } catch { /* fallthrough */ }
-  sel.querySelectorAll('option').forEach((o) => { if (o.value === v) o.setAttribute('selected', ''); else o.removeAttribute('selected'); });
+// design-abs-buttons-2026-10-29 R01：后端选择改为 fieldset 单选卡片（不再是原生 select）
+const radios = (doc) => [...doc.querySelectorAll('input[name="pdfProvider"]')];
+export function checkedProvider(doc) {
+  const r = radios(doc).find((x) => x.checked);
+  return r ? r.value : null;
+}
+function setRadio(doc, v) {
+  for (const r of radios(doc)) {
+    r.checked = r.value === v;
+    if (r.checked) r.setAttribute('checked', ''); else r.removeAttribute('checked');
+  }
 }
 
 const hostOf = (provider) => {
@@ -25,9 +34,9 @@ const hostOf = (provider) => {
 /**
  * @param {{doc:Document, storage:any, permissions:any, registry:any, t:()=>Object, toast?:(msg:string,type?:string)=>void}} deps
  */
-export function createPdfProviderSection({ doc, storage, permissions, registry, t, toast = () => {}, runtime = globalThis.chrome && globalThis.chrome.runtime }) {
+export function createPdfProviderSection({ doc, storage, permissions, registry, t, toast = () => {}, runtime = globalThis.chrome && globalThis.chrome.runtime, local = globalThis.chrome && globalThis.chrome.storage && globalThis.chrome.storage.local, seg, location: loc = globalThis.location }) {
   const $ = (id) => doc.getElementById(id);
-  const state = { current: null, denied: null };
+  const state = { current: null, denied: null, acked: {}, pending: null, fromHash: null };
 
   // 撤销按钮：只要还留着任一项（部分授权也算）就显示
   async function hasAnyGrant(p) {
@@ -43,12 +52,12 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
     const tr = t();
     const p = registry.get(state.current);
     const vars = { provider: p.label, host: hostOf(p) };
-    setSelect($('pdfProvider'), state.current);
-    $('pdfProviderDesc').textContent = tr[`pdf_desc_${p.id}`] || '';
+    if (!state.pending) setRadio(doc, state.current);
     $('providerKeyLabel').textContent = fmt(tr.pdf_key_label, vars);
     const link = $('getKeyLink');
-    link.textContent = fmt(tr.pdf_get_key, vars);
+    $('getKeyText').textContent = fmt(tr.pdf_get_key, vars);
     link.setAttribute('href', KEY_LINKS[p.id] || '#');
+    if (state.pending) refreshPanelText();
     const key = $('providerKey');
     key.dataset.provider = p.id;
     key.value = (await storage.getProviderKey(p.id)) || '';
@@ -83,7 +92,88 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
 
   async function init() {
     state.current = await storage.getPdfProvider((id) => UI_PROVIDERS.includes(id) && registry.has(id));
+    for (const id of UI_PROVIDERS) state.acked[id] = await isDisclosureAcked(id, local);
     await render();
+    // C10：从摘要页 / popup / 右键菜单跳过来（#disclose=<provider>）→ 直接打开该后端的数据说明
+    const want = parseDisclosureHash(loc && loc.hash);
+    if (want && !state.acked[want]) {
+      state.fromHash = want;
+      openDisclosure(want);
+    }
+  }
+
+  // ---- 附录 C：数据说明面板 ----
+  function closePanel() {
+    const old = $('pdPanel');
+    if (old) old.remove();
+    state.pending = null;
+  }
+
+  function refreshPanelText() {
+    const id = state.pending;
+    closePanel();
+    openDisclosure(id, { focus: false });
+  }
+
+  function openDisclosure(id, { focus = true } = {}) {
+    closePanel();
+    const p = registry.get(id);
+    const tr = t();
+    const { panel, title, ok, cancel } = buildDisclosurePanel(doc, tr, p, seg ? (k, text) => seg(k, text, tr) : undefined);
+    state.pending = id;
+    setRadio(doc, id); // 被点的卡片保持「已选」外观，面板在它下方
+    const card = doc.querySelector(`.provider-card[data-provider="${id}"]`);
+    card.after(panel);
+    ok.addEventListener('click', () => { onAgree(id); });
+    cancel.addEventListener('click', () => { onCancelDisclosure(); });
+    panel.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') { ev.preventDefault(); onCancelDisclosure(); } });
+    const live = $('pdLive');
+    if (live) live.textContent = fmt(tr.pdf_disc_live, { provider: p.label });
+    if (focus && typeof title.focus === 'function') title.focus();
+    return panel;
+  }
+
+  function onCancelDisclosure() {
+    closePanel();
+    state.fromHash = null;
+    setRadio(doc, state.current);
+    const r = radios(doc).find((x) => x.value === state.current);
+    if (r && typeof r.focus === 'function') r.focus();
+    const live = $('pdLive');
+    if (live) live.textContent = '';
+  }
+
+  /**
+   * 「同意并使用」（用户手势）：写确认记录、切换后端，并在同一个手势里申请权限。
+   * 存储写入不 await，保证 permissions.request 仍在手势内。用户拒绝授权时后端照样保存，权限行显示「需要授权访问」。
+   */
+  async function onAgree(id) {
+    const p = registry.get(id);
+    const fromHash = state.fromHash === id;
+    closePanel();
+    state.fromHash = null;
+    state.acked[id] = true;
+    const writes = [ackDisclosure(id, local), storage.setPdfProvider(id)];
+    state.current = id;
+    setRadio(doc, id);
+    const granted = await requestProviderPermission(permissions, p);
+    await Promise.all(writes.map((w) => Promise.resolve(w).catch(() => {})));
+    $('permissionRow').classList.remove('denied');
+    $('tokenStatus').style.display = 'none';
+    const tr = t();
+    toast(fromHash ? tr.pdf_disc_confirmed : tr.toast_saved, 'success');
+    await render();
+    return granted;
+  }
+
+  /** 单选卡片 change（用户手势）：未确认过的后端先显示数据说明；已确认的走原来的授权 → 保存流程 */
+  function onPick(id) {
+    if (!registry.has(id)) return render();
+    if (state.pending && state.pending !== id) closePanel();
+    if (id === state.current && !state.pending) return render();
+    if (id === state.current) { onCancelDisclosure(); return null; }
+    if (needsDisclosure(id) && !state.acked[id]) return openDisclosure(id);
+    return onSelect(id);
   }
 
   /** 下拉框 change（用户手势） */
@@ -94,7 +184,7 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
     const ok = await requestProviderPermission(permissions, next);
     const tr = t();
     if (!ok) {
-      setSelect($('pdfProvider'), prev);
+      setRadio(doc, prev);
       // 设计验收 M6：拒绝的说明留在权限行里（不随 toast 消失），附「重新授权」，并滚到可见处
       state.denied = nextId;
       const msg = fmt(tr.pdf_perm_denied, { host: hostOf(next), provider: registry.get(prev).label, next: next.label });
@@ -154,7 +244,7 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
     const p = registry.get(state.current);
     const token = $('providerKey').value.trim();
     const status = $('tokenStatus');
-    status.style.display = 'block';
+    status.style.display = '';
     if (!token) { status.className = 'token-status error'; status.textContent = tr.token_empty_error; return { ok: false }; }
     if (!(await hasProviderPermission(permissions, p))) {
       status.className = 'token-status error';
@@ -184,6 +274,10 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
         a.rel = 'noopener noreferrer';
         a.className = 'token-status-link';
         a.textContent = fmt(tr.pdf_get_key, { provider: p.label });
+        const nt = doc.createElement('span');
+        nt.className = 'sr-only';
+        nt.textContent = tr.link_new_tab;
+        a.append(nt);
         status.append(' ', a);
       }
     }
@@ -191,12 +285,14 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
   }
 
   function bind() {
-    $('pdfProvider').addEventListener('change', (ev) => { onSelect(ev.target.value); });
+    $('pdfProviderGroup').addEventListener('change', (ev) => {
+      if (ev.target && ev.target.name === 'pdfProvider' && ev.target.checked) onPick(ev.target.value);
+    });
     $('grantPermissionBtn').addEventListener('click', () => { onGrant(); });
     if ($('reinitBtn')) $('reinitBtn').addEventListener('click', () => { onReinit(); });
     $('revokePermissionBtn').addEventListener('click', () => { onRevoke(); });
     $('testTokenBtn').addEventListener('click', () => { onTest(); });
   }
 
-  return { init, render, bind, onSelect, onGrant, onRevoke, onReinit, onTest, get current() { return state.current; } };
+  return { init, render, bind, onSelect, onPick, onAgree, onCancelDisclosure, openDisclosure, onGrant, onRevoke, onReinit, onTest, get current() { return state.current; }, get pending() { return state.pending; } };
 }

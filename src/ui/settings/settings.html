@@ -90,12 +90,24 @@
           </p>
 
           <div class="form-group">
-            <label for="pdfProvider" data-i18n="pdf_provider_label">Provider</label>
-            <select id="pdfProvider" class="input-field" aria-describedby="pdfProviderDesc">
-              <option value="paddleocr" data-i18n="pdf_provider_paddleocr">PaddleOCR (default, free quota)</option>
-              <option value="mineru" data-i18n="pdf_provider_mineru">MinerU</option>
-            </select>
-            <p class="form-hint" id="pdfProviderDesc" aria-live="polite"></p>
+            <fieldset class="provider-group" id="pdfProviderGroup">
+              <legend id="pdfProviderLegend" data-i18n="pdf_provider_label">Provider</legend>
+              <label class="provider-card" data-provider="paddleocr">
+                <input type="radio" name="pdfProvider" value="paddleocr" aria-describedby="pcDesc-paddleocr" />
+                <span class="pc-body">
+                  <span class="pc-head">PaddleOCR <span class="pc-badge free" data-i18n="pdf_badge_default_free">Default · free quota</span> <span class="pc-badge" data-i18n="pdf_badge_needs_key">Needs a key</span></span>
+                  <span class="pc-desc" id="pcDesc-paddleocr"><span data-i18n="pdf_card_paddleocr">Uploads PDFs from arXiv (up to 50 MB) to Baidu AI Studio; other PDFs are sent as links. Includes a free daily quota.</span> <span class="pc-note" data-i18n="pdf_card_paddleocr_slow">Usually slower than MinerU.</span></span>
+                </span>
+              </label>
+              <label class="provider-card" data-provider="mineru">
+                <input type="radio" name="pdfProvider" value="mineru" aria-describedby="pcDesc-mineru" />
+                <span class="pc-body">
+                  <span class="pc-head">MinerU <span class="pc-badge" data-i18n="pdf_badge_needs_key">Needs a key</span></span>
+                  <span class="pc-desc" id="pcDesc-mineru"><span data-i18n="pdf_card_mineru">Sends only the PDF link to mineru.net. Free accounts have a daily page limit.</span></span>
+                </span>
+              </label>
+            </fieldset>
+            <div class="sr-only" id="pdLive" role="status" aria-live="polite"></div>
             <div class="permission-row" id="permissionRow" hidden>
               <span id="permissionStatus" role="status"></span>
               <button type="button" id="grantPermissionBtn" class="btn btn-secondary" data-i18n="pdf_grant_btn" hidden>Grant access</button>
@@ -106,36 +118,37 @@
           <div class="form-group">
             <label for="providerKey" id="providerKeyLabel" data-i18n="pdf_key_label">API Key</label>
             <div class="input-group">
-              <input
-                type="password"
-                id="providerKey"
-                data-provider="paddleocr"
-                autocomplete="off"
-                spellcheck="false"
-                data-i18n-placeholder="pdf_key_placeholder"
-                placeholder="Paste your API key"
-                class="input-field"
-                aria-describedby="keyHereHint tokenStatus getKeyHint"
-              />
-              <button type="button" id="toggleTokenBtn" class="btn-icon" data-i18n-title="token_toggle" data-i18n-aria="token_toggle" title="Show/Hide" aria-label="Show/Hide" aria-pressed="false">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                  <circle cx="12" cy="12" r="3" />
+              <div class="key-field">
+                <input
+                  type="password"
+                  id="providerKey"
+                  data-provider="paddleocr"
+                  autocomplete="off"
+                  spellcheck="false"
+                  data-i18n-placeholder="pdf_key_placeholder"
+                  placeholder="Paste your API key"
+                  class="input-field"
+                  aria-describedby="keyHereHint tokenStatus getKeyHint"
+                />
+                <button type="button" id="toggleTokenBtn" class="btn-icon" data-i18n-title="token_toggle" data-i18n-aria="token_toggle" title="Show/Hide" aria-label="Show/Hide" aria-pressed="false">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
+              </div>
+              <button type="button" id="testTokenBtn" class="btn btn-test">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M5 12l5 5L20 7" />
                 </svg>
+                <span data-i18n="mineru_test_btn">Test connection</span>
               </button>
-              <button type="button" id="testTokenBtn" class="btn-icon btn-test" data-i18n-title="mineru_test_btn" data-i18n-aria="mineru_test_btn" title="Test connection" aria-label="Test connection">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                  <polyline points="22 4 12 14.01 9 11.01" />
-                </svg>
-              </button>
+              <div class="token-status" id="tokenStatus" role="status" aria-live="polite"></div>
             </div>
             <div class="form-hint" id="getKeyHint">
-              🔗
-              <a id="getKeyLink" href="https://aistudio.baidu.com/account/accessToken" target="_blank" rel="noopener noreferrer" data-i18n="pdf_get_key">Get a key</a>
+              <a id="getKeyLink" class="key-link" href="https://aistudio.baidu.com/account/accessToken" target="_blank" rel="noopener noreferrer"><span id="getKeyText" data-i18n="pdf_get_key">Get a key</span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></svg><span class="sr-only" data-i18n="link_new_tab">(opens in a new tab)</span></a>
             </div>
             <div class="form-hint key-here" id="keyHereHint" role="status" hidden></div>
-            <div class="token-status" id="tokenStatus" role="status" aria-live="polite"></div>
           </div>
 
           <div class="form-group revoke-row" id="revokeRow" hidden>

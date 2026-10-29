@@ -260,7 +260,7 @@ async function validateToken() {
 
   // 简单的格式验证
   if (token.length < 10) {
-    statusEl.style.display = 'block';
+    statusEl.style.display = '';
     statusEl.className = 'token-status error';
     statusEl.textContent = t.token_invalid;
     return;

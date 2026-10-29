@@ -387,7 +387,6 @@ body {
 /* Test Token Button */
 .btn-test {
   background: var(--success-solid);
-  border: none !important;
   color: var(--on-success);
 }
 
@@ -684,14 +683,9 @@ body {
 .autosave-note.error { color: var(--danger); font-weight: 600; white-space: normal; }
 
 /* R4-14：PDF 解析分组 */
-select.input-field { appearance: auto; cursor: pointer; width: 100%; }
 .permission-row, .revoke-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 8px; font-size: 13px; color: var(--text-secondary, #475569); }
 .permission-row[hidden], .revoke-row[hidden] { display: none; }
 
-/* 设计验收 M4：窄屏下 Key 输入框缩小，显示/测试按钮留在同一行 */
-.input-group { flex-wrap: nowrap; }
-.input-group input { min-width: 0; flex: 1; }
-.input-group .btn-icon { flex: none; }
 
 /* 设计验收 M5：授权/撤销按钮用设置页按钮样式；窄屏下不拉满整行 */
 .permission-row .btn, .revoke-row .btn { min-height: 36px; padding: 0 12px; width: auto; flex: none; }
@@ -699,8 +693,6 @@ select.input-field { appearance: auto; cursor: pointer; width: 100%; }
 /* 设计验收 M6：权限被拒的说明 */
 .permission-row.denied #permissionStatus { color: var(--danger); }
 
-/* 设计建议：测试按钮悬停/聚焦时图标保持白色，不出现红图标压绿底 */
-.btn-test:hover, .btn-test:focus-visible { color: var(--on-success); }
 .token-status-link { color: inherit; text-decoration: underline; font-weight: 600; }
 
 /* 语言按钮：可访问名称以可见文字开头 */
@@ -718,3 +710,62 @@ a:focus-visible {
   display: inline-block;
   padding: 4px 0;
 }
+
+/* ===== design-abs-buttons-2026-10-29 §2 / §5.1：PDF 解析 v2 ===== */
+/* R01：后端单选卡片（fieldset），不再是原生 select */
+.provider-group { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); grid-auto-flow: row dense; gap: 12px; }
+.provider-group > legend { padding: 0; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.provider-card { position: relative; display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); cursor: pointer; font-weight: 400; margin: 0; }
+.provider-card:hover { border-color: var(--border-strong); }
+.provider-card input[type="radio"] { margin: 2px 0 0; width: 16px; height: 16px; accent-color: var(--accent); flex: none; }
+.provider-card input[type="radio"]:focus { outline: none; }
+.provider-card:has(input:focus-visible) { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+/* R16：选中态不改 padding；2px 视觉边 = 1px 边框 + 1px 内阴影 */
+.provider-card:has(input:checked) { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: color-mix(in srgb, var(--accent) 6%, var(--surface)); }
+.provider-card .pc-body { display: grid; gap: 4px; min-width: 0; }
+.provider-card .pc-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.provider-card .pc-desc { font-size: 13px; line-height: 1.5; font-weight: 400; color: var(--text-secondary); }
+.pc-badge { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 999px; font-size: 12px; font-weight: 500; border: 1px solid var(--border); color: var(--text-secondary); background: var(--surface); white-space: nowrap; }
+.pc-badge.free { color: #0f6b37; border-color: #b7dfc5; background: #effaf3; }
+@media (prefers-color-scheme: dark) {
+  .pc-badge.free { color: #4ade80; border-color: #1f5134; background: #13301f; }
+  .provider-card:has(input:checked) { background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+}
+
+/* B5：Key 行。显示/隐藏放进输入框尾部；测试连接 = 40px 描边次按钮；B4：测试结果是按钮右侧的行内状态 */
+.input-group { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: flex-start; }
+.key-field { position: relative; flex: 1 1 240px; min-width: 0; display: flex; }
+.key-field .input-field { width: 100%; height: 40px; padding: 0 44px 0 12px; border-radius: 8px; }
+.key-field #toggleTokenBtn { position: absolute; right: 4px; top: 4px; width: 32px; height: 32px; padding: 0; border: 0; background: transparent; border-radius: 6px; color: var(--text-secondary); display: inline-flex; align-items: center; justify-content: center; }
+.key-field #toggleTokenBtn:hover { background: var(--surface-2); color: var(--text-primary); }
+.key-field #toggleTokenBtn svg { width: 18px; height: 18px; }
+.input-group #testTokenBtn.btn-test { display: inline-flex; align-items: center; gap: 6px; flex: none; width: auto; min-height: 0; height: 40px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-primary); font-size: 13px; font-weight: 600; white-space: nowrap; box-shadow: none; }
+.input-group #testTokenBtn.btn-test:hover { background: var(--surface-muted); border-color: var(--text-secondary); color: var(--text-primary); box-shadow: none; }
+.input-group #testTokenBtn.btn-test:focus-visible { color: var(--text-primary); outline: 2px solid var(--focus-ring); outline-offset: 2px; box-shadow: none; }
+.input-group #testTokenBtn svg { width: 16px; height: 16px; color: var(--text-secondary); }
+.input-group .token-status { margin: 0; padding: 0; border: 0; background: none; font-size: 13px; font-weight: 500; display: none; align-items: center; gap: 4px; min-height: 24px; }
+.input-group .token-status.success, .input-group .token-status.error, .input-group .token-status.testing { display: inline-flex; flex-wrap: wrap; border: 0; background: none; }
+.input-group .token-status.success { color: var(--success); }
+.input-group .token-status.error { color: var(--danger); }
+.input-group .token-status.testing { color: var(--text-secondary); }
+@media (max-width: 479px) { .key-field { flex-basis: 100%; } }
+
+/* B6：获取 Key 链接（外链图标，不再用 emoji） */
+.form-hint a.key-link { display: inline-flex; align-items: center; gap: 4px; padding: 4px 0; color: var(--accent); font-weight: 500; text-decoration: none; }
+.form-hint a.key-link:hover { text-decoration: underline; text-underline-offset: 2px; }
+.form-hint a.key-link svg { width: 14px; height: 14px; flex: none; }
+
+/* 附录 C：首次选择后端的数据说明面板（卡片下方，占满一行） */
+.pd-panel { grid-column: 1 / -1; display: grid; gap: 8px; padding: 14px 16px; border: 1px solid var(--border-strong); border-radius: 10px; background: var(--surface); color: var(--text-primary); }
+.pd-panel .pd-title { margin: 0; padding: 0; font-size: 14px; font-weight: 600; line-height: 1.5; color: var(--text-primary); outline: none; }
+.pd-body { margin: 0; font-size: 13px; line-height: 1.6; color: var(--text-secondary); }
+.pd-link { display: inline-flex; align-items: center; gap: 4px; min-height: 24px; justify-self: start; font-size: 13px; font-weight: 500; color: var(--accent); text-decoration: none; border-radius: 4px; }
+.pd-link:hover { text-decoration: underline; text-underline-offset: 2px; }
+.pd-link svg { width: 14px; height: 14px; flex: none; }
+.pd-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.pd-actions .btn { box-sizing: border-box; width: auto; height: 36px; min-height: 36px; padding: 0 16px; line-height: 20px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+@media (max-width: 359px) { .pd-actions .btn { flex: 1 1 100%; width: 100%; } }
+
+/* R09 / B8：中文按短语断行（text-wrap:pretty 对 CJK 无效） */
+.nw { white-space: nowrap; }
+.btn { white-space: nowrap; }
