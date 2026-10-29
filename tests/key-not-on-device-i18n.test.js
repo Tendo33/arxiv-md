@@ -8,7 +8,7 @@ const rowHtml = (task) => require('../src/ui/popup/task-list').createTaskRow(tas
 
 const task = { id: 't1', status: 'failed', provider: 'mineru', paperInfo: { title: 'P' }, createdAt: Date.now(),
   error: 'mineru: AUTH_INVALID (key_not_on_device)', errorCode: 'AUTH_INVALID', errorReason: 'key_not_on_device' };
-const errText = (html) => (html.match(/<span [^>]*class="row-err"[^>]*>([^<]*)<\/span>/) || [])[1];
+const errText = (html) => (html.match(/<span [^>]*class="row-err"[^>]*>(?:<span [^>]*class="row-err-prov"[^>]*>[^<]*<\/span>)?([^<]*)<\/span>/) || [])[1];
 
 describe('err_reason_key_not_on_device', () => {
   afterAll(() => setTaskListLanguage('en'));

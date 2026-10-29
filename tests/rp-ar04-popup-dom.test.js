@@ -26,7 +26,7 @@ describe('AR-04 createTaskRow 返回节点', () => {
     expect(row.dataset.taskId).toBe('a"b');
     expect(row.querySelector('script')).toBeNull();
     expect(row.querySelector('.n').textContent).toBe('<script>1</script>');
-    expect(row.querySelector('.row-err').textContent).toBe('<i>x</i>');
+    expect(row.querySelector('.row-err').lastChild.textContent).toBe('<i>x</i>'); // rp2c：首个子节点是 aria-hidden 后端前缀
     expect(row.querySelector('[data-action=retry]').dataset.taskId).toBe('a"b');
   });
   test('完成行：下载按钮带 svg 图标（SVG 命名空间）和 .lbl', () => {

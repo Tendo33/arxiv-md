@@ -17,6 +17,6 @@ test('title 是完整原文（含按语言翻译后的 errorReason）', () => {
   setTaskListLanguage('zh');
   const r = createTaskRow({ id: 'b', status: 'failed', provider: 'paddleocr', errorReason: 'key_not_on_device', error: 'raw', paperInfo: {}, createdAt: Date.now() }, document);
   const err = r.querySelector('.row-err');
-  expect(err.getAttribute('title')).toBe(err.textContent);
-  expect(err.textContent).toBe(translations.zh.err_short_reason_key_not_on_device);
+  expect(err.getAttribute('title')).toBe(err.lastChild.textContent);
+  expect(err.lastChild.textContent).toBe(translations.zh.err_short_reason_key_not_on_device);
 });

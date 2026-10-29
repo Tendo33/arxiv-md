@@ -72,7 +72,11 @@ export function createTaskRow(task, doc = globalThis.document) {
     el(doc, 'span', { class: 'row-act' }, act),
   ]);
   // 设计 NTF4：失败原因最多两行（CSS line-clamp），完整原文放在 title 里
-  if (status === TASK_STATUS.FAILED && error) row.append(el(doc, 'span', { class: 'row-err', title: String(error) }, [String(error)]));
+  if (status === TASK_STATUS.FAILED && error) row.append(el(doc, 'span', { class: 'row-err', title: String(error) }, [
+    // rp2c（设计终验 ①）：窄宽可见的后端名前缀；aria-hidden，读屏只读 .prov 那一次；title 仍只放原因
+    el(doc, 'span', { class: 'row-err-prov', 'aria-hidden': 'true' }, [`${providerLabel(task.provider)} · `]),
+    String(error),
+  ]));
   return row;
 }
 

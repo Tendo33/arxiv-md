@@ -35,5 +35,6 @@ test('task-list 行：可见文本是白话，title 是完整白话', async () =
   const row = createTaskRow({ id: 1, status: 'failed', provider: 'paddleocr', errorCode: 'NETWORK', error: 'paddleocr: NETWORK', paperInfo: { title: 'T' }, createdAt: Date.now() }, parseHTML('<html><body></body></html>').document);
   const err = row.querySelector('.row-err');
   expect(err.textContent).not.toMatch(/NETWORK/);
-  expect(err.getAttribute('title')).toBe(err.textContent);
+  expect(err.getAttribute('title')).toBe(err.lastChild.textContent); // rp2c：title 不含后端前缀
+  expect(err.querySelector('.row-err-prov').getAttribute('aria-hidden')).toBe('true');
 });

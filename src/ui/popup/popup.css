@@ -98,6 +98,9 @@ body{min-width:320px}
 .row .row-err{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
 /* release-polish 设计 NTF3：≤340px 时标题单独占第二行（徽标 · 时间 · 操作在第一行），不再被挤成「BERT: Pr…」 */
 @media (max-width:340px){.row .n{flex-basis:100%;order:2;min-width:0}.row .row-err{order:3}}
+/* rp2c（设计终验 ①）：≤378px 时 .prov 仍只给读屏，失败原因前加 aria-hidden 的「{后端} · 」，视觉可见、读屏不重复；在 .row-err 内，沿用两行截断 */
+.row .row-err-prov{display:none;color:var(--text-2);font-weight:500}
+@media (max-width:378px){.row .row-err-prov{display:inline}}
 
 /* 设计建议 S-2：PDF 解析已提交（还没完成）用信息色 */
 .alert.ok.pending{background:var(--info-bg);color:var(--info)}

@@ -3,6 +3,7 @@
 // 设计增量验收 N1 回归 e2e（npm run test:e2e 的第二步）：干净 profile 加载 dist，播种三条任务，
 // 在 360 和 320 宽下打开 popup，用 Playwright 的 ariaSnapshot（可访问性树）逐行断言：
 // 每一行都能读到后端名，且只读一次；.prov 不能是 display:none。
+// rp2c：360/320/375 宽下失败行的 .row-err-prov 前缀要可见（有尺寸、未裁剪、在行内），行、列表和页面都不能横向溢出；读屏仍只读 .prov 一次。
 // 运行条件同 e2e-shortcut.js：CHROME_PATH 必填，playwright 来自本仓库或 E2E_PLAYWRIGHT_DIR，无显示器时用 xvfb-run。
 // E2E_A11Y_OUT=<file> 时把每行的 ariaSnapshot 写成 JSON。
 // rp2b（设计 ①②）：失败行覆盖全部错误码（含 forbidden_empty / key_not_on_device / 有无 host 的 PERMISSION_MISSING），
@@ -69,7 +70,7 @@ function loadPlaywright() {
           ...failed.map((f, i) => ({ id: `f${i}`, status: 'failed', progress: 0, createdAt: n - 5e3 - i * 1e3, provider: i % 2 ? 'paddleocr' : 'mineru', error: 'raw', ...f, paperInfo: { arxivId: `2402.0000${i}`, title: `Failed ${f.errorReason || f.errorCode}` } })),
         ] });
       }, [lang, FAILED]);
-      for (const w of [360, 320]) {
+      for (const w of [360, 320, 375]) {
         const p = await ctx.newPage();
         await p.setViewportSize({ width: w, height: 640 });
         await p.goto(`chrome-extension://${id}/popup.html`);
@@ -85,6 +86,27 @@ function loadPlaywright() {
           const snap = await row.ariaSnapshot();
           const display = await row.locator('.prov').evaluate((e) => getComputedStyle(e).display);
           const count = snap.split(LABEL[provider]).length - 1;
+          // rp2c（设计终验 ①）：窄宽下失败原因前的「{后端} · 」前缀（aria-hidden）要可见——有尺寸、未被裁掉、在行内，行/列表/页面不横向溢出
+          const vis = await row.evaluate((r) => {
+            const pv = r.querySelector('.row-err-prov'); if (!r.querySelector('.row-err')) return null; // 只有失败行有原因行
+            if (!pv) return { missing: true };
+            const b = pv.getBoundingClientRect(); const rb = r.getBoundingClientRect();
+            const cs = getComputedStyle(pv);
+            const list = document.getElementById('taskList');
+            return {
+              w: b.width, h: b.height, clip: cs.clip, pos: cs.position, vis: cs.visibility, op: cs.opacity,
+              inside: b.left >= rb.left - 0.5 && b.right <= rb.right + 0.5 && b.top >= rb.top - 0.5 && b.bottom <= rb.bottom + 0.5,
+              textFits: pv.scrollWidth <= pv.clientWidth + 1,
+              rowOverflow: r.scrollWidth > r.clientWidth + 1,
+              listOverflow: list.scrollWidth > list.clientWidth + 1,
+              docOverflow: document.documentElement.scrollWidth > window.innerWidth,
+            };
+          });
+          if (vis && (vis.missing || !(vis.w >= 20 && vis.h >= 10) || vis.pos === 'absolute' || /rect\(0/.test(vis.clip) || vis.vis !== 'visible' || vis.op === '0'
+            || !vis.inside || !vis.textFits || vis.rowOverflow || vis.listOverflow || vis.docOverflow)) {
+            console.error(`e2e a11y: FAIL ${lang}@${w} row${i} 后端名不可见或溢出 ${JSON.stringify(vis)}`);
+            fail++;
+          }
           const titleDup = await row.evaluate((r, lbl) => [...r.querySelectorAll('[title]')].some((e) => e.getAttribute('title').includes(lbl)), LABEL[provider]);
           out[`${lang}-${w}-${i}`] = { snapshot: snap, provider: LABEL[provider], count, provDisplay: display, titleDup };
           if (count !== 1 || display === 'none' || titleDup) {
