@@ -36,6 +36,7 @@ const hostOf = (provider) => {
  */
 export function createPdfProviderSection({ doc, storage, permissions, registry, t, toast = () => {}, runtime = globalThis.chrome && globalThis.chrome.runtime, local = globalThis.chrome && globalThis.chrome.storage && globalThis.chrome.storage.local, seg, location: loc = globalThis.location }) {
   const $ = (id) => doc.getElementById(id);
+  const segOf = (k, text) => { const r = seg ? seg(k, text) : [text]; return Array.isArray(r) ? r : [r]; };
   const state = { current: null, denied: null, acked: {}, pending: null, fromHash: null };
 
   // 撤销按钮：只要还留着任一项（部分授权也算）就显示
@@ -66,13 +67,14 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
     if (hint) {
       const chosen = storage.getChosenPdfProvider ? await storage.getChosenPdfProvider().catch(() => null) : null;
       hint.hidden = !(chosen === p.id && !key.value);
-      hint.textContent = hint.hidden ? '' : fmt(tr.pdf_key_here, vars);
+      if (hint.hidden) hint.textContent = '';
+      else hint.replaceChildren(...segOf('pdf_key_here', fmt(tr.pdf_key_here, vars)));
     }
 
     const needs = permissionsFor(p).origins.length > 0;
     const granted = await hasProviderPermission(permissions, p);
     $('permissionRow').hidden = !needs;
-    $('permissionStatus').textContent = needs ? fmt(granted ? tr.pdf_perm_granted : tr.pdf_perm_missing, vars) : '';
+    $('permissionStatus').replaceChildren(...(needs ? segOf('pdf_perm', fmt(granted ? tr.pdf_perm_granted : tr.pdf_perm_missing, vars)) : []));
     $('grantPermissionBtn').hidden = !needs || granted;
     $('grantPermissionBtn').textContent = tr.pdf_grant_btn;
     // 审查员 P3：权限已授予但网络规则没装上（dnr_not_ready）时的恢复入口：重新载入扩展，让后台带着已授予的权限重新启动
@@ -119,7 +121,7 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
     closePanel();
     const p = registry.get(id);
     const tr = t();
-    const { panel, title, ok, cancel } = buildDisclosurePanel(doc, tr, p, seg ? (k, text) => seg(k, text, tr) : undefined);
+    const { panel, title, ok, cancel } = buildDisclosurePanel(doc, tr, p, segOf);
     state.pending = id;
     setRadio(doc, id); // 被点的卡片保持「已选」外观，面板在它下方
     const card = doc.querySelector(`.provider-card[data-provider="${id}"]`);

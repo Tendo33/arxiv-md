@@ -1,5 +1,6 @@
 // Settings 页面逻辑
 
+import { NW_ZH, setNwText, nwNodes } from './nw-segments';
 import { svg, setChildren } from '@utils/dom';
 import storage from '@utils/storage';
 import { CONVERSION_MODE } from '@config/constants';
@@ -15,6 +16,7 @@ import { createSaveStatus } from './save-status';
 const showSaveStatus = createSaveStatus({ doc: document, t: () => translations[currentLang] });
 
 const pdfSection = createPdfProviderSection({
+  seg: (key, text) => nwNodes(document, key, text, currentLang),
   doc: document,
   storage,
   permissions: chrome.permissions,
@@ -65,7 +67,8 @@ function updateLanguage(lang) {
   document.querySelectorAll('[data-i18n]').forEach((el) => {
     const key = el.getAttribute('data-i18n');
     if (t[key]) {
-      el.textContent = t[key];
+      if (NW_ZH[key]) setNwText(el, key, t[key], lang); // R09：中文按短语断行
+      else el.textContent = t[key];
     }
   });
 
