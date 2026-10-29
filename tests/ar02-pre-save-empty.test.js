@@ -50,10 +50,13 @@ test('AR-02 回退 PDF 时通知用「HTML 没有正文」，不是普通的「�
   const spy = jest.spyOn(dlMod, 'downloadFile').mockResolvedValue(1);
   try {
     const r = await converter._fallbackToPdf({ arxivId: 'hep-th/9711200', title: 'X' }, null, null, { emptyHtml: true });
-    if (r.success) {
-      expect(r.emptyContent).toBe(true);
-      expect(showNotification.mock.calls[0][0]).toBe(translations.zh.notify_pdf_fallback_empty_title);
-    }
+    expect.hasAssertions();
+    // rp2：不再包在 if (r.success) 里——_fallbackToPdf 失败时测试必须失败，而不是悄悄空过
+    expect(r.success).toBe(true);
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(r.emptyContent).toBe(true);
+    expect(showNotification).toHaveBeenCalledTimes(1);
+    expect(showNotification.mock.calls[0][0]).toBe(translations.zh.notify_pdf_fallback_empty_title);
   } finally { spy.mockRestore(); }
 });
 
