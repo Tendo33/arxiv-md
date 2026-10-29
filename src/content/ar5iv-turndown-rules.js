@@ -340,6 +340,8 @@ const NOT_PYTHON = [
   /[;{]\s*$/m, // C / JS 行尾
   /\b(?:const|let|var|function)\s+\w/, // JS
   /=>|===/,
+  // batch8（batch6 复审 P3）：算法伪代码的 Step/Input/Output/Algorithm 行；伪代码里写 re.compile 也不标 python
+  /^\s*(?:Algorithm\s*\d*\s*[:.]|Algorithm\s+\d+\b|Step\s*\d+\s*[:.)]|Step\s*:|Input\s*:|Output\s*:)/m,
 ];
 
 /**
@@ -358,11 +360,45 @@ export function guessPythonByHints(code) {
  * R1-03：LaTeXML 的 verbatim/listing 不带语言，按内容保守猜测；拿不准就不写。
  */
 // AB6-05：LLM 提示词模板（Llama/Code Llama 的 [INST]、[PYTHON]、<<SYS>>，ChatML 的 <|im_start|> 等）
-// 里夹着 def/import 也不是 Python 源码，整块不标语言
-const PROMPT_TEMPLATE_MARKER = /\[\/?(?:INST|PYTHON|TESTS|SYS)\]|<<\/?SYS>>|<\|im_(?:start|end)\|>|^\s*#{2,3} (?:Instruction|Response):/m;
+// 里夹着 def/import 也不是 Python 源码，整块不标语言。
+// batch8：标记只在「行首（可有缩进）且不在引号里」时才算，避免拼提示词的 Python
+// （prompt = f"[INST] {q} [/INST]"、三引号字符串里的 [INST] 行）丢掉 python 标签。
+// "### Instruction:/### Response:" 本身也是合法的 Python 注释，所以要两者都在行首出现（Alpaca 模板结构）才算。
+const PROMPT_LINE_MARKER = /^[ \t]*(?:\[\/?(?:INST|PYTHON|TESTS|SYS)\]|<<\/?SYS>>|<\|im_(?:start|end)\|>)/m;
+const ALPACA_INSTRUCTION = /^[ \t]*#{2,3} Instruction:/m;
+const ALPACA_RESPONSE = /^[ \t]*#{2,3} Response:/m;
+
+// 去掉 Python 字符串字面量（三引号可跨行；单/双引号到行尾为止；支持 \ 转义），换成 ""。
+// 手写单遍扫描，O(n)，不用正则回溯（病态输入见 tests/batch8-prompt-pseudo.test.js）。
+function stripQuoted(text) {
+  let out = '';
+  let i = 0;
+  const n = text.length;
+  while (i < n) {
+    const ch = text[i];
+    if (ch !== '"' && ch !== '\'') {
+      out += ch;
+      i += 1;
+      continue;
+    }
+    const triple = text.startsWith(ch.repeat(3), i);
+    let j = i + (triple ? 3 : 1);
+    while (j < n) {
+      const c = text[j];
+      if (c === '\\') { j += 2; continue; }
+      if (!triple && c === '\n') break;
+      if (c === ch && (!triple || text.startsWith(ch.repeat(3), j))) { j += triple ? 3 : 1; break; }
+      j += 1;
+    }
+    out += '""';
+    i = Math.min(j, n);
+  }
+  return out;
+}
 
 export function isPromptTemplate(code) {
-  return PROMPT_TEMPLATE_MARKER.test(String(code || ''));
+  const text = stripQuoted(String(code || ''));
+  return PROMPT_LINE_MARKER.test(text) || (ALPACA_INSTRUCTION.test(text) && ALPACA_RESPONSE.test(text));
 }
 
 export function guessCodeLanguage(code) {
