@@ -4,6 +4,11 @@ import { requestProviderPermission, hasProviderPermission, removeProviderPermiss
 import { shortErrorText } from '../popup/task-error-text';
 import { isDisclosureAcked, ackDisclosure, needsDisclosure, parseDisclosureHash } from '@utils/disclosure-ack';
 import { buildDisclosurePanel } from './disclosure';
+import { STORAGE_KEYS, TASK_STATUS } from '@config/constants';
+
+/** 与 background/paddle-origin-rule.js 的 PADDLE_ORIGIN_RULE_ID 相同（tests/reinit-check-p3-3 核对）；设置页只读规则，不写 */
+export const UI_PADDLE_RULE_ID = 4001;
+export const REINIT_CHECK_TIMEOUT_MS = 1500;
 
 /** 本轮 UI 可选的后端（本地服务本轮隐藏，只预留接口） */
 export const UI_PROVIDERS = ['paddleocr', 'mineru'];
@@ -34,7 +39,7 @@ const hostOf = (provider) => {
 /**
  * @param {{doc:Document, storage:any, permissions:any, registry:any, t:()=>Object, toast?:(msg:string,type?:string)=>void}} deps
  */
-export function createPdfProviderSection({ doc, storage, permissions, registry, t, toast = () => {}, runtime = globalThis.chrome && globalThis.chrome.runtime, local = globalThis.chrome && globalThis.chrome.storage && globalThis.chrome.storage.local, seg, location: loc = globalThis.location }) {
+export function createPdfProviderSection({ doc, storage, permissions, registry, t, toast = () => {}, runtime = globalThis.chrome && globalThis.chrome.runtime, local = globalThis.chrome && globalThis.chrome.storage && globalThis.chrome.storage.local, seg, location: loc = globalThis.location, dnr = globalThis.chrome && globalThis.chrome.declarativeNetRequest }) {
   const $ = (id) => doc.getElementById(id);
   const segOf = (k, text) => { const r = seg ? seg(k, text) : [text]; return Array.isArray(r) ? r : [r]; };
   const state = { current: null, denied: null, acked: {}, pending: null, fromHash: null };
@@ -246,10 +251,32 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
     return ok;
   }
 
-  /** dnr_not_ready 恢复：重新载入扩展（任务记录在 storage 里，载入后可在 popup 重试）。不申请任何权限 */
-  function onReinit() {
-    if (runtime && typeof runtime.reload === 'function') { runtime.reload(); return true; }
-    return false;
+  /** dnr_not_ready 恢复（P3-3）：先只读核对规则；规则已在 → 提示已就绪、不重载；有任务在跑 → 不重载；否则重新载入扩展。不申请任何权限 */
+  async function ruleReady() {
+    if (!dnr || typeof dnr.getDynamicRules !== 'function') return false;
+    try {
+      const rules = await Promise.race([
+        Promise.resolve(dnr.getDynamicRules()),
+        new Promise((r) => setTimeout(() => r(null), REINIT_CHECK_TIMEOUT_MS)),
+      ]);
+      return Array.isArray(rules) && rules.some((x) => x && x.id === UI_PADDLE_RULE_ID);
+    } catch (_) { return false; }
+  }
+  async function runningTasks() {
+    if (!local || typeof local.get !== 'function') return 0;
+    try {
+      const r = await local.get(STORAGE_KEYS.TASKS);
+      const list = (r && r[STORAGE_KEYS.TASKS]) || [];
+      return (Array.isArray(list) ? list : []).filter((x) => x && (x.status === TASK_STATUS.PENDING || x.status === TASK_STATUS.PROCESSING)).length;
+    } catch (_) { return 0; }
+  }
+  async function onReinit() {
+    const tr = t();
+    const n = await runningTasks();
+    if (n > 0) { toast(fmt(tr.pdf_reinit_busy, { n }), 'error'); return 'busy'; }
+    if (await ruleReady()) { toast(tr.pdf_reinit_ready, 'success'); return 'ready'; }
+    if (runtime && typeof runtime.reload === 'function') { runtime.reload(); return 'reloaded'; }
+    return 'unavailable';
   }
 
   async function onRevoke() {

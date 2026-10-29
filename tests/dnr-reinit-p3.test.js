@@ -27,6 +27,7 @@ describe('审查员 P3：dnr_not_ready 在权限已授予时也有恢复入口',
     expect(btn.textContent).toBe('重新初始化');
     const req = jest.spyOn(permissions, 'request');
     btn.dispatchEvent(new document.defaultView.Event('click'));
+    await new Promise((r) => setTimeout(r, 0));
     expect(runtime.reload).toHaveBeenCalledTimes(1);
     expect(req).not.toHaveBeenCalled();
   });
