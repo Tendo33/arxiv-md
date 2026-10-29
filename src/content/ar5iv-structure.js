@@ -1,3 +1,4 @@
+import { copyChildren, replaceInTextNodes } from '@utils/dom';
 import logger from '@utils/logger';
 
 /**
@@ -20,7 +21,7 @@ export function preprocessAuthorsAndMetadata(doc) {
 
   // 清理作者分隔符
   doc.querySelectorAll('.ltx_personname').forEach((el) => {
-    el.innerHTML = el.innerHTML.replace(/&amp;/g, '\n\n');
+    replaceInTextNodes(el, /&/g, '\n\n'); // AR-04：不再读写 innerHTML
   });
 }
 
@@ -85,7 +86,7 @@ export function preprocessTables(doc) {
         if (isLikelyHeader) {
           firstRowCells.forEach((td) => {
             const th = doc.createElement('th');
-            th.innerHTML = td.innerHTML;
+            copyChildren(td, th);
             // 复制 rowspan 和 colspan 属性
             const rowspan = td.getAttribute('rowspan');
             const colspan = td.getAttribute('colspan');

@@ -5,6 +5,7 @@
   "description": "__MSG_extDescription__",
   "default_locale": "en",
   "author": "SimonSun",
+  "minimum_chrome_version": "121",
   "icons": {
     "16": "assets/icon-16.png",
     "48": "assets/icon-48.png",
@@ -33,7 +34,10 @@
     "https://paddleocr.aistudio-app.com/*"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "scripts": [
+      "background.js"
+    ]
   },
   "content_scripts": [
     {
@@ -79,5 +83,10 @@
         "https://arxiv.org/*"
       ]
     }
-  ]
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "arxiv-md@tendo33"
+    }
+  }
 }

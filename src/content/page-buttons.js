@@ -1,3 +1,5 @@
+import { h, svg, setChildren } from '@utils/dom';
+import { ICON_MARKDOWN, ICON_PDF } from './page-icons';
 import metadataExtractor from '@core/metadata-extractor';
 import logger from '@utils/logger';
 import { buildArxivBibtex, chooseBibtex } from './bibtex';
@@ -13,6 +15,11 @@ let t = translations.en;
 let startConversion = () => {};
 let hintEpoch = 0;
 const isArxivAbsPage = REGEX.ARXIV_ABS_PAGE.test(window.location.href);
+
+/** PDF 按钮内容：图标 +「PDF」+（标题）；恢复按钮时 content/index.js 也用它 */
+export function pdfButtonContent(tr) {
+  return [svg(document, ICON_PDF), `${tr.content_btn_pdf} `, h(document, 'span', { class: 'arxiv-md-btn-sub' }, `(${tr.content_btn_sub_title})`)];
+}
 
 export function setPageButtonText(next) {
   t = next || translations.en;
@@ -64,13 +71,9 @@ export async function injectConvertButton() {
   const mdButton = document.createElement('button');
   mdButton.className = 'arxiv-md-convert-btn arxiv-md-btn arxiv-md-btn-primary';
   mdButton.setAttribute('aria-label', t.content_btn_markdown);
-  mdButton.innerHTML = `
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-      <path d="M8.5 1.5A1.5 1.5 0 0 0 7 0H3.5A1.5 1.5 0 0 0 2 1.5v13A1.5 1.5 0 0 0 3.5 16h9a1.5 1.5 0 0 0 1.5-1.5V7L8.5 1.5z"/>
-      <path d="M8 1v5.5A1.5 1.5 0 0 0 9.5 8H15"/>
-    </svg>
-    ${t.content_btn_markdown} <span class="arxiv-md-btn-sub">(${modeLabel})</span>
-  `;
+  // AR-04：DOM API 构建，文案走文本节点
+  setChildren(mdButton, svg(document, ICON_MARKDOWN), `${t.content_btn_markdown} `,
+    h(document, 'span', { class: 'arxiv-md-btn-sub' }, `(${modeLabel})`));
   mdButton.addEventListener('click', () => startConversion('markdown'));
 
   // 创建 PDF 按钮
@@ -79,13 +82,7 @@ export async function injectConvertButton() {
   // release-polish 设计：可见文字只有「PDF（标题）」，完整含义放在 title 和 aria-label 里
   pdfButton.setAttribute('aria-label', t.content_btn_pdf_label);
   pdfButton.title = t.content_btn_pdf_label;
-  pdfButton.innerHTML = `
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-      <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
-      <path d="M8.5 6.5a.5.5 0 0 0-1 0v3.793L6.354 9.146a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 10.293V6.5z"/>
-    </svg>
-    ${t.content_btn_pdf} <span class="arxiv-md-btn-sub">(${t.content_btn_sub_title})</span>
-  `;
+  setChildren(pdfButton, ...pdfButtonContent(t));
   pdfButton.addEventListener('click', () => startConversion('pdf'));
 
   const citeButton = document.createElement('button');
@@ -100,13 +97,12 @@ export async function injectConvertButton() {
   progressIndicator.setAttribute('role', 'status');
   progressIndicator.setAttribute('aria-live', 'polite');
   progressIndicator.setAttribute('aria-atomic', 'true');
-  progressIndicator.innerHTML = `
-    <div class="progress-row">
-      <span class="progress-text">${t.content_progress_processing}</span>
-      <span class="progress-percent" style="margin-left: 6px; font-weight: 600;">0%</span>
-    </div>
-    <div class="progress-detail"></div>
-  `;
+  setChildren(progressIndicator,
+    h(document, 'div', { class: 'progress-row' }, [
+      h(document, 'span', { class: 'progress-text' }, t.content_progress_processing),
+      h(document, 'span', { class: 'progress-percent', style: 'margin-left: 6px; font-weight: 600;' }, '0%'),
+    ]),
+    h(document, 'div', { class: 'progress-detail' }));
 
   const hintIndicator = document.createElement('div');
   hintIndicator.className = 'arxiv-md-hint';
@@ -114,14 +110,13 @@ export async function injectConvertButton() {
 
   const autoPrompt = document.createElement('div');
   autoPrompt.className = 'arxiv-md-auto';
-  autoPrompt.innerHTML = `
-    <span class="auto-text">${t.content_auto_prompt_title}</span>
-    <span class="auto-desc">${t.content_auto_prompt_desc}</span>
-    <div class="arxiv-md-auto-actions">
-      <button class="arxiv-md-auto-btn primary" data-action="auto-confirm">${t.content_auto_prompt_confirm}</button>
-      <button class="arxiv-md-auto-btn" data-action="auto-cancel">${t.content_auto_prompt_cancel}</button>
-    </div>
-  `;
+  setChildren(autoPrompt,
+    h(document, 'span', { class: 'auto-text' }, t.content_auto_prompt_title),
+    h(document, 'span', { class: 'auto-desc' }, t.content_auto_prompt_desc),
+    h(document, 'div', { class: 'arxiv-md-auto-actions' }, [
+      h(document, 'button', { class: 'arxiv-md-auto-btn primary', 'data-action': 'auto-confirm' }, t.content_auto_prompt_confirm),
+      h(document, 'button', { class: 'arxiv-md-auto-btn', 'data-action': 'auto-cancel' }, t.content_auto_prompt_cancel),
+    ]));
 
   container.appendChild(mdButton);
   container.appendChild(pdfButton);

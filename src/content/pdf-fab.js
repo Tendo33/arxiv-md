@@ -1,3 +1,4 @@
+import { h, svg, setChildren } from '@utils/dom';
 // A3-1：PDF 页悬浮转换按钮（样式取自 ui-v2 的 .fab，arXiv 主色）。放在 Shadow DOM 里，避免和 PDF 查看器互相影响。
 const CSS = `
 :host{all:initial}
@@ -18,8 +19,9 @@ const CSS = `
 const ICON = {
   idle: 'M↓',
   run: 'M↓',
-  ok: '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>',
-  err: '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 7v6M12 16.5v.5"/></svg>',
+  // AR-04：图标交给 utils/dom.svg 构建
+  ok: ['svg', { 'aria-hidden': 'true', width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.5' }, [['path', { d: 'M5 12l5 5L20 7' }]]],
+  err: ['svg', { 'aria-hidden': 'true', width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.5' }, [['path', { d: 'M12 7v6M12 16.5v.5' }]]],
 };
 
 /**
@@ -42,7 +44,8 @@ export function mountPdfFab(doc, { labels, onClick }) {
   const setState = (next) => {
     state = next;
     btn.className = next === 'idle' ? 'fab' : `fab ${next}`;
-    btn.innerHTML = `<span class="ring"></span>${ICON[next] || ICON.idle}`;
+    const icon = ICON[next] || ICON.idle;
+    setChildren(btn, h(doc, 'span', { class: 'ring' }), typeof icon === 'string' ? icon : svg(doc, icon));
     btn.setAttribute('aria-label', labels[next] || labels.idle);
     btn.title = labels[next] || labels.idle;
     btn.setAttribute('aria-busy', next === 'run' ? 'true' : 'false');

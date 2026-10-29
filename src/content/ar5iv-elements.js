@@ -1,3 +1,4 @@
+import { copyChildren } from '@utils/dom';
 import logger from '@utils/logger';
 import { resolvePaperAssetUrl } from './paper-assets';
 
@@ -56,7 +57,12 @@ export function preprocessAr5ivElements(doc, options = {}) {
     const tagText = tag ? tag.textContent.trim() : '';
     const bibblocEl = bibitem.querySelector('.ltx_bibblock');
     if (tagText && bibblocEl) {
-      bibitem.innerHTML = `<span class="ltx_bib_tag">${tagText}</span> ${bibblocEl.innerHTML}`;
+      // AR-04：标签文字走 textContent（以前插进 HTML 字符串，含 < 的标签会被当成标记）
+      const tagSpan = doc.createElement('span');
+      tagSpan.className = 'ltx_bib_tag';
+      tagSpan.textContent = tagText;
+      const rest = copyChildren(bibblocEl, doc.createDocumentFragment());
+      bibitem.replaceChildren(tagSpan, ' ', rest);
     }
   });
 
@@ -81,7 +87,7 @@ export function preprocessAr5ivElements(doc, options = {}) {
   doc.querySelectorAll('.ltx_quote').forEach((quote) => {
     if (quote.tagName !== 'BLOCKQUOTE') {
       const blockquote = doc.createElement('blockquote');
-      blockquote.innerHTML = quote.innerHTML;
+      copyChildren(quote, blockquote);
       quote.replaceWith(blockquote);
     }
   });
@@ -130,7 +136,7 @@ export function preprocessAr5ivElements(doc, options = {}) {
             }
 
             // 复制内容
-            cellEl.innerHTML = cell.innerHTML;
+            copyChildren(cell, cellEl);
             tr.appendChild(cellEl);
           });
 
@@ -243,7 +249,7 @@ export function preprocessAr5ivElements(doc, options = {}) {
     if (bold.closest('h1, h2, h3, h4, h5, h6, figcaption')) return;
 
     const strong = doc.createElement('strong');
-    strong.innerHTML = bold.innerHTML;
+    copyChildren(bold, strong);
     bold.replaceWith(strong);
   });
 
@@ -253,7 +259,7 @@ export function preprocessAr5ivElements(doc, options = {}) {
     if (italic.closest('h1, h2, h3, h4, h5, h6')) return;
 
     const em = doc.createElement('em');
-    em.innerHTML = italic.innerHTML;
+    copyChildren(italic, em);
     italic.replaceWith(em);
   });
 

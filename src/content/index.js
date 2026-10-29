@@ -10,7 +10,9 @@ import { translations } from '@config/locales';
 import { handleFileDownload, handleBlobDownload } from './page-download';
 import { handleHtmlToMarkdown } from './markdown-convert';
 import { mountPdfFab } from './pdf-fab';
-import { clearHint, injectConvertButton, setConversionHandler, setPageButtonText } from './page-buttons';
+import { clearHint, injectConvertButton, pdfButtonContent, setConversionHandler, setPageButtonText } from './page-buttons';
+import { svg, setChildren } from '@utils/dom';
+import { ICON_SPINNER } from './page-icons';
 import {
   clearProgressState,
   notifyOutcome,
@@ -306,19 +308,12 @@ async function handleConversionTrigger(type = 'markdown') {
 }
 
 async function handlePdfDownloadDirect(button) {
-  const pdfIconSvg = `
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-      <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
-      <path d="M8.5 6.5a.5.5 0 0 0-1 0v3.793L6.354 9.146a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 10.293V6.5z"/>
-    </svg>
-  `;
-
   const restoreButton = () => {
     if (button) {
       button.disabled = false;
       button.style.opacity = '1';
       button.style.cursor = 'pointer';
-      button.innerHTML = `${pdfIconSvg}${t.content_btn_pdf} <span class="arxiv-md-btn-sub">(${t.content_btn_sub_title})</span>`;
+      setChildren(button, ...pdfButtonContent(t)); // AR-04
     }
   };
 
@@ -330,13 +325,7 @@ async function handlePdfDownloadDirect(button) {
     });
 
     if (button) {
-      button.innerHTML = `
-        <svg class="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" stroke-opacity="0.3"></circle>
-          <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        ${t.content_progress_downloading}
-      `;
+      setChildren(button, svg(document, ICON_SPINNER), t.content_progress_downloading); // AR-04
     }
 
     const metadata = isArxivAbsPage
