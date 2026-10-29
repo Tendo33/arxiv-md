@@ -62,7 +62,7 @@ export const DOWNLOAD_KEEPALIVE_MS = 20 * 1000;
 // 改为 reject 一个 DOWNLOAD_STILL_RUNNING，调用方提示「仍在下载」；同时停止 keepalive（不再让 SW 常驻），
 // 只留下 onChanged 监听：SW 还活着时如果之后收到 complete，调用 onLateComplete(id) 补发「已保存」。
 // SW 被回收后监听随之消失，不会补发，这是有意的取舍（不加权限、不常驻）。
-export function downloadFile(url, filename, { timeoutMs = DOWNLOAD_TIMEOUT_MS, keepaliveMs = DOWNLOAD_KEEPALIVE_MS, onLateComplete = null } = {}) {
+export function downloadFile(url, filename, { timeoutMs = DOWNLOAD_TIMEOUT_MS, keepaliveMs = DOWNLOAD_KEEPALIVE_MS, onLateComplete = null, onLateFailure = null } = {}) {
   const downloads = chrome.downloads;
   return new Promise((resolve, reject) => {
     let id = null;
@@ -108,6 +108,11 @@ export function downloadFile(url, filename, { timeoutMs = DOWNLOAD_TIMEOUT_MS, k
         if (state === 'complete' && onLateComplete) {
           try { onLateComplete(id); } catch { /* 补发通知失败不影响任何东西 */ }
         }
+        // batch9 审查 P3②：超时后又中断——补发失败通知（按 AB7 的失败原因）
+        if (state === 'interrupted' && onLateFailure) {
+          const err = delta.error && typeof delta.error === 'object' ? delta.error.current : delta.error;
+          try { onLateFailure(interrupted(err)); } catch { /* 同上 */ }
+        }
         return;
       }
       if (done) return;
@@ -124,7 +129,7 @@ export function downloadFile(url, filename, { timeoutMs = DOWNLOAD_TIMEOUT_MS, k
       done = true;
       stopTimers();
       // 还没拿到 id 时没有可等的下载，直接移除监听
-      if (id !== null && onLateComplete) lingering = true;
+      if (id !== null && (onLateComplete || onLateFailure)) lingering = true;
       else downloads.onChanged.removeListener(onChanged);
       reject(error);
     }, timeoutMs);

@@ -20,6 +20,6 @@ describe('AB6-03 状态卡不显示原始英文报错', () => {
   test('content/index.js 不再把 error / error.message 直接交给 showError', () => {
     const src = require('fs').readFileSync(require('path').join(__dirname, '../src/content/index.js'), 'utf8');
     expect(src).not.toMatch(/showError\([^)]*(?:\.error\b|error\.message)/);
-    expect(src.match(/statusCardErrorText\(/g)).toHaveLength(4);
+    expect(src.match(/statusCardErrorText\(/g)).toHaveLength(5);
   });
 });

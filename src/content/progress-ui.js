@@ -196,10 +196,15 @@ export function showPending(message) {
   clearTimeout(successTimer);
 }
 
+/** batch9 M2：页面上是否仍是 pending 卡片 */
+export function isPendingShown() {
+  const el = document.querySelector('.arxiv-md-progress');
+  return !!el && el.dataset.pending === '1' && el.style.display !== 'none';
+}
+
 /** batch9 M2：后台报告 pending 的下载后来完成了——仍显示 pending 卡片时换成「已完成」 */
 export function settlePending(message) {
-  const el = document.querySelector('.arxiv-md-progress');
-  if (!el || el.dataset.pending !== '1' || el.style.display === 'none') return false;
+  if (!isPendingShown()) return false;
   showSuccess(message);
   return true;
 }

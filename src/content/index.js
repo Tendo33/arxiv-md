@@ -22,6 +22,7 @@ import {
   showCanceled,
   showError,
   showResult,
+  isPendingShown,
   settlePending,
   showSuccess,
   showPending,
@@ -81,6 +82,10 @@ async function init() {
     case 'PDF_DOWNLOAD_SETTLED':
       // batch9 M2：pending 的 PDF 下载后来完成了
       if (message.data?.ok) settlePending(t.content_progress_completed);
+      // batch9 审查 P3②：超时后又中断——仍是 pending 卡片时换成对应的失败 / 已取消卡
+      else if (message.data && isPendingShown()) {
+        (isCanceledDownload(message.data) ? showCanceled : showError)(statusCardErrorText(message.data, t, 'PDF download failed', { download: true }));
+      }
       break;
 
     case 'CONVERSION_PROGRESS':

@@ -60,8 +60,9 @@ describe('batch9 已取消卡片', () => {
     }
   });
 
-  test('content/index.js 三处失败出口都先判断已取消', () => {
+  test('content/index.js 失败出口（含 P3② 的补发）都先判断已取消', () => {
     const src = require('fs').readFileSync(require('path').join(__dirname, '../src/content/index.js'), 'utf8');
-    expect(src.match(/\(isCanceledDownload\(\w+\) \? showCanceled : showError\)\(statusCardErrorText/g)).toHaveLength(3);
+    expect(src.match(/\(isCanceledDownload\([\w.]+\) \? showCanceled : showError\)\(statusCardErrorText/g)).toHaveLength(4);
+    expect(src).toMatch(/else if \(message\.data && isPendingShown\(\)\)/);
   });
 });

@@ -49,6 +49,22 @@ function lateSavedNotifier(key, filename, tabId = null) {
     }
   };
 }
+// batch9 审查 P3②：超时后下载被中断——按 AB7 失败原因补发通知，并让发起页把 pending 卡片换成对应的失败/已取消卡
+function lateFailureNotifier(tabId = null) {
+  return (error) => {
+    const { notifyKey, fields } = pdfDownloadFailure(error);
+    notifyLang().then((lang) => {
+      const n = converterNotification(notifyKey, {}, lang);
+      showNotification(n.title, n.message, 'basic');
+    }).catch(() => {});
+    if (tabId != null) {
+      try {
+        const r = chrome.tabs.sendMessage(tabId, { type: 'PDF_DOWNLOAD_SETTLED', data: { ok: false, success: false, ...fields } });
+        if (r && typeof r.catch === 'function') r.catch(() => {});
+      } catch { /* 页面已关闭 */ }
+    }
+  };
+}
 async function notifyStillRunning() {
   const n = converterNotification('download_pending', {}, await notifyLang());
   showNotification(n.title, n.message, 'basic');
@@ -309,7 +325,7 @@ class MainConverter {
 
       const pdfUrl = paperInfo.pdfUrl || `${API.ARXIV_PDF}/${arxivId}.pdf`;
       try {
-        await downloadFile(pdfUrl, filename, { onLateComplete: lateSavedNotifier('pdf_fallback', filename, tabId) });
+        await downloadFile(pdfUrl, filename, { onLateComplete: lateSavedNotifier('pdf_fallback', filename, tabId), onLateFailure: lateFailureNotifier(tabId) });
       } catch (error) {
         if (!isStillRunning(error)) throw error;
         logger.warn('PDF download still running after timeout:', filename);
@@ -361,7 +377,7 @@ class MainConverter {
 
       const pdfUrl = paperInfo.pdfUrl || `${API.ARXIV_PDF}/${arxivId}.pdf`;
       try {
-        await downloadFile(pdfUrl, filename, { onLateComplete: lateSavedNotifier('pdf_saved', filename, tabId) });
+        await downloadFile(pdfUrl, filename, { onLateComplete: lateSavedNotifier('pdf_saved', filename, tabId), onLateFailure: lateFailureNotifier(tabId) });
       } catch (error) {
         if (!isStillRunning(error)) throw error;
         logger.warn('PDF download still running after timeout:', filename);

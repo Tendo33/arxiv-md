@@ -273,9 +273,9 @@ test('zh/en 新增 key 对齐', () => {
   expect(pick('zh')).toHaveLength(20);
 });
 
-test('content/index.js 两处 PDF 按钮失败都按下载失败显示', () => {
+test('content/index.js 两处 PDF 按钮失败与 P3② 超时后补发的失败都按下载失败显示', () => {
   const src = require('fs').readFileSync(require('path').join(__dirname, '../src/content/index.js'), 'utf8');
-  expect(src.match(/statusCardErrorText\([^)]*'PDF download failed', \{ download: true \}\)/g)).toHaveLength(2);
+  expect(src.match(/statusCardErrorText\([^)]*'PDF download failed', \{ download: true \}\)/g)).toHaveLength(3);
 });
 
 describe('batch9 ①：4 分钟后仍在下载 → 不报失败、不取消；之后完成补发「已保存」', () => {
@@ -298,6 +298,22 @@ describe('batch9 ①：4 分钟后仍在下载 → 不报失败、不取消；�
     expect(c.listeners.size).toBe(0);
     expect(c.downloads.search.mock.calls.length).toBe(polls);
     expect(c.downloads.cancel).not.toHaveBeenCalled();
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
+  // batch9 审查 P3②：超时后又中断 → onLateFailure(带原因)，监听移除
+  test('超时后下载被中断 → onLateFailure 收到中断原因，不补发成功，监听移除', async () => {
+    jest.useFakeTimers();
+    const c = fakeChrome({ interruptAt: 250_000 });
+    const late = jest.fn();
+    const lateFail = jest.fn();
+    const settled = downloadFile('u', 'p.pdf', { onLateComplete: late, onLateFailure: lateFail }).catch((e) => e);
+    await jest.advanceTimersByTimeAsync(260_000);
+    expect((await settled).code).toBe('DOWNLOAD_STILL_RUNNING');
+    expect(late).not.toHaveBeenCalled();
+    expect(lateFail).toHaveBeenCalledTimes(1);
+    expect(lateFail.mock.calls[0][0]).toMatchObject({ code: 'DOWNLOAD_INTERRUPTED', downloadError: 'USER_CANCELED' });
+    expect(c.listeners.size).toBe(0);
     expect(jest.getTimerCount()).toBe(0);
   });
 
@@ -367,6 +383,28 @@ describe('batch9 ①：4 分钟后仍在下载 → 不报失败、不取消；�
   describe.each([['zh'], ['en']])('通知与状态卡（%s）', (lang) => {
     const t = translations[lang];
     beforeEach(() => { showNotification.mockClear(); storage.getLanguage.mockResolvedValue(lang); });
+
+    // batch9 审查 P3②：按 AB7 的失败原因补发失败通知，并通知发起页
+    test.each([
+      ['USER_CANCELED', 'download_canceled', 'canceled'],
+      ['NETWORK_FAILED', 'download_failed_network', 'network'],
+      ['SERVER_FORBIDDEN', 'download_failed_server', 'server'],
+      ['FILE_NO_SPACE', 'download_failed_file', 'file'],
+      ['CRASH', 'download_failed', 'other'],
+    ])('超时后中断 %s → 补发 %s 通知 + SETTLED ok:false', async (reason, key, kind) => {
+      jest.useFakeTimers();
+      const c = fakeChrome({});
+      c.tabs = { sendMessage: jest.fn(() => Promise.resolve()) };
+      converter.downloadPdf(paper, 42);
+      await jest.advanceTimersByTimeAsync(240_001);
+      expect(last()).toEqual([t.notify_download_pending_title, t.notify_download_pending_body, 'basic']);
+      [...c.listeners].forEach((l) => l({ id: 7, state: { current: 'interrupted' }, error: { current: reason } }));
+      await jest.advanceTimersByTimeAsync(0);
+      expect(last()).toEqual([t[`notify_${key}_title`], t[`notify_${key}_body`], 'basic']);
+      expect(showNotification).toHaveBeenCalledTimes(2);
+      expect(c.tabs.sendMessage).toHaveBeenCalledWith(42, expect.objectContaining({ type: 'PDF_DOWNLOAD_SETTLED', data: expect.objectContaining({ ok: false, downloadFailure: kind }) }));
+      expect(c.listeners.size).toBe(0);
+    });
 
     test.each([['downloadPdf', 'pdf_saved'], ['_fallbackToPdf', 'pdf_fallback']])('%s：先通知仍在下载、结果 pending，之后完成补发 %s', async (fn, savedKey) => {
       jest.useFakeTimers();
