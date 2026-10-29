@@ -44,3 +44,9 @@ test('PRIVACY / README / README_CN 写的是同一个链接和文字', () => {
   expect(rd('README_CN.md')).toContain(`[${ZH}](${URL_})`);
   for (const f of ['PRIVACY.md', 'README.md', 'README_CN.md', 'src/ui/settings/disclosure.js']) expect(rd(f)).not.toMatch(/飞桨星河社区隐私政策/);
 });
+
+test('PRIVACY.md 保留期一句用句号断开，不是「; The」', () => {
+  const p = rd('PRIVACY.md');
+  expect(p).toContain('uploaded files or parse results. The applicable policy');
+  expect(p).not.toMatch(/; The applicable/);
+});
