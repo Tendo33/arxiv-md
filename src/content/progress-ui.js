@@ -31,11 +31,16 @@ export function updateProgressUI(progress) {
 
   setProgressState({
     text: withProvider(stageText[progress.stage] || t.content_progress_processing),
-    // AB8-05：下载阶段总大小未知时 progress 为 null，不显示百分比
-    // M-1：检查阶段没有真实进度，也不显示百分比
-    percent: progress.progress == null || progress.stage === 'checking' ? null : Math.round(progress.progress),
+    // M-1（rp2）：只有下载阶段且已知总大小（bytesKnown，来自 bytesReceived/totalBytes）才算确定进度；
+    // 检查/提交/解析/提取等阶段的百分比只是估算，一律走不确定态：不写 aria-valuenow、不显示百分比
+    percent: isDeterminate(progress) ? Math.round(progress.progress) : null,
     state: 'processing',
   });
+}
+
+export function isDeterminate(progress) {
+  return !!progress && progress.stage === 'downloading' && progress.bytesKnown === true
+    && typeof progress.progress === 'number' && !Number.isNaN(progress.progress);
 }
 
 // Toast 通知已被移除，通知由 background script 的系统通知处理

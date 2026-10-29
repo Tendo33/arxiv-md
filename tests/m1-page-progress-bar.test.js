@@ -42,7 +42,7 @@ test.each(['zh', 'en'])('%s：初始有 progressbar（aria-label 下载进度）
 
 test('有 totalBytes：aria-valuenow 取整、显示百分比、填充宽度', async () => {
   const { ui, card, bar } = await mount();
-  ui.updateProgressUI({ stage: 'downloading', progress: 41.6 });
+  ui.updateProgressUI({ stage: 'downloading', progress: 41.6, bytesKnown: true });
   expect(bar.getAttribute('aria-valuenow')).toBe('42');
   expect(bar.classList.contains('indeterminate')).toBe(false);
   expect(card.querySelector('.progress-percent').textContent).toBe('42%');
@@ -68,10 +68,10 @@ test('检查阶段：即使带 progress 也不显示百分比', async () => {
 test('live 区只有阶段文字；同阶段刷新进度不改动阶段文字节点', async () => {
   const { t, ui, card } = await mount();
   expect(card.getAttribute('aria-live')).toBe('polite');
-  ui.updateProgressUI({ stage: 'downloading', progress: 10 });
+  ui.updateProgressUI({ stage: 'downloading', progress: 10, bytesKnown: true });
   expect(spoken(card)).toBe(t.content_progress_downloading);
   const textNode = card.querySelector('.progress-text').firstChild;
-  ui.updateProgressUI({ stage: 'downloading', progress: 70 });
+  ui.updateProgressUI({ stage: 'downloading', progress: 70, bytesKnown: true });
   expect(card.querySelector('.progress-text').firstChild).toBe(textNode);
   expect(spoken(card)).not.toMatch(/\d+%/);
   ui.updateProgressUI({ stage: 'checking', progress: null });

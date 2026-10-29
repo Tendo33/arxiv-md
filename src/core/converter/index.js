@@ -79,7 +79,7 @@ function downloadProgressToTab(tabId) {
   if (tabId == null) return null;
   return (progress) => {
     try {
-      const r = chrome.tabs.sendMessage(tabId, { type: 'CONVERSION_PROGRESS', data: { tier: 'pdf', stage: 'downloading', progress } });
+      const r = chrome.tabs.sendMessage(tabId, { type: 'CONVERSION_PROGRESS', data: { tier: 'pdf', stage: 'downloading', progress, bytesKnown: typeof progress === 'number' } });
       if (r && typeof r.catch === 'function') r.catch(() => {});
     } catch { /* 页面已关闭 */ }
   };
@@ -351,7 +351,7 @@ class MainConverter {
 
       const pdfUrl = paperInfo.pdfUrl || `${API.ARXIV_PDF}/${arxivId}.pdf`;
       try {
-        await downloadFile(pdfUrl, filename, { onLateComplete: lateSavedNotifier('pdf_fallback', filename, tabId), onLateFailure: lateFailureNotifier(tabId), onProgress: onProgress ? (p) => onProgress({ tier: 'pdf', stage: 'downloading', progress: p }) : null });
+        await downloadFile(pdfUrl, filename, { onLateComplete: lateSavedNotifier('pdf_fallback', filename, tabId), onLateFailure: lateFailureNotifier(tabId), onProgress: onProgress ? (p) => onProgress({ tier: 'pdf', stage: 'downloading', progress: p, bytesKnown: typeof p === 'number' }) : null });
       } catch (error) {
         if (!isStillRunning(error)) throw error;
         logger.warn('PDF download still running after timeout:', filename);

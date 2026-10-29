@@ -46,7 +46,7 @@ test('页面：downloading 阶段 progress null 不显示百分比；有数字�
   const { updateProgressUI } = require('../src/content/progress-ui');
   updateProgressUI({ tier: 'pdf', stage: 'downloading', progress: null });
   expect(document.querySelector('.progress-percent').textContent).toBe('');
-  updateProgressUI({ tier: 'pdf', stage: 'downloading', progress: 65 });
+  updateProgressUI({ tier: 'pdf', stage: 'downloading', progress: 65, bytesKnown: true });
   expect(document.querySelector('.progress-percent').textContent).toBe('65%');
   delete global.document;
 });
