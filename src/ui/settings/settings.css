@@ -784,7 +784,7 @@ a:focus-visible {
 .pd-confirmed[hidden] { display: none; }
 
 /* 设计验收 30a6e1b #7：主按钮 focus-visible 只留蓝色 outline，不叠红色阴影 */
-.btn-primary:focus-visible { box-shadow: none; }
+.btn-primary:focus-visible { box-shadow: none; transition: none; } /* 设计复验 15fe0f9 必须改 1（R07）：去掉 0.3s 阴影过渡，Tab 进来第一帧就没有品牌红 */
 
 /* 设计验收 30a6e1b 建议 c：两张卡片两列等宽（1280 下不再留空第三轨）；<540 保持原来的单列 */
 @media (max-width: 539px) { .provider-group { grid-template-columns: minmax(0, 1fr); } }

@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const css = fs.readFileSync(path.join(__dirname, '../src/ui/settings/settings.css'), 'utf8');
 test('btn-primary focus-visible has no box-shadow; .btn focus outline stays', () => {
-  expect(css).toMatch(/\.btn-primary:focus-visible \{ box-shadow: none; \}/);
+  expect(css).toMatch(/\.btn-primary:focus-visible \{ box-shadow: none; transition: none; \}/);
   // 必须在 .btn-primary 阴影规则之后
   expect(css.lastIndexOf('.btn-primary:focus-visible')).toBeGreaterThan(css.indexOf('.btn-primary:hover'));
   expect(css).toMatch(/\.btn:focus-visible \{\s*outline: 2px solid var\(--focus-ring\);/);
