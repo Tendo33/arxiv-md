@@ -1,11 +1,11 @@
 /* popup v2（Round 3 C-2）：骨架来自 ui-v2.css（与 zhihu-md 同源），这里只放 popup 专有的补充 */
 html,body{width:360px}
 .hidden{display:none!important}
-body{min-width:320px}
+/* 设计 M1（R05 类布局跳动）：所有状态固定 360px，不再随视口在 320/360 之间跳 */
+body{min-width:360px}
 /* 浏览器自带 popup 外框，不再画圆角和阴影；1px 边框保留为透明，尺寸与样稿一致 */
 .pop{border-color:transparent;border-radius:0;box-shadow:none}
 /* 复审 P3③ / 设计 M1：320 下 .acts 保持双列（不再改成单列），否则按钮区多出约 44px，任务列表被页脚压住 */
-@media (max-width:339px){html,body{width:100%}.pop{--pw:100%}}
 .btn-xs{min-height:28px;padding:0 8px}
 .btn-xxs{min-height:24px;padding:0 6px;font-size:12px}
 .alert>svg{flex:none;margin-top:1px}

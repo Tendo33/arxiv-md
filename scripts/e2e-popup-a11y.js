@@ -99,7 +99,8 @@ function loadPlaywright() {
               textFits: pv.scrollWidth <= pv.clientWidth + 1,
               rowOverflow: r.scrollWidth > r.clientWidth + 1,
               listOverflow: list.scrollWidth > list.clientWidth + 1,
-              docOverflow: document.documentElement.scrollWidth > window.innerWidth,
+              // 设计 M1：popup 固定 360px，真实 popup 视口就是 360；固定视口 320 模拟时按 max(视口, 360) 判溢出
+              docOverflow: document.documentElement.scrollWidth > Math.max(window.innerWidth, 360),
             };
           });
           if (vis && (vis.missing || !(vis.w >= 20 && vis.h >= 10) || vis.pos === 'absolute' || /rect\(0/.test(vis.clip) || vis.vis !== 'visible' || vis.op === '0'
