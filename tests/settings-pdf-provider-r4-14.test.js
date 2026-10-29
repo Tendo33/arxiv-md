@@ -9,6 +9,7 @@ import { translations } from '../src/config/locales';
 
 const html = fs.readFileSync(path.join(__dirname, '../src/ui/settings/settings.html'), 'utf8');
 const PADDLE = 'https://paddleocr.aistudio-app.com/*';
+const BCEBOS = 'https://*.bj.bcebos.com/*'; // 结果/图片域名，和星河域名一起申请
 
 function setup({ provider = 'paddleocr', keys = {}, origins = [], answer = true, lang = 'en' } = {}) {
   const { document } = parseHTML(html);
@@ -66,7 +67,7 @@ describe('R4-14 设置页：后端选择 + Key', () => {
     await h.sec.init();
     expect(await h.sec.onSelect('paddleocr')).toBe(true);
     expect(h.permissions.request).toHaveBeenCalledTimes(1);
-    expect(h.permissions.request.mock.calls[0][0].origins).toEqual([PADDLE]);
+    expect(h.permissions.request.mock.calls[0][0].origins).toEqual([PADDLE, BCEBOS]);
     expect(h.storage.setPdfProvider).toHaveBeenCalledWith('paddleocr');
     expect(h.document.getElementById('grantPermissionBtn').hidden).toBe(true);
   });
@@ -103,7 +104,7 @@ describe('R4-14 设置页：后端选择 + Key', () => {
   });
 
   test('切到 MinerU（install 权限）不弹窗；旧后端 PaddleOCR 出现“撤销”，点了调用 permissions.remove', async () => {
-    const h = setup({ origins: [PADDLE] });
+    const h = setup({ origins: [PADDLE, BCEBOS] });
     await h.sec.init();
     await h.sec.onSelect('mineru');
     expect(h.permissions.request).not.toHaveBeenCalled();
@@ -135,7 +136,7 @@ describe('R4-14 设置页：后端选择 + Key', () => {
   });
 
   test('测试连接：空 body 403 显示“不是 Key 或额度问题”', async () => {
-    const h = setup({ keys: { paddleocr: 'fixture-key' }, origins: [PADDLE], lang: 'zh' });
+    const h = setup({ keys: { paddleocr: 'fixture-key' }, origins: [PADDLE, BCEBOS], lang: 'zh' });
     await h.sec.init();
     global.fetch = jest.fn(async () => ({ ok: false, status: 403, headers: { get: () => null }, text: async () => '', json: async () => { throw new Error('empty'); } }));
     const r = await h.sec.onTest();
@@ -149,7 +150,7 @@ describe('R4-14 设置页：后端选择 + Key', () => {
 
 describe('设计建议：连接测试失败', () => {
   test('Key 无效：带 ❌、不说「未填写」，并附「获取 PaddleOCR Key」链接', async () => {
-    const h = setup({ origins: [PADDLE], keys: { paddleocr: 'abcdefghijklmnop' }, lang: 'zh' });
+    const h = setup({ origins: [PADDLE, BCEBOS], keys: { paddleocr: 'abcdefghijklmnop' }, lang: 'zh' });
     await h.sec.init();
     const orig = h.registry.get.bind(h.registry);
     const fake = { ...orig('paddleocr'), testConnection: jest.fn(async () => ({ ok: false, error: { code: 'AUTH_INVALID' } })) };
@@ -163,7 +164,7 @@ describe('设计建议：连接测试失败', () => {
     expect(a.getAttribute('href')).toBe('https://aistudio.baidu.com/account/accessToken');
   });
   test('其他失败也带 ❌', async () => {
-    const h = setup({ origins: [PADDLE], keys: { paddleocr: 'abcdefghijklmnop' }, lang: 'zh' });
+    const h = setup({ origins: [PADDLE, BCEBOS], keys: { paddleocr: 'abcdefghijklmnop' }, lang: 'zh' });
     await h.sec.init();
     const orig = h.registry.get.bind(h.registry);
     const fake = { ...orig('paddleocr'), testConnection: jest.fn(async () => ({ ok: false, error: { code: 'RATE_LIMITED' } })) };

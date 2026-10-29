@@ -32,6 +32,6 @@ describe('DNR 可选权限：仅星河域名删除 Origin', () => {
     const api = createPermissions();
     await requestProviderPermission(api, paddleocrProvider);
     expect(api.request).toHaveBeenCalledTimes(1);
-    expect(api.request.mock.calls[0][0]).toEqual({ origins: ['https://paddleocr.aistudio-app.com/*'], permissions: [DNR_PERMISSION] });
+    expect(api.request.mock.calls[0][0]).toEqual({ origins: ['https://paddleocr.aistudio-app.com/*', 'https://*.bj.bcebos.com/*'], permissions: [DNR_PERMISSION] });
   });
 });

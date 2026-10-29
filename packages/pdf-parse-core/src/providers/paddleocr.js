@@ -1,13 +1,13 @@
 // R4-07：PaddleOCR provider（百度飞桨星河社区 API，异步任务）
 // 只传 arXiv PDF 的 URL，不上传文件。
-// TODO(R4-07/bcebos)：resultUrl 指向 *.bcebos.com，本轮不加该域名权限（管理员：只记 TODO 不合并）；
-//   fetchResult 读取失败时报 PERMISSION_MISSING/NETWORK，由调用方提示。
+// 结果 JSONL 和图片在 *.bj.bcebos.com（无 CORS 头），需要可选 host 权限，和星河域名一起在用户选 PaddleOCR 时申请。
 import { defineProvider } from '../provider.js';
 import { ParseError, classifyHttpError, readErrorResponse, isParseError, fromFetchFailure } from '../errors.js';
 import { fetchWithTimeout } from '../http.js';
 
 export const PADDLEOCR_BASE = 'https://paddleocr.aistudio-app.com';
 export const PADDLEOCR_JOBS_URL = `${PADDLEOCR_BASE}/api/v2/ocr/jobs`;
+export const PADDLEOCR_RESULT_HOSTS = 'https://*.bj.bcebos.com/*'; // 待 Simon 批准的新可选权限
 export const PADDLEOCR_DEFAULT_MODEL = 'PaddleOCR-VL-1.5'; // 1.6 上线并经 QA 确认后再切
 const ID = 'paddleocr';
 const AUTH_TEXT = /unauthori[sz]ed|invalid (access )?token|token (expired|invalid)|鉴权|认证|令牌/i;
@@ -43,7 +43,7 @@ const STATE_MAP = { pending: 'pending', queued: 'pending', running: 'running', p
 export const paddleocrProvider = defineProvider({
   id: ID,
   label: 'PaddleOCR',
-  hosts: [`${PADDLEOCR_BASE}/*`],
+  hosts: [`${PADDLEOCR_BASE}/*`, PADDLEOCR_RESULT_HOSTS],
   // R4-08：optional_host_permissions，选中 PaddleOCR 时在用户手势里申请
   permissionMode: 'optional',
   // DNR 可选权限：和域名权限一起申请，用于删除星河请求的 Origin 头（否则网关返回空 body 403）

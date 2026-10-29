@@ -94,7 +94,7 @@ async function settingsRow(lang, error) {
   const p = { ...base.get('paddleocr'), testConnection: async () => ({ ok: false, error }) };
   const registry = { ...base, get: (id) => (id === 'paddleocr' ? p : base.get(id)), list: base.list ? base.list.bind(base) : undefined };
   const storage = { getPdfProvider: async () => 'paddleocr', setPdfProvider: async () => {}, getProviderKey: async () => 'fixture-key', setProviderKey: async () => {} };
-  const permissions = createPermissions({ origins: ['https://paddleocr.aistudio-app.com/*'], permissions: ['declarativeNetRequestWithHostAccess'] });
+  const permissions = createPermissions({ origins: ['https://paddleocr.aistudio-app.com/*', 'https://*.bj.bcebos.com/*'], permissions: ['declarativeNetRequestWithHostAccess'] });
   const sec = createPdfProviderSection({ doc: document, storage, permissions, registry, t: () => translations[lang] });
   await sec.init();
   await sec.onTest();

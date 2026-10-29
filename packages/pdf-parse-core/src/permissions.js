@@ -43,6 +43,14 @@ export function canRevoke(provider) {
 /** 转换前检查：缺权限 → 抛 PERMISSION_MISSING（host 填第一个域名），调用方不得发任何请求 */
 export async function ensureProviderPermission(api, provider) {
   if (await hasProviderPermission(api, provider)) return;
-  const host = (permissionsFor(provider).origins[0] || '').replace(/^https?:\/\//, '').replace(/\/\*$/, '');
+  // 指出第一个真正缺的域名（老用户只授权过星河域名、没授权结果域名时，不能误报星河）
+  const origins = permissionsFor(provider).origins;
+  let missing = origins[0] || '';
+  for (const o of origins) {
+    let ok = false;
+    try { ok = !!(await api.contains({ origins: [o] })); } catch { ok = false; }
+    if (!ok) { missing = o; break; }
+  }
+  const host = missing.replace(/^https?:\/\//, '').replace(/\/\*$/, '');
   throw new ParseError('PERMISSION_MISSING', { provider: provider.id, host });
 }

@@ -32,7 +32,10 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
   // 撤销按钮：只要还留着任一项（部分授权也算）就显示
   async function hasAnyGrant(p) {
     const q = permissionsFor(p);
-    try { return !!(await permissions.contains({ origins: q.origins })); } catch { return false; }
+    for (const o of q.origins) {
+      try { if (await permissions.contains({ origins: [o] })) return true; } catch { /* 继续看下一项 */ }
+    }
+    return false;
   }
 
   async function render() {

@@ -32,7 +32,8 @@
     "https://cdn-mineru.openxlab.org.cn/*"
   ],
   "optional_host_permissions": [
-    "https://paddleocr.aistudio-app.com/*"
+    "https://paddleocr.aistudio-app.com/*",
+    "https://*.bj.bcebos.com/*"
   ],
   "background": {
     "service_worker": "background.js",

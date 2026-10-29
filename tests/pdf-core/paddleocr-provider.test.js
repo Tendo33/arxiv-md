@@ -111,6 +111,6 @@ describe('PaddleOCR 细节', () => {
 
   test('默认注册表顺序：PaddleOCR 在前', () => {
     expect(createDefaultRegistry().ids()).toEqual(['paddleocr', 'mineru']);
-    expect(paddleocrProvider.hosts).toEqual(['https://paddleocr.aistudio-app.com/*']);
+    expect(paddleocrProvider.hosts).toEqual(['https://paddleocr.aistudio-app.com/*', 'https://*.bj.bcebos.com/*']);
   });
 });
