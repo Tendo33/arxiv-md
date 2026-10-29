@@ -6,6 +6,7 @@ import { defineProvider } from '../provider.js';
 import { ParseError, classifyHttpError, readErrorResponse, isParseError, fromFetchFailure } from '../errors.js';
 import { fetchWithTimeout } from '../http.js';
 import { withKeepAlive } from '../keepalive.js';
+import { fixPageFromBlocks } from './paddleocr-blocks.js';
 
 export const PADDLEOCR_BASE = 'https://paddleocr.aistudio-app.com';
 export const PADDLEOCR_JOBS_URL = `${PADDLEOCR_BASE}/api/v2/ocr/jobs`;
@@ -94,36 +95,82 @@ export function parsePaddleJsonl(text) {
       throw new ParseError('PROVIDER_FAILED', { provider: ID, reason: row.errorMsg || `errorCode ${row.errorCode}`, raw: { errorCode: row.errorCode, errorMsg: row.errorMsg } });
     }
     const pages = (row.result && row.result.layoutParsingResults) || [];
-    for (const pg of pages) {
+    const pre = (row.result && row.result.preprocessedImages) || [];
+    pages.forEach((pg, i) => {
       page += 1;
       const md = (pg && pg.markdown) || {};
-      const imgMap = md.images || {};
-      let t = String(md.text || '');
+      const imgMap = { ...(md.images || {}) };
+      // P-2：版面块修正（图被识别成表格 → 按 bbox 从预处理页图裁图）；裁剪源只用预处理图（bbox 坐标系就是它）
+      const fixed = fixPageFromBlocks(String(md.text || ''), pg);
+      let t = fixed.text;
+      const crops = new Map();
+      const pageImg = pre[i] || null;
+      for (const c of fixed.crops) {
+        if (imgMap[c.name]) continue;
+        imgMap[c.name] = pageImg; // 没有页图时 url=null：下载阶段记为失败，正文改成注释，不留坏链接
+        crops.set(c.name, { bbox: c.bbox, width: c.width, height: c.height });
+      }
       for (const [name, url] of Object.entries(imgMap)) {
         const src = `page-${page}/${name.replace(/^\.?\//, '')}`;
         // 只替换完整的引用（src="name" / (name)），避免前缀相同的名字互相误伤
         const esc = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         t = t.replace(new RegExp(`(["'(])${esc}(["')])`, 'g'), `$1${src}$2`);
-        images.push({ src, url, page });
+        images.push(crops.has(name) ? { src, url, page, crop: crops.get(name) } : { src, url, page });
       }
       if (t.trim()) parts.push(t.trim());
-    }
+    });
   }
   return { markdown: parts.join('\n\n'), images, pages: page };
 }
 
 /** 下载 markdown.images（签名 URL，在 *.bj.bcebos.com）。单张失败不让整个任务失败：data=null，交付时在正文留注释 */
+async function fetchBytes(url, ctx) {
+  const res = await fetchWithTimeout(url, { method: 'GET' }, { ctx, provider: ID, timeoutMs: ctx.requestTimeoutMs || 60000 });
+  if (!res.ok) return { error: `HTTP ${res.status}` };
+  return { data: new Uint8Array(await res.arrayBuffer()), contentType: (res.headers && res.headers.get && res.headers.get('content-type')) || null };
+}
+
+/**
+ * P-2：按版面块 bbox 从页图裁剪（bbox 是 prunedResult.width/height 坐标系，按实际位图尺寸缩放）。
+ * 只用 createImageBitmap + OffscreenCanvas（MV3 service worker 原生可用，不需要新权限或依赖）。
+ */
+export async function cropImage(bytes, { bbox, width, height }) {
+  if (typeof createImageBitmap !== 'function' || typeof OffscreenCanvas !== 'function') throw new Error('crop unsupported');
+  const bmp = await createImageBitmap(new Blob([bytes]));
+  const sx = width ? bmp.width / width : 1; const sy = height ? bmp.height / height : 1;
+  const x = Math.max(0, Math.floor(bbox[0] * sx)); const y = Math.max(0, Math.floor(bbox[1] * sy));
+  const w = Math.min(bmp.width - x, Math.ceil((bbox[2] - bbox[0]) * sx)); const h = Math.min(bmp.height - y, Math.ceil((bbox[3] - bbox[1]) * sy));
+  if (!(w > 0 && h > 0)) throw new Error('crop out of range');
+  const canvas = new OffscreenCanvas(w, h);
+  canvas.getContext('2d').drawImage(bmp, x, y, w, h, 0, 0, w, h);
+  if (bmp.close) bmp.close();
+  const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.92 });
+  return new Uint8Array(await blob.arrayBuffer());
+}
+
 export async function downloadImages(images, ctx = {}, concurrency = 4) {
   const out = images.map((i) => ({ ...i, data: null, contentType: null, error: null }));
+  const pageCache = new Map();
   let next = 0;
   async function worker() {
     while (next < out.length) {
       const img = out[next++];
       try {
-        const res = await fetchWithTimeout(img.url, { method: 'GET' }, { ctx, provider: ID, timeoutMs: ctx.requestTimeoutMs || 60000 });
-        if (!res.ok) { img.error = `HTTP ${res.status}`; continue; }
-        img.data = new Uint8Array(await res.arrayBuffer());
-        img.contentType = (res.headers && res.headers.get && res.headers.get('content-type')) || null;
+        if (!img.url) { img.error = 'no source image'; continue; }
+        if (img.crop) {
+          // P-2：同一页图只下载一次；裁剪失败按单张图片失败处理（正文留注释，不让任务失败）
+          if (!pageCache.has(img.url)) pageCache.set(img.url, fetchBytes(img.url, ctx));
+          const page = await pageCache.get(img.url);
+          if (page.error) { img.error = page.error; continue; }
+          const crop = ctx.cropImage || cropImage;
+          img.data = await crop(page.data, img.crop);
+          img.contentType = 'image/jpeg';
+          continue;
+        }
+        const r = await fetchBytes(img.url, ctx);
+        if (r.error) { img.error = r.error; continue; }
+        img.data = r.data;
+        img.contentType = r.contentType;
       } catch (e) {
         if (isParseError(e) && e.code === 'PERMISSION_MISSING') throw e; // 没 bcebos 权限：整体失败，让用户重新授权
         img.error = (e && (e.code || e.message)) || 'download failed';
