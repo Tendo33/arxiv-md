@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { parseHTML } from 'linkedom';
 import { createTaskRow, renderTaskRows, setTaskListLanguage } from '../src/ui/popup/task-list';
+import { translations as T5 } from '@config/locales';
 
 const read = (f) => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
 const code = (s) => s.split('\n').filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n');
@@ -26,7 +27,9 @@ describe('AR-04 createTaskRow 返回节点', () => {
     expect(row.dataset.taskId).toBe('a"b');
     expect(row.querySelector('script')).toBeNull();
     expect(row.querySelector('.n').textContent).toBe('<script>1</script>');
-    expect(row.querySelector('.row-err').lastChild.textContent).toBe('<i>x</i>'); // rp2c：首个子节点是 aria-hidden 后端前缀
+    expect(row.querySelector('.row-err').lastChild.textContent).toBe(T5.en.err_short_failed_plain); // rp2c：首个子节点是 aria-hidden 后端前缀；R5-03 原文只进 title
+    expect(row.querySelector('.row-err').getAttribute('title')).toBe('<i>x</i>');
+    expect(row.querySelector('.row-err i')).toBeNull();
     expect(row.querySelector('[data-action=retry]').dataset.taskId).toBe('a"b');
   });
   test('完成行：下载按钮带 svg 图标（SVG 命名空间）和 .lbl', () => {

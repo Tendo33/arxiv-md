@@ -24,6 +24,16 @@ export function taskErrorText(task, t) {
   }
   const s = shortErrorText({ code, reason: task.errorReason, host: task.errorHost }, t);
   if (s) return s;
-  if (code) return t.err_short_failed_plain;
-  return task.error ? String(task.error) : t.err_short_failed_plain;
+  // R5-03：认不出（包括没有 errorCode 的旧任务 / 未分类异常）一律通用白话；原文只进 title（见 taskErrorTitle）
+  return t.err_short_failed_plain;
+}
+
+/**
+ * R5-03：失败行的 title。只有「认不出」的原文（没有 errorCode、也不是 "provider: CODE"）才放进 title 便于排查；
+ * 有错误码的任务 title 仍是完整白话（NTF4），原始码只在后台日志。
+ */
+export function taskErrorTitle(task, shown) {
+  const raw = task && typeof task.error === 'string' ? task.error.trim() : '';
+  if (!raw || task.errorCode || task.errorReason || RAW_CODE.test(raw)) return shown;
+  return raw;
 }

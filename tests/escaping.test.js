@@ -15,10 +15,11 @@ describe('escaping', () => {
     expect(row.querySelector('img')).toBeNull();
     expect(row.querySelector('.row-err b')).toBeNull();
     expect(row.querySelector('.n').textContent).toBe('<img src=x onerror=alert(1)>');
-    expect(row.querySelector('.row-err').lastChild.textContent).toBe('<b>boom</b>');
+    // R5-03：认不出的原文不在行内显示（通用白话），只放进 .row-err 的 title 属性
+    expect(row.querySelector('.row-err').getAttribute('title')).toBe('<b>boom</b>');
     // 标题原文也放进 title 属性（属性值里的 < 不会被当成标签）；文本节点序列化时被转义
     const html = row.outerHTML;
-    expect(html).toContain('>&lt;b&gt;boom&lt;/b&gt;</span>');
+    expect(html).not.toContain('<b>boom</b></span>');
     expect(html).toContain('>&lt;img src=x onerror=alert(1)&gt;</span>');
   });
 

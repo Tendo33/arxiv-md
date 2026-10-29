@@ -1,5 +1,5 @@
 // R4-03：任务列表不再显示 "paddleocr: NETWORK" 这类原始码
-import { taskErrorText } from '../src/ui/popup/task-error-text';
+import { taskErrorText, taskErrorTitle } from '../src/ui/popup/task-error-text';
 import { translations } from '@config/locales';
 import { ALL_ERROR_CODES } from '@pdf-core/errors';
 import { providerLabel } from '@config/pdf-providers';
@@ -25,8 +25,19 @@ describe.each(['zh', 'en'])('R4-03 %s', (lang) => {
     expect(taskErrorText({ provider: 'paddleocr', errorCode: 'PROVIDER_FAILED', errorReason: 'empty_result' }, t, providerLabel)).toBe(t.err_reason_empty_result);
     expect(taskErrorText({ provider: 'paddleocr', errorCode: 'PERMISSION_MISSING', errorHost: 'paddleocr.aistudio-app.com' }, t, providerLabel)).toContain('paddleocr.aistudio-app.com');
   });
-  test('认不出的原文（非 code 格式）保持原样，不吞信息', () => {
-    expect(taskErrorText({ error: 'Some message' }, t, providerLabel)).toBe('Some message');
+  // R5-03：认不出的原文（没有 errorCode）→ 通用白话；原文只进 title（taskErrorTitle），不吞信息
+  test('认不出的原文（非 code 格式）→ 通用白话，原文进 title', () => {
+    const task = { error: 'TypeError: Failed to fetch at e.submit (background.js:1:22)' };
+    const shown = taskErrorText(task, t, providerLabel);
+    expect(shown).toBe(t.err_short_failed_plain);
+    expect(taskErrorTitle(task, shown)).toBe(task.error);
+  });
+  test('有错误码 / reason 的 title 仍是白话，不放原始码', () => {
+    const task = { error: 'paddleocr: NETWORK', errorCode: 'NETWORK' };
+    const shown = taskErrorText(task, t, providerLabel);
+    expect(taskErrorTitle(task, shown)).toBe(shown);
+    expect(taskErrorTitle({ error: 'paddleocr: NETWORK' }, 'x')).toBe('x');
+    expect(taskErrorTitle({}, 'y')).toBe('y');
   });
 });
 

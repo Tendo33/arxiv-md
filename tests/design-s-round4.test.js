@@ -89,9 +89,9 @@ describe('design S8: failed row has no duplicate title', () => {
     const rowTag = html.match(/^<div [^>]*class="row"[^>]*>/)[0];
     expect(rowTag).not.toMatch(/\stitle=/);
     // release-polish NTF4：.row-err 自己带 title（完整原文，配合两行截断），可见文本仍只出现一次
-    expect(html).toMatch(/<span [^>]*class="row-err"[^>]*><span aria-hidden="true" class="row-err-prov">PaddleOCR · <\/span>Boom here<\/span>/); // rp2c：前缀 aria-hidden
+    expect(html).toMatch(/<span [^>]*class="row-err"[^>]*><span aria-hidden="true" class="row-err-prov">PaddleOCR · <\/span>Couldn't parse this PDF[^<]*<\/span>/); // rp2c：前缀 aria-hidden；R5-03 认不出的原文 → 通用白话
     expect(html.match(/<span [^>]*class="row-err"[^>]*>/)[0]).toContain('title="Boom here"');
-    expect(html.split('>Boom here<').length - 1).toBe(1);
+    expect(html.split('>Boom here<').length - 1).toBe(0); // 原文只在 title
   });
 });
 
