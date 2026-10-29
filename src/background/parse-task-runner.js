@@ -90,11 +90,13 @@ export function createParseTaskRunner(deps) {
     const ctx = ctrl ? { signal: ctrl.signal } : {};
     if (!jobId) {
       // 先落盘「正在提交」：SW 在拿到 jobId 前被回收时，resume 不再静默重传（见 process）
-      await taskManager.updateTask(task.id, { submitStartedAt: now() });
+      // QA L-06：提交阶段可能要 ~100 s；从提交开始就计时并给 5%，卡片不再停在 0%
+      const submitAt = now();
+      await taskManager.updateTask(task.id, { submitStartedAt: submitAt, startedAt: submitAt, progress: 5 });
       const r = await provider.submit({ url: pdfUrlOf(task), dataId: task.paperInfo && task.paperInfo.arxivId }, creds, ctx);
       // 发送途中用户删了任务：服务端可能已建任务，但不再落盘 jobId、不轮询
       if ((ctrl && ctrl.signal.aborted) || (await guard.consume(task.id))) return { deleted: true };
-      jobId = r.jobId; startedAt = now();
+      jobId = r.jobId; startedAt = submitAt;
       await taskManager.updateTask(task.id, { jobId, startedAt, progress: 10, submitStartedAt: null });
     }
     const deadline = (startedAt ?? now()) + (provider.timeoutMs || DEFAULT_ASYNC_TIMEOUT_MS);
