@@ -109,7 +109,7 @@ npm run build
 - 扩展没有自己的服务器，开发者不收集你的数据，也没有统计或埋点。标准模式在浏览器本地转换；只有使用 PDF 解析时，才会把内容发给你选定的第三方解析服务：PaddleOCR 会上传 arXiv 上 50MB 以内的 PDF 文件，其他 PDF 只发链接；MinerU 只发 PDF 链接。
 - 标准模式下，转换完全在你的浏览器里完成，只访问 arXiv 和 ar5iv。
 - 只有你主动使用 PDF 解析时，论文才会和你的 Key 一起发给你选定的那一个后端（PaddleOCR 或 MinerU，均为第三方服务，受其条款约束）：MinerU 收到 arXiv PDF 链接；PaddleOCR 收到 arXiv PDF 文件本身（上传，50 MB 以内），非 arXiv 的 PDF 只发链接；超过 50 MB 的 PDF 不会发送，扩展会提示改用 MinerU。扩展不会自动切换后端。
-- 解析服务如何处理和保留你提交的内容由其自身条款决定。百度 AI Studio（PaddleOCR）和 MinerU 目前都没有公开上传文件和解析结果的具体保留期限；AI Studio 隐私政策只写了"在提供服务所需的期限内保存"。请不要发送你无权分享给第三方的 PDF。
+- 解析服务如何处理和保留你提交的内容由其自身条款决定。百度 AI Studio（PaddleOCR）和 MinerU 目前都没有公开上传文件和解析结果的具体保留期限；适用的政策是[百度隐私权保护声明（中文）](https://www.baidu.com/duty/yinsiquan.html)；[飞桨 AI Studio 隐私政策](https://aistudio.baidu.com/privacy)正文写明适用于「微信小程序、移动端浏览器（不含PC端）」，不覆盖插件的 API 调用，仅作参考，其中只写了"在提供服务所需的期限内保存"。请不要发送你无权分享给第三方的 PDF。
 - 详见 [PRIVACY.md](./PRIVACY.md)。
 
 ## 常见问题
