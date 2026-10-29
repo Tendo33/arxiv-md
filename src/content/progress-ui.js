@@ -31,7 +31,8 @@ export function updateProgressUI(progress) {
 
   setProgressState({
     text: withProvider(stageText[progress.stage] || t.content_progress_processing),
-    percent: Math.round(progress.progress || 0),
+    // AB8-05：下载阶段总大小未知时 progress 为 null，不显示百分比
+    percent: progress.progress == null && progress.stage === 'downloading' ? null : Math.round(progress.progress || 0),
     state: 'processing',
   });
 }

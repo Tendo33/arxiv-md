@@ -66,6 +66,16 @@ function lateFailureNotifier(tabId = null) {
     }
   };
 }
+// release-polish AB8-05：页面 PDF 按钮的下载进度发回页面状态卡（progress 为 null = 总大小未知，不显示百分比）
+function downloadProgressToTab(tabId) {
+  if (tabId == null) return null;
+  return (progress) => {
+    try {
+      const r = chrome.tabs.sendMessage(tabId, { type: 'CONVERSION_PROGRESS', data: { tier: 'pdf', stage: 'downloading', progress } });
+      if (r && typeof r.catch === 'function') r.catch(() => {});
+    } catch { /* 页面已关闭 */ }
+  };
+}
 async function notifyStillRunning() {
   const n = converterNotification('download_pending', {}, await notifyLang());
   showNotification(n.title, n.message, 'basic');
@@ -327,7 +337,7 @@ class MainConverter {
 
       const pdfUrl = paperInfo.pdfUrl || `${API.ARXIV_PDF}/${arxivId}.pdf`;
       try {
-        await downloadFile(pdfUrl, filename, { onLateComplete: lateSavedNotifier('pdf_fallback', filename, tabId), onLateFailure: lateFailureNotifier(tabId) });
+        await downloadFile(pdfUrl, filename, { onLateComplete: lateSavedNotifier('pdf_fallback', filename, tabId), onLateFailure: lateFailureNotifier(tabId), onProgress: onProgress ? (p) => onProgress({ tier: 'pdf', stage: 'downloading', progress: p }) : null });
       } catch (error) {
         if (!isStillRunning(error)) throw error;
         logger.warn('PDF download still running after timeout:', filename);
@@ -379,7 +389,7 @@ class MainConverter {
 
       const pdfUrl = paperInfo.pdfUrl || `${API.ARXIV_PDF}/${arxivId}.pdf`;
       try {
-        await downloadFile(pdfUrl, filename, { onLateComplete: lateSavedNotifier('pdf_saved', filename, tabId), onLateFailure: lateFailureNotifier(tabId) });
+        await downloadFile(pdfUrl, filename, { onLateComplete: lateSavedNotifier('pdf_saved', filename, tabId), onLateFailure: lateFailureNotifier(tabId), onProgress: downloadProgressToTab(tabId) });
       } catch (error) {
         if (!isStillRunning(error)) throw error;
         logger.warn('PDF download still running after timeout:', filename);

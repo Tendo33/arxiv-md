@@ -63,21 +63,28 @@ export const DOWNLOAD_KEEPALIVE_MS = 20 * 1000;
 // 改为 reject 一个 DOWNLOAD_STILL_RUNNING，调用方提示「仍在下载」；同时停止 keepalive（不再让 SW 常驻），
 // 只留下 onChanged 监听：SW 还活着时如果之后收到 complete，调用 onLateComplete(id) 补发「已保存」。
 // SW 被回收后监听随之消失，不会补发，这是有意的取舍（不加权限、不常驻）。
-export function downloadFile(url, filename, { timeoutMs = DOWNLOAD_TIMEOUT_MS, keepaliveMs = DOWNLOAD_KEEPALIVE_MS, onLateComplete = null, onLateFailure = null } = {}) {
+// release-polish AB8-05：onProgress(percent|null) —— 每 progressMs 读一次 bytesReceived/totalBytes；
+// totalBytes 未知（0 / -1）时给 null，界面不显示百分比，不再写死 0%。
+export const DOWNLOAD_PROGRESS_MS = 1000;
+export function downloadFile(url, filename, { timeoutMs = DOWNLOAD_TIMEOUT_MS, keepaliveMs = DOWNLOAD_KEEPALIVE_MS, onLateComplete = null, onLateFailure = null, onProgress = null, progressMs = DOWNLOAD_PROGRESS_MS } = {}) {
   const downloads = chrome.downloads;
   return new Promise((resolve, reject) => {
     let id = null;
     let done = false;
     let timer = null;
     let keepalive = null;
+    let progressTimer = null;
+    let lastPercent = null; // 开始时页面已不显示百分比，未知大小不必再发
     const early = [];
 
     let lingering = false; // 超时后仍在等 complete，用于补发「已保存」
     const stopTimers = () => {
       if (timer) clearTimeout(timer);
       if (keepalive) clearInterval(keepalive);
+      if (progressTimer) clearInterval(progressTimer);
       timer = null;
       keepalive = null;
+      progressTimer = null;
     };
     const finish = (fn, value) => {
       if (done) return;
@@ -153,10 +160,23 @@ export function downloadFile(url, filename, { timeoutMs = DOWNLOAD_TIMEOUT_MS, k
             finish(reject, error);
             return;
           }
-          if (items && items[0]) settle(items[0]);
+          if (items && items[0]) {
+            reportProgress(items[0]);
+            settle(items[0]);
+          }
         }, () => { /* search 失败就继续等 onChanged / 超时 */ });
+        const reportProgress = (item) => {
+          if (!onProgress || done || item.state !== 'in_progress') return;
+          const total = Number(item.totalBytes);
+          const got = Number(item.bytesReceived);
+          const percent = total > 0 && got >= 0 ? Math.min(99, Math.floor((got / total) * 100)) : null;
+          if (percent === lastPercent) return;
+          lastPercent = percent;
+          try { onProgress(percent); } catch { /* 进度失败不影响下载 */ }
+        };
         poll();
         if (!done) keepalive = setInterval(poll, keepaliveMs);
+        if (!done && onProgress) progressTimer = setInterval(poll, progressMs);
       });
     } catch (error) {
       finish(reject, error);

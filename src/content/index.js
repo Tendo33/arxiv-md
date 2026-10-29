@@ -318,7 +318,7 @@ async function handlePdfDownloadDirect(button) {
   try {
     setProgressState({
       text: t.content_progress_downloading,
-      percent: 0,
+      percent: null, // AB8-05：真实进度由后台 CONVERSION_PROGRESS 推送，开始时不显示 0%
       state: 'processing',
     });
 
