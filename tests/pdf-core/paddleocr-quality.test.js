@@ -294,3 +294,9 @@ describe('P-4：addFormulaTags 不改输入、编号必须在公式右侧', () =
   });
   test('编号在公式左侧 → 不配对', () => expect(addFormulaTags(F, mk(20))).toBe(F));
 });
+
+describe('P-3：文字/引用命令不包 $', () => {
+  const { wrapCellMath } = require('@pdf-core/normalize/table');
+  test.each([['\\cite{x}'], ['\\citep{vaswani2017}'], ['\\ref{tab:1}'], ['\\textbf{Model}'], ['\\emph{ours}'], ['\\textbf{28.4}']])('不动：%s', (a) => expect(wrapCellMath(a)).toBe(a));
+  test('数学命令照常包', () => expect(wrapCellMath('\\mathbf{x}_{i}')).toBe('$\\mathbf{x}_{i}$'));
+});

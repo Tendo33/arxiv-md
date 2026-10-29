@@ -18,12 +18,14 @@ export function htmlTableToGfm(html) {
 }
 
 const LATEX_HINT = /\\[A-Za-z]+|[\^_]\{/;
+// 文字/引用类命令：不是数学，包进 $…$ 后 KaTeX 会报错（\cite）或排版不对（\textbf）
+const TEXT_CMD_RE = /\\(?:cite[a-z]*|ref|eqref|autoref|cref|Cref|label|url|href|footnote|textbf|textit|texttt|emph|underline)\b/;
 
 /** P-3：单元格是裸 LaTeX（含 \cmd、^{、_{ 且没有 $）时补 $…$；去掉命令和花括号后还剩 3 个以上连续字母的视为普通文本，不包 */
 export function wrapCellMath(cellHtml) {
   const body = String(cellHtml);
   const t = body.trim();
-  if (!t || t.includes('$') || /<[a-z/!]/i.test(t) || !LATEX_HINT.test(t)) return body;
+  if (!t || t.includes('$') || /<[a-z/!]/i.test(t) || !LATEX_HINT.test(t) || TEXT_CMD_RE.test(t)) return body;
   const rest = t.replace(/\\[A-Za-z]+/g, ' ').replace(/\{[^{}]*\}/g, ' ');
   if (/[A-Za-z]{3,}/.test(rest)) return body;
   return `$${t}$`;
