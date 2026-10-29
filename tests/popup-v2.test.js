@@ -88,8 +88,8 @@ describe('C-2 内容脚本回执', () => {
 
 describe('C-2 像素回归（round3 对比截图）', () => {
   const css = require('fs').readFileSync(require('path').join(__dirname, '../src/ui/popup/popup.css'), 'utf8');
-  test('320 宽下按钮单列', () => {
-    expect(css).toMatch(/@media \(max-width:339px\)\{[^@]*\.acts\{grid-template-columns:1fr\}/);
+  test('320 宽下按钮保持双列（复审 P3③ / 设计 M1：单列会让列表被页脚压住）', () => {
+    expect(css).not.toMatch(/@media \(max-width:339px\)\{[^@]*\.acts\{grid-template-columns:1fr\}/);
   });
   test('列表行操作按钮不撑高行（行高与样稿一致 37px）', () => {
     expect(css).toMatch(/\.row \.row-act\{[^}]*margin:-2px 0/);

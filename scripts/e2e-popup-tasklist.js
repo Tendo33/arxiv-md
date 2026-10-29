@@ -71,8 +71,30 @@ function loadPlaywright() {
           return { listTop: Math.round(lr.top), listBottom: Math.round(lr.bottom), listH: Math.round(lr.height), rowH: Math.round(rr.height), wrapped: btns.length && btns[0].top > rr.top + 12, btns };
         });
         m.ok = m.btns.length > 0 && m.btns.every((b) => b.top >= m.listTop && b.bottom <= m.listBottom);
+        // 复审 P3③：Key 提示显示时，待确认行和它的按钮不能被 footer 盖住。
+        // 先截一张原始状态；再像用户一样在 Key 提示上滚一下滚轮（.body 是 overflow:hidden，滚不动；被遮住的内容用户也看不到），然后量 bottom ≤ .ft 的 top。
+        const shots = process.env.E2E_TASKLIST_SHOTS;
+        if (shots) { fs.mkdirSync(shots, { recursive: true }); await p.screenshot({ path: path.join(shots, `${lang}-${w}-open.png`) }); }
+        const ak = await p.$eval('#alertKey', (e) => { const r = e.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
+        await p.mouse.move(ak.x, ak.y);
+        await p.mouse.wheel(0, 600);
+        await p.waitForTimeout(400);
+        if (shots) await p.screenshot({ path: path.join(shots, `${lang}-${w}-scrolled.png`) });
+        const f = await p.evaluate(() => {
+          const ft = document.querySelector('.ft').getBoundingClientRect();
+          const body = document.querySelector('.body').getBoundingClientRect();
+          const row = document.querySelector('#taskList .row[data-status="awaiting_consent"]').getBoundingClientRect();
+          const btns = [...document.querySelectorAll('#taskList .row[data-status="awaiting_consent"] .row-act button')].map((b) => {
+            const r = b.getBoundingClientRect(); return { top: Math.round(r.top), bottom: Math.round(r.bottom) };
+          });
+          return { ftTop: Math.round(ft.top), bodyTop: Math.round(body.top), rowTop: Math.round(row.top), rowBottom: Math.round(row.bottom), btns };
+        });
+        f.ok = f.btns.length > 0 && f.rowBottom <= f.ftTop && f.rowTop >= f.bodyTop
+          && f.btns.every((b) => b.bottom <= f.ftTop && b.top >= f.bodyTop);
+        m.footer = f;
         out[`${lang}-${w}`] = m;
         if (!m.ok) { console.error(`e2e tasklist: FAIL ${lang}@${w} ${JSON.stringify(m)}`); fail++; }
+        if (!f.ok) { console.error(`e2e tasklist: FAIL footer ${lang}@${w} ${JSON.stringify(f)}`); fail++; }
         await p.close();
       }
       // 更强的一条：没在 sync 里选过后端（keyMissingHere=false）时，打开 popup 不显示 #alertKey、标题为空；

@@ -4,7 +4,8 @@ html,body{width:360px}
 body{min-width:320px}
 /* 浏览器自带 popup 外框，不再画圆角和阴影；1px 边框保留为透明，尺寸与样稿一致 */
 .pop{border-color:transparent;border-radius:0;box-shadow:none}
-@media (max-width:339px){html,body{width:100%}.pop{--pw:100%}.acts{grid-template-columns:1fr}}
+/* 复审 P3③ / 设计 M1：320 下 .acts 保持双列（不再改成单列），否则按钮区多出约 44px，任务列表被页脚压住 */
+@media (max-width:339px){html,body{width:100%}.pop{--pw:100%}}
 .btn-xs{min-height:28px;padding:0 8px}
 .btn-xxs{min-height:24px;padding:0 6px;font-size:12px}
 .alert>svg{flex:none;margin-top:1px}
@@ -15,7 +16,7 @@ body{min-width:320px}
 .recent.hidden{display:none}
 .sec-h{min-height:24px}
 .sec-x{display:flex;gap:4px}
-/* 审查员 S 增量 C：列表至少放下一整行折行后的待确认任务（行 59px + 上下内边距 8px），按钮不被内部滚动区截断 */
+/* 审查员 S 增量 C / R4 合入 C2：列表最小高度默认 46px（一整行），含待确认行时 72px（见下一条），按钮不被内部滚动区截断 */
 #taskList{padding:4px 10px;overflow-y:auto;min-height:46px;overscroll-behavior:contain}
 /* R4 合入 C2：默认只保证一整行（46px，窄宽时 flex 不会把列表压到半行）；出现待确认行（按钮可能折行）时才保证 72px */
 #taskList:has(.row[data-status=awaiting_consent]){min-height:72px}
@@ -87,7 +88,6 @@ body{min-width:320px}
 .acts .btn>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .acts #mineruBtn{flex-direction:column;gap:2px;padding-top:4px;padding-bottom:4px;line-height:1.2}
 .acts #mineruBtn .backend-label{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-@media (max-width:339px){.acts{grid-template-columns:1fr}}
 /* 设计建议：失败原因直接显示在行下，不只放在 tooltip 里 */
 .row{flex-wrap:wrap;row-gap:2px}
 .row .n{flex:1 1 0;min-width:3em}

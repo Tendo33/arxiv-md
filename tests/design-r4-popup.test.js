@@ -28,11 +28,11 @@ describe('建议：待确认有单独的等待样式', () => {
 });
 
 describe('M3 英文 360 下次按钮不截断', () => {
-  test('两列 minmax(0,1fr)、按钮 min-width:0、文字在 span 里省略；≤339 仍单列（规则在后面）', () => {
+  test('两列 minmax(0,1fr)、按钮 min-width:0、文字在 span 里省略；≤339 也保持双列（复审 P3③ / 设计 M1 去掉了单列规则）', () => {
     expect(css).toMatch(/\.acts\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)\}/);
     expect(css).toMatch(/\.acts \.btn\{min-width:0\}/);
     expect(css).toMatch(/\.acts \.btn>span\{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap\}/);
-    expect(css.lastIndexOf('.acts{grid-template-columns:1fr}')).toBeGreaterThan(css.indexOf('repeat(2,minmax(0,1fr))'));
+    expect(css).not.toContain('.acts{grid-template-columns:1fr}');
     const html = fs.readFileSync(path.join(__dirname, '../src/ui/popup/popup.html'), 'utf8');
     expect(html).toMatch(/id="pdfBtn"[^>]*><span data-i18n="popup_btn_pdf">/);
   });

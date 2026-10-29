@@ -20,3 +20,20 @@ describe('C2：只在有待确认行时给 #taskList 最小高度', () => {
     expect(css).toMatch(/#taskList:has\(\.row\[data-status=awaiting_consent\]\)\{min-height:72px\}/);
   });
 });
+
+describe('复审 P3③ / 设计 M1：320 下 .acts 保持双列，任务行不被页脚压住', () => {
+  test('popup.css 里不再有把 .acts 改成单列的规则；.body 仍是 overflow:hidden（设计没选滚动兜底）', () => {
+    expect(css).not.toMatch(/\.acts\{grid-template-columns:1fr\}/);
+    expect(css).toMatch(/^\.body\{display:flex;flex-direction:column;overflow:hidden\}/m);
+  });
+  test('#taskList 注释写的是 46px / 72px，不是过时的单一 72px 说法', () => {
+    expect(css).toContain('列表最小高度默认 46px（一整行），含待确认行时 72px');
+  });
+  test('e2e-popup-tasklist 断言行和按钮的 bottom ≤ .ft 的 top，覆盖 zh/en × 320/360/375', () => {
+    const e2e = fs.readFileSync(path.join(__dirname, '../scripts/e2e-popup-tasklist.js'), 'utf8');
+    expect(e2e).toContain('f.rowBottom <= f.ftTop');
+    expect(e2e).toContain('b.bottom <= f.ftTop');
+    expect(e2e).toMatch(/for \(const w of \[320, 360, 375\]\)/);
+    expect(e2e).toMatch(/for \(const lang of \['zh', 'en'\]\)/);
+  });
+});
