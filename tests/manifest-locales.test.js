@@ -75,6 +75,8 @@ describe('ci.yml：e2e 脚本清单、rendered-check、selftest-live 都在', ()
     expect(items).toEqual(expect.arrayContaining(['scripts/e2e-shortcut.js', 'scripts/e2e-popup-a11y.js', 'scripts/e2e-popup-tasklist.js']));
     items.forEach((f) => expect(fs.existsSync(path.join(root, f))).toBe(true));
     expect(ci).toMatch(/for s in \$E2E_SCRIPTS; do/);
+    // 循环体必须真的在 xvfb 下运行每个脚本（把循环体换成 echo 也要失败）
+    expect(ci).toMatch(/xvfb-run -a node "\$s"/);
   });
   test('rendered-check job 存在并校验 markdown-it 版本行', () => {
     expect(jobs).toContain('rendered-check');
