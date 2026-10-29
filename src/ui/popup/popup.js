@@ -170,6 +170,11 @@ function showOk(text, title = null, state = 'ok') {
   ctx.state = state;
   $('okTitle').textContent = title || t().popup_saved;
   $('okFile').textContent = text ? ` · ${text}` : '';
+  // 设计建议 S-2：已提交≠已完成，用时钟图标和蓝色信息色，不用绿色 ✓
+  const pending = state === 'submitted';
+  $('alertOk').classList.toggle('pending', pending);
+  $('okIconDone').classList.toggle('hidden', pending);
+  $('okIconPending').classList.toggle('hidden', !pending);
   $('alertOk').classList.remove('hidden');
 }
 

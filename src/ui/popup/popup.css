@@ -98,3 +98,6 @@ body{min-width:320px}
 .row .row-err{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
 /* release-polish 设计 NTF3：≤340px 时标题单独占第二行（徽标 · 时间 · 操作在第一行），不再被挤成「BERT: Pr…」 */
 @media (max-width:340px){.row .n{flex-basis:100%;order:2;min-width:0}.row .row-err{order:3}}
+
+/* 设计建议 S-2：PDF 解析已提交（还没完成）用信息色 */
+.alert.ok.pending{background:var(--info-bg);color:var(--info)}
