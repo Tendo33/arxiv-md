@@ -3,6 +3,7 @@
 import { translations } from '@config/locales';
 import { defaultTimers } from './action-badge';
 import { providerLabel } from '@config/pdf-providers';
+import { browserDefaultLanguage } from '@utils/browser-language';
 
 export const PAGE_PATTERNS = [
   'https://arxiv.org/abs/*',
@@ -60,7 +61,7 @@ export function createContextMenus({ menus, tabs, runtime, commands, storage, is
   let building = Promise.resolve();
 
   async function rebuild() {
-    const lang = (await storage.getLanguage().catch(() => 'en')) || 'en';
+    const lang = await storage.getLanguage().catch(() => browserDefaultLanguage()); // AB8-04
     const active = storage.getActivePdfProvider
       ? await storage.getActivePdfProvider().catch(() => ({ id: 'mineru', hasKey: false }))
       : { id: 'mineru', hasKey: !!(await storage.getMinerUToken().catch(() => '')) };

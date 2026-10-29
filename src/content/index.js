@@ -5,7 +5,7 @@ import { paperTabTitle } from './bibtex';
 import logger from '@utils/logger';
 import { isCanceledDownload, statusCardErrorText } from './status-error';
 import { REGEX } from '@config/constants';
-import storage from '@utils/storage';
+import storage, { browserDefaultLanguage } from '@utils/storage';
 import { translations } from '@config/locales';
 import { handleFileDownload, handleBlobDownload } from './page-download';
 import { handleHtmlToMarkdown } from './markdown-convert';
@@ -115,10 +115,10 @@ async function init() {
 async function initLanguage() {
   try {
     const lang = await storage.getLanguage();
-    currentLang = lang || 'en';
+    currentLang = lang;
   } catch (error) {
     logger.warn('Failed to load language setting:', error);
-    currentLang = 'en';
+    currentLang = browserDefaultLanguage(); // AB8-04
   }
   t = translations[currentLang] || translations.en;
   setPageButtonText(t);

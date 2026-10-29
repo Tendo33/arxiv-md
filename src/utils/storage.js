@@ -4,6 +4,8 @@ import { STORAGE_KEYS, DEFAULTS } from '@config/constants';
 import logger from './logger';
 import { PROVIDER_KEYS_KEY, PDF_PROVIDER_KEY, pickPdfProvider } from './migrations';
 
+import { browserDefaultLanguage } from './browser-language';
+
 /**
  * Storage Manager - 封装 Chrome Storage API
  */
@@ -227,9 +229,18 @@ class StorageManager {
     await this.set(STORAGE_KEYS.SHOW_NOTIFICATIONS, value);
   }
 
-  /** 未保存过语言时跟随浏览器界面语言（zh* → 中文，其余英文） */
+  /**
+   * 未保存过语言时跟随浏览器界面语言（zh* → 中文，其余英文）。
+   * release-polish AB8-04：唯一的语言入口——存的值不是 zh/en、或读取失败时都回落到 browserDefaultLanguage，
+   * 调用方不再各自写 'en' / null 兜底。
+   */
   async getLanguage() {
-    return this.get(STORAGE_KEYS.LANGUAGE, browserDefaultLanguage());
+    try {
+      const v = await this.get(STORAGE_KEYS.LANGUAGE, null);
+      return v === 'zh' || v === 'en' ? v : browserDefaultLanguage();
+    } catch {
+      return browserDefaultLanguage();
+    }
   }
 
   async setLanguage(lang) {
@@ -237,13 +248,8 @@ class StorageManager {
   }
 }
 
-export function browserDefaultLanguage(
-  uiLang = (typeof chrome !== 'undefined' && chrome.i18n && chrome.i18n.getUILanguage)
-    ? chrome.i18n.getUILanguage()
-    : (typeof navigator !== 'undefined' ? navigator.language : ''),
-) {
-  return /^zh\b/i.test(uiLang || '') ? 'zh' : 'en';
-}
+// AB8-04：纯函数放在 browser-language.js，背景页/右键菜单可以不实例化 StorageManager 直接用
+export { browserDefaultLanguage };
 
 // 导出单例
 export default new StorageManager();
