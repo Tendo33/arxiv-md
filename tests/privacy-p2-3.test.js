@@ -15,7 +15,7 @@ test('两个后端都只发链接，代码里没有上传文件的请求体', ()
 });
 
 test('写明 OA 规则：arXiv 视为 OA，其余或判断不了先确认', () => {
-  expect(doc).toMatch(/Open-access check/);
+  expect(doc).toMatch(/\*\*Open access\.\*\* All papers on arXiv are treated as open access/);
   expect(doc).toMatch(/arxiv\.org\/pdf/);
   expect(doc).toMatch(/cannot be determined, nothing is sent/);
   expect(doc).toMatch(/popup, right-click menu, floating button and keyboard shortcut/);

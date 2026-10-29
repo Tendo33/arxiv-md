@@ -1,5 +1,6 @@
 // 审查 P1-1：默认只把开放获取（OA）的 PDF 发给第三方解析；其他 PDF 先由用户确认再发送。
-// OA 判定：PDF 地址是 arXiv 官方托管的论文 PDF（arXiv 上的论文都可公开获取）。
+// OA 判定（P1-A 方案 2，Simon 决定）：arXiv 上的论文一律视为 OA，arXiv 托管的 PDF 直接解析、不弹确认，
+// 不逐篇检查 license。PRIVACY.md「Open access」段是对应的政策文字（发布前由 Simon 审阅）。
 // 其他来源、地址解析失败或缺字段一律按非 OA 处理（拿不准就按非 OA）。
 import { pdfUrlOf } from './pdf-url';
 
