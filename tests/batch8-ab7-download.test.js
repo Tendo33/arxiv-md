@@ -301,6 +301,43 @@ describe('batch9 ①：4 分钟后仍在下载 → 不报失败、不取消；�
     expect(jest.getTimerCount()).toBe(0);
   });
 
+  // batch9 审查 P3①：补发等待阶段按 id 过滤、只认终态
+  test('超时后其他 id 先 complete → 忽略，监听仍在；本 id 之后 complete 照常补发', async () => {
+    jest.useFakeTimers();
+    const c = fakeChrome({});
+    const late = jest.fn();
+    const settled = downloadFile('u', 'p.pdf', { onLateComplete: late }).catch((e) => e);
+    await jest.advanceTimersByTimeAsync(240_001);
+    expect((await settled).code).toBe('DOWNLOAD_STILL_RUNNING');
+    const fire = (d) => [...c.listeners].forEach((l) => l(d));
+    fire({ id: 99, state: { previous: 'in_progress', current: 'complete' } });
+    expect(late).not.toHaveBeenCalled();
+    expect(c.listeners.size).toBe(1);
+    fire({ id: 7, state: { previous: 'in_progress', current: 'complete' } });
+    expect(late).toHaveBeenCalledWith(7);
+    expect(c.listeners.size).toBe(0);
+  });
+
+  test('超时后本 id 变为 paused → 不补发成功也不补发失败，监听仍在；之后 complete 照常补发', async () => {
+    jest.useFakeTimers();
+    const c = fakeChrome({});
+    const late = jest.fn();
+    const lateFail = jest.fn();
+    const settled = downloadFile('u', 'p.pdf', { onLateComplete: late, onLateFailure: lateFail }).catch((e) => e);
+    await jest.advanceTimersByTimeAsync(240_001);
+    expect((await settled).code).toBe('DOWNLOAD_STILL_RUNNING');
+    const fire = (d) => [...c.listeners].forEach((l) => l(d));
+    fire({ id: 7, paused: { previous: false, current: true } });
+    fire({ id: 7, filename: { current: '/x/p.pdf' } });
+    expect(late).not.toHaveBeenCalled();
+    expect(lateFail).not.toHaveBeenCalled();
+    expect(c.listeners.size).toBe(1);
+    fire({ id: 7, state: { previous: 'in_progress', current: 'complete' } });
+    expect(late).toHaveBeenCalledTimes(1);
+    expect(lateFail).not.toHaveBeenCalled();
+    expect(c.listeners.size).toBe(0);
+  });
+
   test('超时后下载被中断 → 不补发，监听移除', async () => {
     jest.useFakeTimers();
     const c = fakeChrome({ interruptAt: 250_000 });
