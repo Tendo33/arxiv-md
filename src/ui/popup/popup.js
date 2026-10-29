@@ -1,6 +1,6 @@
 // Popup v2（Round 3 C-2）：当前页上下文 + 三个导出动作 + 最近 MinerU 任务
 
-import { keyHereMessage, renderKeyHint } from './key-hint';
+import { keyHereMessage, renderKeyHint, setHintText } from './key-hint';
 import { ctxBadgeState } from './ctx-badge';
 import logger from '@utils/logger';
 import storage from '@utils/storage';
@@ -9,7 +9,6 @@ import { showConfirm } from './confirm-dialog';
 import { confirmSendFlow, refocusTask } from './send-consent';
 import { renderTaskRows, setTaskListLanguage } from './task-list';
 import { bindListScroll, fitListToHalfRow, refitOnResize } from './list-scroll';
-import { NW_ZH, setNwText } from '../settings/nw-segments';
 import { pageContext, recentTasks } from './page-context';
 import { renderShortcutGuide } from './shortcut-guide';
 import { providerLabel } from '@config/pdf-providers';
@@ -93,7 +92,7 @@ function renderBackend() {
   const el = $('backendLabel');
   if (el) el.textContent = (t().popup_backend || '({provider})').replace('{provider}', providerLabel(active.id));
   // 复审 P2-A：后端随 sync 过来了，但 Key 不同步 → 打开弹窗就提示在本设备重新填写
-  renderKeyHint(document, active, t(), providerLabel(active.id));
+  renderKeyHint(document, active, t(), providerLabel(active.id), currentLang); // R09
 }
 
 function scheduleLoadTasks() {
@@ -185,9 +184,7 @@ function showOk(text, title = null, state = 'ok') {
 function showNeedKey(title, hint) {
   hideAlerts();
   $('keyHereTitle').textContent = title;
-  // R09：zh 按短语 .nw 分段（表见 nw-segments.js）；没有手工表的走 splitZh 兜底
-  const key = Object.keys(NW_ZH).find((k) => NW_ZH[k].join('') === hint) || '';
-  setNwText($('keyHereHint'), key, hint || '', currentLang);
+  setHintText($('keyHereHint'), hint, currentLang); // R09：zh 按短语 .nw 分段
   $('alertKey').classList.remove('hidden');
 }
 

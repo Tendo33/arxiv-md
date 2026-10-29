@@ -3,6 +3,7 @@ import path from 'path';
 import { parseHTML } from 'linkedom';
 import { translations } from '../src/config/locales.js';
 import { NW_ZH, setNwText } from '../src/ui/settings/nw-segments.js';
+import { renderKeyHint } from '../src/ui/popup/key-hint.js';
 
 const read = (p) => fs.readFileSync(path.join(__dirname, '..', p), 'utf8');
 const KEYS = ['popup_key_here_hint', 'popup_err_token_hint', 'pdf_disc_needed_body'];
@@ -22,8 +23,15 @@ describe('R09：弹窗 #keyHereHint 中文按短语不拆词', () => {
       if (translations.zh[k].includes('设备的')) expect(segs.some((s) => s.includes('本设备的'))).toBe(true);
     }
   });
-  test('popup.js 用 setNwText 写 #keyHereHint，popup.css 给 .nw nowrap', () => {
-    expect(read('src/ui/popup/popup.js')).toMatch(/setNwText\(\$\('keyHereHint'\)/);
+  test('两条写入路径（打开时 renderKeyHint、点击时 showNeedKey）都分段，popup.css 给 .nw nowrap', () => {
+    const { document } = parseHTML('<div id="alertKey" class="hidden"><b id="keyHereTitle"></b><span id="keyHereHint"></span></div>');
+    renderKeyHint(document, { id: 'paddleocr', keyMissingHere: true }, translations.zh, 'PaddleOCR', 'zh');
+    const segs = [...document.querySelectorAll('#keyHereHint .nw')].map((s) => s.textContent);
+    expect(segs).toEqual(NW_ZH.popup_key_here_hint);
+    renderKeyHint(document, { id: 'paddleocr', keyMissingHere: true }, translations.en, 'PaddleOCR', 'en');
+    expect(document.querySelector('#keyHereHint .nw')).toBeNull();
+    expect(read('src/ui/popup/popup.js')).toMatch(/setHintText\(\$\('keyHereHint'\), hint, currentLang\)/);
+    expect(read('src/ui/popup/popup.js')).toMatch(/renderKeyHint\(document, active, t\(\), providerLabel\(active\.id\), currentLang\)/);
     expect(read('src/ui/popup/popup.css')).toMatch(/#keyHereHint \.nw\{white-space:nowrap\}/);
   });
 });
