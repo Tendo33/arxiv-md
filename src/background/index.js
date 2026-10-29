@@ -359,6 +359,9 @@ async function handleRetryTask(taskId, sendResponse) {
       jobId: null, // 重试 = 重新提交
       startedAt: null,
       submitStartedAt: null,
+      // 审查 P3-4：手动重试 = 重新开始，清掉上一轮「等 DNR 重载」的状态（否则 popup 一直显示等待提示、不再自动重载、10 分钟窗口用旧值）
+      dnrReinitWaitSince: null,
+      dnrAutoReinit: null,
     });
 
     sendResponse({ success: true });

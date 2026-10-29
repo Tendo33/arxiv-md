@@ -182,7 +182,8 @@ export function createParseTaskRunner(deps) {
       if (provider.mode !== 'sync' && !task.jobId && task.submitStartedAt) {
         return { error: await fail(task, new ParseError('NETWORK', { provider: provider.id, reason: ERROR_REASONS.INTERRUPTED_SUBMIT }), provider) };
       }
-      await taskManager.updateTask(taskId, { status: TASK_STATUS.PROCESSING, ...(task.jobId ? {} : { progress: 0 }) });
+      // 审查 P3-4：开始处理就不再是「等 DNR 重载」，清掉 dnrReinitWaitSince（dnrAutoReinit 保留：每个任务最多自动重载一次）
+      await taskManager.updateTask(taskId, { status: TASK_STATUS.PROCESSING, dnrReinitWaitSince: null, ...(task.jobId ? {} : { progress: 0 }) });
       const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
       if (ctrl) controllers.set(taskId, ctrl);
       try {
