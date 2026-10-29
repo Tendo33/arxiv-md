@@ -2,17 +2,17 @@
 // 用法：node scripts/verify-dist.js [distDir] [--target=chrome|firefox]（默认 dist、chrome）
 const fs = require('fs');
 const path = require('path');
-const { normalizeTarget, verifyBackground } = require('./manifest-target');
+const { parseVerifyArgs, verifyBackground } = require('./manifest-target');
 
-const args = process.argv.slice(2);
 let target;
+let dist;
 try {
-  target = normalizeTarget((args.find((a) => a.startsWith('--target=')) || '').slice(9) || 'chrome');
+  ({ target, dist } = parseVerifyArgs(process.argv.slice(2)));
 } catch (e) {
   console.error(`verify:dist 失败：${e.message}`);
   process.exit(1);
 }
-const dist = path.resolve(args.find((a) => !a.startsWith('--')) || 'dist');
+dist = path.resolve(dist);
 const manifestPath = path.join(dist, 'manifest.json');
 if (!fs.existsSync(manifestPath)) {
   console.error(`verify:dist 失败：找不到 ${manifestPath}，请先构建`);

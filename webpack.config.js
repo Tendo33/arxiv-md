@@ -3,7 +3,7 @@ const webpack = require("webpack");
 const CopyPlugin = require("copy-webpack-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
 const { ThirdPartyNoticesPlugin } = require("./scripts/third-party-notices");
-const { normalizeTarget, manifestForTarget } = require("./scripts/manifest-target");
+const { normalizeTarget, manifestForTarget, assertEnvTargetNotEmpty } = require("./scripts/manifest-target");
 
 // AR-09：background.js 是扩展后台脚本，从本地包加载，不走网络，webpack 默认 244 KiB 的
 // "web performance" 告警对它没有意义（主要是 HTML→Markdown 转换 + PDF 解析内核）。
@@ -28,6 +28,7 @@ class BackgroundBudgetPlugin {
 
 // 目标浏览器：默认 chrome（Chrome / Edge，产出 dist/）；--env target=firefox 产出 dist-firefox/。
 module.exports = (env, argv) => {
+  assertEnvTargetNotEmpty(process.argv);
   const target = normalizeTarget(env && env.target);
   return {
     entry: {
