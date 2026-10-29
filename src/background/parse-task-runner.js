@@ -14,6 +14,8 @@ import { uploadAllowed } from './oa-gate';
 
 export const SYNC_PROVIDER_TIMEOUT_MS = 60 * 1000;
 export const DEFAULT_ASYNC_TIMEOUT_MS = 10 * 60 * 1000;
+/** QA L-01：DNR 没就绪时最多等多久（等扩展页面关掉再重载） */
+export const DNR_REINIT_MAX_WAIT_MS = 10 * 60 * 1000;
 
 const sleepReal = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -158,7 +160,21 @@ export function createParseTaskRunner(deps) {
       // R4-02：首次提交前（还没有 jobId）让 background 确认该 provider 需要的网络规则已就绪（幂等）
       if (deps.beforeSubmit && !task.jobId) {
         // R5-01：不再吞掉错误继续提交（规则没装好提交必然 403 / 卡住），直接让任务失败并给可读原因
-        try { await deps.beforeSubmit(provider); } catch (e) { return { error: await fail(task, e, provider) }; }
+        try { await deps.beforeSubmit(provider); } catch (e) {
+          // QA L-01：刚授权后的同一会话里 DNR 调用一直挂起（见 dnr-reinit.js），只能重新载入扩展才恢复。
+          // 任务保持 PENDING，排队等「没有扩展页面开着、没有别的任务在跑」时重载一次（不在用户眼前关掉设置页 / popup），
+          // 重载后 resume 续跑。每个任务最多重载一次；最多等 DNR_REINIT_MAX_WAIT_MS，超时照常失败
+          if (e && e.reason === ERROR_REASONS.DNR_NOT_READY && typeof deps.reinit === 'function' && !task.dnrAutoReinit) {
+            const since = task.dnrReinitWaitSince ?? now();
+            if (now() - since < DNR_REINIT_MAX_WAIT_MS) {
+              await taskManager.updateTask(taskId, { status: TASK_STATUS.PENDING, dnrReinitWaitSince: since, error: null, errorCode: null, errorReason: null });
+              try { log.info(`PDF parse task ${taskId}: DNR not ready, reload queued until no extension page is open`); } catch { /* noop */ }
+              deps.reinit({ isIdle: () => running.size === 0, beforeReload: () => taskManager.updateTask(taskId, { dnrAutoReinit: true }) });
+              return { reinit: true };
+            }
+          }
+          return { error: await fail(task, e, provider) };
+        }
       }
       // 审查 P2-3：上次提交途中后台被回收、没拿到 jobId → 明确报错，让用户手动重试，不自动重传
       if (provider.mode !== 'sync' && !task.jobId && task.submitStartedAt) {

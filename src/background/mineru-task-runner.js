@@ -1,4 +1,5 @@
 // R4-11：保留旧模块路径（兼容旧 import）；实现已迁到 parse-task-runner.js，一个版本后删除
+import { scheduleReloadWhenIdle } from './dnr-reinit';
 import taskManager from '@core/task-manager';
 import logger from '@utils/logger';
 import { generateFilename } from '@utils/helpers';
@@ -36,6 +37,9 @@ export async function showTaskNotification(task, status, detail = '', provider =
   });
 }
 
+/** QA L-01：后台用的 reinit（导出给测试）：排队，等没有扩展页面、没有别的任务时才 runtime.reload */
+export const backgroundReinit = (opts) => scheduleReloadWhenIdle(opts);
+
 export const parseTaskRunner = createParseTaskRunner({
   permissions: typeof chrome !== 'undefined' && chrome.permissions ? chrome.permissions : null,
   registry: providerRegistry,
@@ -48,6 +52,8 @@ export const parseTaskRunner = createParseTaskRunner({
   notify: showTaskNotification,
   // R4-02 / R5-01：PaddleOCR 提交前确认 DNR 规则 4001 已装（只在 background），5 s 内没就绪 → 任务失败（dnr_not_ready）
   beforeSubmit: (provider) => (provider && provider.id === 'paddleocr' ? requirePaddleOriginRule() : undefined),
+  // QA L-01：首次解析 DNR 没就绪 → 等没有扩展页面开着、也没有别的任务在跑时重新载入扩展一次，启动后 resume 续跑
+  reinit: backgroundReinit,
   // 审查 30a6e1b P2：所有走 runner 的路径在提交前查数据说明确认
   isDisclosureAcked: (id) => (needsDisclosure(id) ? isDisclosureAcked(id) : true),
   log: logger,
