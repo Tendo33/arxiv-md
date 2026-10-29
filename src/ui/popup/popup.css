@@ -135,7 +135,8 @@ body{min-width:360px}
 @media (prefers-reduced-motion:reduce){#ctxProg .bar.indeterminate>i{animation:none!important;transform:none;width:30%}}
 
 /* 审查 30a6e1b P2：数据说明未确认的任务，中性说明行 */
-.row .row-note{flex-basis:100%;min-width:0;font-size:12px;line-height:18px;color:var(--text-2);text-wrap:pretty}
+/* 设计裁定 R-2（QA 6a49976 R-2）：等待说明在标题 / 状态行之下、行内最后一个文字元素（≤340 时 .n 是 order:2、.row-err 是 order:3，这里 order:4）；左缘同 .row-err */
+.row .row-note{order:4;flex-basis:100%;min-width:0;margin-top:4px;font-size:12px;line-height:18px;color:var(--text-2);text-wrap:pretty}
 
 /* 附录 D1（AX-03）：状态区在按钮行下方；全部隐藏时不占位（也不吃 .body 的 gap） */
 .status-zone{display:flex;flex-direction:column;gap:8px}
