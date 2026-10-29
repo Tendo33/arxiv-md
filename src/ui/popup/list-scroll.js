@@ -9,13 +9,17 @@ export function fitListToHalfRow(listEl) {
   listEl.style.minHeight = '';
   const rows = Array.from(listEl.children).filter((r) => r.offsetHeight > 0);
   // 设计 Q1 裁定：列表至少露出 2 整行 + 0.5 行（320 下行变高、有提示卡时也一样）；超出部分由 .body 滚动
-  if (rows.length >= 3) listEl.style.minHeight = `${Math.round(rows[2].offsetTop + rows[2].offsetHeight / 2)}px`;
+  const mid = (r) => r.offsetTop + r.offsetHeight / 2;
+  const minH = rows.length >= 3 ? Math.round(mid(rows[2])) : 0;
+  if (minH) listEl.style.minHeight = `${minH}px`;
   const avail = listEl.clientHeight;
   if (!(listEl.scrollHeight > avail + 1)) return updateListScrollState(listEl);
   // 设计复验 15fe0f9 必须改 6：被截行要能露出半行（中线在可用高度内），否则 .pop 的 max-height 会把半行再压掉
-  let cut = null;
-  for (const r of rows) { if (r.offsetTop + r.offsetHeight / 2 <= avail) cut = r; else break; }
-  if (cut) listEl.style.maxHeight = `${Math.round(cut.offsetTop + cut.offsetHeight / 2)}px`;
+  // 审查 P3-2：clientHeight 不含边框、offsetTop 从边框内算起，实测差约 2px，第 3 行中线常被判成「超出」、cut 退到第 2 行，
+  // max-height 比 min-height 还小（只靠 min 压过 max 才显示对）。有下限时 cut 至少取第 3 行，max-height 不小于 min-height。
+  let cut = minH ? rows[2] : null;
+  for (let i = minH ? 3 : 0; i < rows.length && mid(rows[i]) <= avail; i++) cut = rows[i];
+  if (cut) listEl.style.maxHeight = `${Math.max(minH, Math.round(mid(cut)))}px`;
   return updateListScrollState(listEl);
 }
 

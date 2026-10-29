@@ -49,3 +49,44 @@ test('popup 接线 + Q1 CSS', () => {
   expect(css).toMatch(/\.pop:has\(#alertKey:not\(\.hidden\)\)\{max-height:600px\}/);
   expect(css).toMatch(/\.body\{overflow-y:auto\}/);
 });
+
+// 审查 P3-2：max-height 不能小于 min-height；2/3/4 行与「中线正好等于可用高度」的边界
+describe('P3-2 边界', () => {
+  // 模拟浏览器里 clientHeight 比 offsetTop 参照少 2px（边框）的情况
+  function setupBorder(rowH, n, avail) {
+    const list = setup(rowH, n, avail);
+    def(list, 'clientHeight', () => { const mn = parseFloat(list.style.minHeight) || 0; const mx = parseFloat(list.style.maxHeight); return Math.max(mn, Number.isFinite(mx) ? Math.min(mx, avail) : avail) - 2; });
+    return list;
+  }
+  const px = (v) => parseFloat(v);
+  test.each([3, 4, 12])('%i 行、可用高度很小 + 2px 边框差：max-height ≥ min-height，且停在第 3 行中线', (n) => {
+    const list = setupBorder(46, n, 60);
+    fitListToHalfRow(list);
+    expect(px(list.style.minHeight)).toBe(Math.round(4 + 2 * 46 + 23));
+    expect(px(list.style.maxHeight)).toBeGreaterThanOrEqual(px(list.style.minHeight));
+    expect(px(list.style.maxHeight)).toBe(Math.round(4 + 2 * 46 + 23));
+  });
+  test('2 行：不设 min-height（不足 3 行没有下限）', () => {
+    const list = setup(46, 2, 60);
+    fitListToHalfRow(list);
+    expect(list.style.minHeight).toBe('');
+    expect(px(list.style.maxHeight)).toBe(Math.round(4 + 23));
+  });
+  test('正好 3 行就设下限（>= 3，不是 >= 4）', () => {
+    const list = setup(46, 3, 300);
+    fitListToHalfRow(list);
+    expect(px(list.style.minHeight)).toBe(Math.round(4 + 2 * 46 + 23));
+  });
+  test('中线正好等于可用高度：这一行算作被截行（<=，不是 <）', () => {
+    const avail = 4 + 3 * 46 + 23; // 第 4 行中线
+    const list = setup(46, 12, avail);
+    fitListToHalfRow(list);
+    expect(px(list.style.maxHeight)).toBe(avail);
+  });
+  test('2 行、中线正好等于可用高度（无下限路径的 <=）', () => {
+    const list = setup(46, 3 - 1, 4 + 46 + 23);
+    def(list, 'scrollHeight', () => 400);
+    fitListToHalfRow(list);
+    expect(px(list.style.maxHeight)).toBe(4 + 46 + 23);
+  });
+});
