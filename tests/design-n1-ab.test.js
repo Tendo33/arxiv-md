@@ -51,9 +51,9 @@ describe('建议 A：缺 Key 提示', () => {
   });
 });
 
-test('C：#taskList 最小高度至少 72px（放下一整行折行后的待确认任务）', () => {
+test('C/C2：有待确认行时 #taskList 最小高度至少 72px（放下一整行折行后的待确认任务）', () => {
   const css = fs.readFileSync(path.join(__dirname, '../src/ui/popup/popup.css'), 'utf8');
-  const m = css.match(/#taskList\{[^}]*min-height:(\d+)px/);
+  const m = css.match(/#taskList:has\(\.row\[data-status=awaiting_consent\]\)\{min-height:(\d+)px/);
   expect(m).not.toBeNull();
   expect(Number(m[1])).toBeGreaterThanOrEqual(72);
 });

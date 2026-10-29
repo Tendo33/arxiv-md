@@ -16,7 +16,9 @@ body{min-width:320px}
 .sec-h{min-height:24px}
 .sec-x{display:flex;gap:4px}
 /* 审查员 S 增量 C：列表至少放下一整行折行后的待确认任务（行 59px + 上下内边距 8px），按钮不被内部滚动区截断 */
-#taskList{padding:4px 10px;overflow-y:auto;min-height:72px;overscroll-behavior:contain}
+#taskList{padding:4px 10px;overflow-y:auto;min-height:0;overscroll-behavior:contain}
+/* R4 合入 C2：只有出现待确认行（按钮可能折行）时才保证 72px，普通单行不再留空白 */
+#taskList:has(.row[data-status=awaiting_consent]){min-height:72px}
 .recent-empty{padding:10px;color:var(--text-2);font-size:var(--fs-xs)}
 /* AF3-02：状态标签不换行、不被标题挤压（中文按字断行，320/360 宽都会折成两行） */
 .row .badge{padding:1px 6px;flex:none;white-space:nowrap}

@@ -10,3 +10,13 @@ describe('A2：#alertKey 的「打开设置」按钮独占一行', () => {
     expect(css).toMatch(/#alertKey \.btn-refresh\{margin-top:6px\}/);
   });
 });
+
+describe('C2：只在有待确认行时给 #taskList 最小高度', () => {
+  test('默认 min-height:0', () => {
+    expect(css).toMatch(/#taskList\{[^}]*min-height:0;/);
+    expect(css).not.toMatch(/#taskList\{[^}]*min-height:72px/);
+  });
+  test(':has(待确认行) 时 72px', () => {
+    expect(css).toMatch(/#taskList:has\(\.row\[data-status=awaiting_consent\]\)\{min-height:72px\}/);
+  });
+});
