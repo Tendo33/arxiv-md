@@ -104,7 +104,8 @@ export const REGEX = {
   ARXIV_ID: /(?:arxiv\.(?:org|abs)\/(?:abs\/|pdf\/)?|export\.arxiv\.org\/abs\/)?((?:\d{4}\.\d{4,5}|[a-z-]+\/[0-9]{7})(?:v\d+)?)/i,
   ARXIV_ABS_PAGE: /^https?:\/\/arxiv\.org\/abs\//,
   ARXIV_PDF_PAGE: /^https?:\/\/arxiv\.org\/pdf\//,
-  ARXIV_HTML_PAGE: /^https?:\/\/arxiv\.org\/html\/\d{4}\.\d{4,5}/,
+  // AR-03：旧式编号（hep-th/9711200、math/0211159）的 HTML 页也要接住快捷键
+  ARXIV_HTML_PAGE: /^https?:\/\/arxiv\.org\/html\/(?:\d{4}\.\d{4,5}|[a-z-]+(?:\.[A-Z]{2})?\/\d{7})/,
 };
 
 /**
