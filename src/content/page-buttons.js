@@ -16,9 +16,9 @@ let startConversion = () => {};
 let hintEpoch = 0;
 const isArxivAbsPage = REGEX.ARXIV_ABS_PAGE.test(window.location.href);
 
-/** PDF 按钮内容：图标 +「PDF」+（标题）；恢复按钮时 content/index.js 也用它 */
+/** PDF 按钮内容：图标 +「PDF」+ 副标题「标题」（abs-buttons v2：不加括号，分隔点由 CSS 生成）；恢复按钮时 content/index.js 也用它 */
 export function pdfButtonContent(tr) {
-  return [svg(document, ICON_PDF), `${tr.content_btn_pdf} `, h(document, 'span', { class: 'arxiv-md-btn-sub' }, `(${tr.content_btn_sub_title})`)];
+  return [svg(document, ICON_PDF), `${tr.content_btn_pdf} `, h(document, 'span', { class: 'arxiv-md-btn-sub' }, tr.content_btn_sub_title)];
 }
 
 export function setPageButtonText(next) {
@@ -73,7 +73,7 @@ export async function injectConvertButton() {
   mdButton.setAttribute('aria-label', t.content_btn_markdown);
   // AR-04：DOM API 构建，文案走文本节点
   setChildren(mdButton, svg(document, ICON_MARKDOWN), `${t.content_btn_markdown} `,
-    h(document, 'span', { class: 'arxiv-md-btn-sub' }, `(${modeLabel})`));
+    h(document, 'span', { class: 'arxiv-md-btn-sub' }, modeLabel));
   mdButton.addEventListener('click', () => startConversion('markdown'));
 
   // 创建 PDF 按钮

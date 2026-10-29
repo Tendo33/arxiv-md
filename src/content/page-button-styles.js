@@ -260,6 +260,59 @@ export const PAGE_BUTTON_STYLES = `
       color: var(--amd-brand-on);
     }
 
+    /* ===== abs-buttons v2（design-abs-buttons-2026-10-29 §1 + 5.6/5.7；R04/R05/R10/R11/R14，旧编号 A1–A3）===== */
+    /* A1 按钮：32px 高、6px 圆角、13px/600，图标 16px；与 .submission-history 左缘对齐 */
+    .arxiv-md-btn-container { gap: 8px; margin: 12px 0 16px 20px; align-items: flex-start; flex-wrap: wrap; }
+    @media (max-width: 800px) { .arxiv-md-btn-container { margin-left: 0; } }
+    .arxiv-md-btn { height: 32px; padding: 0 12px; gap: 6px; border-radius: 6px; font-size: 13px; font-weight: 600; line-height: 1; white-space: nowrap; box-shadow: none; }
+    .arxiv-md-btn svg, .arxiv-md-btn .animate-spin { width: 16px; height: 16px; flex: none; margin: 0; }
+    .arxiv-md-btn-primary { border-color: var(--amd-brand); }
+    .arxiv-md-btn-primary:not(:disabled):hover { border-color: var(--amd-brand-hover); }
+    .arxiv-md-btn-primary:not(:disabled):active { border-color: var(--amd-brand-press); }
+    .arxiv-md-btn-secondary:not(:disabled):active, .arxiv-md-btn-quiet:not(:disabled):active { background: var(--amd-surface-2); }
+    /* 副标题：不加括号，「·」由 CSS 生成（读屏不念） */
+    .arxiv-md-btn-sub { margin: 0; font-size: 12px; font-weight: 400; }
+    .arxiv-md-btn-sub::before { content: "·"; margin-right: 6px; opacity: .7; }
+    .arxiv-md-btn-primary .arxiv-md-btn-sub { color: rgba(255,255,255,.86); }
+    .arxiv-md-btn-container[data-theme="dark"] .arxiv-md-btn-primary .arxiv-md-btn-sub { color: inherit; }
+    .arxiv-md-btn-secondary .arxiv-md-btn-sub { color: var(--amd-text-2); }
+
+    /* A2 状态行：任何宽度都独占按钮行下方一行（flex:0 0 100%），状态切换不移动按钮行（R05）。
+       不是卡片：无底色、无边框；内层网格「图标+粗体标题 … 关闭」/「说明」，>480 时收缩包裹、「关闭」紧跟最长一行 16px */
+    .arxiv-md-progress, .arxiv-md-hint, .arxiv-md-auto { flex: 0 0 100%; box-sizing: border-box; min-width: 0; }
+    .arxiv-md-progress { padding: 0 8px 0 0; background: none; border: 0; border-radius: 0; font-size: 13px; line-height: 20px; color: var(--amd-text);
+      grid-template-columns: minmax(0, max-content) auto; justify-content: start; column-gap: 16px; row-gap: 2px; align-items: center; }
+    .arxiv-md-progress[style*="flex"] { display: grid !important; }
+    .arxiv-md-progress.error, .arxiv-md-progress.success, .arxiv-md-progress.submitted,
+    .arxiv-md-progress.warning, .arxiv-md-progress.canceled { background: none; border: 0; color: var(--amd-text); }
+    .arxiv-md-progress .progress-row { grid-column: 1; grid-row: 1; min-width: 0; gap: 6px; flex-wrap: nowrap; margin: 0; }
+    .arxiv-md-progress .progress-text { white-space: nowrap; }
+    .arxiv-md-progress .progress-percent:empty { display: none; }
+    .arxiv-md-progress .progress-icon { width: 16px; height: 16px; flex: none; }
+    .arxiv-md-progress.success   .progress-icon, .arxiv-md-progress.success   .progress-text { color: var(--amd-success); }
+    .arxiv-md-progress.error     .progress-icon, .arxiv-md-progress.error     .progress-text { color: var(--amd-danger); }
+    .arxiv-md-progress.submitted .progress-icon, .arxiv-md-progress.submitted .progress-text { color: var(--amd-info); }
+    .arxiv-md-progress.warning   .progress-icon, .arxiv-md-progress.warning   .progress-text { color: var(--amd-warning); }
+    /* A3：已取消用中性色（用户主动取消，不是错误） */
+    .arxiv-md-progress.canceled  .progress-icon, .arxiv-md-progress.canceled  .progress-text,
+    .arxiv-md-progress.canceled  .progress-detail { color: var(--amd-text-2); }
+    .arxiv-md-progress .progress-detail, .arxiv-md-progress .progress-file { grid-column: 1; padding-left: 22px; margin: 0; min-width: 0; overflow-wrap: anywhere; font-size: 13px; }
+    .arxiv-md-progress .progress-detail { color: var(--amd-text); }
+    .arxiv-md-progress .progress-file { font-size: 12px; color: var(--amd-text-2); }
+    .arxiv-md-progress .progress-bar { grid-column: 1; width: 100%; max-width: 320px; min-width: 160px; height: 4px; margin-top: 4px; }
+    .arxiv-md-progress .arxiv-md-result-actions { grid-column: 2; grid-row: 1; justify-self: end; margin: 0; flex-wrap: wrap; }
+    @media (max-width: 480px) {
+      .arxiv-md-progress { grid-template-columns: minmax(0, 1fr) auto; justify-content: stretch; }
+      .arxiv-md-progress .progress-detail, .arxiv-md-progress .progress-file, .arxiv-md-progress .progress-bar { grid-column: 1 / -1; }
+    }
+    /* 状态行里的操作：文字按钮（关闭 / 复制 Markdown），点击区 ≥24px */
+    .arxiv-md-result-btn { min-height: 24px; padding: 0 6px; margin: 0; border: 0; background: none; font-size: 12px; font-weight: 500;
+      color: var(--amd-text-2); text-decoration: underline; text-underline-offset: 2px; border-radius: 4px; white-space: nowrap; }
+    .arxiv-md-result-btn:hover { color: var(--amd-text); background: var(--amd-surface-2); }
+    .arxiv-md-result-btn.primary { background: none; border: 0; color: var(--amd-brand); font-weight: 600; }
+    .arxiv-md-hint { padding: 0; border: 0; background: none; font-size: 13px; }
+    .arxiv-md-btn-container .nw { white-space: nowrap; }
+
     @media (prefers-reduced-motion: reduce) {
       .arxiv-md-btn, .arxiv-md-result-btn, .arxiv-md-auto-btn { transition: none; }
       .animate-spin { animation: none; }

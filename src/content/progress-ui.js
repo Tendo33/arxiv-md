@@ -43,6 +43,43 @@ export function isDeterminate(progress) {
     && typeof progress.progress === 'number' && !Number.isNaN(progress.progress);
 }
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+/** 状态图标（16px，currentColor）：完成 ✓、失败 !、已提交 时钟、警告 △、已取消 ⊘ */
+const STATE_ICON_PATHS = {
+  success: ['circle:12,12,9', 'M8 12.5l2.5 2.5L16 9.5'],
+  error: ['circle:12,12,9', 'M12 7.5v5.5', 'M12 16.5h.01'],
+  submitted: ['circle:12,12,9', 'M12 7v5l3 2'],
+  warning: ['M12 3.5 2.5 20h19L12 3.5Z', 'M12 10v4.5', 'M12 17.5h.01'],
+  canceled: ['circle:12,12,9', 'M8.5 15.5l7-7'],
+};
+export function stateIcon(state) {
+  const el = document.createElementNS(SVG_NS, 'svg');
+  el.setAttribute('class', 'progress-icon');
+  el.setAttribute('aria-hidden', 'true');
+  el.setAttribute('width', '16');
+  el.setAttribute('height', '16');
+  el.setAttribute('viewBox', '0 0 24 24');
+  el.setAttribute('fill', 'none');
+  el.setAttribute('stroke', 'currentColor');
+  el.setAttribute('stroke-width', '2');
+  el.setAttribute('stroke-linecap', 'round');
+  el.setAttribute('stroke-linejoin', 'round');
+  el.dataset.state = state;
+  for (const d of STATE_ICON_PATHS[state] || []) {
+    let node;
+    if (d.startsWith('circle:')) {
+      const [cx, cy, r] = d.slice(7).split(',');
+      node = document.createElementNS(SVG_NS, 'circle');
+      node.setAttribute('cx', cx); node.setAttribute('cy', cy); node.setAttribute('r', r);
+    } else {
+      node = document.createElementNS(SVG_NS, 'path');
+      node.setAttribute('d', d);
+    }
+    el.appendChild(node);
+  }
+  return el;
+}
+
 // Toast 通知已被移除，通知由 background script 的系统通知处理
 
 export function setProgressState({ text, percent = null, detail = '', file = '', state = '', polite = false }) {
@@ -62,6 +99,9 @@ export function setProgressState({ text, percent = null, detail = '', file = '',
   if (icon) icon.remove();
   if (state === 'error' || state === 'success' || state === 'warning' || state === 'submitted' || state === 'canceled') {
     progressIndicator.classList.add(state);
+    // abs-buttons v2（A2）：每个结束态在标题前放 16px 图标（svg.progress-icon，aria-hidden），颜色跟随状态
+    const row = progressIndicator.querySelector('.progress-row');
+    if (row) row.prepend(stateIcon(state));
   }
   // 读屏：进度/成功用 polite 播报，错误用 alert 立即播报
   // batch9 S3：polite=true（已取消）即使沿用错误样式也走 status/polite，不打断读屏
@@ -145,6 +185,14 @@ export function showError(message) {
     percent: null,
     state: 'error',
   });
+  // abs-buttons v2（A2）：失败行也有「关闭」（不自动收起，R5-05）
+  const progressIndicator = document.querySelector('.arxiv-md-progress');
+  if (progressIndicator) {
+    const actions = document.createElement('div');
+    actions.className = 'arxiv-md-result-actions';
+    actions.appendChild(createCloseButton());
+    progressIndicator.appendChild(actions);
+  }
   reportShortcutFailure();
 }
 
@@ -292,25 +340,6 @@ export function showSuccess(message) {
   startAutoHide('success');
 }
 
-const SVG_NS = 'http://www.w3.org/2000/svg';
-function clockIcon() {
-  const svg = document.createElementNS(SVG_NS, 'svg');
-  svg.setAttribute('class', 'progress-icon');
-  svg.setAttribute('aria-hidden', 'true');
-  svg.setAttribute('width', '14');
-  svg.setAttribute('height', '14');
-  svg.setAttribute('viewBox', '0 0 24 24');
-  svg.setAttribute('fill', 'none');
-  svg.setAttribute('stroke', 'currentColor');
-  svg.setAttribute('stroke-width', '2.2');
-  svg.setAttribute('stroke-linecap', 'round');
-  const c = document.createElementNS(SVG_NS, 'circle');
-  c.setAttribute('cx', '12'); c.setAttribute('cy', '12'); c.setAttribute('r', '9');
-  const path = document.createElementNS(SVG_NS, 'path');
-  path.setAttribute('d', 'M12 7v5l3 2');
-  svg.append(c, path);
-  return svg;
-}
 
 /**
  * rp2b（设计 ③，与 popup S-2 一致）：异步后端（PaddleOCR / MinerU）提交成功≠完成。
@@ -327,8 +356,6 @@ export function showSubmitted(providerId) {
   });
   const progressIndicator = document.querySelector('.arxiv-md-progress');
   if (progressIndicator) {
-    const row = progressIndicator.querySelector('.progress-row');
-    if (row) row.prepend(clockIcon());
     const actions = document.createElement('div');
     actions.className = 'arxiv-md-result-actions';
     actions.appendChild(createCloseButton());

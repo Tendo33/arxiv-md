@@ -114,10 +114,11 @@ describe('AR-04 摘要页按钮', () => {
     await mod.injectConvertButton();
     const md = document.querySelector('.arxiv-md-convert-btn');
     expect(md.querySelector('svg')).toBeTruthy();
-    expect(md.textContent.startsWith(`${t.content_btn_markdown} (`)).toBe(true);
+    expect(md.textContent.startsWith(`${t.content_btn_markdown} `)).toBe(true);
+    expect(md.textContent).not.toContain("(");
     const pdf = document.querySelector('.arxiv-pdf-download-btn');
-    expect(pdf.textContent).toBe(`${t.content_btn_pdf} (${t.content_btn_sub_title})`);
-    expect(pdf.querySelector('.arxiv-md-btn-sub').textContent).toBe(`(${t.content_btn_sub_title})`);
+    expect(pdf.textContent).toBe(`${t.content_btn_pdf} ${t.content_btn_sub_title}`); // abs-buttons v2：副标题不加括号
+    expect(pdf.querySelector(".arxiv-md-btn-sub").textContent).toBe(t.content_btn_sub_title);
     const prog = document.querySelector('.arxiv-md-progress');
     expect(prog.querySelector('.progress-text').textContent).toBe(t.content_progress_processing);
     expect(prog.querySelector('.progress-percent').textContent).toBe(""); // M-1：开始时不写死 0%

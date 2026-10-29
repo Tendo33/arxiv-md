@@ -24,8 +24,8 @@ test('en 副标题是 "by title"，zh 不变', () => {
   expect(translations.zh.content_btn_sub_title).toBe('标题');
 });
 test.each([
-  ['en', 'Download PDF named after the paper title', '(by title)'],
-  ['zh', '下载以论文标题命名的 PDF', '(标题)'],
+  ['en', 'Download PDF named after the paper title', 'by title'],
+  ['zh', '下载以论文标题命名的 PDF', '标题'],
 ])('%s PDF 按钮 title/aria-label', async (lang, label, sub) => {
   const btn = await inject(lang);
   expect(btn).toBeTruthy();
