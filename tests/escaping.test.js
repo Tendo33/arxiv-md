@@ -18,7 +18,7 @@ describe('escaping', () => {
     expect(row.querySelector('.row-err').textContent).toBe('<b>boom</b>');
     // 标题原文也放进 title 属性（属性值里的 < 不会被当成标签）；文本节点序列化时被转义
     const html = row.outerHTML;
-    expect(html).not.toContain('<b>boom');
+    expect(html).toContain('>&lt;b&gt;boom&lt;/b&gt;</span>');
     expect(html).toContain('>&lt;img src=x onerror=alert(1)&gt;</span>');
   });
 

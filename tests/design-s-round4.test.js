@@ -87,8 +87,10 @@ describe('design S8: failed row has no duplicate title', () => {
     const html = rowHtml({ id: 'x', status: 'failed', error: 'Boom here', paperInfo: { title: 'T' }, provider: 'paddleocr' });
     const rowTag = html.match(/^<div [^>]*class="row"[^>]*>/)[0];
     expect(rowTag).not.toMatch(/\stitle=/);
-    expect(html).toContain('<span class="row-err">Boom here</span>');
-    expect(html.split('Boom here').length - 1).toBe(1);
+    // release-polish NTF4：.row-err 自己带 title（完整原文，配合两行截断），可见文本仍只出现一次
+    expect(html).toMatch(/<span [^>]*class="row-err"[^>]*>Boom here<\/span>/);
+    expect(html.match(/<span [^>]*class="row-err"[^>]*>/)[0]).toContain('title="Boom here"');
+    expect(html.split('>Boom here<').length - 1).toBe(1);
   });
 });
 

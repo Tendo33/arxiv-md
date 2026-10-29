@@ -71,7 +71,8 @@ export function createTaskRow(task, doc = globalThis.document) {
     side,
     el(doc, 'span', { class: 'row-act' }, act),
   ]);
-  if (status === TASK_STATUS.FAILED && error) row.append(el(doc, 'span', { class: 'row-err' }, [String(error)]));
+  // 设计 NTF4：失败原因最多两行（CSS line-clamp），完整原文放在 title 里
+  if (status === TASK_STATUS.FAILED && error) row.append(el(doc, 'span', { class: 'row-err', title: String(error) }, [String(error)]));
   return row;
 }
 
