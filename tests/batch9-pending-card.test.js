@@ -13,8 +13,13 @@ describe('batch9 ①：pending 状态卡（中性、无百分比、不说完成/
       <div class="progress-detail"></div></div></body></html>`);
     global.document = document;
     global.window = window;
+    // batch9 审查 P3③：所有用例都用假计时器，成功卡的 8s 收起计时器不会留成 open handle
+    jest.useFakeTimers();
   });
-  afterEach(() => jest.useRealTimers());
+  afterEach(() => {
+    jest.clearAllTimers();
+    jest.useRealTimers();
+  });
 
   test('标题「Still downloading」，无百分比，无 success/error/warning 样式', () => {
     showPending(t.content_download_pending);
