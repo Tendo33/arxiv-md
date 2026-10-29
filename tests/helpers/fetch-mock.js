@@ -1,12 +1,13 @@
 // R4-18：按 URL（字符串前缀或正则）+ 顺序返回响应的 fetch mock
 export function mockResponse({ status = 200, json, body, headers = {} } = {}) {
-  const text = body !== undefined ? body : (json !== undefined ? JSON.stringify(json) : '');
+  const text = body !== undefined && typeof body === 'object' && body && body.buffer ? '' : body !== undefined ? body : (json !== undefined ? JSON.stringify(json) : '');
   const h = Object.fromEntries(Object.entries(headers).map(([k, v]) => [k.toLowerCase(), v]));
   return {
     ok: status >= 200 && status < 300, status, statusText: String(status),
     headers: { get: (k) => h[String(k).toLowerCase()] ?? null },
     text: async () => text,
     json: async () => JSON.parse(text),
+    arrayBuffer: async () => (typeof body === 'object' && body && body.buffer ? body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength) : new TextEncoder().encode(text).buffer),
   };
 }
 

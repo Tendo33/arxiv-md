@@ -1,5 +1,5 @@
 // R4-07：PaddleOCR provider：4 种状态 + 5 种错误 + 契约
-import { paddleocrProvider, PADDLEOCR_JOBS_URL, PADDLEOCR_DEFAULT_MODEL } from '@pdf-core/providers/paddleocr';
+import { paddleocrProvider, PADDLEOCR_JOBS_URL, PADDLEOCR_DEFAULT_MODEL, PADDLEOCR_MAX_UPLOAD_BYTES, shouldUploadFile } from '@pdf-core/providers/paddleocr';
 import { createDefaultRegistry } from '@pdf-core/providers/index';
 import { createFetchMock } from '../helpers/fetch-mock';
 import { runProviderContract } from '../helpers/provider-contract';
@@ -19,22 +19,24 @@ const JOB = submitOk.data.jobId;
 const creds = { token: 'test-token-placeholder' };
 const input = { url: 'https://arxiv.org/pdf/2401.00001.pdf' };
 const MD_URL = done.data.resultUrl.markdownUrl;
+const PDF_BYTES = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x37, 0x0a]); // "%PDF-1.7\n"
+const withPdf = (f) => (fm) => { fm.on(input.url, [{ body: PDF_BYTES }], { method: 'GET', sticky: true }); return f(fm); };
 
 runProviderContract('paddleocr', {
   provider: paddleocrProvider, creds, input, expectJobId: JOB, expectResultKeys: ['markdown'],
-  happy: (fm) => fm.on(PADDLEOCR_JOBS_URL, [{ json: submitOk }], { method: 'POST' })
+  happy: (fm) => fm.on(input.url, [{ body: PDF_BYTES }], { method: 'GET' }).on(PADDLEOCR_JOBS_URL, [{ json: submitOk }], { method: 'POST' })
     .on(`${PADDLEOCR_JOBS_URL}/`, [{ json: pending }, { json: running }, { json: done }], { method: 'GET' })
     .on(MD_URL, [{ body: MD }]),
   errors: {
-    AUTH_INVALID: (fm) => { fm.on(PADDLEOCR_JOBS_URL, [{ status: 401, json: err401 }]); },
-    QUOTA_EXCEEDED: (fm) => { fm.on(PADDLEOCR_JOBS_URL, [{ status: 403, json: quota403 }]); },
-    RATE_LIMITED: (fm) => { fm.on(PADDLEOCR_JOBS_URL, [{ status: 429, body: '', headers: { 'Retry-After': '3' } }]); },
-    FILE_UNSUPPORTED: (fm) => { fm.on(PADDLEOCR_JOBS_URL, [{ status: 415, body: 'unsupported' }]); },
-    TOO_LARGE: (fm) => { fm.on(PADDLEOCR_JOBS_URL, [{ status: 413, body: 'too large' }]); },
-    NETWORK: (fm) => { fm.on(PADDLEOCR_JOBS_URL, [new TypeError('Failed to fetch')]); },
+    AUTH_INVALID: withPdf((fm) => { fm.on(PADDLEOCR_JOBS_URL, [{ status: 401, json: err401 }]); }),
+    QUOTA_EXCEEDED: withPdf((fm) => { fm.on(PADDLEOCR_JOBS_URL, [{ status: 403, json: quota403 }]); }),
+    RATE_LIMITED: withPdf((fm) => { fm.on(PADDLEOCR_JOBS_URL, [{ status: 429, body: '', headers: { 'Retry-After': '3' } }]); }),
+    FILE_UNSUPPORTED: withPdf((fm) => { fm.on(PADDLEOCR_JOBS_URL, [{ status: 415, body: 'unsupported' }]); }),
+    TOO_LARGE: withPdf((fm) => { fm.on(PADDLEOCR_JOBS_URL, [{ status: 413, body: 'too large' }]); }),
+    NETWORK: withPdf((fm) => { fm.on(PADDLEOCR_JOBS_URL, [new TypeError('Failed to fetch')]); }),
     PERMISSION_MISSING: () => ({ ctx: { fetch: async () => { throw new (require('@pdf-core/errors').ParseError)('PERMISSION_MISSING', { provider: 'paddleocr' }); } } }),
-    TIMEOUT: (fm) => { fm.on(PADDLEOCR_JOBS_URL, [Object.assign(new Error('aborted'), { name: 'AbortError' })]); },
-    PROVIDER_FAILED: (fm) => { fm.on(PADDLEOCR_JOBS_URL, [{ status: 500, body: '<html>' }]); },
+    TIMEOUT: withPdf((fm) => { fm.on(PADDLEOCR_JOBS_URL, [Object.assign(new Error('aborted'), { name: 'AbortError' })]); }),
+    PROVIDER_FAILED: withPdf((fm) => { fm.on(PADDLEOCR_JOBS_URL, [{ status: 500, body: '<html>' }]); }),
   },
 });
 
@@ -42,15 +44,53 @@ describe('PaddleOCR 细节', () => {
   let fm;
   beforeEach(() => { fm = createFetchMock(); global.fetch = fm.fetch; });
 
-  test('submit：JSON {fileUrl, model} + Bearer，传 URL 不传文件', async () => {
-    fm.on(PADDLEOCR_JOBS_URL, [{ json: submitOk }, { json: submitOk }]);
+  test('submit：arXiv 链接 → 先下载 PDF，再 multipart 上传 file/model/optionalPayload，不带 JSON 头', async () => {
+    fm.on(input.url, [{ body: PDF_BYTES }, { body: PDF_BYTES }], { method: 'GET' });
+    fm.on(PADDLEOCR_JOBS_URL, [{ json: submitOk }, { json: submitOk }], { method: 'POST' });
     expect(await paddleocrProvider.submit(input, creds, {})).toEqual({ jobId: JOB });
-    const c = fm.calls[0];
-    expect(c.method).toBe('POST');
-    expect(JSON.parse(c.body)).toEqual({ fileUrl: input.url, model: PADDLEOCR_DEFAULT_MODEL });
-    expect(c.init.headers.Authorization).toBe('Bearer test-token-placeholder');
+    const post = fm.calls.find((c) => c.method === 'POST');
+    expect(post.body).toBeInstanceOf(FormData);
+    expect(post.body.get('model')).toBe(PADDLEOCR_DEFAULT_MODEL);
+    expect(post.body.get('optionalPayload')).toBe('{}');
+    const file = post.body.get('file');
+    expect(file.name).toBe('2401.00001.pdf');
+    expect(file.type).toBe('application/pdf');
+    expect(new Uint8Array(await file.arrayBuffer())).toEqual(PDF_BYTES);
+    expect(post.body.has('fileUrl')).toBe(false);
+    expect(post.init.headers).toEqual({ Authorization: 'Bearer test-token-placeholder' });
     await paddleocrProvider.submit({ ...input, options: { model: 'PaddleOCR-VL-1.6' } }, creds, {});
-    expect(JSON.parse(fm.calls[1].body).model).toBe('PaddleOCR-VL-1.6');
+    expect(fm.calls.filter((c) => c.method === 'POST')[1].body.get('model')).toBe('PaddleOCR-VL-1.6');
+  });
+
+  test('submit：非 arXiv 来源仍传 JSON {fileUrl, model}，不下载', async () => {
+    fm.on(PADDLEOCR_JOBS_URL, [{ json: submitOk }]);
+    const other = { url: 'https://example.invalid/paper.pdf' };
+    expect(await paddleocrProvider.submit(other, creds, {})).toEqual({ jobId: JOB });
+    expect(fm.calls.length).toBe(1);
+    expect(JSON.parse(fm.calls[0].body)).toEqual({ fileUrl: other.url, model: PADDLEOCR_DEFAULT_MODEL });
+    expect(fm.calls[0].init.headers['Content-Type']).toBe('application/json');
+  });
+
+  test('shouldUploadFile：只认 https 的 arxiv.org / export.arxiv.org', () => {
+    expect(shouldUploadFile('https://arxiv.org/pdf/1706.03762')).toBe(true);
+    expect(shouldUploadFile('https://export.arxiv.org/pdf/1706.03762v7.pdf')).toBe(true);
+    expect(shouldUploadFile('http://arxiv.org/pdf/1706.03762')).toBe(false);
+    expect(shouldUploadFile('https://arxiv.org.evil.invalid/pdf/1')).toBe(false);
+    expect(shouldUploadFile('not a url')).toBe(false);
+  });
+
+  test('下载 PDF 失败：超 50 MB → TOO_LARGE；不是 PDF → FILE_UNSUPPORTED；404 / 断网 → 不提交任务', async () => {
+    fm.on(input.url, [
+      { body: PDF_BYTES, headers: { 'Content-Length': String(PADDLEOCR_MAX_UPLOAD_BYTES + 1) } },
+      { body: '<html>not ready</html>' },
+      { status: 404, body: '' },
+      new TypeError('Failed to fetch'),
+    ], { method: 'GET' });
+    await expect(paddleocrProvider.submit(input, creds, {})).rejects.toMatchObject({ code: 'TOO_LARGE', reason: 'upload_limit' });
+    await expect(paddleocrProvider.submit(input, creds, {})).rejects.toMatchObject({ code: 'FILE_UNSUPPORTED', reason: 'not_pdf' });
+    await expect(paddleocrProvider.submit(input, creds, {})).rejects.toMatchObject({ code: 'PROVIDER_FAILED', httpStatus: 404 });
+    await expect(paddleocrProvider.submit(input, creds, {})).rejects.toMatchObject({ code: 'NETWORK' });
+    expect(fm.calls.some((c) => c.method === 'POST')).toBe(false);
   });
 
   test('poll：4 种状态 + 页数进度', async () => {
@@ -63,7 +103,8 @@ describe('PaddleOCR 细节', () => {
     expect(fm.calls[0].url).toBe(`${PADDLEOCR_JOBS_URL}/${JOB}`);
   });
 
-  test('5 种错误：401 / 403 有体=额度 / 403 空体≠401≠额度 / code≠0 / done 缺 markdownUrl', async () => {
+  test('5 种错误（arXiv 上传后提交）：401 / 403 有体=额度 / 403 空体≠401≠额度 / code≠0 / done 缺 markdownUrl', async () => {
+    fm.on(input.url, [{ body: PDF_BYTES }], { method: 'GET', sticky: true });
     fm.on(PADDLEOCR_JOBS_URL, [{ status: 401, json: err401 }, { status: 403, json: quota403 }, { status: 403, body: '' }, { json: nonzero }, { json: { code: 0, data: {} } }]);
     await expect(paddleocrProvider.submit(input, creds, {})).rejects.toMatchObject({ code: 'AUTH_INVALID', httpStatus: 401 });
     await expect(paddleocrProvider.submit(input, creds, {})).rejects.toMatchObject({ code: 'QUOTA_EXCEEDED', httpStatus: 403 });
@@ -76,6 +117,7 @@ describe('PaddleOCR 细节', () => {
   });
 
   test('code≠0 且文本是鉴权类 → AUTH_INVALID', async () => {
+    fm.on(input.url, [{ body: PDF_BYTES }], { method: 'GET' });
     fm.on(PADDLEOCR_JOBS_URL, [{ json: { code: 10001, msg: 'invalid access token' } }]);
     await expect(paddleocrProvider.submit(input, creds, {})).rejects.toMatchObject({ code: 'AUTH_INVALID' });
   });

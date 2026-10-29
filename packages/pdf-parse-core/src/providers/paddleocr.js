@@ -1,5 +1,6 @@
 // R4-07：PaddleOCR provider（百度飞桨星河社区 API，异步任务）
-// 只传 arXiv PDF 的 URL，不上传文件。
+// arXiv PDF：后台先下载（arxiv.org / export.arxiv.org 已在 host_permissions），再 multipart 上传（星河拒收 arXiv 链接，code 10004）；
+// 其他来源：仍只传 fileUrl（扩展没有这些域名的权限，取不到文件）。
 // 结果 JSONL 和图片在 *.bj.bcebos.com（无 CORS 头），需要可选 host 权限，和星河域名一起在用户选 PaddleOCR 时申请。
 import { defineProvider } from '../provider.js';
 import { ParseError, classifyHttpError, readErrorResponse, isParseError, fromFetchFailure } from '../errors.js';
@@ -27,10 +28,39 @@ export function mapPaddleError(err) {
   return fromFetchFailure(err, ID);
 }
 
+/** 星河 multipart 上传上限 50 MB（官方文档：链接 200 MB、上传 50 MB） */
+export const PADDLEOCR_MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
+const UPLOAD_HOSTS = new Set(['arxiv.org', 'www.arxiv.org', 'export.arxiv.org']);
+
+/** 是否走「下载后上传」：只限 arXiv 自家域名（扩展有权限） */
+export function shouldUploadFile(url) {
+  try { const u = new URL(url); return u.protocol === 'https:' && UPLOAD_HOSTS.has(u.hostname); } catch { return false; }
+}
+
+/** 后台下载 arXiv PDF → Blob；超 50 MB → TOO_LARGE；非 PDF → FILE_UNSUPPORTED */
+export async function downloadPdf(url, ctx = {}) {
+  const res = await fetchWithTimeout(url, { method: 'GET' }, { ctx, provider: ID, timeoutMs: ctx.downloadTimeoutMs || 120000 });
+  if (!res.ok) throw classifyHttpError(await readErrorResponse(res), ID);
+  const len = Number(res.headers && res.headers.get && res.headers.get('content-length'));
+  if (len > PADDLEOCR_MAX_UPLOAD_BYTES) throw new ParseError('TOO_LARGE', { provider: ID, reason: 'upload_limit' });
+  const buf = new Uint8Array(await res.arrayBuffer());
+  if (buf.length > PADDLEOCR_MAX_UPLOAD_BYTES) throw new ParseError('TOO_LARGE', { provider: ID, reason: 'upload_limit' });
+  // %PDF 魔数；arXiv 偶尔返回 HTML（撤稿/未就绪）
+  if (!(buf[0] === 0x25 && buf[1] === 0x50 && buf[2] === 0x44 && buf[3] === 0x46)) throw new ParseError('FILE_UNSUPPORTED', { provider: ID, reason: 'not_pdf' });
+  return new Blob([buf], { type: 'application/pdf' });
+}
+
+function fileNameOf(url) {
+  const last = (String(url).split(/[?#]/)[0].split('/').pop() || 'paper').replace(/[^\w.-]/g, '_');
+  return /\.pdf$/i.test(last) ? last : `${last}.pdf`;
+}
+
 async function request(url, init, token, ctx) {
+  // multipart：不能写死 Content-Type，boundary 由 fetch 按 FormData 生成
+  const isForm = typeof FormData !== 'undefined' && init.body instanceof FormData;
   const res = await fetchWithTimeout(url, {
     ...init,
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    headers: isForm ? { Authorization: `Bearer ${token}` } : { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
   }, { ctx, provider: ID, timeoutMs: ctx.requestTimeoutMs });
   if (!res.ok) throw mapPaddleError(await readErrorResponse(res));
   const json = await res.json();
@@ -52,7 +82,7 @@ export const paddleocrProvider = defineProvider({
   keyUrl: 'https://aistudio.baidu.com/account/accessToken',
   dataHost: 'paddleocr.aistudio-app.com',
   mode: 'async',
-  input: 'url',
+  input: 'url', // arXiv 链接在 submit 里转成文件上传，其余仍传链接
   cost: 'free',
   output: 'markdown', // 交给 R4-09 统一整理
   timeoutMs: 10 * 60 * 1000,
@@ -60,10 +90,18 @@ export const paddleocrProvider = defineProvider({
 
   async submit(input, creds, ctx = {}) {
     if (!creds || !creds.token) throw new ParseError('AUTH_INVALID', { provider: ID });
-    const json = await request(PADDLEOCR_JOBS_URL, {
-      method: 'POST',
-      body: JSON.stringify({ fileUrl: input.url, model: (input.options && input.options.model) || PADDLEOCR_DEFAULT_MODEL }),
-    }, creds.token, ctx);
+    const model = (input.options && input.options.model) || PADDLEOCR_DEFAULT_MODEL;
+    let body;
+    if (shouldUploadFile(input.url)) {
+      const blob = await downloadPdf(input.url, ctx);
+      body = new FormData();
+      body.append('model', model);
+      body.append('optionalPayload', '{}');
+      body.append('file', blob, fileNameOf(input.url));
+    } else {
+      body = JSON.stringify({ fileUrl: input.url, model });
+    }
+    const json = await request(PADDLEOCR_JOBS_URL, { method: 'POST', body }, creds.token, ctx);
     const jobId = json.data && json.data.jobId;
     if (!jobId) throw new ParseError('PROVIDER_FAILED', { provider: ID, raw: json, reason: 'missing jobId' });
     return { jobId };

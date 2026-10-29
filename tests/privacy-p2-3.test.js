@@ -4,14 +4,16 @@ import path from 'path';
 const doc = fs.readFileSync(path.join(__dirname, '../PRIVACY.md'), 'utf8');
 const read = (p) => fs.readFileSync(path.join(__dirname, '..', p), 'utf8');
 
-test('两个后端都只发链接，代码里没有上传文件的请求体', () => {
-  for (const id of ['paddleocr', 'mineru']) {
-    const src = read(`packages/pdf-parse-core/src/providers/${id}.js`);
-    expect(src).not.toMatch(/FormData|new Blob|arrayBuffer\(\)\s*[,)]/);
-  }
-  expect(read('packages/pdf-parse-core/src/providers/paddleocr.js')).toMatch(/fileUrl: input\.url/);
-  expect(doc).not.toMatch(/may be uploaded|uploaded instead/);
-  expect(doc.match(/does not upload the PDF file/g)).toHaveLength(2);
+test('MinerU 只发链接；PaddleOCR 仅 arXiv 上传 PDF 文件，其他来源只发链接；PRIVACY 如实写明', () => {
+  expect(read('packages/pdf-parse-core/src/providers/mineru.js')).not.toMatch(/FormData|new Blob|arrayBuffer\(\)\s*[,)]/);
+  const paddle = read('packages/pdf-parse-core/src/providers/paddleocr.js');
+  expect(paddle).toMatch(/new FormData\(\)/);
+  expect(paddle).toMatch(/if \(shouldUploadFile\(input\.url\)\)/);
+  expect(paddle).toMatch(/fileUrl: input\.url/);
+  expect(doc).toMatch(/uploads the PDF file \(up to 50 MB\)/);
+  expect(doc).toMatch(/for any other PDF it sends only the PDF link \(`fileUrl`\) and does not upload the file/);
+  expect(doc).toMatch(/\*\.bj\.bcebos\.com/);
+  expect(doc.match(/does not upload the PDF file/g)).toHaveLength(1); // 只剩 MinerU 段
 });
 
 test('写明 OA 规则：arXiv 视为 OA，其余或判断不了先确认', () => {

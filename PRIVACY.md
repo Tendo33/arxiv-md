@@ -82,7 +82,7 @@ Neither provider receives the PDF file from your browser: the extension sends on
 
 #### PaddleOCR (default)
 
-The extension sends your access token, the PDF link (`fileUrl`) and the model name to `paddleocr.aistudio-app.com`, operated by Baidu (AI Studio). It does not upload the PDF file. Access to this domain is requested only when you select PaddleOCR, and you can revoke it at any time.
+The extension sends your access token and the model name to `paddleocr.aistudio-app.com`, operated by Baidu (AI Studio). For papers hosted on arXiv (`arxiv.org`, `export.arxiv.org`), the extension downloads the public PDF itself and uploads the PDF file (up to 50 MB), because AI Studio does not accept arXiv links; for any other PDF it sends only the PDF link (`fileUrl`) and does not upload the file. The parse result (Markdown text and figure images) is then downloaded from Baidu's storage domain `*.bj.bcebos.com`. Access to both domains is requested together only when you select PaddleOCR, and you can revoke it at any time. Access to this domain is requested only when you select PaddleOCR, and you can revoke it at any time.
 
 #### MinerU
 
