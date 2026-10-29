@@ -271,10 +271,11 @@ class MainConverter {
 
         // 使用 setTimeout 确保当前调用栈完成后再处理，避免阻塞响应
         setTimeout(() => {
-          if (backgroundModule.processMinerUTaskInBackground) {
-            backgroundModule.processMinerUTaskInBackground(task.id);
+          // QA P1-KA：走 startParseTask，和 START_PDF_TASK 一样挂 keepAlive alarm
+          if (backgroundModule.startParseTask) {
+            backgroundModule.startParseTask(task.id);
           } else {
-            logger.error('processMinerUTaskInBackground not exported from background module');
+            logger.error('startParseTask not exported from background module');
           }
         }, 0);
 

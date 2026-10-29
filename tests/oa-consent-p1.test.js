@@ -120,7 +120,8 @@ describe('各入口都绕不过', () => {
   test('所有建任务的消息都交给 runner.process', () => {
     const idx = read('src/background/index.js');
     for (const type of ['START_PDF_TASK', 'START_MINERU_TASK', 'START_MINERU_TASK_FORCE', 'RETRY_TASK']) expect(idx).toContain(`case '${type}'`);
-    expect(idx).toMatch(/processMinerUTaskInBackground\(task\.id\)/);
+    expect(idx).toMatch(/startParseTask\(task\.id\)/); // P1-KA：入口经 startParseTask
+    expect(idx).toMatch(/startParseTask\(taskId\)\s*\{\s*processMinerUTaskInBackground\(taskId\)/);
     expect(read('src/background/mineru-task-runner.js')).toMatch(/return parseTaskRunner\.process\(taskId\)/);
   });
 

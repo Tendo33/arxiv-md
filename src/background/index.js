@@ -135,8 +135,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   case '_INTERNAL_PROCESS_TASK':
     // 内部消息：触发任务处理（从 converter 调用）
     if (message.taskId) {
-      processMinerUTaskInBackground(message.taskId);
-      refreshKeepAlive();
+      startParseTask(message.taskId);
     }
     return false;
 
@@ -280,8 +279,7 @@ async function _doStartPdfTask(paperInfo, sendResponse, skipDuplicateCheck, requ
 
     // 立即异步处理任务（不阻塞响应）
     Promise.resolve().then(() => {
-      processMinerUTaskInBackground(task.id);
-      refreshKeepAlive();
+      startParseTask(task.id);
     });
   } catch (error) {
     logger.error('Failed to start PDF task:', error);
@@ -366,8 +364,7 @@ async function handleRetryTask(taskId, sendResponse) {
     sendResponse({ success: true });
 
     // 重新处理
-    processMinerUTaskInBackground(taskId);
-    refreshKeepAlive();
+    startParseTask(taskId);
   } catch (error) {
     logger.error('Failed to retry task:', error);
     sendResponse({ success: false, error: error.message });
@@ -422,6 +419,16 @@ if (chrome.commands && chrome.commands.onCommand) {
   });
 } else {
   logger.warn('chrome.commands API not available');
+}
+
+/**
+ * QA P1-KA：所有发起解析任务的入口（START_PDF_TASK、重试、_INTERNAL_PROCESS_TASK、
+ * converter 在 SW 里直接发起的 popup/abs 按钮路径）都走这里，保证同时挂上 keepAlive alarm。
+ * 否则 SW 被停后没有 alarm 把它叫醒，轮询会卡住直到用户打开扩展页。
+ */
+export function startParseTask(taskId) {
+  processMinerUTaskInBackground(taskId);
+  return refreshKeepAlive();
 }
 
 // 仅在有进行中的 MinerU 任务时保持 Service Worker 活跃，空闲时清除 alarm
