@@ -8,7 +8,7 @@ import storage from '@utils/storage';
 import { TASK_STATUS } from '@config/constants';
 import { arxivApiUrl } from '@core/metadata-extractor';
 import { installPaddleOriginRuleListeners } from './paddle-origin-rule';
-import { deletedTaskGuard, processMinerUTaskInBackground, providerRegistry, resumeParseTasks, confirmPdfSend } from './mineru-task-runner';
+import { deletedTaskGuard, processMinerUTaskInBackground, providerRegistry, resumeParseTasks, confirmPdfSend, abortParseTask } from './mineru-task-runner';
 import { KEEP_ALIVE_ALARM, syncKeepAlive } from './keep-alive';
 import { isExtensionPageSender, isTrustedArxivSender, isValidArxivId, triggerConversionInActiveTab } from './message-guards';
 import { createActionBadge, handleShortcutResult, conversionBadgeState } from './action-badge';
@@ -316,6 +316,7 @@ async function handleDeleteTask(taskId, sendResponse) {
   try {
     // 先落盘删除标记，再删任务记录，避免 service worker 在两步之间重启后继续下载
     await deletedTaskGuard.mark(taskId);
+    abortParseTask(taskId); // 审查 P2-3：进行中的发送立即中止
 
     const success = await taskManager.deleteTask(taskId);
     sendResponse({ success });
@@ -345,6 +346,7 @@ async function handleRetryTask(taskId, sendResponse) {
       errorReason: null,
       jobId: null, // 重试 = 重新提交
       startedAt: null,
+      submitStartedAt: null,
     });
 
     sendResponse({ success: true });

@@ -33,6 +33,7 @@ export const ERROR_REASONS = Object.freeze({
   KEY_NOT_ON_DEVICE: 'key_not_on_device', // Key 不跨设备同步：后端选过但本设备没有 Key
   EMPTY_RESULT: 'empty_result', // AR-02：结果没有正文，不保存
   DNR_NOT_READY: 'dnr_not_ready', // R5-01：PaddleOCR 的网络规则（去 Origin 头）没装上
+  INTERRUPTED_SUBMIT: 'interrupted_submit', // 审查 P2-3：提交/上传途中后台被回收，还没拿到任务号；不自动重传，避免重复扣额度
 });
 
 export class ParseError extends Error {

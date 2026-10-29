@@ -40,6 +40,7 @@ function withTimeout(promise, ms, provider) {
 export function createParseTaskRunner(deps) {
   const { registry, taskManager, storage, guard, downloadUrl, saveDeliverable, makeFilename, notify = () => {}, now = () => Date.now(), sleep = sleepReal, log = { info() {}, error() {} }, options = {} } = deps;
   const running = new Set();
+  const controllers = new Map(); // 审查 P2-3：每个任务一个 AbortController，删除时中止发送/轮询
 
   async function fail(task, err, provider) {
     const e = isParseError(err) ? err : (provider && provider.mapError ? provider.mapError(err) : new ParseError('PROVIDER_FAILED', { raw: err }));
@@ -83,11 +84,16 @@ export function createParseTaskRunner(deps) {
 
   async function runAsync(task, provider, creds) {
     let { jobId, startedAt } = task;
-    const ctx = {};
+    const ctrl = controllers.get(task.id);
+    const ctx = ctrl ? { signal: ctrl.signal } : {};
     if (!jobId) {
+      // 先落盘「正在提交」：SW 在拿到 jobId 前被回收时，resume 不再静默重传（见 process）
+      await taskManager.updateTask(task.id, { submitStartedAt: now() });
       const r = await provider.submit({ url: pdfUrlOf(task), dataId: task.paperInfo && task.paperInfo.arxivId }, creds, ctx);
+      // 发送途中用户删了任务：服务端可能已建任务，但不再落盘 jobId、不轮询
+      if ((ctrl && ctrl.signal.aborted) || (await guard.consume(task.id))) return { deleted: true };
       jobId = r.jobId; startedAt = now();
-      await taskManager.updateTask(task.id, { jobId, startedAt, progress: 10 });
+      await taskManager.updateTask(task.id, { jobId, startedAt, progress: 10, submitStartedAt: null });
     }
     const deadline = (startedAt ?? now()) + (provider.timeoutMs || DEFAULT_ASYNC_TIMEOUT_MS);
     for (;;) {
@@ -147,7 +153,13 @@ export function createParseTaskRunner(deps) {
         // R5-01：不再吞掉错误继续提交（规则没装好提交必然 403 / 卡住），直接让任务失败并给可读原因
         try { await deps.beforeSubmit(provider); } catch (e) { return { error: await fail(task, e, provider) }; }
       }
+      // 审查 P2-3：上次提交途中后台被回收、没拿到 jobId → 明确报错，让用户手动重试，不自动重传
+      if (provider.mode !== 'sync' && !task.jobId && task.submitStartedAt) {
+        return { error: await fail(task, new ParseError('NETWORK', { provider: provider.id, reason: ERROR_REASONS.INTERRUPTED_SUBMIT }), provider) };
+      }
       await taskManager.updateTask(taskId, { status: TASK_STATUS.PROCESSING, ...(task.jobId ? {} : { progress: 0 }) });
+      const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      if (ctrl) controllers.set(taskId, ctrl);
       try {
         const out = provider.mode === 'sync' ? await runSync(task, provider, creds) : await runAsync(task, provider, creds);
         if (out.deleted || (await guard.consume(taskId))) return { skipped: 'deleted' };
@@ -160,11 +172,13 @@ export function createParseTaskRunner(deps) {
         notify(task, 'completed', delivered.zipUrl || delivered.filename, provider);
         return { completed: true };
       } catch (err) {
+        if ((ctrl && ctrl.signal.aborted) || (err && err.callerAborted)) { await guard.consume(taskId); return { skipped: 'deleted' }; }
         log.error('Parse task failed:', taskId, err);
         return { error: await fail(task, err, provider) };
       }
     } finally {
       running.delete(taskId);
+      controllers.delete(taskId);
     }
   }
 
@@ -192,7 +206,14 @@ export function createParseTaskRunner(deps) {
     return { confirmed: true, done };
   }
 
-  return { process, confirmSend, resumeActiveTasks, isRunning: (id) => running.has(id) };
+  /** 用户删除任务：立即中止进行中的发送/轮询（删除标记由调用方先落盘） */
+  function abort(taskId) {
+    const c = controllers.get(taskId);
+    if (!c) return false;
+    c.abort(); return true;
+  }
+
+  return { process, confirmSend, resumeActiveTasks, abort, isRunning: (id) => running.has(id) };
 }
 
 export { pdfUrlOf };

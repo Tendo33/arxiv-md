@@ -64,3 +64,8 @@ export const processParseTask = processMinerUTaskInBackground;
 export function resumeParseTasks() {
   return parseTaskRunner.resumeActiveTasks();
 }
+
+/** 审查 P2-3：删除任务时中止进行中的发送 */
+export function abortParseTask(taskId) {
+  return parseTaskRunner.abort(taskId);
+}
