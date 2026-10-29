@@ -60,3 +60,19 @@ describe('batch8 性能', () => {
     expect(ms).toBeLessThan(100);
   });
 });
+
+describe('审查 P3①：转义的 \\$ 不算公式定界符', () => {
+  test('\\$x <b>y</b> \\$：两个都转义 → 不保护，标签照常清理', () => {
+    expect(strip('价格 \\$x <b>y</b> \\$ 元')).toBe('价格 \\$x y \\$ 元');
+  });
+  test('开头转义、结尾不转义 → 不算公式', () => {
+    expect(strip('a \\$x <b>y</b>$ b')).toBe('a \\$x y$ b');
+  });
+  test('开头正常、结尾转义 → 结尾不算，继续找下一个可用结尾', () => {
+    expect(strip('a $x <b>y</b>\\$ b')).toBe('a $x y\\$ b');
+    expect(strip('a $x\\$<b>y</b>$ b')).toBe('a $x\\$<b>y</b>$ b');
+  });
+  test('\\\\$：转义的是反斜杠，$ 仍是定界符', () => {
+    expect(strip('a \\\\$x<b>y</b>$ b')).toBe('a \\\\$x<b>y</b>$ b');
+  });
+});

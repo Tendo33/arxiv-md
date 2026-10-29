@@ -117,7 +117,7 @@ function lineSpans(text, lineStart) {
       if (!ticks.has(len)) ticks.set(len, { pos: [], next: 0 });
       ticks.get(len).pos.push(i);
       i = j - 1;
-    } else if (text[i] === '$' && i > lineStart && !/\s/.test(text[i - 1]) && !/\d/.test(text[i + 1] || '')) {
+    } else if (text[i] === '$' && i > lineStart && !/\s/.test(text[i - 1]) && !/\d/.test(text[i + 1] || '') && !isEscaped(text, i)) {
       closers.push(i);
     }
   }
@@ -175,7 +175,7 @@ function protectedRanges(text) {
       i = j; // 没有配对：整串按普通文本
       continue;
     }
-    if (ch === '$' && i + 1 < line.lineEnd && !/[\s$]/.test(text[i + 1])) {
+    if (ch === '$' && i + 1 < line.lineEnd && !/[\s$]/.test(text[i + 1]) && !isEscaped(text, i)) {
       const c = line.closers;
       while (line.nextCloser < c.length && c[line.nextCloser] <= i + 1) line.nextCloser += 1;
       if (line.nextCloser < c.length) {
@@ -188,6 +188,13 @@ function protectedRanges(text) {
     i += 1;
   }
   return ranges;
+}
+
+// 审查 P3①：Pandoc 规定前面是 \ 的 $ 不算公式定界符（\\$ 是转义的反斜杠，后面的 $ 仍算）
+function isEscaped(text, i) {
+  let n = 0;
+  for (let k = i - 1; k >= 0 && text[k] === '\\'; k -= 1) n += 1;
+  return n % 2 === 1;
 }
 
 export function replaceOutsideProtected(text, fn) {
