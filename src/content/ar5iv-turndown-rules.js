@@ -347,7 +347,7 @@ const NOT_PYTHON = [
  */
 export function guessPythonByHints(code) {
   const text = String(code || '');
-  if (NOT_PYTHON.some((re) => re.test(text))) return false;
+  if (isPromptTemplate(text) || NOT_PYTHON.some((re) => re.test(text))) return false;
   const strong = PYTHON_STRONG.filter((re) => re.test(text)).length;
   const weak = PYTHON_WEAK.filter((re) => re.test(text)).length;
   return strong >= 1 && strong + weak >= 2;
@@ -357,8 +357,17 @@ export function guessPythonByHints(code) {
 /**
  * R1-03：LaTeXML 的 verbatim/listing 不带语言，按内容保守猜测；拿不准就不写。
  */
+// AB6-05：LLM 提示词模板（Llama/Code Llama 的 [INST]、[PYTHON]、<<SYS>>，ChatML 的 <|im_start|> 等）
+// 里夹着 def/import 也不是 Python 源码，整块不标语言
+const PROMPT_TEMPLATE_MARKER = /\[\/?(?:INST|PYTHON|TESTS|SYS)\]|<<\/?SYS>>|<\|im_(?:start|end)\|>|^\s*#{2,3} (?:Instruction|Response):/m;
+
+export function isPromptTemplate(code) {
+  return PROMPT_TEMPLATE_MARKER.test(String(code || ''));
+}
+
 export function guessCodeLanguage(code) {
   const text = String(code || '');
+  if (isPromptTemplate(text)) return '';
   if (/^\s*(?:import [\w.]+(?: as \w+)?|from [\w.]+ import |def \w+\(.*\):|class \w+(?:\(.*\))?:)\s*$/m.test(text)) return 'python';
   if (/^\s*(?:\$ )?(?:pip|conda|git|python3?|bash|sh|cd|export) \S/m.test(text) && !/[;{}]\s*$/m.test(text)) return 'bash';
   if (/^\s*#include\s*[<"]/m.test(text)) return 'cpp';
