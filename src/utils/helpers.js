@@ -166,13 +166,17 @@ export function downloadFile(url, filename, { timeoutMs = DOWNLOAD_TIMEOUT_MS, k
 
 /**
  * batch8 AB7-01：下载失败归类，用于选 zh/en 文案；原始原因只进日志。
- * @returns {'network'|'server'|'canceled'|'file'|'pending'|'removed'|'other'}
+ * release-polish AB8-02：SERVER_* 细分——BAD_CONTENT 是 404/文件不存在（notfound），FORBIDDEN/UNAUTHORIZED 是拒绝/限流
+ * （forbidden），CONTENT_LENGTH_MISMATCH 是传输中断（按网络处理），其余 SERVER_* 是服务器出错（server）。
+ * @returns {'network'|'notfound'|'forbidden'|'server'|'canceled'|'file'|'pending'|'removed'|'other'}
  */
 export function downloadFailureKind(error) {
   if (error?.code === 'DOWNLOAD_STILL_RUNNING') return 'pending';
   if (error?.code === 'DOWNLOAD_REMOVED') return 'removed';
   const reason = error?.code === 'DOWNLOAD_INTERRUPTED' ? String(error.downloadError || '') : '';
-  if (/^NETWORK_/.test(reason)) return 'network';
+  if (/^NETWORK_/.test(reason) || reason === 'SERVER_CONTENT_LENGTH_MISMATCH') return 'network';
+  if (reason === 'SERVER_BAD_CONTENT') return 'notfound';
+  if (reason === 'SERVER_FORBIDDEN' || reason === 'SERVER_UNAUTHORIZED') return 'forbidden';
   if (/^SERVER_/.test(reason)) return 'server';
   if (reason === 'USER_CANCELED' || reason === 'USER_SHUTDOWN') return 'canceled';
   if (/^FILE_/.test(reason)) return 'file';

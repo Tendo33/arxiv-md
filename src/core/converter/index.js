@@ -73,7 +73,8 @@ async function notifyStillRunning() {
 
 function pdfDownloadFailure(error) {
   const kind = isNetworkError(error) ? 'network' : downloadFailureKind(error);
-  const notifyKey = { network: 'download_failed_network', server: 'download_failed_server', canceled: 'download_canceled',
+  const notifyKey = { network: 'download_failed_network', server: 'download_failed_server', notfound: 'download_failed_notfound',
+    forbidden: 'download_failed_forbidden', canceled: 'download_canceled',
     file: 'download_failed_file', removed: 'download_removed' }[kind] || 'download_failed';
   return {
     notifyKey,

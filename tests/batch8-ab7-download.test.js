@@ -85,7 +85,7 @@ describe('downloadFile 等待终态', () => {
   });
 
   test.each([
-    ['SERVER_BAD_CONTENT', 'server'], ['SERVER_FORBIDDEN', 'server'], ['SERVER_FAILED', 'server'],
+    ['SERVER_BAD_CONTENT', 'notfound'], ['SERVER_FORBIDDEN', 'forbidden'], ['SERVER_FAILED', 'server'],
     ['NETWORK_FAILED', 'network'], ['NETWORK_TIMEOUT', 'network'], ['NETWORK_DISCONNECTED', 'network'],
     ['USER_CANCELED', 'canceled'], ['USER_SHUTDOWN', 'canceled'],
     ['FILE_NO_SPACE', 'file'], ['FILE_ACCESS_DENIED', 'file'], ['CRASH', 'other'],
@@ -206,8 +206,8 @@ describe('downloadFile 等待终态', () => {
 
 const CASES = [
   // [fake 模式, 通知 key, 状态卡 key, errorCode]
-  [{ interrupt: 'SERVER_FORBIDDEN' }, 'download_failed_server', 'content_error_download_server', undefined],
-  [{ interrupt: 'SERVER_BAD_CONTENT' }, 'download_failed_server', 'content_error_download_server', undefined],
+  [{ interrupt: 'SERVER_FORBIDDEN' }, 'download_failed_forbidden', 'content_error_download_forbidden', undefined],
+  [{ interrupt: 'SERVER_BAD_CONTENT' }, 'download_failed_notfound', 'content_error_download_notfound', undefined],
   [{ interrupt: 'NETWORK_FAILED' }, 'download_failed_network', 'content_error_offline', 'NETWORK_OFFLINE'],
   [{ interrupt: 'USER_CANCELED' }, 'download_canceled', 'content_error_download_canceled', undefined],
   [{ interrupt: 'FILE_NO_SPACE' }, 'download_failed_file', 'content_error_download_file', undefined],
@@ -270,7 +270,7 @@ describe.each([['zh'], ['en']])('通知与状态卡（%s）', (lang) => {
 test('zh/en 新增 key 对齐', () => {
   const pick = (l) => Object.keys(translations[l]).filter((k) => /^(notify_download_|content_error_download_)/.test(k)).sort();
   expect(pick('zh')).toEqual(pick('en'));
-  expect(pick('zh')).toHaveLength(20);
+  expect(pick('zh')).toHaveLength(26) // release-polish AB8-02 +notfound/forbidden 各 3 个;
 });
 
 test('content/index.js 两处 PDF 按钮失败与 P3② 超时后补发的失败都按下载失败显示', () => {
@@ -388,7 +388,7 @@ describe('batch9 ①：4 分钟后仍在下载 → 不报失败、不取消；�
     test.each([
       ['USER_CANCELED', 'download_canceled', 'canceled'],
       ['NETWORK_FAILED', 'download_failed_network', 'network'],
-      ['SERVER_FORBIDDEN', 'download_failed_server', 'server'],
+      ['SERVER_FORBIDDEN', 'download_failed_forbidden', 'forbidden'],
       ['FILE_NO_SPACE', 'download_failed_file', 'file'],
       ['CRASH', 'download_failed', 'other'],
     ])('超时后中断 %s → 补发 %s 通知 + SETTLED ok:false', async (reason, key, kind) => {
