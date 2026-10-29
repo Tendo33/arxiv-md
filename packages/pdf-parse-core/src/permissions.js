@@ -54,3 +54,32 @@ export async function ensureProviderPermission(api, provider) {
   const host = missing.replace(/^https?:\/\//, '').replace(/\/\*$/, '');
   throw new ParseError('PERMISSION_MISSING', { provider: provider.id, host });
 }
+
+/**
+ * FF-01 方案 A：manifest 里已经是安装时必需的权限（Firefox 包的 declarativeNetRequestWithHostAccess）
+ * 不再申请、不再撤销、contains 时也不再查。Chrome 包里 DNR 仍是可选权限，required 不含它，行为不变。
+ * @param {any} api chrome.permissions / browser.permissions
+ * @param {string[]} required manifest.permissions
+ */
+export function withRequiredPermissions(api, required = []) {
+  if (!api || !required || !required.length) return api;
+  const strip = (q = {}) => {
+    const out = { ...q };
+    if (Array.isArray(q.permissions)) {
+      out.permissions = q.permissions.filter((p) => !required.includes(p));
+      if (!out.permissions.length) delete out.permissions;
+    }
+    return out;
+  };
+  const empty = (q) => !(q.origins && q.origins.length) && !(q.permissions && q.permissions.length);
+  const wrapped = Object.create(api);
+  wrapped.contains = async (q) => { const s = strip(q); return empty(s) ? true : api.contains(s); };
+  wrapped.request = async (q) => { const s = strip(q); return empty(s) ? true : api.request(s); };
+  wrapped.remove = async (q) => { const s = strip(q); return empty(s) ? false : api.remove(s); };
+  return wrapped;
+}
+
+/** 从 runtime.getManifest() 取安装时必需的权限；拿不到就当空 */
+export function requiredPermissionsOf(runtime) {
+  try { return (runtime && runtime.getManifest && runtime.getManifest().permissions) || []; } catch { return []; }
+}

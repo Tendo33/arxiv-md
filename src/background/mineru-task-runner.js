@@ -1,3 +1,4 @@
+import { withRequiredPermissions, requiredPermissionsOf } from '@pdf-core/permissions';
 // R4-11：保留旧模块路径（兼容旧 import）；实现已迁到 parse-task-runner.js，一个版本后删除
 import { scheduleReloadWhenIdle } from './dnr-reinit';
 import taskManager from '@core/task-manager';
@@ -41,7 +42,8 @@ export async function showTaskNotification(task, status, detail = '', provider =
 export const backgroundReinit = (opts) => scheduleReloadWhenIdle(opts);
 
 export const parseTaskRunner = createParseTaskRunner({
-  permissions: typeof chrome !== 'undefined' && chrome.permissions ? chrome.permissions : null,
+  // FF-01 A：Firefox 包里 DNR 已是必需权限，contains 不再查它
+  permissions: typeof chrome !== 'undefined' && chrome.permissions ? withRequiredPermissions(chrome.permissions, requiredPermissionsOf(chrome.runtime)) : null,
   registry: providerRegistry,
   taskManager,
   storage,

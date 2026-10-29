@@ -1,3 +1,4 @@
+import { withRequiredPermissions, requiredPermissionsOf } from '@pdf-core/permissions';
 // Settings 页面逻辑
 
 import { NW_ZH, setNwText, nwNodes } from './nw-segments';
@@ -19,7 +20,8 @@ const pdfSection = createPdfProviderSection({
   seg: (key, text) => nwNodes(document, key, text, currentLang),
   doc: document,
   storage,
-  permissions: chrome.permissions,
+  // FF-01 A：Firefox 包里 DNR 已是必需权限，不再申请
+  permissions: withRequiredPermissions(chrome.permissions, requiredPermissionsOf(chrome.runtime)),
   registry: createDefaultRegistry(),
   t: () => translations[currentLang],
   toast: (m, type) => showSaveStatus(m, type),
