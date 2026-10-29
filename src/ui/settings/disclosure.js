@@ -4,7 +4,7 @@ import { h, svg } from '@utils/dom';
 
 export const PRIVACY_LINKS = {
   paddleocr: 'https://www.baidu.com/duty/yinsiquan.html',
-  mineru: 'https://webpub.shlab.tech/dps/opendatalab-web/odl_v5.1690/privacy.html',
+  mineru: 'https://sso.openxlab.org.cn/protocol/privacy',
 };
 const EXT = ['svg', { viewBox: '0 0 24 24', width: 14, height: 14, fill: 'none', stroke: 'currentColor', 'stroke-width': 2, 'aria-hidden': 'true' }, [
   ['path', { d: 'M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5' }],

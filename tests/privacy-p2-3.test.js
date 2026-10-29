@@ -78,6 +78,6 @@ test('PRIVACY 写明 MinerU 运营主体，不再写待核实；保留期限句�
   const s = require('fs').readFileSync('PRIVACY.md', 'utf8');
   expect(s).not.toMatch(/legal operator is still to be verified/);
   expect(s).toMatch(/上海人工智能创新中心/);
-  expect(s).toMatch(/https:\/\/webpub\.shlab\.tech\/dps\/opendatalab-web\/odl_v5\.1690\/privacy\.html/);
+  expect(s).toMatch(/https:\/\/sso\.openxlab\.org\.cn\/protocol\/privacy/);
   expect(s).toMatch(/Neither Baidu AI Studio \(PaddleOCR\) nor MinerU publishes a specific retention period/);
 });
