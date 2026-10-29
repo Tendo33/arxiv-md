@@ -98,3 +98,28 @@ describe('P-3：表格单元格里的裸 LaTeX 补 $', () => {
     expect(bare).toEqual([]);
   });
 });
+
+describe('P-4：公式编号 → \\tag{n}', () => {
+  const { addFormulaTags } = require('@pdf-core/providers/paddleocr-blocks');
+  test('Attention 第 4 页公式 (1) 带 \\tag{1}，只加一次', async () => {
+    const md = (await deliver(ATT)).out.markdown;
+    expect(md).toMatch(/Attention\(Q,K,V\)=softmax\(\\frac\{QK\^\{T\}\}\{\\sqrt\{d_\{k\}\}\}\)V\s*\\tag\{1\}\s*\$\$/);
+    expect(md.match(/\\tag\{/g)).toHaveLength(1);
+  });
+  const pg = (blocks) => ({ prunedResult: { parsing_res_list: blocks } });
+  const F = (y, c = '$$ a=b $$') => ({ block_label: 'display_formula', block_bbox: [100, y, 500, y + 40], block_content: c });
+  const N = (y, c) => ({ block_label: 'formula_number', block_bbox: [900, y, 940, y + 20], block_content: c });
+  test('按竖直位置配对最近的公式', () => {
+    const t = '$$ a=b $$\n\n$$ c=d $$';
+    expect(addFormulaTags(t, pg([F(100), F(300, '$$ c=d $$'), N(310, '(7)')]))).toBe('$$ a=b $$\n\n$$ c=d\\tag{7} $$');
+  });
+  test('编号不在任何公式的竖直范围内 / 编号格式怪 / 已有 \\tag → 不动', () => {
+    const t = '$$ a=b $$';
+    expect(addFormulaTags(t, pg([F(100), N(600, '(1)')]))).toBe(t);
+    expect(addFormulaTags(t, pg([F(100), N(110, 'see text')]))).toBe(t);
+    expect(addFormulaTags('$$ a \\tag{2} $$', pg([F(100, '$$ a \\tag{2} $$'), N(110, '(2)')]))).toBe('$$ a \\tag{2} $$');
+  });
+  test('支持 (A.1) 这类编号', () => {
+    expect(addFormulaTags('$$ a=b $$', pg([F(100), N(110, '(A.1)')]))).toBe('$$ a=b\\tag{A.1} $$');
+  });
+});
