@@ -321,6 +321,7 @@ async function handlePdfDownloadDirect(button) {
       button.style.opacity = '1';
       button.style.cursor = 'pointer';
       setChildren(button, ...pdfButtonContent(t)); // AR-04
+      button.removeAttribute('aria-busy');
     }
   };
 
@@ -332,7 +333,9 @@ async function handlePdfDownloadDirect(button) {
     });
 
     if (button) {
-      setChildren(button, svg(document, ICON_SPINNER), t.content_progress_downloading); // AR-04
+      // 设计附录 D2（AX-04）：下载中只把图标换成 spinner（同为 16px），文字不变，按钮宽度不变；状态交给 aria-busy
+      setChildren(button, svg(document, ICON_SPINNER), ...pdfButtonContent(t).slice(1)); // AR-04
+      button.setAttribute('aria-busy', 'true');
     }
 
     const metadata = isArxivAbsPage

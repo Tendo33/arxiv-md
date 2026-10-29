@@ -81,6 +81,28 @@ async function r05(env, lang) {
   return { base, fails };
 }
 
+// 设计附录 D2（AX-04）：点「PDF」后下载中只换图标，PDF 按钮宽度、BibTeX 的 left 都不变，且有 aria-busy
+async function ax04(env) {
+  const p = await env.ctx.newPage();
+  await p.setViewportSize({ width: 1280, height: 800 });
+  await p.goto(ABS);
+  const sel = '.arxiv-md-btn-container .arxiv-pdf-download-btn';
+  await p.waitForSelector(sel, { timeout: 15000 });
+  // 页面主世界的 MutationObserver 能看到内容脚本改的 DOM：每次按钮内容/属性变化时同步量一次
+  await p.evaluate((sel) => {
+    const b = document.querySelector(sel);
+    const all = () => [...document.querySelectorAll('.arxiv-md-btn-container > .arxiv-md-btn')].map((x) => { const r = x.getBoundingClientRect(); return [r.left, r.width]; });
+    window.__ax04 = { base: all(), seen: [] };
+    new MutationObserver(() => window.__ax04.seen.push({ busy: b.getAttribute('aria-busy'), text: b.textContent, rects: all() })).observe(b, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-busy'] });
+  }, sel);
+  await p.click(sel);
+  await p.waitForTimeout(1500);
+  const r = await p.evaluate(() => window.__ax04);
+  await p.close();
+  const deltas = r.seen.map((s) => Math.max(...s.rects.map((x, i) => Math.max(Math.abs(x[0] - r.base[i][0]), Math.abs(x[1] - r.base[i][1])))));
+  return { busySeen: r.seen.some((s) => s.busy === 'true'), busyCleared: r.seen.length > 0 && r.seen[r.seen.length - 1].busy !== 'true', maxDelta: deltas.length ? Math.round(Math.max(...deltas) * 100) / 100 : null, n: r.seen.length };
+}
+
 const PROVIDER_HOSTS = /paddleocr\.aistudio-app\.com|bcebos\.com|mineru\.net/;
 
 async function c10(env, lang, provider) {
@@ -148,6 +170,15 @@ async function c10(env, lang, provider) {
         const r = await r05(env, lang);
         out[`r05-${lang}`] = r;
         if (r.fails.length) { fail++; console.error(`e2e abs: FAIL R05 ${lang} ${JSON.stringify(r.fails[0])}`); }
+      } finally { await env.close(); }
+    }
+    if (!only || only === 'ax04') {
+      const env = await open(exec, chromium, { lang });
+      try {
+        const r = await ax04(env);
+        out[`ax04-${lang}`] = r;
+        console.log(`e2e abs: AX-04 ${lang} ${JSON.stringify(r)}`);
+        if (!r.busySeen || !r.busyCleared || r.maxDelta !== 0) { fail++; console.error(`e2e abs: FAIL AX-04 ${lang} ${JSON.stringify(r)}`); }
       } finally { await env.close(); }
     }
   }
