@@ -27,6 +27,7 @@ import {
   isPendingShown,
   settlePending,
   showSuccess,
+  showSubmitted,
   showPending,
   updateProgressUI,
 } from './progress-ui';
@@ -274,7 +275,8 @@ async function handleConversionTrigger(type = 'markdown') {
         if (response?.data?.pending) {
           showPending(t.content_download_pending, response.data.downloadId);
         } else if (response?.data?.background) {
-          showSuccess(t.content_progress_submitted);
+          // rp2b ③：异步后端（PaddleOCR / MinerU）只是提交成功，不是完成
+          showSubmitted(response.data.provider);
         } else if (response?.data?.filename) {
           showResult({
             filename: response.data.filename,

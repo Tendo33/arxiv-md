@@ -7,6 +7,7 @@ export const PAGE_BUTTON_STYLES = `
       --amd-text: #1b1f24; --amd-text-2: #5b6270; --amd-text-disabled: #8b929c;
       --amd-success: #0f7a3d; --amd-success-bg: #e7f5ec; --amd-danger: #b42318; --amd-danger-bg: #fdecea;
       --amd-warning: #92400e; --amd-warning-bg: #fef3c7;
+      --amd-info: #1f5fbf; --amd-info-bg: #e8f0fc;
       --amd-focus: #b31b1b;
       display: flex;
       gap: 12px;
@@ -22,6 +23,7 @@ export const PAGE_BUTTON_STYLES = `
         --amd-text: #e8eaed; --amd-text-2: #a1a7b3; --amd-text-disabled: #6b717b;
         --amd-success: #4ade80; --amd-success-bg: #13301f; --amd-danger: #f87171; --amd-danger-bg: #3a1717;
         --amd-warning: #fbbf24; --amd-warning-bg: #33270a;
+        --amd-info: #7cb2ff; --amd-info-bg: #152a47;
         --amd-focus: #f87171;
     }
 
@@ -122,6 +124,14 @@ export const PAGE_BUTTON_STYLES = `
       color: var(--amd-success);
     }
 
+    /* rp2b ③：已提交（还没完成）用信息蓝 + 时钟图标，与 popup S-2 一致 */
+    .arxiv-md-progress.submitted {
+      background: var(--amd-info-bg);
+      border-color: var(--amd-info);
+      color: var(--amd-info);
+    }
+    .progress-icon { flex: none; }
+
     .arxiv-md-progress.warning {
       background: var(--amd-warning-bg);
       border-color: var(--amd-warning);
@@ -154,6 +164,7 @@ export const PAGE_BUTTON_STYLES = `
     }
     .arxiv-md-progress.error .progress-detail,
     .arxiv-md-progress.success .progress-detail,
+    .arxiv-md-progress.submitted .progress-detail,
     .arxiv-md-progress.warning .progress-detail { color: var(--amd-text); }
     .progress-file {
       font-size: 12px;

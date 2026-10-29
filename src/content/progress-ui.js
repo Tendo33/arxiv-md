@@ -57,8 +57,10 @@ export function setProgressState({ text, percent = null, detail = '', file = '',
   delete progressIndicator.dataset.pending;
   delete progressIndicator.dataset.downloadId;
   removeResultActions(progressIndicator);
-  progressIndicator.classList.remove('error', 'success', 'warning');
-  if (state === 'error' || state === 'success' || state === 'warning') {
+  progressIndicator.classList.remove('error', 'success', 'warning', 'submitted');
+  const icon = progressIndicator.querySelector('.progress-icon');
+  if (icon) icon.remove();
+  if (state === 'error' || state === 'success' || state === 'warning' || state === 'submitted') {
     progressIndicator.classList.add(state);
   }
   // 读屏：进度/成功用 polite 播报，错误用 alert 立即播报
@@ -110,7 +112,9 @@ export function clearProgressState() {
   if (!progressIndicator) return;
   removeResultActions(progressIndicator);
   progressIndicator.style.display = 'none';
-  progressIndicator.classList.remove('error', 'success');
+  progressIndicator.classList.remove('error', 'success', 'warning', 'submitted');
+  const icon = progressIndicator.querySelector('.progress-icon');
+  if (icon) icon.remove();
   // 隐藏时同时清空文字，避免残留上一次的“Completed 100%”
   const textEl = progressIndicator.querySelector('.progress-text');
   const percentEl = progressIndicator.querySelector('.progress-percent');
@@ -196,6 +200,56 @@ export function showSuccess(message) {
     // 期间若已开始下一次转换（状态不再是 success），不要误清
     const el = document.querySelector('.arxiv-md-progress');
     if (el && el.classList.contains('success')) clearProgressState();
+  }, SUCCESS_VISIBLE_MS);
+}
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function clockIcon() {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('class', 'progress-icon');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('width', '14');
+  svg.setAttribute('height', '14');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2.2');
+  svg.setAttribute('stroke-linecap', 'round');
+  const c = document.createElementNS(SVG_NS, 'circle');
+  c.setAttribute('cx', '12'); c.setAttribute('cy', '12'); c.setAttribute('r', '9');
+  const path = document.createElementNS(SVG_NS, 'path');
+  path.setAttribute('d', 'M12 7v5l3 2');
+  svg.append(c, path);
+  return svg;
+}
+
+/**
+ * rp2b（设计 ③，与 popup S-2 一致）：异步后端（PaddleOCR / MinerU）提交成功≠完成。
+ * 标题「已提交」，无百分比、无进度条；时钟图标 + 信息蓝；只有「关闭」；读屏 polite。
+ */
+export function showSubmitted(providerId) {
+  notifyOutcome({ ok: true, submitted: true, message: t.content_progress_submitted });
+  const label = providerId ? providerLabel(providerId) : provider;
+  setProgressState({
+    text: t.content_progress_submitted,
+    detail: String(t.content_submitted_body || '').replace(/\{provider\}/g, label),
+    percent: null,
+    state: 'submitted',
+  });
+  const progressIndicator = document.querySelector('.arxiv-md-progress');
+  if (progressIndicator) {
+    const row = progressIndicator.querySelector('.progress-row');
+    if (row) row.prepend(clockIcon());
+    const actions = document.createElement('div');
+    actions.className = 'arxiv-md-result-actions';
+    actions.appendChild(createCloseButton());
+    progressIndicator.appendChild(actions);
+  }
+  // 与之前的提交提示一样 8 秒后收起（系统通知会在完成时再提醒）；期间开始新转换则不误清
+  clearTimeout(successTimer);
+  successTimer = setTimeout(() => {
+    const el = document.querySelector('.arxiv-md-progress');
+    if (el && el.classList.contains('submitted')) clearProgressState();
   }, SUCCESS_VISIBLE_MS);
 }
 

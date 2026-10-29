@@ -197,6 +197,7 @@ export const translations = {
     content_progress_failed: 'Failed',
     content_progress_canceled: 'Canceled',
     content_progress_submitted: 'Submitted',
+    content_submitted_body: '{provider} is parsing it. You\'ll be notified when it\'s done. Track it under PDF parsing tasks in the popup.',
     content_result_saved: 'Saved: {filename}',
     content_result_incomplete:
       'Found about {expected} headings but only {actual} were exported. Open the file to check, or compare with the PDF.',
@@ -480,6 +481,7 @@ export const translations = {
     content_progress_failed: '失败',
     content_progress_canceled: '已取消',
     content_progress_submitted: '已提交',
+    content_submitted_body: '{provider} 正在解析，完成后会通知你。可在扩展弹窗的「PDF 解析任务」里查看',
     content_result_saved: '已保存：{filename}',
     content_result_incomplete: '页面约有 {expected} 个标题，只导出了 {actual} 个。请打开文件核对，必要时改用「PDF（标题）」对照原文。',
     content_btn_copy_md: '复制 Markdown',

@@ -281,6 +281,7 @@ class MainConverter {
           tier: CONVERSION_TIER.MINERU_API,
           taskId: task.id,
           background: true,
+          provider, // rp2b ③：页面提交卡片显示实际提交到的后端
         };
       } catch (error) {
         logger.error('Failed to submit MinerU task:', error);
@@ -312,6 +313,7 @@ class MainConverter {
                 tier: CONVERSION_TIER.MINERU_API,
                 taskId: response.taskId,
                 background: true,
+                provider,
               });
             } else if (response && response.duplicate) {
               // 返回重复任务信息，让调用方决定如何处理
