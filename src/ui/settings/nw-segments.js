@@ -8,12 +8,13 @@ export const NW_ZH = {
   welcome_desc: ['一键将 arXiv 论文', '转换为 Markdown。', '先用 arXiv HTML，', '再试 ar5iv，', '失败时下载 PDF。'],
   advanced_auto: ['自动转换', '（进入论文页面', '自动弹出转换提示）'],
   advanced_metadata: ['在 Markdown 中', '包含元数据', '（标题、作者、ID 等）'],
+  pdf_desc: ['PaddleOCR 会上传', '来自 arXiv 的 PDF 文件', '（50 MB 以内）；', 'MinerU 和', '其他网站的 PDF ', '只发送链接。', 'Key 只保存在本机，', '只发给你选择的服务。'],
   advanced_pdf_fab: ['在 PDF 页显示', '悬浮导出按钮'],
 };
 
-/** 没有手工切分表的中文句子：在 ，。；、） 之后切开，片段仍不超过一个分句 */
+/** 没有手工切分表的中文句子：在 ，。；） 之后、以及中英文之间的空格处切开（如「访问 {host} 才能使用」），片段仍不超过一个分句 */
 export function splitZh(text) {
-  const out = String(text || '').match(/[^，。；）]*[，。；）]?/g).filter(Boolean);
+  const out = String(text || '').match(/[^，。；）\s]*(?:[，。；）]|\s+)?/g).filter(Boolean);
   return out.length ? out : [String(text || '')];
 }
 
