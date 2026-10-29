@@ -18,6 +18,7 @@ export function addFormulaTags(text, pg) {
   const blocks = blocksOf(pg);
   const formulas = blocks.filter((b) => b.block_label === 'display_formula');
   let out = text;
+  const done = new Set(); // 已加过 \tag 的公式块（局部记录，不改调用方的 pg）
   for (const nb of blocks.filter((b) => b.block_label === 'formula_number')) {
     const m = /^\s*\(?\s*([0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)\s*\)?\s*$/.exec(nb.block_content || '');
     if (!m) continue;
@@ -26,14 +27,14 @@ export function addFormulaTags(text, pg) {
       .filter((f) => cy >= f.block_bbox[1] - 8 && cy <= f.block_bbox[3] + 8 && f.block_bbox[0] < nb.block_bbox[0])
       .sort((a, b) => Math.abs((a.block_bbox[1] + a.block_bbox[3]) / 2 - cy) - Math.abs((b.block_bbox[1] + b.block_bbox[3]) / 2 - cy));
     const f = cands[0];
-    if (!f) continue;
+    if (!f || done.has(f)) continue;
     const src = String(f.block_content || '').trim();
     if (!src.endsWith('$$') || /\\tag\{/.test(src)) continue;
     const at = out.indexOf(src);
     if (at < 0) continue;
     const tagged = `${src.slice(0, -2).trimEnd()}\\tag{${m[1]}} $$`;
     out = out.slice(0, at) + tagged + out.slice(at + src.length);
-    f.block_content = tagged; // 同一公式不重复加
+    done.add(f);
   }
   return out;
 }

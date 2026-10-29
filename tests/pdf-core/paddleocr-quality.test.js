@@ -278,3 +278,19 @@ describe('P-2：图注里的 < > & 重新转义', () => {
     expect(r.text).not.toMatch(/p < 0/);
   });
 });
+
+describe('P-4：addFormulaTags 不改输入、编号必须在公式右侧', () => {
+  const { addFormulaTags } = require('@pdf-core/providers/paddleocr-blocks');
+  const F = '$$ a=b $$';
+  const mk = (numX) => ({ prunedResult: { parsing_res_list: [
+    { block_label: 'display_formula', block_content: F, block_bbox: [100, 100, 500, 140] },
+    { block_label: 'formula_number', block_content: '(1)', block_bbox: [numX, 110, numX + 30, 130] },
+    { block_label: 'formula_number', block_content: '(2)', block_bbox: [numX, 112, numX + 30, 128] }] } });
+  test('调用方的 pg 不被修改，同一公式只加一个 tag', () => {
+    const pg = mk(600); const snap = JSON.stringify(pg);
+    expect(addFormulaTags(F, pg)).toBe('$$ a=b\\tag{1} $$'.replace('\\\\', '\\'));
+    expect(JSON.stringify(pg)).toBe(snap);
+    expect(addFormulaTags(F, pg)).toBe(addFormulaTags(F, mk(600))); // 重复调用结果一致
+  });
+  test('编号在公式左侧 → 不配对', () => expect(addFormulaTags(F, mk(20))).toBe(F));
+});
