@@ -1,0 +1,1 @@
+{ "code": 0, "msg": "Success", "data": { "jobId": "fixture-job-0001", "state": "done", "extractProgress": { "totalPages": 12, "extractedPages": 12 }, "resultUrl": { "markdownUrl": "https://bj.bcebos.example.invalid/fixture/doc.md" } } }

@@ -1,5 +1,5 @@
 // R4-07：PaddleOCR provider：4 种状态 + 5 种错误 + 契约
-import { paddleocrProvider, PADDLEOCR_JOBS_URL, PADDLEOCR_DEFAULT_MODEL, PADDLEOCR_MAX_UPLOAD_BYTES, shouldUploadFile } from '@pdf-core/providers/paddleocr';
+import { paddleocrProvider, PADDLEOCR_JOBS_URL, PADDLEOCR_DEFAULT_MODEL, PADDLEOCR_MAX_UPLOAD_BYTES, shouldUploadFile, parsePaddleJsonl } from '@pdf-core/providers/paddleocr';
 import { createDefaultRegistry } from '@pdf-core/providers/index';
 import { createFetchMock } from '../helpers/fetch-mock';
 import { runProviderContract } from '../helpers/provider-contract';
@@ -7,6 +7,7 @@ import submitOk from '../fixtures/providers/paddleocr/submit-ok.json';
 import pending from '../fixtures/providers/paddleocr/poll-pending.json';
 import running from '../fixtures/providers/paddleocr/poll-running.json';
 import done from '../fixtures/providers/paddleocr/poll-done.json';
+import doneLegacy from '../fixtures/providers/paddleocr/poll-done-legacy-md.json';
 import failed from '../fixtures/providers/paddleocr/poll-failed.json';
 import err401 from '../fixtures/providers/paddleocr/err-401.json';
 import quota403 from '../fixtures/providers/paddleocr/err-quota-403.json';
@@ -18,7 +19,9 @@ const MD = fs.readFileSync(path.join(__dirname, '../fixtures/providers/paddleocr
 const JOB = submitOk.data.jobId;
 const creds = { token: 'test-token-placeholder' };
 const input = { url: 'https://arxiv.org/pdf/2401.00001.pdf' };
-const MD_URL = done.data.resultUrl.markdownUrl;
+const MD_URL = doneLegacy.data.resultUrl.markdownUrl;
+const JSON_URL = done.data.resultUrl.jsonUrl;
+const JSONL = fs.readFileSync(path.join(__dirname, '../fixtures/providers/paddleocr/result.jsonl'), 'utf8');
 const PDF_BYTES = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x37, 0x0a]); // "%PDF-1.7\n"
 const withPdf = (f) => (fm) => { fm.on(input.url, [{ body: PDF_BYTES }], { method: 'GET', sticky: true }); return f(fm); };
 
@@ -26,7 +29,7 @@ runProviderContract('paddleocr', {
   provider: paddleocrProvider, creds, input, expectJobId: JOB, expectResultKeys: ['markdown'],
   happy: (fm) => fm.on(input.url, [{ body: PDF_BYTES }], { method: 'GET' }).on(PADDLEOCR_JOBS_URL, [{ json: submitOk }], { method: 'POST' })
     .on(`${PADDLEOCR_JOBS_URL}/`, [{ json: pending }, { json: running }, { json: done }], { method: 'GET' })
-    .on(MD_URL, [{ body: MD }]),
+    .on(JSON_URL, [{ body: JSONL }]),
   errors: {
     AUTH_INVALID: withPdf((fm) => { fm.on(PADDLEOCR_JOBS_URL, [{ status: 401, json: err401 }]); }),
     QUOTA_EXCEEDED: withPdf((fm) => { fm.on(PADDLEOCR_JOBS_URL, [{ status: 403, json: quota403 }]); }),
@@ -98,7 +101,7 @@ describe('PaddleOCR 细节', () => {
     expect((await paddleocrProvider.poll(JOB, creds, {})).state).toBe('pending');
     const r = await paddleocrProvider.poll(JOB, creds, {});
     expect(r).toMatchObject({ state: 'running', progress: { done: 5, total: 12 } });
-    expect((await paddleocrProvider.poll(JOB, creds, {})).result).toEqual({ markdownUrl: MD_URL, jsonUrl: done.data.resultUrl.jsonUrl });
+    expect((await paddleocrProvider.poll(JOB, creds, {})).result).toEqual({ markdownUrl: null, jsonUrl: JSON_URL });
     expect(await paddleocrProvider.poll(JOB, creds, {})).toMatchObject({ state: 'failed', error: 'failed to download fileUrl' });
     expect(fm.calls[0].url).toBe(`${PADDLEOCR_JOBS_URL}/${JOB}`);
   });
@@ -128,12 +131,41 @@ describe('PaddleOCR 细节', () => {
     expect(fm.calls.length).toBe(0);
   });
 
-  test('fetchResult：取 markdownUrl 原文；失败映射', async () => {
+  test('fetchResult（旧格式）：只有 markdownUrl 时取原文；失败映射', async () => {
     fm.on(MD_URL, [{ body: MD }, { status: 403, body: '' }, new TypeError('x')]);
-    const r = await paddleocrProvider.fetchResult(done.data.resultUrl, creds, {});
+    const r = await paddleocrProvider.fetchResult(doneLegacy.data.resultUrl, creds, {});
     expect(r.markdown).toBe(MD);
-    await expect(paddleocrProvider.fetchResult(done.data.resultUrl, creds, {})).rejects.toMatchObject({ reason: 'forbidden_empty' });
-    await expect(paddleocrProvider.fetchResult(done.data.resultUrl, creds, {})).rejects.toMatchObject({ code: 'NETWORK' });
+    expect(r.images).toEqual([]);
+    await expect(paddleocrProvider.fetchResult(doneLegacy.data.resultUrl, creds, {})).rejects.toMatchObject({ reason: 'forbidden_empty' });
+    await expect(paddleocrProvider.fetchResult(doneLegacy.data.resultUrl, creds, {})).rejects.toMatchObject({ code: 'NETWORK' });
+  });
+
+  test('fetchResult（实测格式）：jsonUrl → JSONL 多行多页拼接 markdown.text，图片按页加前缀', async () => {
+    fm.on(JSON_URL, [{ body: JSONL }]);
+    const r = await paddleocrProvider.fetchResult(done.data.resultUrl, creds, {});
+    expect(fm.calls.map((c) => c.url)).toEqual([JSON_URL]);
+    expect(r.jsonUrl).toBe(JSON_URL);
+    expect(r.markdown.startsWith('# Fixture Paper')).toBe(true);
+    expect(r.markdown).toMatch(/<table>/);
+    expect(r.markdown).toMatch(/\$\$ y = x \\cdot \\Phi\(x\) \$\$/);
+    expect(r.markdown.indexOf('# Fixture Paper')).toBeLessThan(r.markdown.indexOf('## Results'));
+    // 第 1 页和第 3 页同名（框坐标相同）→ 前缀区分，不串图
+    expect(r.markdown).toMatch(/src="page-1\/imgs\/img_in_chart_box_10_20_30_40\.jpg"/);
+    expect(r.markdown).toMatch(/src="page-3\/imgs\/img_in_chart_box_10_20_30_40\.jpg"/);
+    expect(r.markdown).toMatch(/!\[\]\(page-3\/imgs\/img_in_image_box_1_2_3_4\.png\)/);
+    expect(r.markdown).not.toMatch(/["(]imgs\//);
+    expect(r.images).toEqual([
+      { src: 'page-1/imgs/img_in_chart_box_10_20_30_40.jpg', url: 'https://pplines-online.bj.bcebos.example.invalid/fixture/p1.jpg?authorization=fixture', page: 1 },
+      { src: 'page-3/imgs/img_in_chart_box_10_20_30_40.jpg', url: 'https://pplines-online.bj.bcebos.example.invalid/fixture/p3a.jpg?authorization=fixture', page: 3 },
+      { src: 'page-3/imgs/img_in_image_box_1_2_3_4.png', url: 'https://pplines-online.bj.bcebos.example.invalid/fixture/p3b.png?authorization=fixture', page: 3 },
+    ]);
+  });
+
+  test('parsePaddleJsonl：行内 errorCode≠0 / 坏行 → PROVIDER_FAILED；空行忽略；页数按页累计', () => {
+    expect(parsePaddleJsonl(`\n${JSONL}\n\n`).pages).toBe(3);
+    expect(() => parsePaddleJsonl('{"errorCode":500,"errorMsg":"page parse failed"}')).toThrow(expect.objectContaining({ code: 'PROVIDER_FAILED', reason: 'page parse failed' }));
+    expect(() => parsePaddleJsonl('not json')).toThrow(expect.objectContaining({ code: 'PROVIDER_FAILED', reason: 'bad_jsonl' }));
+    expect(parsePaddleJsonl('')).toEqual({ markdown: '', images: [], pages: 0 });
   });
 
   test('testConnection：GET 随机 jobId，从不 POST', async () => {

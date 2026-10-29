@@ -55,6 +55,39 @@ function fileNameOf(url) {
   return /\.pdf$/i.test(last) ? last : `${last}.pdf`;
 }
 
+/**
+ * 解析星河 JSONL：每行 {result:{layoutParsingResults:[{markdown:{text,images}}]}, errorCode, errorMsg}。
+ * 图片名是框坐标（imgs/img_in_chart_box_x_y_x_y.jpg），不同页可能重名 → 引用改成 page-{N}/imgs/...（normalize 的 defaultPageOf 认得）。
+ * @returns {{markdown:string, images:{src:string,url:string,page:number}[], pages:number}}
+ */
+export function parsePaddleJsonl(text) {
+  const lines = String(text || '').split(/\r?\n/).filter((l) => l.trim());
+  const parts = []; const images = []; let page = 0;
+  for (const line of lines) {
+    let row;
+    try { row = JSON.parse(line); } catch { throw new ParseError('PROVIDER_FAILED', { provider: ID, reason: 'bad_jsonl' }); }
+    if (row.errorCode != null && Number(row.errorCode) !== 0) {
+      throw new ParseError('PROVIDER_FAILED', { provider: ID, reason: row.errorMsg || `errorCode ${row.errorCode}`, raw: { errorCode: row.errorCode, errorMsg: row.errorMsg } });
+    }
+    const pages = (row.result && row.result.layoutParsingResults) || [];
+    for (const pg of pages) {
+      page += 1;
+      const md = (pg && pg.markdown) || {};
+      const imgMap = md.images || {};
+      let t = String(md.text || '');
+      for (const [name, url] of Object.entries(imgMap)) {
+        const src = `page-${page}/${name.replace(/^\.?\//, '')}`;
+        // 只替换完整的引用（src="name" / (name)），避免前缀相同的名字互相误伤
+        const esc = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        t = t.replace(new RegExp(`(["'(])${esc}(["')])`, 'g'), `$1${src}$2`);
+        images.push({ src, url, page });
+      }
+      if (t.trim()) parts.push(t.trim());
+    }
+  }
+  return { markdown: parts.join('\n\n'), images, pages: page };
+}
+
 async function request(url, init, token, ctx) {
   // multipart：不能写死 Content-Type，boundary 由 fetch 按 FormData 生成
   const isForm = typeof FormData !== 'undefined' && init.body instanceof FormData;
@@ -116,21 +149,25 @@ export const paddleocrProvider = defineProvider({
     const progress = p && p.totalPages > 0 ? { done: p.extractedPages || 0, total: p.totalPages } : null;
     if (state === 'done') {
       const r = d.resultUrl || {};
-      if (!r.markdownUrl) throw new ParseError('PROVIDER_FAILED', { provider: ID, raw: json, reason: 'Completed job has no markdownUrl' });
-      return { state, progress, result: { markdownUrl: r.markdownUrl, jsonUrl: r.jsonUrl || null }, raw: d };
+      // 实测（2026-10-29）：resultUrl 只有 jsonUrl；markdownUrl 兼容旧文档
+      if (!r.jsonUrl && !r.markdownUrl) throw new ParseError('PROVIDER_FAILED', { provider: ID, raw: json, reason: 'Completed job has no jsonUrl' });
+      return { state, progress, result: { markdownUrl: r.markdownUrl || null, jsonUrl: r.jsonUrl || null }, raw: d };
     }
     if (state === 'failed') return { state, progress, error: d.errorMsg || 'Job failed', raw: d };
     return { state, progress, raw: d };
   },
 
-  /** 取回 Markdown 原文（整理交给 R4-09 normalize） */
+  /** 取回结果：优先 jsonUrl（JSONL，每行一批页），否则旧的 markdownUrl。整理交给 R4-09 normalize */
   async fetchResult(result, creds, ctx = {}) {
+    const url = result.jsonUrl || result.markdownUrl;
     let res;
     try {
-      res = await fetchWithTimeout(result.markdownUrl, { method: 'GET' }, { ctx, provider: ID, timeoutMs: ctx.requestTimeoutMs || 60000 });
+      res = await fetchWithTimeout(url, { method: 'GET' }, { ctx, provider: ID, timeoutMs: ctx.requestTimeoutMs || 60000 });
     } catch (e) { throw mapPaddleError(e); }
     if (!res.ok) throw mapPaddleError(await readErrorResponse(res));
-    return { markdown: await res.text(), markdownUrl: result.markdownUrl, jsonUrl: result.jsonUrl || null };
+    const text = await res.text();
+    if (!result.jsonUrl) return { markdown: text, markdownUrl: result.markdownUrl, jsonUrl: null, images: [] };
+    return { ...parsePaddleJsonl(text), markdownUrl: null, jsonUrl: result.jsonUrl };
   },
 
   mapError: mapPaddleError,
