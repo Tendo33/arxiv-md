@@ -42,9 +42,11 @@ export function imgTagsToMarkdown(md) {
     const m = /\bsrc\s*=\s*["'](images\/[^"']+)["']/i.exec(tag);
     return m ? `![](${m[1]})` : null;
   };
-  return String(md)
+  const conv = (part) => part
     .replace(/<div\b[^>]*>\s*(<img\b[^>]*>)\s*<\/div>/gi, (all, img) => { const r = one(img); return r ? r : all; })
     .replace(/<img\b[^>]*>/gi, (img) => one(img) || img);
+  // P3-4：HTML 表格里的 <img> 保持原样——表格单元格里的 ![]() 不会被渲染成图片
+  return String(md).split(/(<table\b[\s\S]*?<\/table>)/i).map((part) => (/^<table\b/i.test(part) ? part : conv(part))).join('');
 }
 
 /**
