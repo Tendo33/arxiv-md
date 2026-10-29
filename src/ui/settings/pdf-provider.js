@@ -1,6 +1,7 @@
 // R4-14：设置页“PDF 解析”分组。依赖全部注入，便于在 linkedom 里测试。
 // 权限申请只发生在下拉框 change / 按钮 click（用户手势）里；用户拒绝 → 下拉框回到原来的后端。
 import { requestProviderPermission, hasProviderPermission, removeProviderPermission, canRevoke, permissionsFor } from '@pdf-core/permissions';
+import { shortErrorText } from '../popup/task-error-text';
 
 /** 本轮 UI 可选的后端（本地服务本轮隐藏，只预留接口） */
 export const UI_PROVIDERS = ['paddleocr', 'mineru'];
@@ -155,7 +156,9 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
       status.className = 'token-status success'; status.textContent = tr.token_api_valid;
     } else {
       const e = r.error || {};
-      const reason = e.reason === 'forbidden_empty' ? fmt(tr.err_reason_forbidden_empty, { provider: p.label }) : (e.message || '');
+      // rp2b（设计 ①②）：「{provider} 解析失败：」前缀已带后端名，{reason} 用不带后端名的短文案
+      // 带 code 的错误 message 是 "paddleocr: PROVIDER_FAILED" 这类原始码，只进日志，不给用户看
+      const reason = shortErrorText({ code: e.code, reason: e.reason, host: hostOf(p) }, tr) || (e.code ? '' : e.message) || tr.err_short_failed_plain;
       status.className = 'token-status error';
       // 设计建议：已经填了 Key 时不说「未填写」；失败一律带 ❌，Key 问题附「获取 Key」链接
       const msg = e.code === 'AUTH_INVALID'

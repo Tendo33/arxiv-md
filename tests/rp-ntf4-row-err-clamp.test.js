@@ -18,5 +18,5 @@ test('title 是完整原文（含按语言翻译后的 errorReason）', () => {
   const r = createTaskRow({ id: 'b', status: 'failed', provider: 'paddleocr', errorReason: 'key_not_on_device', error: 'raw', paperInfo: {}, createdAt: Date.now() }, document);
   const err = r.querySelector('.row-err');
   expect(err.getAttribute('title')).toBe(err.textContent);
-  expect(err.textContent).toBe(translations.zh.err_reason_key_not_on_device.replace(/\{provider\}/g, 'PaddleOCR'));
+  expect(err.textContent).toBe(translations.zh.err_short_reason_key_not_on_device);
 });

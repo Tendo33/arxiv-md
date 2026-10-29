@@ -1,24 +1,29 @@
 // R4-03：任务列表的失败原因。用户看到的是当前语言的白话，不是 "paddleocr: NETWORK" 这样的原始码；
 // title 仍是完整白话（设计 NTF4：两行截断，title 放全文）；原始码只在后台日志里。
-// 优先级：err_reason_<reason> → err_<CODE>（PROVIDER_FAILED 的 {reason} 是原始信息，不展示）→ 通用失败文案。
+// rp2b（设计 ①②）：任务行旁边已单独显示后端名（S-2：每行只出现一次），所以这里一律用不带后端名的
+// err_short_* 文案；通知和页面卡片没有单独的后端名，继续用带 {provider} 的 err_* / err_reason_*。
+// 优先级：err_short_reason_<reason> → err_reason_<reason>（本身不带后端名，如 empty_result）→ err_short_<CODE> → 通用失败文案。
 const RAW_CODE = /^\s*([a-z0-9_-]+)\s*:\s*([A-Z_]+)\s*$/; // 旧任务只存了 "provider: CODE"
 
-export function taskErrorText(task, t, providerLabel = (id) => id || '') {
+/** 不带后端名的短文案；认不出时返回 null。task-list 和设置页共用 */
+export function shortErrorText({ code, reason, host }, t) {
+  const fill = (s) => String(s).replace(/\{host\}/g, host || '');
+  const r = reason && (t[`err_short_reason_${reason}`] || t[`err_reason_${reason}`]);
+  if (r) return fill(r);
+  if (code === 'PERMISSION_MISSING') return fill(host ? t.err_short_PERMISSION_MISSING : t.err_short_permission_plain);
+  if (code && code !== 'PROVIDER_FAILED' && t[`err_short_${code}`]) return fill(t[`err_short_${code}`]);
+  return null;
+}
+
+export function taskErrorText(task, t) {
   if (!task) return '';
   let code = task.errorCode || null;
-  let provider = task.provider || null;
   if (!code && typeof task.error === 'string') {
     const m = task.error.match(RAW_CODE);
-    if (m) { provider = provider || m[1]; code = m[2]; }
+    if (m) code = m[2];
   }
-  const label = providerLabel(provider);
-  const fill = (s) => String(s).replace(/\{provider\}/g, label).replace(/\{host\}/g, task.errorHost || '');
-  // 任务行旁边已有后端名（S-2：每行只出现一次），forbidden_empty 的通用文案带 {provider}，任务行用不带后端名的版本
-  const reasonMsg = task.errorReason && ((task.errorReason === 'forbidden_empty' && t.err_task_forbidden_empty) || t[`err_reason_${task.errorReason}`]);
-  if (reasonMsg) return fill(reasonMsg);
-  // RATE_LIMITED 的 err_ 文案是“稍后自动重试”，任务已失败时不成立 → 用任务专用文案
-  if (code === 'RATE_LIMITED') return fill(t.err_task_rate_limited);
-  if (code && code !== 'PROVIDER_FAILED' && t[`err_${code}`] && !(code === 'PERMISSION_MISSING' && !task.errorHost)) return fill(t[`err_${code}`]);
-  if (code) return fill(code === 'PERMISSION_MISSING' ? t.err_task_permission_plain : t.err_task_failed_plain);
-  return task.error ? String(task.error) : fill(t.err_task_failed_plain);
+  const s = shortErrorText({ code, reason: task.errorReason, host: task.errorHost }, t);
+  if (s) return s;
+  if (code) return t.err_short_failed_plain;
+  return task.error ? String(task.error) : t.err_short_failed_plain;
 }

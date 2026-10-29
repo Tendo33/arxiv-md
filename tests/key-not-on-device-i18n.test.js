@@ -19,16 +19,16 @@ describe('err_reason_key_not_on_device', () => {
   test('中文界面显示中文', () => {
     setTaskListLanguage('zh');
     const s = errText(rowHtml(task));
-    expect(s).toBe('本设备还没有 MinerU 的 Key（Key 不会跨设备同步），请在本设备的设置 › PDF 解析里重新填写');
+    expect(s).toBe('本设备还没有 Key（Key 不会跨设备同步），请在设置 › PDF 解析里填写'); // rp2b：任务行不重复后端名
   });
   test('英文界面显示英文，不含中文', () => {
     setTaskListLanguage('en');
     const s = errText(rowHtml(task));
-    expect(s).toContain('No MinerU key on this device');
+    expect(s).toBe("No key on this device (keys don't sync). Add it in Settings › PDF parsing");
     expect(s).not.toMatch(/[\u4e00-\u9fff]/);
   });
   test('没有对应文案的 reason → 按错误码显示白话（R4-03：不再显示原文）', () => {
     setTaskListLanguage('en');
-    expect(errText(rowHtml({ ...task, errorReason: 'other', error: 'raw msg' }))).toBe(translations.en.err_AUTH_INVALID.replace('{provider}', 'MinerU'));
+    expect(errText(rowHtml({ ...task, errorReason: 'other', error: 'raw msg' }))).toBe(translations.en.err_short_AUTH_INVALID);
   });
 });

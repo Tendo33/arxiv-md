@@ -14,11 +14,12 @@ describe.each(['zh', 'en'])('R4-03 %s', (lang) => {
       const s = taskErrorText({ status: 'failed', provider, errorCode: code, error: `${provider}: ${code}` }, t, providerLabel);
       expect(s).toBeTruthy();
       expect(s).not.toMatch(RAW);
-      expect(s).toContain(providerLabel(provider));
+      // rp2b：任务行已单独显示后端名，错误文案不再重复它
+      expect(s).not.toContain(providerLabel(provider));
     }
   });
   test('旧任务只有 "paddleocr: NETWORK" 原文 → 也能翻译', () => {
-    expect(taskErrorText({ error: 'paddleocr: NETWORK' }, t, providerLabel)).toBe(t.err_NETWORK.replace('{provider}', 'PaddleOCR'));
+    expect(taskErrorText({ error: 'paddleocr: NETWORK' }, t, providerLabel)).toBe(t.err_short_NETWORK);
   });
   test('reason 优先，PERMISSION_MISSING 有 host 时带上 host', () => {
     expect(taskErrorText({ provider: 'paddleocr', errorCode: 'PROVIDER_FAILED', errorReason: 'empty_result' }, t, providerLabel)).toBe(t.err_reason_empty_result);
