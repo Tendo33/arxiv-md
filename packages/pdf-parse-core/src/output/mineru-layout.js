@@ -30,6 +30,17 @@ export function markFailedImages(md, failedSrcs) {
   return out;
 }
 
+/** MinerU 的 full.md 用 ![](images/<sha>.jpg)；PaddleOCR 给的是 <div><img src width></div>，统一成 MinerU 写法（只动 images/ 下的引用） */
+export function imgTagsToMarkdown(md) {
+  const one = (tag) => {
+    const m = /\bsrc\s*=\s*["'](images\/[^"']+)["']/i.exec(tag);
+    return m ? `![](${m[1]})` : null;
+  };
+  return String(md)
+    .replace(/<div\b[^>]*>\s*(<img\b[^>]*>)\s*<\/div>/gi, (all, img) => { const r = one(img); return r ? r : all; })
+    .replace(/<img\b[^>]*>/gi, (img) => one(img) || img);
+}
+
 /**
  * @param {{markdown:string, images:{src:string,data?:Uint8Array|null,contentType?:string}[]}} fetched
  * @param {{meta?:object, subtle?:SubtleCrypto}} [opts]
@@ -45,5 +56,5 @@ export async function buildMineruLayout(fetched, { meta = null, subtle } = {}) {
   const md = markFailedImages(fetched.markdown || '', failed);
   const norm = normalizeMarkdown(md, { meta, rename: (src) => names.get(src) });
   const images = norm.images.filter((i) => data.has(i.to)).map((i) => ({ ...i, data: data.get(i.to) }));
-  return { markdown: norm.markdown, images, deliver: 'zip', layout: 'mineru', failedImages: failed };
+  return { markdown: imgTagsToMarkdown(norm.markdown), images, deliver: 'zip', layout: 'mineru', failedImages: failed };
 }
