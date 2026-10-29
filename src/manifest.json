@@ -67,7 +67,7 @@
         "default": "Alt+Shift+M",
         "mac": "Alt+Shift+M"
       },
-      "description": "Convert the current arXiv paper to Markdown"
+      "description": "__MSG_cmdConvertDescription__"
     }
   },
   "options_ui": {

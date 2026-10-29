@@ -2,6 +2,10 @@
   "extDescription": {
     "message": "一键把 arXiv 论文保存为 Markdown，保留公式、表格和参考文献，PDF 自动按标题命名。"
   },
+  "cmdConvertDescription": {
+    "message": "把当前 arXiv 论文转换为 Markdown",
+    "description": "AR-07: chrome://extensions/shortcuts description of the convert-current-paper command"
+  },
   "notify_incomplete_title": {
     "message": "⚠ 导出可能不完整",
     "description": "AF3-01: notification title when the export may be incomplete"

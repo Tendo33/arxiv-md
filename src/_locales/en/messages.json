@@ -2,6 +2,10 @@
   "extDescription": {
     "message": "Save arXiv papers as Markdown in one click: math, tables and references kept, PDFs named by title."
   },
+  "cmdConvertDescription": {
+    "message": "Convert the current arXiv paper to Markdown",
+    "description": "AR-07: chrome://extensions/shortcuts description of the convert-current-paper command"
+  },
   "notify_incomplete_title": {
     "message": "⚠ Export may be incomplete",
     "description": "AF3-01: notification title when the export may be incomplete"
