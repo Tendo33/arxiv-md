@@ -9,6 +9,9 @@
   ],
   "scripts": {
     "build": "webpack --mode production",
+    "build:firefox": "webpack --mode production --env target=firefox",
+    "verify:dist": "node scripts/verify-dist.js",
+    "verify:dist:firefox": "node scripts/verify-dist.js dist-firefox --target=firefox",
     "dev": "webpack --mode development --watch",
     "lint": "eslint src/**/*.js \"packages/pdf-parse-core/src/**/*.js\"",
     "test": "jest --runInBand",
