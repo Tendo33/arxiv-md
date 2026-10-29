@@ -780,3 +780,6 @@ a:focus-visible {
 /* 设计验收 30a6e1b #6：确认后提示在卡片下方单独一行，前缀 ✓，不进底部 toast */
 .pd-confirmed { margin: 8px 0 0; font-size: 13px; line-height: 20px; color: var(--success); }
 .pd-confirmed[hidden] { display: none; }
+
+/* 设计验收 30a6e1b #7：主按钮 focus-visible 只留蓝色 outline，不叠红色阴影 */
+.btn-primary:focus-visible { box-shadow: none; }
