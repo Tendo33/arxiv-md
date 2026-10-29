@@ -10,6 +10,7 @@ import { saveDeliverable } from '@pdf-core/output/save';
 import { createParseTaskRunner } from './parse-task-runner';
 import { taskNotificationText } from './task-notification-text';
 import { requirePaddleOriginRule } from './paddle-origin-rule';
+import { isDisclosureAcked, needsDisclosure } from '@utils/disclosure-ack';
 
 export const deletedTaskGuard = createDeletedTaskGuard(chrome.storage.local);
 export const providerRegistry = createDefaultRegistry();
@@ -47,6 +48,8 @@ export const parseTaskRunner = createParseTaskRunner({
   notify: showTaskNotification,
   // R4-02 / R5-01：PaddleOCR 提交前确认 DNR 规则 4001 已装（只在 background），5 s 内没就绪 → 任务失败（dnr_not_ready）
   beforeSubmit: (provider) => (provider && provider.id === 'paddleocr' ? requirePaddleOriginRule() : undefined),
+  // 审查 30a6e1b P2：所有走 runner 的路径在提交前查数据说明确认
+  isDisclosureAcked: (id) => (needsDisclosure(id) ? isDisclosureAcked(id) : true),
   log: logger,
 });
 

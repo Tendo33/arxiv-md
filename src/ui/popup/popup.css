@@ -113,3 +113,6 @@ body{min-width:320px}
 #ctxProg .bar.indeterminate>i{width:30%;animation:amd-indet 1.2s ease-in-out infinite}
 @keyframes amd-indet{0%{transform:translateX(-100%)}100%{transform:translateX(340%)}}
 @media (prefers-reduced-motion:reduce){#ctxProg .bar.indeterminate>i{animation:none!important;transform:none;width:30%}}
+
+/* 审查 30a6e1b P2：数据说明未确认的任务，中性说明行 */
+.row .row-note{flex-basis:100%;min-width:0;font-size:12px;line-height:18px;color:var(--text-2)}

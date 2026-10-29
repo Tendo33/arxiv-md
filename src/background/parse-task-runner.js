@@ -128,6 +128,13 @@ export function createParseTaskRunner(deps) {
       if (!task) return { skipped: 'missing' };
       const provider = registry.get(task.provider || 'mineru');
       if (!provider) return { error: await fail(task, new ParseError('PROVIDER_FAILED', { reason: `unknown provider ${task.provider}` })) };
+      // 审查 30a6e1b P2（C10）：重试 / SW 续跑 / 内部消息 / 确认发送都汇到这里 → 发出任何请求前统一查 disclosureAck.<provider>。
+      // 没确认 → 任务停在中性的 awaiting_disclosure（不是失败），不取 Key、不发任何请求
+      if (deps.isDisclosureAcked && !(await deps.isDisclosureAcked(provider.id))) {
+        await taskManager.updateTask(taskId, { status: TASK_STATUS.AWAITING_DISCLOSURE, error: null, errorCode: null, errorReason: null });
+        notify(task, 'disclosure', '', provider);
+        return { disclosureNeeded: true, provider: provider.id };
+      }
       // 审查 P1-1：非 OA（或判断不了）的 PDF 先停下等用户确认，确认前不发任何请求
       if (!uploadAllowed(task)) {
         await taskManager.updateTask(taskId, { status: TASK_STATUS.AWAITING_CONSENT });

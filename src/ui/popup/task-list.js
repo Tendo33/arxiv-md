@@ -48,6 +48,7 @@ export function createTaskRow(task, doc = globalThis.document) {
     [TASK_STATUS.COMPLETED]: ['ok', t.popup_status_completed],
     [TASK_STATUS.FAILED]: ['err', t.popup_status_failed],
     [TASK_STATUS.AWAITING_CONSENT]: ['wait', t.popup_status_awaiting], // 在等用户，和“处理中”区分
+    [TASK_STATUS.AWAITING_DISCLOSURE]: ['wait', t.popup_status_awaiting], // 审查 30a6e1b P2：中性，不是失败
   };
   const [cls, label] = map[status] || ['idle', t.popup_status_unknown];
   const busy = status === TASK_STATUS.PENDING || status === TASK_STATUS.PROCESSING;
@@ -59,6 +60,9 @@ export function createTaskRow(task, doc = globalThis.document) {
   } else if (status === TASK_STATUS.AWAITING_CONSENT) {
     // 审查 P1-1：非 OA PDF，点了才弹确认框
     act.push(el(doc, 'button', { class: 'btn btn-ghost', 'data-action': 'consent', 'data-task-id': eid, 'data-provider': task.provider || '' }, [t.popup_action_consent]));
+  } else if (status === TASK_STATUS.AWAITING_DISCLOSURE) {
+    act.push(el(doc, 'button', { class: 'btn btn-ghost', 'data-action': 'disclose', 'data-provider': task.provider || '' }, [t.popup_action_disclose]));
+    act.push(el(doc, 'button', { class: 'btn btn-ghost', 'data-action': 'retry', 'data-task-id': eid }, [t.popup_action_retry]));
   } else if (status === TASK_STATUS.FAILED) {
     act.push(el(doc, 'button', { class: 'btn btn-ghost', 'data-action': 'retry', 'data-task-id': eid }, [t.popup_action_retry]));
   }
@@ -77,6 +81,7 @@ export function createTaskRow(task, doc = globalThis.document) {
     el(doc, 'span', { class: 'row-err-prov', 'aria-hidden': 'true' }, [`${providerLabel(task.provider)} · `]),
     String(error),
   ]));
+  if (status === TASK_STATUS.AWAITING_DISCLOSURE) row.append(el(doc, 'span', { class: 'row-note' }, [t.pdf_disc_needed_title]));
   return row;
 }
 

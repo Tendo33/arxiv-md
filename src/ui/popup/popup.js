@@ -287,6 +287,7 @@ function bindTaskActions() {
     if (action === 'download') handleDownload(url);
     else if (action === 'retry') await handleRetry(taskId);
     else if (action === 'consent') await handleConsent(taskId, btn.dataset.provider);
+    else if (action === 'disclose') chrome.runtime.sendMessage({ type: 'OPEN_DISCLOSURE', provider: btn.dataset.provider });
     else if (action === 'delete') await handleDelete(taskId);
   });
 }

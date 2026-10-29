@@ -117,6 +117,7 @@ export const TASK_STATUS = {
   COMPLETED: 'completed',   // 已完成
   FAILED: 'failed',         // 失败
   AWAITING_CONSENT: 'awaiting_consent', // 非 OA PDF，等用户确认发送链接（审查 P1-1）
+  AWAITING_DISCLOSURE: 'awaiting_disclosure', // 审查 30a6e1b P2：该后端的数据说明还没确认，任务停住，不发任何请求
 };
 
 /**
