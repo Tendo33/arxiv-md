@@ -26,7 +26,7 @@ test('右键菜单：getLanguage 失败时用浏览器语言而不是写死 en',
   const cm = createContextMenus({
     menus, tabs: { onUpdated: { addListener() {} }, onRemoved: { addListener() {} } }, runtime: { lastError: null },
     commands: { getAll: async () => [] }, isValidArxivId: () => true, badge: {},
-    storage: { getLanguage: () => Promise.reject(new Error('x')), getMinerUToken: async () => '' },
+    storage: { getLanguage: () => Promise.reject(new Error('x')), getMinerUToken: async () => '', getPdfParseReadiness: async () => ({ ready: false, provider: 'paddleocr' }) },
   });
   await cm.refresh();
   const titles = created.map((o) => o.title).join('|');

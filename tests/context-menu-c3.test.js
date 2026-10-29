@@ -13,7 +13,7 @@ function fakeChrome({ lang = 'zh', token = '' } = {}) {
     menus: { removeAll: (cb) => { created.length = 0; cb(); }, create: (item, cb) => { created.push(item); cb && cb(); } },
     runtime: { lastError: null },
     commands: { getAll: async () => [{ name: 'convert-current-paper', shortcut: 'Alt+Shift+M' }] },
-    storage: { getLanguage: async () => store.language, getMinerUToken: async () => store.mineruToken },
+    storage: { getLanguage: async () => store.language, getMinerUToken: async () => store.mineruToken, getPdfParseReadiness: async () => ({ ready: !!store.mineruToken, provider: 'mineru' }) },
     tabs: {
       sendMessage: async (id, msg) => { sent.push([id, msg]); return { received: true }; },
       create: async (opts) => ({ id: 99, ...opts }),
@@ -50,6 +50,7 @@ describe('C-3 右键菜单', () => {
     const c = fakeChrome({ lang: 'en' });
     let active = { id: 'paddleocr', hasKey: false };
     c.storage.getActivePdfProvider = async () => active;
+    c.storage.getPdfParseReadiness = async () => ({ ready: !!active.hasKey, provider: active.id });
     const m = make(c);
     await m.refresh();
     expect(c.created.map((i) => i.id)).toEqual([MENU.PAGE, MENU.LINK]);

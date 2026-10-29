@@ -6,7 +6,7 @@ jest.mock('@utils/logger', () => ({ __esModule: true, default: { error: jest.fn(
 jest.mock('@utils/storage', () => ({
   __esModule: true,
   default: {
-    getConversionMode: jest.fn(async () => 'fast'), getMinerUToken: jest.fn(async () => null),
+    getConversionMode: jest.fn(async () => 'fast'), getPdfParseReadiness: jest.fn(async function () { return { ready: !!(await this.getMinerUToken()), provider: 'mineru' }; }), getMinerUToken: jest.fn(async () => null),
     getIncludeMetadata: jest.fn(async () => true), incrementConversion: jest.fn(async () => {}),
     getLanguage: jest.fn(async () => 'zh'),
   },

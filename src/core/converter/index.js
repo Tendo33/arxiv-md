@@ -106,18 +106,19 @@ class MainConverter {
     logger.info('Starting conversion:', arxivId);
 
     const mode = await storage.getConversionMode();
-    const mineruToken = await storage.getMinerUToken();
+    // R4-01：按当前选中的后端判断是否已配置（以前只看 MinerU token，PaddleOCR 用户四个入口全部失效）
+    const { ready: pdfReady, provider } = await storage.getPdfParseReadiness();
     const includeMetadata = await storage.getIncludeMetadata();
 
-    // popup「PDF 解析」按钮（C-2）带 forceMineru：有 Key 就直接走 PDF 解析
-    if ((mode === CONVERSION_MODE.ALWAYS_MINERU || paperInfo.forceMineru) && mineruToken) {
-      return this._convertWithMinerU(paperInfo, onProgress, tabId);
+    // popup「PDF 解析」按钮（C-2）带 forceMineru：当前后端有 Key 就直接走 PDF 解析
+    if ((mode === CONVERSION_MODE.ALWAYS_MINERU || paperInfo.forceMineru) && pdfReady) {
+      return this._convertWithMinerU(paperInfo, onProgress, tabId, provider);
     }
 
     return this._convertWithTieredStrategy(
       paperInfo,
       mode,
-      mineruToken,
+      pdfReady,
       onProgress,
       tabId,
       includeMetadata,
@@ -127,7 +128,7 @@ class MainConverter {
   async _convertWithTieredStrategy(
     paperInfo,
     mode,
-    mineruToken,
+    pdfReady,
     onProgress,
     tabId,
     includeMetadata,
@@ -217,14 +218,16 @@ class MainConverter {
 
 
 
-  async _convertWithMinerU(paperInfo, onProgress, tabId) {
+  async _convertWithMinerU(paperInfo, onProgress, tabId, providerId = null) {
     const { arxivId, title } = paperInfo;
-    logger.info('MinerU conversion requested, submitting background task...');
+    logger.info('PDF parse requested, submitting background task...');
 
-    const mineruToken = await storage.getMinerUToken();
-    if (!mineruToken) {
-      throw new ParseError('AUTH_INVALID', { provider: 'mineru' });
+    // R4-01：校验当前后端的 Key（不再写死 MinerU）
+    const readiness = providerId ? { ready: true, provider: providerId } : await storage.getPdfParseReadiness();
+    if (!readiness.ready) {
+      throw new ParseError('AUTH_INVALID', { provider: readiness.provider });
     }
+    const provider = readiness.provider;
 
     // 检测运行环境：background 还是 content script
     const isBackgroundContext = typeof chrome !== 'undefined' &&
@@ -237,7 +240,7 @@ class MainConverter {
         const taskManager = (await import('@core/task-manager')).default;
 
         // 检查是否存在重复任务
-        const existingTask = await taskManager.findTaskByArxivId(arxivId);
+        const existingTask = await taskManager.findTaskByArxivId(arxivId, provider);
         if (existingTask) {
           // 返回重复任务信息，让调用方决定如何处理
           return {
@@ -252,7 +255,7 @@ class MainConverter {
           };
         }
 
-        const task = await taskManager.addTask(paperInfo, 'mineru');
+        const task = await taskManager.addTask(paperInfo, 'mineru', provider);
 
         // 直接导入 background 模块并调用处理函数
         // 注意：不能用 chrome.runtime.sendMessage 给自己发消息，Service Worker 不会收到

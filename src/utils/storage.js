@@ -110,6 +110,16 @@ class StorageManager {
     return { id, hasKey, keyMissingHere };
   }
 
+  /**
+   * R4-01：「PDF 解析是否可用」唯一判断——当前选中的后端在本设备有 Key。
+   * 所有入口（快捷键、右键菜单、悬浮按钮、popup「PDF 解析」）都经 converter 用这个函数，不再只看 MinerU token。
+   * @returns {Promise<{ready:boolean, provider:string}>}
+   */
+  async getPdfParseReadiness(isKnown) {
+    const { id, hasKey } = await this.getActivePdfProvider(isKnown);
+    return { ready: !!hasKey, provider: id };
+  }
+
   /** 兼容旧调用：等价于 getProviderKey('mineru') */
   async getMinerUToken() {
     return this.getProviderKey('mineru');

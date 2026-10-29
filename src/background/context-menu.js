@@ -62,11 +62,10 @@ export function createContextMenus({ menus, tabs, runtime, commands, storage, is
 
   async function rebuild() {
     const lang = await storage.getLanguage().catch(() => browserDefaultLanguage()); // AB8-04
-    const active = storage.getActivePdfProvider
-      ? await storage.getActivePdfProvider().catch(() => ({ id: 'mineru', hasKey: false }))
-      : { id: 'mineru', hasKey: !!(await storage.getMinerUToken().catch(() => '')) };
-    const hasToken = active.hasKey;
-    const provider = active.id;
+    // R4-01：只按当前后端判断，不再回退到「只看 MinerU token」
+    const active = await storage.getPdfParseReadiness().catch(() => ({ ready: false, provider: 'paddleocr' }));
+    const hasToken = active.ready;
+    const provider = active.provider;
     let shortcut = '';
     try {
       const all = commands && commands.getAll ? await commands.getAll() : [];

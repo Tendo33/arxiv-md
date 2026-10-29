@@ -82,8 +82,8 @@ describe('C-2 内容脚本回执', () => {
     expect(cb).toHaveBeenCalledTimes(1);
     expect(cb).toHaveBeenCalledWith({ ok: true, filename: 'a.md' });
   });
-  test('转换器：forceMineru 且有 token 时走 MinerU', () => {
-    expect(read('src/core/converter/index.js')).toMatch(/paperInfo\.forceMineru\)\s*&&\s*mineruToken/);
+  test('转换器：forceMineru 且当前后端已配置时走 PDF 解析（R4-01）', () => {
+    expect(read('src/core/converter/index.js')).toMatch(/paperInfo\.forceMineru\)\s*&&\s*pdfReady/);
     const idx = read('src/content/index.js');
     expect(idx).toMatch(/onNextOutcome\(sendResponse\)/);
     expect(idx).toMatch(/forceMineru\s*=\s*true/);

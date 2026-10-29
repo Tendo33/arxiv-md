@@ -2,7 +2,7 @@
 jest.mock('@utils/storage', () => ({
   __esModule: true,
   default: {
-    getConversionMode: jest.fn(), getMinerUToken: jest.fn(), getIncludeMetadata: jest.fn(async () => true),
+    getConversionMode: jest.fn(), getPdfParseReadiness: jest.fn(async function () { return { ready: !!(await this.getMinerUToken()), provider: 'mineru' }; }), getMinerUToken: jest.fn(), getIncludeMetadata: jest.fn(async () => true),
     incrementConversion: jest.fn(async () => {}),
   },
 }));
