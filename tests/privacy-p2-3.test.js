@@ -73,3 +73,11 @@ test('PRIVACY 保留期限按 PM 核实结果写明；>50 MB 不发送、建议 
   expect(rd('README_CN.md')).toMatch(/超过 50 MB 的 PDF 不会发送[^\n]*MinerU/);
   expect(rd('README_CN.md')).toMatch(/bcebos\.com/);
 });
+
+test('PRIVACY 写明 MinerU 运营主体，不再写待核实；保留期限句不变', () => {
+  const s = require('fs').readFileSync('PRIVACY.md', 'utf8');
+  expect(s).not.toMatch(/legal operator is still to be verified/);
+  expect(s).toMatch(/上海人工智能创新中心/);
+  expect(s).toMatch(/https:\/\/webpub\.shlab\.tech\/dps\/opendatalab-web\/odl_v5\.1690\/privacy\.html/);
+  expect(s).toMatch(/Neither Baidu AI Studio \(PaddleOCR\) nor MinerU publishes a specific retention period/);
+});

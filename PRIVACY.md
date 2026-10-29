@@ -2,7 +2,7 @@
 
 **Last updated: September 28, 2026**
 
-> **Pending review (Round 4 draft):** the PDF parsing sections below follow `pdf-parser-privacy-draft.md` v2 and are not final. The MinerU legal operator is still to be verified. Update the date above at release.
+> **Pending review (Round 4 draft):** the PDF parsing sections below follow `pdf-parser-privacy-draft.md` v2 and are not final. MinerU is operated by 上海人工智能创新中心 (Shanghai Artificial Intelligence Innovation Center), the operator named in the 「OpenDataLab」个人信息保护政策 (Chinese only): https://webpub.shlab.tech/dps/opendatalab-web/odl_v5.1690/privacy.html Update the date above at release.
 
 ## Overview
 
