@@ -8,10 +8,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
-### 修复
-
-- Chrome / Edge 包的 manifest 不再带 `background.scripts`，Chrome 扩展页不再提示「'background.scripts' requires manifest version of 2 or lower」。Firefox 包另用 `npm run build:firefox` 构建到 `dist-firefox/`，保留 `background.scripts`。
-
 ## [1.2.0] - 2026-10-29
 
 ### 新增
@@ -34,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - ar5iv 返回「No content available」空页面或转换结果为空时，自动改用 PDF，不再保存空的 Markdown。
 - 旧式 arXiv 编号（如 `math/0211159`）的 `/html/` 页面也能用快捷键转换。
 - 取消下载后，如果页面上已经显示了下载卡片，就不再额外弹系统通知；卡片按下载任务对应，不会串号。
+- Chrome / Edge 包不再带 `background.scripts`，Chrome 扩展页不再提示「'background.scripts' requires manifest version of 2 or lower」；Firefox 包用 `npm run build:firefox` 单独构建到 `dist-firefox/`，保留后台脚本。
 
 ### 其他
 
