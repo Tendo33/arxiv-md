@@ -27,8 +27,8 @@ describe('err_reason_key_not_on_device', () => {
     expect(s).toContain('No MinerU key on this device');
     expect(s).not.toMatch(/[\u4e00-\u9fff]/);
   });
-  test('没有对应文案的 reason 沿用原 error', () => {
+  test('没有对应文案的 reason → 按错误码显示白话（R4-03：不再显示原文）', () => {
     setTaskListLanguage('en');
-    expect(errText(rowHtml({ ...task, errorReason: 'other', error: 'raw msg' }))).toBe('raw msg');
+    expect(errText(rowHtml({ ...task, errorReason: 'other', error: 'raw msg' }))).toBe(translations.en.err_AUTH_INVALID.replace('{provider}', 'MinerU'));
   });
 });

@@ -48,6 +48,7 @@ export function createParseTaskRunner(deps) {
       errorCode: e.code,
       errorReason: e.reason || null,
       errorHttpStatus: e.httpStatus || null,
+      errorHost: e.host || null, // R4-03：PERMISSION_MISSING 文案要用
     });
     notify(task, 'failed', e, provider); // 通知层按 code/reason 选文案，不展示 e.message
     return e;

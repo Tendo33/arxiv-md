@@ -1,4 +1,5 @@
 import { translations } from '@config/locales';
+import { taskErrorText } from './task-error-text';
 import { TASK_STATUS } from '@config/constants';
 import { formatTimeAgo } from '@utils/time-ago';
 import { providerLabel } from '@config/pdf-providers';
@@ -36,9 +37,8 @@ function downloadIcon(doc) {
 export function createTaskRow(task, doc = globalThis.document) {
   const t = translations[currentLang];
   const { id, status, progress, paperInfo = {}, createdAt, zipUrl } = task;
-  // 三审 P3：有 errorReason 且有对应 err_reason_* 文案时按当前语言显示，否则沿用后台原文
-  const reasonMsg = task.errorReason && t[`err_reason_${task.errorReason}`];
-  const error = reasonMsg ? reasonMsg.replace(/\{provider\}/g, providerLabel(task.provider)) : task.error;
+  // R4-03：失败原因按错误码 / reason 显示当前语言的白话（见 task-error-text.js），原文只放 title
+  const error = status === TASK_STATUS.FAILED ? taskErrorText(task, t, providerLabel) : task.error;
   const title = paperInfo.title || paperInfo.arxivId || '';
   // 设计验收 R3 建议 1：行内用短格式（11 min. ago），给标题留宽度
   const timeAgo = formatTimeAgo(createdAt, currentLang, t.popup_time_just_now, Date.now(), 'narrow');
