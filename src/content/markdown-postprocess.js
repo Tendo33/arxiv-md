@@ -92,16 +92,38 @@ export function postProcessMarkdown(markdown) {
 //   货币 $5 … $10 / $5,$10 不算公式。没有采用「开头 $ 后不能是数字」：它会让 $0$、$0.25$ 这类真公式失去保护（2305.18290 快照）。
 // - 围栏代码块：行首 ```/~~~（≥3），到同一串独占一行（可带尾随空白）为止；没闭合就不保护（与旧行为一致）。
 // - $$…$$：到下一个 $$ 为止；没闭合就不保护。
-function findFenceEnd(text, start, fence) {
-  let from = start;
-  for (;;) {
-    const k = text.indexOf(`\n${fence}`, from);
-    if (k < 0) return -1;
-    let e = k + 1 + fence.length;
+// batch9 ③（batch8 审查 P3③）：原来每个围栏都向后 indexOf，大量未闭合围栏是平方复杂度（2 万个约 4.9 秒）。
+// 现在第一次用到时把所有「可作结尾」的行（行首 n 个同一字符的 ` 或 ~，后面只有空白）按串分组，
+// 位置递增；查找时二分出第一个 > start 的位置。整体 O(n log n)。
+function fenceClosers(text) {
+  const byFence = new Map(); // 串（如 '```'）-> [{ k: 行前换行位置, e: 行尾 }]
+  for (let k = text.indexOf('\n'); k >= 0; k = text.indexOf('\n', k + 1)) {
+    const c = text[k + 1];
+    if (c !== '`' && c !== '~') continue;
+    let f = k + 1;
+    while (f < text.length && text[f] === c) f += 1;
+    if (f - k - 1 < 3) continue;
+    let e = f;
     while (e < text.length && (text[e] === ' ' || text[e] === '\t')) e += 1;
-    if (e === text.length || text[e] === '\n') return e;
-    from = k + 1;
+    if (e !== text.length && text[e] !== '\n') continue;
+    const key = text.slice(k + 1, f);
+    if (!byFence.has(key)) byFence.set(key, []);
+    byFence.get(key).push({ k, e });
   }
+  return byFence;
+}
+
+function findFenceEnd(closers, start, fence) {
+  const list = closers.get(fence);
+  if (!list) return -1;
+  let lo = 0;
+  let hi = list.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (list[mid].k >= start) hi = mid;
+    else lo = mid + 1;
+  }
+  return lo < list.length ? list[lo].e : -1;
 }
 
 function lineSpans(text, lineStart) {
@@ -129,6 +151,8 @@ function protectedRanges(text) {
   const n = text.length;
   let i = 0;
   let line = null;
+  let fences = null;
+  let noMoreDoubleDollar = false; // 某个 $$ 向后找不到结尾后，后面的 $$ 也不会有
   while (i < n) {
     if (i === 0 || text[i - 1] === '\n') {
       // 手工数围栏串（不用 /^(`{3,})[^\n]*\n/，它在无换行的长反引号串上会二次回溯）
@@ -137,7 +161,8 @@ function protectedRanges(text) {
       const nl = text.indexOf('\n', f);
       const fm = f - i >= 3 && nl >= 0 ? [text.slice(i, nl + 1), text.slice(i, f)] : null;
       if (fm) {
-        const end = findFenceEnd(text, i + fm[0].length - 1, fm[1]);
+        if (!fences) fences = fenceClosers(text);
+        const end = findFenceEnd(fences, i + fm[0].length - 1, fm[1]);
         if (end >= 0) {
           ranges.push([i, end]);
           i = end;
@@ -151,12 +176,14 @@ function protectedRanges(text) {
       line = lineSpans(text, ls);
     }
     const ch = text[i];
-    if (ch === '$' && text[i + 1] === '$') {
+    if (ch === '$' && text[i + 1] === '$' && !noMoreDoubleDollar) {
       const end = text.indexOf('$$', i + 2);
+      if (end < 0) noMoreDoubleDollar = true;
       if (end >= 0) {
         ranges.push([i, end + 2]);
+        // batch9 ③：结尾还在同一行时保留本行的扫描结果，不再整行重扫（同一行 5000 个 $$a$$ 原来约 3 秒）
+        if (end + 2 > line.lineEnd) line = null;
         i = end + 2;
-        line = null;
         continue;
       }
     }

@@ -3,7 +3,7 @@
 import metadataExtractor from '@core/metadata-extractor';
 import { paperTabTitle } from './bibtex';
 import logger from '@utils/logger';
-import { statusCardErrorText } from './status-error';
+import { isCanceledDownload, statusCardErrorText } from './status-error';
 import { REGEX } from '@config/constants';
 import storage from '@utils/storage';
 import { translations } from '@config/locales';
@@ -19,9 +19,13 @@ import {
   reportShortcutFailure,
   setProgressState,
   setProgressText,
+  showCanceled,
   showError,
   showResult,
+  isPendingShown,
+  settlePending,
   showSuccess,
+  showPending,
   updateProgressUI,
 } from './progress-ui';
 
@@ -73,6 +77,15 @@ async function init() {
         return true;
       }
       handleConversionTrigger(message.mode || 'markdown');
+      break;
+
+    case 'PDF_DOWNLOAD_SETTLED':
+      // batch9 M2：pending 的 PDF 下载后来完成了
+      if (message.data?.ok) settlePending(t.content_progress_completed);
+      // batch9 审查 P3②：超时后又中断——仍是 pending 卡片时换成对应的失败 / 已取消卡
+      else if (message.data && isPendingShown()) {
+        (isCanceledDownload(message.data) ? showCanceled : showError)(statusCardErrorText(message.data, t, 'PDF download failed', { download: true }));
+      }
       break;
 
     case 'CONVERSION_PROGRESS':
@@ -244,11 +257,14 @@ async function handleConversionTrigger(type = 'markdown') {
           ? response
           : response?.data?.success === false ? response.data : null;
         if (failure) {
-          showError(statusCardErrorText(failure, t, 'Conversion failed'));
+          (isCanceledDownload(failure) ? showCanceled : showError)(statusCardErrorText(failure, t, 'Conversion failed'));
           return;
         }
 
-        if (response?.data?.background) {
+        // batch9 ①：4 分钟后下载还在继续，不是失败
+        if (response?.data?.pending) {
+          showPending(t.content_download_pending);
+        } else if (response?.data?.background) {
           showSuccess(t.content_progress_submitted);
         } else if (response?.data?.filename) {
           showResult({
@@ -332,10 +348,14 @@ async function handlePdfDownloadDirect(button) {
         }
 
         if (response && (response.success === false || response.data?.success === false)) {
-          showError(statusCardErrorText(response, t, 'PDF download failed', { download: true }));
+          (isCanceledDownload(response) ? showCanceled : showError)(statusCardErrorText(response, t, 'PDF download failed', { download: true }));
           return;
         }
 
+        if (response?.data?.pending || response?.pending) {
+          showPending(t.content_download_pending);
+          return;
+        }
         showSuccess(t.content_progress_completed);
         logger.info('PDF download initiated via background');
       }
@@ -343,7 +363,7 @@ async function handlePdfDownloadDirect(button) {
   } catch (error) {
     logger.error('PDF download failed:', error);
     restoreButton();
-    showError(statusCardErrorText(error, t, 'PDF download failed', { download: true }));
+    (isCanceledDownload(error) ? showCanceled : showError)(statusCardErrorText(error, t, 'PDF download failed', { download: true }));
   }
 }
 

@@ -38,7 +38,7 @@ export function updateProgressUI(progress) {
 
 // Toast 通知已被移除，通知由 background script 的系统通知处理
 
-export function setProgressState({ text, percent = null, detail = '', file = '', state = '' }) {
+export function setProgressState({ text, percent = null, detail = '', file = '', state = '', polite = false }) {
   const progressIndicator = document.querySelector('.arxiv-md-progress');
   if (!progressIndicator) return;
 
@@ -47,14 +47,17 @@ export function setProgressState({ text, percent = null, detail = '', file = '',
   const detailEl = progressIndicator.querySelector('.progress-detail');
 
   progressIndicator.style.display = 'flex';
+  delete progressIndicator.dataset.pending;
   removeResultActions(progressIndicator);
   progressIndicator.classList.remove('error', 'success', 'warning');
   if (state === 'error' || state === 'success' || state === 'warning') {
     progressIndicator.classList.add(state);
   }
   // 读屏：进度/成功用 polite 播报，错误用 alert 立即播报
-  progressIndicator.setAttribute('role', state === 'error' ? 'alert' : 'status');
-  progressIndicator.setAttribute('aria-live', state === 'error' ? 'assertive' : 'polite');
+  // batch9 S3：polite=true（已取消）即使沿用错误样式也走 status/polite，不打断读屏
+  const assertive = state === 'error' && !polite;
+  progressIndicator.setAttribute('role', assertive ? 'alert' : 'status');
+  progressIndicator.setAttribute('aria-live', assertive ? 'assertive' : 'polite');
   progressIndicator.setAttribute('aria-atomic', 'true');
 
   if (textEl) textEl.textContent = text || t.content_progress_processing;
@@ -123,6 +126,22 @@ export function showError(message) {
   reportShortcutFailure();
 }
 
+/**
+ * batch9 设计验收 M3/S3：PDF 下载被取消或已从下载列表移除——标题「已取消」而不是「失败」，
+ * 读屏用 status/polite。样式暂时沿用错误卡片（中性「已取消」样式在 backlog）。
+ */
+export function showCanceled(message) {
+  notifyOutcome({ ok: false, error: message || t.content_error_download_canceled });
+  setProgressState({
+    text: t.content_progress_canceled,
+    detail: message || t.content_error_download_canceled,
+    percent: null,
+    state: 'error',
+    polite: true,
+  });
+  reportShortcutFailure();
+}
+
 /** 让后台把快捷键徽标从「…」换成「!」；不是快捷键发起的转换，后台会忽略 */
 export function reportShortcutFailure() { sendShortcutResult({ ok: false }); }
 /** H-01：重复任务用户取消/强制提交成功——让后台直接清除徽标 */
@@ -161,6 +180,43 @@ export function showSuccess(message) {
     const el = document.querySelector('.arxiv-md-progress');
     if (el && el.classList.contains('success')) clearProgressState();
   }, SUCCESS_VISIBLE_MS);
+}
+
+/**
+ * batch9 ①：4 分钟后下载仍在继续——中性（进行中）样式，不显示百分比，
+ * 标题「仍在下载」，不声称已完成或失败；带关闭按钮，不自动收起（M2）。
+ */
+export function showPending(message) {
+  notifyOutcome({ ok: true, pending: true, message: message || '' });
+  setProgressState({
+    text: t.content_progress_still_downloading,
+    detail: message || '',
+    percent: null,
+    state: '',
+  });
+  const progressIndicator = document.querySelector('.arxiv-md-progress');
+  if (progressIndicator) {
+    progressIndicator.dataset.pending = '1';
+    const actions = document.createElement('div');
+    actions.className = 'arxiv-md-result-actions';
+    actions.appendChild(createCloseButton());
+    progressIndicator.appendChild(actions);
+  }
+  // batch9 M2（Simon 决定）：pending 不自动收起，留到用户点「关闭」、新的转换替换它，或下载补完成（settlePending）
+  clearTimeout(successTimer);
+}
+
+/** batch9 M2：页面上是否仍是 pending 卡片 */
+export function isPendingShown() {
+  const el = document.querySelector('.arxiv-md-progress');
+  return !!el && el.dataset.pending === '1' && el.style.display !== 'none';
+}
+
+/** batch9 M2：后台报告 pending 的下载后来完成了——仍显示 pending 卡片时换成「已完成」 */
+export function settlePending(message) {
+  if (!isPendingShown()) return false;
+  showSuccess(message);
+  return true;
 }
 
 function createCloseButton() {
