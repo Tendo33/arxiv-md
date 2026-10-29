@@ -300,3 +300,16 @@ describe('P-3：文字/引用命令不包 $', () => {
   test.each([['\\cite{x}'], ['\\citep{vaswani2017}'], ['\\ref{tab:1}'], ['\\textbf{Model}'], ['\\emph{ours}'], ['\\textbf{28.4}']])('不动：%s', (a) => expect(wrapCellMath(a)).toBe(a));
   test('数学命令照常包', () => expect(wrapCellMath('\\mathbf{x}_{i}')).toBe('$\\mathbf{x}_{i}$'));
 });
+
+describe('P-7：锚点块太短（<20 字）不用来定位', () => {
+  const { restoreDroppedHeadings } = require('@pdf-core/providers/paddleocr-blocks');
+  const blk = (label, content, bbox) => ({ block_label: label, block_content: content, block_bbox: bbox });
+  test('标题正下方是短块「(a)」→ 跳过，插到下一个足够长的块前', () => {
+    const body = 'As shown in (a) above, results vary.\n\nWe use a shallow architecture with two convolutional layers.';
+    const pg = { prunedResult: { parsing_res_list: [
+      blk('header', 'ACKNOWLEDGMENTS', [100, 100, 900, 120]),
+      blk('text', '(a)', [100, 125, 200, 135]),
+      blk('text', 'We use a shallow architecture with two convolutional layers.', [100, 140, 900, 200])] } };
+    expect(restoreDroppedHeadings(body, pg)).toBe('As shown in (a) above, results vary.\n\n## ACKNOWLEDGMENTS\n\nWe use a shallow architecture with two convolutional layers.');
+  });
+});
