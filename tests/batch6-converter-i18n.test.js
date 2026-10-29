@@ -29,7 +29,7 @@ describe.each([['zh'], ['en']])('语言 %s', (lang) => {
   beforeEach(() => storage.getLanguage.mockResolvedValue(lang));
 
   test('转换完成', async () => {
-    ar5iv.convert.mockResolvedValue({ markdown: '# x', metadata: { source: 'ar5iv' } });
+    ar5iv.convert.mockResolvedValue({ markdown: '# x\n\nbody', metadata: { source: 'ar5iv' } });
     await converter.convert(paper);
     expect(last()[0]).toBe(t.notify_done_title);
     expect(last()[1]).toContain('ar5iv');

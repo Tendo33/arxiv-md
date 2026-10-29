@@ -26,10 +26,10 @@ beforeEach(() => {
 describe.each([[false], [true]])('无 Token（forceMineru=%s）', (force) => {
   beforeEach(() => { storage.getConversionMode.mockResolvedValue('fast'); storage.getMinerUToken.mockResolvedValue(null); });
   test('ar5iv 成功 → 仍走 Tier 1，不碰 MinerU', async () => {
-    ar5iv.convert.mockResolvedValue({ markdown: '# x', title: 'T', metadata: { source: 'ar5iv' } });
+    ar5iv.convert.mockResolvedValue({ markdown: '# x\n\nbody', title: 'T', metadata: { source: 'ar5iv' } });
     const r = await converter.convert(paper(force ? { forceMineru: true } : {}));
     expect(r.success).toBe(true);
-    expect(r.markdown).toBe('# x');
+    expect(r.markdown).toBe('# x\n\nbody');
     expect(converter._convertWithMinerU).not.toHaveBeenCalled();
     expect(converter._fallbackToPdf).not.toHaveBeenCalled();
   });

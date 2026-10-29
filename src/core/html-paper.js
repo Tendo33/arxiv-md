@@ -18,8 +18,40 @@ export function hasLtxDocument(html) {
     && /<article\b[\s\S]{0,500}?class\s*=\s*["'][^"']*\bltx_document\b/i.test(html);
 }
 
+/**
+ * AR-02：ar5iv 没有可用转换时（例如 hep-th/9711200）仍返回 200 和 ltx_document，
+ * 但标题是「No content available」、正文只有一个空 article 加上 ltx_ERROR 的 Fatal error 提示。
+ * 这种页面不算可转换，交给 PDF 兜底。
+ */
+export function isNoContentPage(html) {
+  if (typeof html !== 'string') return true;
+  if (/<title>\s*No content available\s*<\/title>/i.test(html)) return true;
+  const body = html.replace(/<script\b[\s\S]*?<\/script>/gi, '').replace(/<style\b[\s\S]*?<\/style>/gi, '');
+  const docs = body.match(/<article\b[^>]*\bltx_document\b[^>]*>[\s\S]*?<\/article>/gi) || [];
+  const text = docs.join(' ')
+    .replace(/<span\b[^>]*\bltx_ERROR\b[^>]*>[\s\S]*?<\/span>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;|\s+/g, '');
+  return text.length === 0;
+}
+
 export function isUsableHtmlPaper({ ok, finalUrl, contentType, html }) {
-  return isAr5ivHtmlAvailable({ ok, finalUrl, contentType }) && hasLtxDocument(html);
+  return isAr5ivHtmlAvailable({ ok, finalUrl, contentType }) && hasLtxDocument(html) && !isNoContentPage(html);
+}
+
+/**
+ * AR-02：转换结果除去 YAML 头、标题行、元数据引用块和分隔线后没有正文，就不算成功，绝不显示「转换完成」。
+ */
+export function hasMarkdownBody(markdown) {
+  if (typeof markdown !== 'string') return false;
+  const rest = markdown
+    .replace(/^---\n[\s\S]*?\n---\n?/, '')
+    .split('\n')
+    .filter((l) => !/^\s*(#{1,6}\s|>|[-*_]{3,}\s*$)/.test(l))
+    .join('')
+    .replace(/Conversion to HTML had a Fatal error and exited abruptly\.?( This document may be truncated or damaged\.)?/g, '')
+    .replace(/\s+/g, '');
+  return rest.length > 0;
 }
 
 export async function loadHtmlPaper(source, arxivId, fetchImpl = fetch, onError = null) {

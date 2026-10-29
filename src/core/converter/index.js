@@ -1,6 +1,7 @@
 // 主转换器
 
 import ar5ivConverter from './ar5iv-converter';
+import { hasMarkdownBody } from '../html-paper';
 import storage from '@utils/storage';
 import logger from '@utils/logger';
 import { isNetworkError, NETWORK_OFFLINE_CODE } from '@utils/network-error';
@@ -143,6 +144,8 @@ class MainConverter {
         includeMetadata,
         paperInfo,
       });
+      // AR-02：空正文不算转换成功，退回 PDF
+      if (!hasMarkdownBody(result?.markdown)) throw new Error('Converted HTML document has no content');
       const filename = generateFilename(
         {
           title: result.title || title,

@@ -15,7 +15,7 @@ import converter from '@core/converter';
 import { translations } from '../src/config/locales';
 
 const incompleteResult = {
-  markdown: '# x', title: 'T', metadata: { source: 'arxiv-html' },
+  markdown: '# x\n\nbody', title: 'T', metadata: { source: 'arxiv-html' },
   integrity: { complete: false, source: { headings: 58 }, exported: { headings: 25 } },
 };
 
