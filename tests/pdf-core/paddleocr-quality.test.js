@@ -141,3 +141,23 @@ describe('P-5：被段落切断的行内公式', () => {
   ])('不合并：%s', (_, t) => expect(mergeSplitInlineMath(t)).toBe(t));
   test('最小例子', () => expect(mergeSplitInlineMath('where $ P(a \\leq $\n\n$ b) $ is')).toBe('where $ P(a \\leq b) $ is'));
 });
+
+describe('P-6：\\mathrm / \\text 里的拆字母', () => {
+  const { joinSpacedLetters } = require('@pdf-core/normalize/math');
+  test.each([
+    ['$ \\mathrm{G E L U}(x) $', '$ \\mathrm{GELU}(x) $'],
+    ['$ \\mathrm{e r f}(x) $', '$ \\mathrm{erf}(x) $'],
+    ['$ d_{\\mathrm{m o d e l}} $', '$ d_{\\mathrm{model}} $'],
+    ['$ \\mathbf{z}_{\\mathrm{c l a s s;}} $', '$ \\mathbf{z}_{\\mathrm{class;}} $'],
+    ['$ \\mathrm{M S A}(\\mathrm{L N}(z)) $', '$ \\mathrm{MSA}(\\mathrm{LN}(z)) $'],
+    ['$ \\operatorname{s o f t m a x} $', '$ \\operatorname{softmax} $'],
+  ])('%s', (i, o) => expect(joinSpacedLetters(i)).toBe(o));
+  test.each([
+    '$ x \\text{and } y $', '$ \\text{for any } x $', '$ \\mathrm{LN} $', '$ \\mathbf{x} $',
+    '$ \\mathrm{x} $', 'l r a t e', '`\\mathrm{a b}`',
+  ])('不动：%s', (t) => expect(joinSpacedLetters(t)).toBe(t));
+  test('走完整 normalizeMarkdown', () => {
+    const { normalizeMarkdown } = require('@pdf-core/normalize');
+    expect(normalizeMarkdown('$$ \\mathrm{G E L U}(x)=x\\Phi(x) $$').markdown).toContain('\\mathrm{GELU}(x)');
+  });
+});

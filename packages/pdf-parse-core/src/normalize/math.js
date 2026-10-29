@@ -25,8 +25,18 @@ export function mergeSplitInlineMath(md) {
   });
 }
 
+/**
+ * P-6：OCR 把正体文字拆成单字母（\mathrm{G E L U}、\mathrm{c l a s s;}）。
+ * 只处理 \mathrm/\text/\operatorname 等文字命令，且花括号里全是「单字母 + 空格」时才去空格；
+ * \text{and } 这类正常文字不动。公式外的「l r a t e」属已知问题，不自动修。
+ */
+const SPACED_LETTERS = /\\(mathrm|text|textrm|textit|textbf|operatorname|mathit|mathsf|mathtt|rm)\s*\{(\s*[A-Za-z](?:\s+[A-Za-z])+\s*[;,.:]?\s*)\}/g;
+export function joinSpacedLetters(md) {
+  return withCodeProtected(md, (s) => s.replace(SPACED_LETTERS, (_, cmd, body) => `\\${cmd}{${body.replace(/\s+/g, '')}}`));
+}
+
 export function normalizeMath(md) {
-  return mergeSplitInlineMath(withCodeProtected(md, (s) => s
+  return mergeSplitInlineMath(withCodeProtected(joinSpacedLetters(md), (s) => s
     .replace(/\\\[([\s\S]+?)\\\]/g, (_, body) => `$$${body.trim().includes('\n') ? `\n${body.trim()}\n` : body.trim()}$$`)
     .replace(/\\\(([\s\S]+?)\\\)/g, (_, body) => `$${body.trim()}$`)));
 }
