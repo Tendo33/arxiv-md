@@ -29,6 +29,8 @@ export function mapPaddleError(err) {
 }
 
 /** 星河 multipart 上传上限 50 MB（官方文档：链接 200 MB、上传 50 MB） */
+// 实测（2026-10-29）：2.2 MB 的 arXiv PDF 从海外上传到星河用了 137s，30s 默认超时必然失败
+export const PADDLEOCR_UPLOAD_TIMEOUT_MS = 5 * 60 * 1000;
 export const PADDLEOCR_MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
 const UPLOAD_HOSTS = new Set(['arxiv.org', 'www.arxiv.org', 'export.arxiv.org']);
 
@@ -116,7 +118,7 @@ async function request(url, init, token, ctx) {
   const res = await fetchWithTimeout(url, {
     ...init,
     headers: isForm ? { Authorization: `Bearer ${token}` } : { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-  }, { ctx, provider: ID, timeoutMs: ctx.requestTimeoutMs });
+  }, { ctx, provider: ID, timeoutMs: isForm ? (ctx.uploadTimeoutMs || PADDLEOCR_UPLOAD_TIMEOUT_MS) : ctx.requestTimeoutMs });
   if (!res.ok) throw mapPaddleError(await readErrorResponse(res));
   const json = await res.json();
   if (json && json.code != null && Number(json.code) !== 0) throw mapBusiness(json, res.status);
