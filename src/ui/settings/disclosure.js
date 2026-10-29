@@ -3,7 +3,7 @@
 import { h, svg } from '@utils/dom';
 
 export const PRIVACY_LINKS = {
-  paddleocr: 'https://www.baidu.com/duty/yinsiquan.html',
+  paddleocr: 'https://aistudio.baidu.com/privacy',
   mineru: 'https://sso.openxlab.org.cn/protocol/privacy',
 };
 const EXT = ['svg', { viewBox: '0 0 24 24', width: 14, height: 14, fill: 'none', stroke: 'currentColor', 'stroke-width': 2, 'aria-hidden': 'true' }, [
