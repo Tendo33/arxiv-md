@@ -174,7 +174,7 @@ export function showSuccess(message) {
 
 /**
  * batch9 ①：4 分钟后下载仍在继续——中性（进行中）样式，不显示百分比，
- * 标题「仍在下载」，不声称已完成或失败；带关闭按钮，同样停留 SUCCESS_VISIBLE_MS 后收起。
+ * 标题「仍在下载」，不声称已完成或失败；带关闭按钮，不自动收起（M2）。
  */
 export function showPending(message) {
   notifyOutcome({ ok: true, pending: true, message: message || '' });
@@ -192,11 +192,16 @@ export function showPending(message) {
     actions.appendChild(createCloseButton());
     progressIndicator.appendChild(actions);
   }
+  // batch9 M2（Simon 决定）：pending 不自动收起，留到用户点「关闭」、新的转换替换它，或下载补完成（settlePending）
   clearTimeout(successTimer);
-  successTimer = setTimeout(() => {
-    const el = document.querySelector('.arxiv-md-progress');
-    if (el && el.dataset.pending === '1') clearProgressState();
-  }, SUCCESS_VISIBLE_MS);
+}
+
+/** batch9 M2：后台报告 pending 的下载后来完成了——仍显示 pending 卡片时换成「已完成」 */
+export function settlePending(message) {
+  const el = document.querySelector('.arxiv-md-progress');
+  if (!el || el.dataset.pending !== '1' || el.style.display === 'none') return false;
+  showSuccess(message);
+  return true;
 }
 
 function createCloseButton() {

@@ -22,6 +22,7 @@ import {
   showCanceled,
   showError,
   showResult,
+  settlePending,
   showSuccess,
   showPending,
   updateProgressUI,
@@ -75,6 +76,11 @@ async function init() {
         return true;
       }
       handleConversionTrigger(message.mode || 'markdown');
+      break;
+
+    case 'PDF_DOWNLOAD_SETTLED':
+      // batch9 M2：pending 的 PDF 下载后来完成了
+      if (message.data?.ok) settlePending(t.content_progress_completed);
       break;
 
     case 'CONVERSION_PROGRESS':

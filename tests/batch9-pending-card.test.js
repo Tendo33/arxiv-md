@@ -1,5 +1,5 @@
 import { parseHTML } from 'linkedom';
-import { showPending, showError, showSuccess, SUCCESS_VISIBLE_MS } from '../src/content/progress-ui';
+import { showPending, showError, showSuccess, setProgressState, settlePending, SUCCESS_VISIBLE_MS } from '../src/content/progress-ui';
 import { statusCardErrorText } from '../src/content/status-error';
 import { translations } from '../src/config/locales';
 
@@ -35,19 +35,56 @@ describe('batch9 ①：pending 状态卡（中性、无百分比、不说完成/
     expect(translations.zh.content_progress_still_downloading).not.toBe(translations.zh.content_progress_completed);
   });
 
-  test('停留 SUCCESS_VISIBLE_MS 后收起；期间被新状态替换则不误清', () => {
+  // batch9 M2（Simon 决定）：pending 不自动收起
+  test('8 秒、60 秒后仍在；只有关闭 / 新转换 / 补完成会把它换掉', () => {
     jest.useFakeTimers();
     showPending(t.content_download_pending);
     const box = document.querySelector('.arxiv-md-progress');
-    jest.advanceTimersByTime(SUCCESS_VISIBLE_MS - 1);
+    jest.advanceTimersByTime(SUCCESS_VISIBLE_MS + 1);
     expect(box.style.display).toBe('flex');
-    jest.advanceTimersByTime(1);
-    expect(box.style.display).toBe('none');
+    expect(box.dataset.pending).toBe('1');
+    jest.advanceTimersByTime(60_000);
+    expect(box.style.display).toBe('flex');
+    expect(box.querySelector('.progress-text').textContent).toBe('Still downloading');
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
+  test('点「关闭」移除', () => {
+    jest.useFakeTimers();
     showPending(t.content_download_pending);
-    showError('x');
-    jest.advanceTimersByTime(SUCCESS_VISIBLE_MS);
-    expect(box.style.display).toBe('flex');
+    const box = document.querySelector('.arxiv-md-progress');
+    jest.advanceTimersByTime(60_000);
+    box.querySelector('.arxiv-md-result-close').dispatchEvent(new window.Event('click'));
+    expect(box.style.display).toBe('none');
+  });
+
+  test('新的转换开始时被替换', () => {
+    jest.useFakeTimers();
+    showPending(t.content_download_pending);
+    const box = document.querySelector('.arxiv-md-progress');
+    jest.advanceTimersByTime(60_000);
+    setProgressState({ text: t.content_progress_processing, percent: 0 });
     expect(box.dataset.pending).toBeUndefined();
+    expect(box.querySelector('.progress-text').textContent).toBe(t.content_progress_processing);
+    expect(settlePending('done')).toBe(false); // 不再是 pending，补完成消息不覆盖新任务
+    expect(box.querySelector('.progress-text').textContent).toBe(t.content_progress_processing);
+  });
+
+  test('补完成（PDF_DOWNLOAD_SETTLED）换成已完成，之后按成功卡规则收起', () => {
+    jest.useFakeTimers();
+    showPending(t.content_download_pending);
+    const box = document.querySelector('.arxiv-md-progress');
+    jest.advanceTimersByTime(60_000);
+    expect(settlePending(t.content_progress_completed)).toBe(true);
+    expect(box.classList.contains('success')).toBe(true);
+    expect(box.dataset.pending).toBeUndefined();
+    jest.advanceTimersByTime(SUCCESS_VISIBLE_MS);
+    expect(box.style.display).toBe('none');
+  });
+
+  test('content/index.js 处理 PDF_DOWNLOAD_SETTLED', () => {
+    const src = require('fs').readFileSync(require('path').join(__dirname, '../src/content/index.js'), 'utf8');
+    expect(src).toMatch(/case 'PDF_DOWNLOAD_SETTLED':\n.*\n\s*if \(message\.data\?\.ok\) settlePending\(/);
   });
 
   test('成功卡仍是 100% success（对照）', () => {

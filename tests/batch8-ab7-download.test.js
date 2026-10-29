@@ -312,6 +312,21 @@ describe('batch9 ①：4 分钟后仍在下载 → 不报失败、不取消；�
     expect(c.listeners.size).toBe(0);
   });
 
+  // batch9 M2：pending 卡片不自动收起，补完成时后台给发起页发 PDF_DOWNLOAD_SETTLED 把卡片换掉
+  test.each([
+    ['downloadPdf', (p) => converter.downloadPdf(p, 42)],
+    ['_fallbackToPdf', (p) => converter._fallbackToPdf(p, null, 42)],
+  ])('%s：补完成时通知发起页 PDF_DOWNLOAD_SETTLED', async (_n, run) => {
+    jest.useFakeTimers();
+    const c = fakeChrome({ completeAt: 300_000 });
+    c.tabs = { sendMessage: jest.fn(() => Promise.resolve()) };
+    run(paper);
+    await jest.advanceTimersByTimeAsync(240_001);
+    expect(c.tabs.sendMessage).not.toHaveBeenCalled();
+    await jest.advanceTimersByTimeAsync(60_000);
+    expect(c.tabs.sendMessage).toHaveBeenCalledWith(42, { type: 'PDF_DOWNLOAD_SETTLED', data: { ok: true, filename: 'p.pdf' } });
+  });
+
   describe.each([['zh'], ['en']])('通知与状态卡（%s）', (lang) => {
     const t = translations[lang];
     beforeEach(() => { showNotification.mockClear(); storage.getLanguage.mockResolvedValue(lang); });

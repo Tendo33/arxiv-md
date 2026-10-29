@@ -34,12 +34,19 @@ function notifyLang() {
 function isStillRunning(error) {
   return error?.code === 'DOWNLOAD_STILL_RUNNING';
 }
-function lateSavedNotifier(key, filename) {
+function lateSavedNotifier(key, filename, tabId = null) {
   return () => {
     notifyLang().then((lang) => {
       const n = converterNotification(key, { filename }, lang);
       showNotification(n.title, n.message, 'basic');
     }).catch(() => {});
+    // batch9 M2：pending 卡片不自动收起，下载补完成时通知发起页把它换掉
+    if (tabId != null) {
+      try {
+        const r = chrome.tabs.sendMessage(tabId, { type: 'PDF_DOWNLOAD_SETTLED', data: { ok: true, filename } });
+        if (r && typeof r.catch === 'function') r.catch(() => {});
+      } catch { /* 页面已关闭 */ }
+    }
   };
 }
 async function notifyStillRunning() {
@@ -166,7 +173,7 @@ class MainConverter {
       }
 
       // Tier 2: PDF Fallback
-      return this._fallbackToPdf(paperInfo, onProgress);
+      return this._fallbackToPdf(paperInfo, onProgress, tabId);
     }
   }
 
@@ -282,7 +289,7 @@ class MainConverter {
 
 
 
-  async _fallbackToPdf(paperInfo, onProgress) {
+  async _fallbackToPdf(paperInfo, onProgress, tabId = null) {
     const { arxivId, title } = paperInfo;
     logger.info('Tier 2: Falling back to PDF download...');
 
@@ -302,7 +309,7 @@ class MainConverter {
 
       const pdfUrl = paperInfo.pdfUrl || `${API.ARXIV_PDF}/${arxivId}.pdf`;
       try {
-        await downloadFile(pdfUrl, filename, { onLateComplete: lateSavedNotifier('pdf_fallback', filename) });
+        await downloadFile(pdfUrl, filename, { onLateComplete: lateSavedNotifier('pdf_fallback', filename, tabId) });
       } catch (error) {
         if (!isStillRunning(error)) throw error;
         logger.warn('PDF download still running after timeout:', filename);
@@ -354,7 +361,7 @@ class MainConverter {
 
       const pdfUrl = paperInfo.pdfUrl || `${API.ARXIV_PDF}/${arxivId}.pdf`;
       try {
-        await downloadFile(pdfUrl, filename, { onLateComplete: lateSavedNotifier('pdf_saved', filename) });
+        await downloadFile(pdfUrl, filename, { onLateComplete: lateSavedNotifier('pdf_saved', filename, tabId) });
       } catch (error) {
         if (!isStillRunning(error)) throw error;
         logger.warn('PDF download still running after timeout:', filename);
