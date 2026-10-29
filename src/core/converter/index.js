@@ -30,10 +30,27 @@ function notifyLang() {
  * 主转换器 - 智能三层降级架构
  */
 // batch8 AB7-01：PDF 下载失败 → 失败类别 + 通知 key。网络类沿用 AB6-06 的 NETWORK_OFFLINE（状态卡显示网络文案）。
+// batch9 ①：4 分钟后还没完成 → 不算失败，通知「仍在下载」；如果之后完成，补发「已保存」通知
+function isStillRunning(error) {
+  return error?.code === 'DOWNLOAD_STILL_RUNNING';
+}
+function lateSavedNotifier(key, filename) {
+  return () => {
+    notifyLang().then((lang) => {
+      const n = converterNotification(key, { filename }, lang);
+      showNotification(n.title, n.message, 'basic');
+    }).catch(() => {});
+  };
+}
+async function notifyStillRunning() {
+  const n = converterNotification('download_pending', {}, await notifyLang());
+  showNotification(n.title, n.message, 'basic');
+}
+
 function pdfDownloadFailure(error) {
   const kind = isNetworkError(error) ? 'network' : downloadFailureKind(error);
   const notifyKey = { network: 'download_failed_network', server: 'download_failed_server', canceled: 'download_canceled',
-    file: 'download_failed_file', timeout: 'download_timeout' }[kind] || 'download_failed';
+    file: 'download_failed_file' }[kind] || 'download_failed';
   return {
     notifyKey,
     fields: { downloadFailure: kind, ...(kind === 'network' ? { errorCode: NETWORK_OFFLINE_CODE } : {}) },
@@ -284,7 +301,14 @@ class MainConverter {
       );
 
       const pdfUrl = paperInfo.pdfUrl || `${API.ARXIV_PDF}/${arxivId}.pdf`;
-      await downloadFile(pdfUrl, filename);
+      try {
+        await downloadFile(pdfUrl, filename, { onLateComplete: lateSavedNotifier('pdf_fallback', filename) });
+      } catch (error) {
+        if (!isStillRunning(error)) throw error;
+        logger.warn('PDF download still running after timeout:', filename);
+        await notifyStillRunning();
+        return { success: true, pending: true, tier: CONVERSION_TIER.PDF_FALLBACK, filename };
+      }
       await storage.incrementConversion(CONVERSION_TIER.PDF_FALLBACK);
 
       if (onProgress)
@@ -329,7 +353,14 @@ class MainConverter {
       logger.debug('Generated filename:', filename);
 
       const pdfUrl = paperInfo.pdfUrl || `${API.ARXIV_PDF}/${arxivId}.pdf`;
-      await downloadFile(pdfUrl, filename);
+      try {
+        await downloadFile(pdfUrl, filename, { onLateComplete: lateSavedNotifier('pdf_saved', filename) });
+      } catch (error) {
+        if (!isStillRunning(error)) throw error;
+        logger.warn('PDF download still running after timeout:', filename);
+        await notifyStillRunning();
+        return { success: true, pending: true, filename };
+      }
 
       const n = converterNotification('pdf_saved', { filename }, await notifyLang());
       showNotification(n.title, n.message, 'basic');
@@ -338,7 +369,7 @@ class MainConverter {
       return { success: true, filename };
     } catch (error) {
       logger.error('PDF download failed:', error);
-      // 原始错误只进日志（上一行），通知按原因区分：网络（AB6-06）/ 服务端 / 取消 / 文件 / 超时 / 其他（batch8 AB7-01）
+      // 原始错误只进日志（上一行），通知按原因区分：网络（AB6-06）/ 服务端 / 取消 / 文件 / 其他（batch8 AB7-01）；超时不算失败（batch9）
       const { notifyKey, fields } = pdfDownloadFailure(error);
       const n = converterNotification(notifyKey, {}, await notifyLang());
       showNotification(n.title, n.message, 'basic');

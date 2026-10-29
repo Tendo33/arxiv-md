@@ -54,6 +54,7 @@ function fakeChrome(mode) {
         }
         if (mode.earlyComplete) fire({ id: 7, state: { previous: 'in_progress', current: 'complete' } });
         if (mode.earlyOther) fire({ id: 99, state: { previous: 'in_progress', current: 'complete' } });
+        if (mode.interruptAt) setTimeout(() => fire({ id: 7, state: { current: 'interrupted' }, error: { current: 'USER_CANCELED' } }), mode.interruptAt);
         if (mode.completeAt) setTimeout(() => fire({ id: 7, state: { previous: 'in_progress', current: 'complete' } }), mode.completeAt);
         cb(7);
         setTimeout(() => {
@@ -163,7 +164,7 @@ describe('downloadFile 等待终态', () => {
     await jest.advanceTimersByTimeAsync(239_000);
     expect(c.listeners.size).toBe(1);
     await jest.advanceTimersByTimeAsync(1_001);
-    expect((await settled).code).toBe('DOWNLOAD_TIMEOUT');
+    expect((await settled).code).toBe('DOWNLOAD_STILL_RUNNING');
     const calls = c.downloads.search.mock.calls.length;
     expect(calls).toBe(12); // 立即 1 次 + 20s…220s 共 11 次；240s 那次与超时同刻，超时先注册先触发
     await jest.advanceTimersByTimeAsync(60_000);
@@ -172,15 +173,15 @@ describe('downloadFile 等待终态', () => {
     expect(jest.getTimerCount()).toBe(0);
   });
 
-  test('超时 → reject DOWNLOAD_TIMEOUT，监听器已移除，之后的事件不再生效', async () => {
+  test('batch9 ①：超时 → reject DOWNLOAD_STILL_RUNNING（类别 pending），没有 onLateComplete 时监听器移除', async () => {
     jest.useFakeTimers();
     const c = fakeChrome({ never: true });
     const p = downloadFile('u', 'p.pdf', { timeoutMs: 1000 });
     const settled = p.catch((e) => e);
     await jest.advanceTimersByTimeAsync(1001);
     const err = await settled;
-    expect(err.code).toBe('DOWNLOAD_TIMEOUT');
-    expect(downloadFailureKind(err)).toBe('timeout');
+    expect(err.code).toBe('DOWNLOAD_STILL_RUNNING');
+    expect(downloadFailureKind(err)).toBe('pending');
     expect(c.listeners.size).toBe(0);
     expect(c.downloads.onChanged.removeListener).toHaveBeenCalledTimes(1);
   });
@@ -257,7 +258,7 @@ describe.each([['zh'], ['en']])('通知与状态卡（%s）', (lang) => {
     expect(statusCardErrorText(new Error('boom'), t, 'PDF download failed', { download: true })).toBe(t.content_error_download_other);
     expect(t.content_error_download_other).not.toBe(t.content_error_generic);
     // 失败类通知标题都是「下载失败」；取消单独说「已取消」
-    for (const k of ['download_failed', 'download_failed_network', 'download_failed_server', 'download_failed_file', 'download_timeout']) {
+    for (const k of ['download_failed', 'download_failed_network', 'download_failed_server', 'download_failed_file']) {
       expect(t[`notify_${k}_title`]).toBe(t.notify_download_failed_title);
     }
     expect(t.content_error_download_other).toBe(lang === 'zh' ? '下载失败' : 'Download failed');
@@ -267,10 +268,81 @@ describe.each([['zh'], ['en']])('通知与状态卡（%s）', (lang) => {
 test('zh/en 新增 key 对齐', () => {
   const pick = (l) => Object.keys(translations[l]).filter((k) => /^(notify_download_|content_error_download_)/.test(k)).sort();
   expect(pick('zh')).toEqual(pick('en'));
-  expect(pick('zh')).toHaveLength(18);
+  expect(pick('zh')).toHaveLength(17);
 });
 
 test('content/index.js 两处 PDF 按钮失败都按下载失败显示', () => {
   const src = require('fs').readFileSync(require('path').join(__dirname, '../src/content/index.js'), 'utf8');
   expect(src.match(/statusCardErrorText\([^)]*'PDF download failed', \{ download: true \}\)/g)).toHaveLength(2);
+});
+
+describe('batch9 ①：4 分钟后仍在下载 → 不报失败、不取消；之后完成补发「已保存」', () => {
+  test('超时后只留 onChanged 监听，不再 poll，没有定时器；complete 到来时调用 onLateComplete 并移除监听', async () => {
+    jest.useFakeTimers();
+    const c = fakeChrome({ completeAt: 300_000 });
+    c.downloads.cancel = jest.fn();
+    const late = jest.fn();
+    const settled = downloadFile('u', 'p.pdf', { onLateComplete: late }).catch((e) => e);
+    await jest.advanceTimersByTimeAsync(240_001);
+    const err = await settled;
+    expect(err.code).toBe('DOWNLOAD_STILL_RUNNING');
+    expect(err.downloadId).toBe(7);
+    expect(c.listeners.size).toBe(1);
+    const polls = c.downloads.search.mock.calls.length;
+    expect(jest.getTimerCount()).toBe(1); // 只剩假下载自己的 completeAt
+    await jest.advanceTimersByTimeAsync(60_000);
+    expect(late).toHaveBeenCalledWith(7);
+    expect(late).toHaveBeenCalledTimes(1);
+    expect(c.listeners.size).toBe(0);
+    expect(c.downloads.search.mock.calls.length).toBe(polls);
+    expect(c.downloads.cancel).not.toHaveBeenCalled();
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
+  test('超时后下载被中断 → 不补发，监听移除', async () => {
+    jest.useFakeTimers();
+    const c = fakeChrome({ interruptAt: 250_000 });
+    const late = jest.fn();
+    const settled = downloadFile('u', 'p.pdf', { onLateComplete: late }).catch((e) => e);
+    await jest.advanceTimersByTimeAsync(260_000);
+    expect((await settled).code).toBe('DOWNLOAD_STILL_RUNNING');
+    expect(late).not.toHaveBeenCalled();
+    expect(c.listeners.size).toBe(0);
+  });
+
+  describe.each([['zh'], ['en']])('通知与状态卡（%s）', (lang) => {
+    const t = translations[lang];
+    beforeEach(() => { showNotification.mockClear(); storage.getLanguage.mockResolvedValue(lang); });
+
+    test.each([['downloadPdf', 'pdf_saved'], ['_fallbackToPdf', 'pdf_fallback']])('%s：先通知仍在下载、结果 pending，之后完成补发 %s', async (fn, savedKey) => {
+      jest.useFakeTimers();
+      const c = fakeChrome({ completeAt: 300_000 });
+      c.downloads.cancel = jest.fn();
+      let r;
+      converter[fn](paper).then((v) => { r = v; });
+      await jest.advanceTimersByTimeAsync(240_001);
+      expect(r).toMatchObject({ success: true, pending: true, filename: 'p.pdf' });
+      expect(last()).toEqual([t.notify_download_pending_title, t.notify_download_pending_body, 'basic']);
+      expect(showNotification).toHaveBeenCalledTimes(1);
+      await jest.advanceTimersByTimeAsync(60_000);
+      expect(last()).toEqual([t[`notify_${savedKey}_title`], t[`notify_${savedKey}_body`].replace('{filename}', 'p.pdf'), 'basic']);
+      expect(c.downloads.cancel).not.toHaveBeenCalled();
+      expect(c.listeners.size).toBe(0);
+    });
+  });
+
+  test('zh/en 文案', () => {
+    expect(translations.zh.content_download_pending).toBe('仍在下载，完成后会出现在下载列表');
+    expect(translations.zh.notify_download_pending_body).toBe('仍在下载，完成后会出现在下载列表');
+    expect(translations.en.content_download_pending).toBe('Still downloading. It will appear in the download list when finished.');
+    for (const l of ['zh', 'en']) {
+      expect(translations[l].notify_download_pending_title).not.toBe(translations[l].notify_download_failed_title);
+      expect(translations[l]).not.toHaveProperty('content_error_download_timeout');
+    }
+  });
+
+  test('content/index.js 两处结果处理都先看 pending', () => {
+    const src = require('fs').readFileSync(require('path').join(__dirname, '../src/content/index.js'), 'utf8');
+    expect(src.match(/pending\) \{\n\s*showSuccess\(t\.content_download_pending\)/g)).toHaveLength(2);
+  });
 });

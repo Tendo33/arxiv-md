@@ -248,7 +248,10 @@ async function handleConversionTrigger(type = 'markdown') {
           return;
         }
 
-        if (response?.data?.background) {
+        // batch9 ①：4 分钟后下载还在继续，不是失败
+        if (response?.data?.pending) {
+          showSuccess(t.content_download_pending);
+        } else if (response?.data?.background) {
           showSuccess(t.content_progress_submitted);
         } else if (response?.data?.filename) {
           showResult({
@@ -336,6 +339,10 @@ async function handlePdfDownloadDirect(button) {
           return;
         }
 
+        if (response?.data?.pending || response?.pending) {
+          showSuccess(t.content_download_pending);
+          return;
+        }
         showSuccess(t.content_progress_completed);
         logger.info('PDF download initiated via background');
       }
