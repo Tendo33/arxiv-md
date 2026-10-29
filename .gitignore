@@ -45,3 +45,7 @@ output/
 project_document/
 .worktrees/
 screenshots/round*/
+
+# 本地截图与导出产物
+shots/
+outputs/
