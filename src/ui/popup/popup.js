@@ -230,6 +230,10 @@ async function runExport(mode) {
   if (res && res.ok) {
     if (mode === 'mineru') showOk(tr.popup_saved_bg.replace('{provider}', providerLabel(active.id)), tr.content_progress_submitted, 'submitted');
     else showOk(res.filename || res.message || '');
+  } else if (res?.notice) {
+    // 设计验收 30a6e1b #5：C10 拦截不是失败，用中性 info 卡（#alertKey，role=status），不用 showErr
+    showNeedKey(res.title || tr.pdf_disc_needed_title, res.hint || tr.pdf_disc_needed_body);
+    ctx.state = 'notice';
   } else {
     showErr(res?.error || tr.popup_badge_err, res?.unreachable ? '' : tr.popup_err_generic_hint);
     showRefresh(!!res?.unreachable);

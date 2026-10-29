@@ -31,3 +31,9 @@ export function isCanceledDownload(failure) {
   const kind = body?.downloadFailure;
   return kind === 'canceled' || kind === 'removed';
 }
+
+/** 设计验收 30a6e1b #5：C10 拦截（还没确认数据说明）不是失败，走中性提示 */
+export function isDisclosureNeeded(failure) {
+  const body = failure?.data?.success === false ? failure.data : failure;
+  return !!(body?.disclosureNeeded || failure?.disclosureNeeded);
+}
