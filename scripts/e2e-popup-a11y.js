@@ -7,7 +7,7 @@
 // E2E_A11Y_OUT=<file> 时把每行的 ariaSnapshot 写成 JSON。
 // rp2b（设计 ①②）：失败行覆盖全部错误码（含 forbidden_empty / key_not_on_device / 有无 host 的 PERMISSION_MISSING），
 // 每行后端名仍只能读到一次；设置页 Key 测试的错误行（#tokenStatus）对每个能出现的错误，后端名最多一次。
-// E2E_A11Y_SHOTS=<dir> 时额外拍 popup 任务行（QUOTA / TIMEOUT / forbidden_empty 在最上面）和设置页错误行，宽 320/375，亮色 / 暗色（data-theme="dark"）。
+// E2E_A11Y_SHOTS=<dir> 时额外拍 popup 任务行（QUOTA / TIMEOUT / forbidden_empty 在最上面）和设置页错误行，宽 320/375，亮色 / 暗色（popup 用 data-theme="dark"；设置页只跟随系统，用 prefers-color-scheme 模拟）。
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -136,6 +136,8 @@ function loadPlaywright() {
         if (shots && ['QUOTA_EXCEEDED', 'TIMEOUT', 'forbidden_empty'].includes(name)) {
           for (const theme of ['light', 'dark']) for (const w of [320, 375]) {
             await p.setViewportSize({ width: w, height: 700 });
+            // 设置页没有 data-theme 钩子，暗色只跟随系统，所以这里用 prefers-color-scheme 模拟
+            await p.emulateMedia({ colorScheme: theme });
             await p.evaluate((th) => document.documentElement.setAttribute('data-theme', th), theme);
             await p.locator('#tokenStatus').scrollIntoViewIfNeeded();
             await p.waitForTimeout(200);
