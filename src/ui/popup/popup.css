@@ -36,9 +36,9 @@ body{min-width:320px}
 .row .row-act .btn{min-width:24px}
 .row .row-act .btn svg{flex:none;vertical-align:-2px}
 /* design-recheck N1：320 宽英文时 Download 只留图标（aria-label/title 保留文字） */
-@media (max-width:339px){.row .row-act .btn-dl{padding:0 5px}.row .row-act .btn-dl .lbl{display:none}}
+@media (max-width:339px){.row .row-act .btn-dl{padding:0 4px}.row .row-act .btn-dl .lbl{display:none}}
 /* AF3 设计验收：英文 Download 文字更长，≤379px（含默认 360 宽）也只留图标，aria-label/title 不变 */
-@media (max-width:379px){html[lang="en"] .row .row-act .btn-dl{padding:0 5px}html[lang="en"] .row .row-act .btn-dl .lbl{display:none}}
+@media (max-width:379px){html[lang="en"] .row .row-act .btn-dl{padding:0 4px}html[lang="en"] .row .row-act .btn-dl .lbl{display:none}}
 .row .pct{font-variant-numeric:tabular-nums}
 /* R4-04：时间列也用等宽数字 + 固定最小宽度、右对齐，不同行的「3 分钟前 / 12 分钟前」不再左右跳 */
 .row .t,.row .pct{font-variant-numeric:tabular-nums;min-width:4.5em;text-align:right}
@@ -72,11 +72,11 @@ body{min-width:320px}
 .sc-label{color:var(--text-2)}
 .sc-link{margin-left:-4px;min-height:24px;padding:0 4px;border:0;background:transparent;color:var(--brand-text);font:inherit;font-weight:600;text-decoration:underline;cursor:pointer;border-radius:4px}
 .sc-link:hover{background:var(--brand-soft)}
-.sc-link:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
+.sc-link:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
 
 /* R4-15：后端名 */
 .backend-label { font-weight: 400; font-size: 12px; color: var(--text-2); }
-.row .prov { flex: none; font-size: 11px; padding: 0 5px; border-radius: 4px; border: 1px solid currentColor; color: var(--text-2); line-height: 16px; }
+.row .prov { flex: none; font-size: 11px; padding: 0 4px; border-radius: 4px; border: 1px solid currentColor; color: var(--text-2); line-height: 16px; }
 /* 设计复核 S3 + 增量验收 N1：窄于 379px（弹窗固定 360，即常态）后端名仅视觉隐藏，读屏仍按顺序读出 */
 .row{position:relative}
 @media (max-width:378px){.row .prov{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;padding:0}}
@@ -90,6 +90,8 @@ body{min-width:320px}
 .acts{grid-template-columns:repeat(2,minmax(0,1fr))}
 .acts .btn{min-width:0}
 .acts .btn>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 基线 R12：span 的 line-height 跟按钮一样等于字号时会把下伸部分裁掉 1–2px */
+.acts .btn>span{line-height:1.3}
 .acts #mineruBtn{flex-direction:column;gap:2px;padding-top:4px;padding-bottom:4px;line-height:1.2}
 .acts #mineruBtn .backend-label{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* 设计建议：失败原因直接显示在行下，不只放在 tooltip 里 */
