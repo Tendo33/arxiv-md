@@ -2,7 +2,7 @@
 
 **Last updated: September 28, 2026**
 
-> **Pending review (Round 4 draft):** the PDF parsing sections below follow `pdf-parser-privacy-draft.md` v2 and are not final. Provider retention periods and the MinerU legal operator are still to be verified. Update the date above at release.
+> **Pending review (Round 4 draft):** the PDF parsing sections below follow `pdf-parser-privacy-draft.md` v2 and are not final. The MinerU legal operator is still to be verified. Update the date above at release.
 
 ## Overview
 
@@ -91,7 +91,7 @@ The extension sends your access token and the model name to `paddleocr.aistudio-
 
 The extension sends your MinerU bearer token, the PDF link for the selected paper, the model and language options, and the arXiv ID as task metadata to `mineru.net`. It does not upload the PDF file. MinerU processes the paper on its own service and returns a ZIP result URL (`cdn-mineru.openxlab.org.cn`), which the extension downloads. MinerU's domain access is unchanged from earlier versions and is granted at install.
 
-Parsing providers are third parties, and their own terms govern how they process and retain what you submit. Retention periods for both providers are still to be verified.
+Parsing providers are third parties, and their own terms govern how they process and retain what you submit. Neither Baidu AI Studio (PaddleOCR) nor MinerU publishes a specific retention period for uploaded files or parse results; AI Studio's privacy policy says only that information is kept "for the period necessary to provide the service". Don't send PDFs you aren't allowed to share with a third party.
 
 ## What The Extension Does Not Do
 

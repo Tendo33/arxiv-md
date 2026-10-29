@@ -110,7 +110,7 @@ Changes are saved automatically.
 
 - No backend, no analytics, no data collection.
 - In Standard mode, conversion runs entirely in your browser and only talks to arXiv and ar5iv.
-- Only when you use PDF parsing is the paper sent, with your key, to the one provider you selected (PaddleOCR or MinerU, third-party services under their own terms): MinerU gets the arXiv PDF URL; PaddleOCR gets the arXiv PDF file itself (uploaded, up to 50 MB), and only the link for non-arXiv PDFs. The extension never switches providers on its own.
+- Only when you use PDF parsing is the paper sent, with your key, to the one provider you selected (PaddleOCR or MinerU, third-party services under their own terms): MinerU gets the arXiv PDF URL; PaddleOCR gets the arXiv PDF file itself (uploaded, up to 50 MB), and only the link for non-arXiv PDFs. A PDF over 50 MB is not sent; the extension suggests switching to MinerU. The extension never switches providers on its own.
 - See [PRIVACY.md](./PRIVACY.md).
 
 ## FAQ

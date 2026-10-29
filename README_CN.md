@@ -100,6 +100,7 @@ npm run build
 | `ar5iv.org`、`ar5iv.labs.arxiv.org` | 官方 HTML 不可用时读取 ar5iv 版本 |
 | `mineru.net`、`cdn-mineru.openxlab.org.cn` | 仅在你使用 MinerU 时提交任务、下载结果 |
 | `paddleocr.aistudio-app.com`（可选） | 仅在你选择 PaddleOCR 时申请，可在设置页撤销 |
+| `*.bj.bcebos.com`（可选） | 与 PaddleOCR 访问权限一起申请；PaddleOCR 的解析结果和图片从这个百度存储域名下载 |
 | `declarativeNetRequestWithHostAccess`（可选） | 与 PaddleOCR 访问权限一起申请，只去掉发往该域名请求的 `Origin` 头 |
 | 内容脚本：`arxiv.org/abs/*`、`arxiv.org/pdf/*`、`arxiv.org/html/*` | 在这些页面注入导出按钮、结果卡片和 PDF 页悬浮按钮 |
 
@@ -107,7 +108,8 @@ npm run build
 
 - 扩展没有自己的服务器，不收集、不上传你的数据，也没有统计或埋点。
 - 标准模式下，转换完全在你的浏览器里完成，只访问 arXiv 和 ar5iv。
-- 只有你主动使用 PDF 解析时，论文才会和你的 Key 一起发给你选定的那一个后端（PaddleOCR 或 MinerU，均为第三方服务，受其条款约束）：MinerU 收到 arXiv PDF 链接；PaddleOCR 收到 arXiv PDF 文件本身（上传，50 MB 以内），非 arXiv 的 PDF 只发链接。扩展不会自动切换后端。
+- 只有你主动使用 PDF 解析时，论文才会和你的 Key 一起发给你选定的那一个后端（PaddleOCR 或 MinerU，均为第三方服务，受其条款约束）：MinerU 收到 arXiv PDF 链接；PaddleOCR 收到 arXiv PDF 文件本身（上传，50 MB 以内），非 arXiv 的 PDF 只发链接；超过 50 MB 的 PDF 不会发送，扩展会提示改用 MinerU。扩展不会自动切换后端。
+- 解析服务如何处理和保留你提交的内容由其自身条款决定。百度 AI Studio（PaddleOCR）和 MinerU 目前都没有公开上传文件和解析结果的具体保留期限；AI Studio 隐私政策只写了"在提供服务所需的期限内保存"。请不要发送你无权分享给第三方的 PDF。
 - 详见 [PRIVACY.md](./PRIVACY.md)。
 
 ## 常见问题

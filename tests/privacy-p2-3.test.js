@@ -62,3 +62,14 @@ describe('隐私说明（Simon：arXiv 论文都算 OA，直接解析）和实�
     expect(shouldUploadFile('https://example.org/a.pdf')).toBe(false);
   });
 });
+
+test('PRIVACY 保留期限按 PM 核实结果写明；>50 MB 不发送、建议 MinerU（PRIVACY/README 双语一致）', () => {
+  const rd = (f) => require('fs').readFileSync(require('path').join(__dirname, '..', f), 'utf8');
+  const p = rd('PRIVACY.md');
+  expect(p).not.toMatch(/Retention periods/);
+  expect(p).toMatch(/Neither Baidu AI Studio \(PaddleOCR\) nor MinerU publishes a specific retention period/);
+  expect(p).toMatch(/larger than 50 MB is stopped before upload[^\n]*MinerU/);
+  expect(rd('README.md')).toMatch(/over 50 MB is not sent[^\n]*MinerU/);
+  expect(rd('README_CN.md')).toMatch(/超过 50 MB 的 PDF 不会发送[^\n]*MinerU/);
+  expect(rd('README_CN.md')).toMatch(/bcebos\.com/);
+});
