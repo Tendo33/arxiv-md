@@ -50,10 +50,10 @@ describe('设计验收 M1：模式卡、页面按钮、进度、统计不再写�
     ui.updateProgressUI({ stage: 'submitting', progress: 10 });
     expect(document.querySelector('.progress-text').textContent).toBe('正在发送给 PaddleOCR…');
     ui.updateProgressUI({ stage: 'processing', progress: 50 });
-    expect(document.querySelector('.progress-text').textContent).toBe('PaddleOCR 解析中…');
+    expect(document.querySelector('.progress-text').textContent).toBe('PaddleOCR 正在解析…');
     ui.setProgressProvider(undefined);
     ui.updateProgressUI({ stage: 'processing', progress: 50 });
-    expect(document.querySelector('.progress-text').textContent).toBe('MinerU 解析中…');
+    expect(document.querySelector('.progress-text').textContent).toBe('MinerU 正在解析…');
   });
 
   test('页面按钮读取 pdfProvider 并替换占位', () => {

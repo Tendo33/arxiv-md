@@ -75,9 +75,10 @@ describe('design S6', () => {
 });
 
 describe('design S7', () => {
-  test('zh incomplete detail uses 『』 for the inner quote', () => {
-    expect(translations.zh.content_result_incomplete).toContain('『PDF（标题）』');
-    expect(translations.zh.content_result_incomplete).not.toContain('「PDF（标题）」');
+  // release-polish NTF5 取代 S7：这句不嵌在其他引号里，按钮名统一用「」；『』只用于嵌套
+  test('zh incomplete detail quotes the button name with 「」', () => {
+    expect(translations.zh.content_result_incomplete).toContain('「PDF（标题）」');
+    expect(translations.zh.content_result_incomplete).not.toContain('『PDF（标题）』');
   });
 });
 
