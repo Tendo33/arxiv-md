@@ -101,3 +101,8 @@ body{min-width:320px}
 
 /* 设计建议 S-2：PDF 解析已提交（还没完成）用信息色 */
 .alert.ok.pending{background:var(--info-bg);color:var(--info)}
+
+/* 设计建议 S-1：popup 转换中进度条为不确定态（同页面进度卡：30% 块 1.2s 平移；减少动态时静止） */
+#ctxProg .bar.indeterminate>i{width:30%;animation:amd-indet 1.2s ease-in-out infinite}
+@keyframes amd-indet{0%{transform:translateX(-100%)}100%{transform:translateX(340%)}}
+@media (prefers-reduced-motion:reduce){#ctxProg .bar.indeterminate>i{animation:none!important;transform:none;width:30%}}

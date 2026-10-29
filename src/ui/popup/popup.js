@@ -155,7 +155,9 @@ function setBusy(on) {
   $('exportBtn').querySelector('.btn-icon').classList.toggle('hidden', on && lastMode === 'markdown');
   btn.setAttribute('aria-busy', on ? 'true' : 'false');
   $('ctxProg').classList.toggle('hidden', !on);
-  if (on) { $('ctxProgText').textContent = t().popup_converting; $('ctxProgPct').textContent = ''; $('ctxProgBar').style.width = '40%'; }
+  if (on) { $('ctxProgText').textContent = t().popup_converting; $('ctxProgPct').textContent = ''; $('ctxProgBar').style.width = ''; }
+  // 设计建议 S-1：没有真实进度，用和页面进度卡同一个不确定动画，不再写死固定宽度
+  $('ctxProgBar').parentElement.classList.toggle('indeterminate', on);
   renderContext();
 }
 
