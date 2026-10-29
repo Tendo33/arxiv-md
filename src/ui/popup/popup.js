@@ -164,9 +164,11 @@ function hideAlerts() {
   $('alertErr').classList.add('hidden');
 }
 
-function showOk(text) {
+// 设计验收 B1：PDF 解析只是「已提交」，不能显示「已完成 / 已保存」；title 缺省时是「已保存」
+function showOk(text, title = null, state = 'ok') {
   hideAlerts();
-  ctx.state = 'ok';
+  ctx.state = state;
+  $('okTitle').textContent = title || t().popup_saved;
   $('okFile').textContent = text ? ` · ${text}` : '';
   $('alertOk').classList.remove('hidden');
 }
@@ -219,7 +221,8 @@ async function runExport(mode) {
   }
   setBusy(false);
   if (res && res.ok) {
-    showOk(mode === 'mineru' ? tr.popup_saved_bg.replace('{provider}', providerLabel(active.id)) : (res.filename || res.message || ''));
+    if (mode === 'mineru') showOk(tr.popup_saved_bg.replace('{provider}', providerLabel(active.id)), tr.content_progress_submitted, 'submitted');
+    else showOk(res.filename || res.message || '');
   } else {
     showErr(res?.error || tr.popup_badge_err, res?.unreachable ? '' : tr.popup_err_generic_hint);
     showRefresh(!!res?.unreachable);

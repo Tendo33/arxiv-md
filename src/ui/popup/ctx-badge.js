@@ -6,6 +6,8 @@ export function ctxBadgeState({ busy, loading, state, kind }, tr) {
   if (busy) return ['run', tr.popup_badge_run];
   if (loading) return ['dis', tr.popup_badge_dis];
   if (state === 'ok') return ['ok', tr.popup_badge_ok];
+  // 设计验收 B1：PDF 解析任务已提交但还没完成，用等待样式
+  if (state === 'submitted') return ['wait', tr.content_progress_submitted];
   if (state === 'err') return ['err', tr.popup_badge_err];
   if (state === 'needkey') return ['idle', tr.popup_badge_needkey];
   return ['idle', tr[`popup_badge_${kind}`]];
