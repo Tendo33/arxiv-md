@@ -776,3 +776,7 @@ a:focus-visible {
 .btn-ghost { background: transparent; color: var(--text-secondary); border: none; box-shadow: none; }
 .btn-ghost:hover, .btn-ghost:focus-visible { background: var(--surface-2); color: var(--text-primary); }
 .permission-row .btn-ghost { box-sizing: border-box; height: 36px; min-height: 36px; }
+
+/* 设计验收 30a6e1b #6：确认后提示在卡片下方单独一行，前缀 ✓，不进底部 toast */
+.pd-confirmed { margin: 8px 0 0; font-size: 13px; line-height: 20px; color: var(--success); }
+.pd-confirmed[hidden] { display: none; }

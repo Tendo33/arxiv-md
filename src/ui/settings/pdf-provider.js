@@ -117,8 +117,21 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
     openDisclosure(id, { focus: false });
   }
 
+  /** 设计验收 30a6e1b #6：确认后的提示行（✓ 前缀），在卡片组下方 */
+  function showConfirmed(text) {
+    const el = $('pdConfirmed');
+    if (!el) return;
+    el.textContent = `✓ ${text}`;
+    el.hidden = false;
+  }
+  function hideConfirmed() {
+    const el = $('pdConfirmed');
+    if (el) { el.hidden = true; el.textContent = ''; }
+  }
+
   function openDisclosure(id, { focus = true } = {}) {
     closePanel();
+    hideConfirmed();
     const p = registry.get(id);
     const tr = t();
     const { panel, title, ok, cancel } = buildDisclosurePanel(doc, tr, p, segOf);
@@ -163,8 +176,8 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
     $('permissionRow').classList.remove('denied');
     $('tokenStatus').style.display = 'none';
     const tr = t();
-    toast(fromHash ? tr.pdf_disc_confirmed : tr.toast_saved, 'success');
     await render();
+    showConfirmed(fromHash ? tr.pdf_disc_confirmed : tr.toast_saved); // 设计验收 30a6e1b #6：卡片下方内联，不用 toast
     return granted;
   }
 

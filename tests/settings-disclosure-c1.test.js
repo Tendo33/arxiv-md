@@ -78,7 +78,11 @@ describe('附录 C1：首次选择后端先显示数据说明', () => {
     await h.sec.init();
     expect(h.document.getElementById('pdPanel').getAttribute('data-provider')).toBe('paddleocr');
     await h.sec.onAgree('paddleocr');
-    expect(h.toast).toHaveBeenCalledWith(translations.zh.pdf_disc_confirmed, 'success');
+    // 设计验收 30a6e1b #6：#disclose 指向当前已选后端，确认提示也在卡片下方内联显示（✓ 前缀），不进 toast
+    const line = h.document.getElementById('pdConfirmed');
+    expect(line.hidden).toBe(false);
+    expect(line.textContent).toBe(`✓ ${translations.zh.pdf_disc_confirmed}`);
+    expect(h.toast).not.toHaveBeenCalledWith(translations.zh.pdf_disc_confirmed, 'success');
   });
   test('MinerU 文案不说「上传」；中英文 key 齐全', () => {
     for (const k of ['pdf_card_mineru', 'pdf_disc_body_mineru']) expect(translations.zh[k].replace('PDF 文件本身不会上传', '')).not.toMatch(/上传/); // C11：只允许否定句「不会上传」
