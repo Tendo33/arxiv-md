@@ -280,6 +280,7 @@ async function handleConversionTrigger(type = 'markdown') {
             filename: response.data.filename,
             markdown: response.data.markdown || '',
             integrity: response.data.incomplete ? response.data.integrity : null,
+            emptyContent: !!response.data.emptyContent,
           });
         } else {
           showSuccess(t.content_progress_completed);

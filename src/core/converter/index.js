@@ -1,7 +1,7 @@
 // 主转换器
 
 import ar5ivConverter from './ar5iv-converter';
-import { hasMarkdownBody } from '../html-paper';
+import { assertSavableMarkdown, isEmptyResultError } from '@pdf-core/output/pre-save';
 import storage from '@utils/storage';
 import logger from '@utils/logger';
 import { isNetworkError, NETWORK_OFFLINE_CODE } from '@utils/network-error';
@@ -146,7 +146,7 @@ class MainConverter {
         paperInfo,
       });
       // AR-02：空正文不算转换成功，退回 PDF
-      if (!hasMarkdownBody(result?.markdown)) throw new Error('Converted HTML document has no content');
+      assertSavableMarkdown(result?.markdown, { provider: result?.metadata?.source || 'html' });
       const filename = generateFilename(
         {
           title: result.title || title,
@@ -212,7 +212,8 @@ class MainConverter {
       }
 
       // Tier 2: PDF Fallback
-      return this._fallbackToPdf(paperInfo, onProgress, tabId);
+      // AR-02：HTML/ar5iv 没有正文 → 不写空 .md，改下载 PDF，并明确告诉用户原因（不显示「完成」）
+      return this._fallbackToPdf(paperInfo, onProgress, tabId, { emptyHtml: isEmptyResultError(ar5ivError) });
     }
   }
 
@@ -330,7 +331,7 @@ class MainConverter {
 
 
 
-  async _fallbackToPdf(paperInfo, onProgress, tabId = null) {
+  async _fallbackToPdf(paperInfo, onProgress, tabId = null, { emptyHtml = false } = {}) {
     const { arxivId, title } = paperInfo;
     logger.info('Tier 2: Falling back to PDF download...');
 
@@ -361,11 +362,11 @@ class MainConverter {
 
       if (onProgress)
         onProgress({ tier: 'pdf', stage: 'completed', progress: 100 });
-      const n = converterNotification('pdf_fallback', { filename }, await notifyLang());
+      const n = converterNotification(emptyHtml ? 'pdf_fallback_empty' : 'pdf_fallback', { filename }, await notifyLang());
       showNotification(n.title, n.message, 'basic');
       logger.info('Tier 2 success:', filename);
 
-      return { success: true, tier: CONVERSION_TIER.PDF_FALLBACK, filename };
+      return { success: true, tier: CONVERSION_TIER.PDF_FALLBACK, filename, ...(emptyHtml ? { emptyContent: true } : {}) };
     } catch (error) {
       logger.error('PDF download failed:', error);
       // 原始错误只进日志（上一行）。batch8 AB7-01：按下载失败原因选通知，状态卡用同一类别（downloadFailure）

@@ -388,7 +388,7 @@ describe('batch9 ①：4 分钟后仍在下载 → 不报失败、不取消；�
     const spy = jest.spyOn(converter, '_fallbackToPdf').mockResolvedValue({ success: true });
     try {
       await converter.convert(paper, null, 42);
-      expect(spy).toHaveBeenCalledWith(paper, null, 42);
+      expect(spy).toHaveBeenCalledWith(paper, null, 42, { emptyHtml: false });
     } finally { spy.mockRestore(); }
   });
 

@@ -70,7 +70,7 @@ describe('AR-02 ar5iv No content available', () => {
     const dl = jest.spyOn(converter, '_downloadViaContentScript').mockResolvedValue();
     try {
       const r = await converter.convert({ arxivId: 'hep-th/9711200', title: 'X' }, null, 42);
-      expect(spy).toHaveBeenCalledWith(expect.objectContaining({ arxivId: 'hep-th/9711200' }), null, 42);
+      expect(spy).toHaveBeenCalledWith(expect.objectContaining({ arxivId: 'hep-th/9711200' }), null, 42, { emptyHtml: true });
       expect(dl).not.toHaveBeenCalled();
       expect(r.tier).toBe('pdf_fallback');
       const done = translations.zh.notify_done_title;

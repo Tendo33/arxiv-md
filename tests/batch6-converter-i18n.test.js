@@ -71,7 +71,7 @@ test('converter 源码不再硬编码通知文案', () => {
 test('所有通知不含原始错误和 MinerU 字样；zh/en key 对齐', () => {
   for (const lang of ['zh', 'en']) {
     const keys = Object.keys(translations[lang]).filter((k) => /^notify_(done|task_submitted|pdf_fallback|convert_failed|pdf_saved|download_failed)_/.test(k));
-    expect(keys).toHaveLength(22); // release-polish AB8-02 新增 download_failed_notfound_* / download_failed_forbidden_*; // AB6-06 新增 download_failed_network_*；batch8 AB7-01 新增 download_failed_server_* / download_failed_file_*
+    expect(keys).toHaveLength(24); // AR-02 新增 pdf_fallback_empty_*； release-polish AB8-02 新增 download_failed_notfound_* / download_failed_forbidden_*; // AB6-06 新增 download_failed_network_*；batch8 AB7-01 新增 download_failed_server_* / download_failed_file_*
     keys.forEach((k) => expect(translations[lang][k]).not.toMatch(/MinerU/));
   }
   for (const c of showNotification.mock.calls) expect(c.join(' ')).not.toContain('ERR_SECRET');

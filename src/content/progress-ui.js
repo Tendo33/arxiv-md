@@ -273,8 +273,19 @@ export async function copyTextToClipboard(text, doc = document) {
  * 转换完成后的结果态：保留在页面上直到用户关闭或开始下一次转换，
  * 显示文件名，有 Markdown 时提供“复制 Markdown”按钮。
  */
-export function showResult({ filename = '', markdown = '', integrity = null } = {}) {
-  notifyOutcome({ ok: true, filename, incomplete: !!integrity });
+export function showResult({ filename = '', markdown = '', integrity = null, emptyContent = false } = {}) {
+  notifyOutcome({ ok: true, filename, incomplete: !!integrity || emptyContent });
+  // AR-02：HTML 没有正文，已改存 PDF——警告态，不显示「已完成」，提示可用 PDF 解析
+  if (emptyContent) {
+    setProgressState({
+      text: t.content_progress_empty,
+      detail: t.content_result_empty,
+      file: filename ? t.content_result_saved.replace('{filename}', filename) : '',
+      percent: null,
+      state: 'warning',
+    });
+    return;
+  }
   const saved = filename ? t.content_result_saved.replace('{filename}', filename) : '';
   // AF3-01：导出明显少于页面——文件照常保存，提示改为警告并给出节数
   const warning = integrity

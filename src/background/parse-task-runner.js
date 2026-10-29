@@ -6,6 +6,7 @@
 import { ParseError, isParseError, ERROR_REASONS } from '@pdf-core/errors';
 import { normalizeMarkdown, shouldNormalize } from '@pdf-core/normalize/index';
 import { ensureProviderPermission } from '@pdf-core/permissions';
+import { assertSavableMarkdown } from '@pdf-core/output/pre-save';
 import { TASK_STATUS } from '@config/constants';
 import { pdfUrlOf } from './pdf-url';
 import { uploadAllowed } from './oa-gate';
@@ -60,6 +61,8 @@ export function createParseTaskRunner(deps) {
       const downloadId = await downloadUrl(fetched.zipUrl, filename);
       return { zipUrl: fetched.zipUrl, downloadId, filename };
     }
+    // AR-02：PDF 解析结果没有正文 → 任务失败（empty_result），不写空文件、不报「完成」
+    assertSavableMarkdown(fetched.markdown, { provider: provider.id });
     const includeMeta = storage.getIncludeMetadata ? (await storage.getIncludeMetadata()) !== false : true;
     const norm = normalizeMarkdown(fetched.markdown || '', { meta: includeMeta ? { ...meta, source: provider.id } : null });
     const base = makeFilename(meta, 'md').replace(/\.md$/, '');

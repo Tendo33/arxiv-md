@@ -39,20 +39,8 @@ export function isUsableHtmlPaper({ ok, finalUrl, contentType, html }) {
   return isAr5ivHtmlAvailable({ ok, finalUrl, contentType }) && hasLtxDocument(html) && !isNoContentPage(html);
 }
 
-/**
- * AR-02：转换结果除去 YAML 头、标题行、元数据引用块和分隔线后没有正文，就不算成功，绝不显示「转换完成」。
- */
-export function hasMarkdownBody(markdown) {
-  if (typeof markdown !== 'string') return false;
-  const rest = markdown
-    .replace(/^---\n[\s\S]*?\n---\n?/, '')
-    .split('\n')
-    .filter((l) => !/^\s*(#{1,6}\s|>|[-*_]{3,}\s*$)/.test(l))
-    .join('')
-    .replace(/Conversion to HTML had a Fatal error and exited abruptly\.?( This document may be truncated or damaged\.)?/g, '')
-    .replace(/\s+/g, '');
-  return rest.length > 0;
-}
+/** AR-02：实现移到共用的写前检查（@pdf-core/output/pre-save），这里保留导出兼容旧调用 */
+export { hasMarkdownBody } from '@pdf-core/output/pre-save';
 
 export async function loadHtmlPaper(source, arxivId, fetchImpl = fetch, onError = null) {
   const url = `${source.base}/${arxivId}`;
