@@ -8,7 +8,7 @@ import { detectPageTheme } from './page-theme';
 import storage from '@utils/storage';
 import { REGEX } from '@config/constants';
 import { translations } from '@config/locales';
-import { providerLabel } from '@config/pdf-providers';
+import { providerLabel, PDF_PROVIDER_LABELS } from '@config/pdf-providers';
 import { setProgressProvider } from './progress-ui';
 
 let t = translations.en;
@@ -46,6 +46,9 @@ export async function injectConvertButton() {
     const result = await chrome.storage.sync.get(['conversionMode', 'pdfProvider']);
     conversionMode = result.conversionMode || 'fast';
     pdfProvider = result.pdfProvider;
+    // QA L-02：和设置页 / popup 用同一套规则（pickPdfProvider：未选 → 有 MinerU Key 用 MinerU，否则默认 PaddleOCR），
+    // 不能拿 sync 原值直接查名字（未设置时会显示成 MinerU）
+    pdfProvider = await storage.getPdfProvider((id) => Object.prototype.hasOwnProperty.call(PDF_PROVIDER_LABELS, id)).catch(() => pdfProvider);
   } catch (error) {
     logger.warn('Failed to get conversion mode, using default:', error);
   }
