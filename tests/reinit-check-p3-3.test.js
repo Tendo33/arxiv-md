@@ -96,3 +96,11 @@ test('英文 toast：1 个用单数，2 个用复数', async () => {
   const b = mk([{ status: 'pending' }, { status: 'processing' }]); await b.sec.onReinit();
   expect(b.toast.mock.calls[0][0]).toBe('2 PDF tasks still running. Reinitialize after they finish so they aren\'t interrupted.');
 });
+
+// 审查 P3-b：ready 只认规则 4001（「任意规则都算 ready」的变异要被杀死）
+test('只有别的动态规则（不是 4001）→ 不算 ready，照常 reloaded', async () => {
+  const s = setup({ rules: [{ id: 9999 }, { id: 4002 }] });
+  expect(await s.sec.onReinit()).toBe('reloaded');
+  expect(s.runtime.reload).toHaveBeenCalledTimes(1);
+  expect(s.toast).not.toHaveBeenCalledWith(translations.zh.pdf_reinit_ready, 'success');
+});
