@@ -95,3 +95,13 @@ describe('e2e-shortcut 环境前置检查', () => {
     expect(left).toEqual([]);
   });
 });
+
+describe('R5-07：DEVELOPMENT.md 写明 e2e 的环境条件', () => {
+  test('提到 E2E_PLAYWRIGHT_DIR、CHROME_PATH、xvfb-run 和 exit 2', () => {
+    const doc = require('fs').readFileSync(require('path').join(__dirname, '../docs/DEVELOPMENT.md'), 'utf8');
+    expect(doc).toMatch(/E2E_PLAYWRIGHT_DIR/);
+    expect(doc).toMatch(/CHROME_PATH/);
+    expect(doc).toMatch(/xvfb-run -a/);
+    expect(doc).toMatch(/exit 2/);
+  });
+});

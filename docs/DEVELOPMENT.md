@@ -44,6 +44,22 @@ npm run package
 - `test`：运行 Jest。覆盖论文 ID、文件名、HTML 来源选择、MinerU 响应、删除守卫、BibTeX 和一段 HTML 夹具
 - `package`：先构建，再生成 `build/arxiv-md-v<version>.zip`
 
+### 端到端测试（`npm run test:e2e`）
+
+仓库不依赖 playwright，e2e 需要三个环境条件，缺任何一个脚本都会打印原因并以 **exit 2** 退出（不是测试失败）：
+
+| 条件 | 说明 |
+|---|---|
+| `E2E_PLAYWRIGHT_DIR` | 指向一个含 `node_modules/playwright` 的目录（本仓库 `node_modules` 里有 playwright 时可不设） |
+| `CHROME_PATH` | Chromium/Chrome 可执行文件本身（例如 Playwright 下载的 `.../chrome-linux64/chrome`），不能是目录 |
+| 显示器 | 扩展需要有界面的 Chrome；无显示器的机器用 `xvfb-run -a` |
+
+```bash
+E2E_PLAYWRIGHT_DIR=/path/to/tools CHROME_PATH=/path/to/chrome xvfb-run -a npm run test:e2e
+```
+
+`scripts/selftest-live.js` 的运行条件相同（先 `npm run build`）。
+
 ## 推荐开发顺序
 
 ### 1. 先判断你改的是哪一层
