@@ -105,3 +105,24 @@ describe('R5-04 已取消卡片：关闭按钮 + 10 秒自动收起', () => {
     expect(m[1]).not.toMatch(/danger/);
   });
 });
+
+describe('R5-06 PDF 下载完成卡片：detail 不重复标题', () => {
+  const { showSuccess, successDetail } = require('../src/content/progress-ui');
+  test('没有文件名 → detail 为空、隐藏；标题「Completed」只出现一次', () => {
+    const box = mount();
+    showSuccess(successDetail({ success: true, data: {} }));
+    expect(box.querySelector('.progress-text').textContent).toBe(t.content_progress_completed);
+    expect(box.querySelector('.progress-detail').textContent).toBe('');
+    expect(box.querySelector('.progress-detail').style.display).toBe('none');
+    expect(box.textContent.split(t.content_progress_completed).length - 1).toBe(1);
+  });
+  test('有文件名 → 「Saved: 文件名」（只取文件名，不带目录）', () => {
+    expect(successDetail({ data: { filename: 'arxiv/Attention (2017).pdf' } })).toBe(t.content_result_saved.replace('{filename}', 'Attention (2017).pdf'));
+    expect(successDetail(null)).toBe('');
+  });
+  test('content/index.js 不再 showSuccess(t.content_progress_completed)', () => {
+    const src = require('fs').readFileSync(require('path').join(__dirname, '../src/content/index.js'), 'utf8');
+    expect(src).not.toMatch(/showSuccess\(t\.content_progress_completed\)/);
+    expect((src.match(/showSuccess\(successDetail\(response\)\)/g) || []).length).toBe(2);
+  });
+});

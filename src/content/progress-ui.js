@@ -260,6 +260,17 @@ function cancelAutoHide() {
   successTimer = null;
 }
 
+/**
+ * R5-06：「已完成」卡片的 detail。标题本身已是「已完成」，detail 不能再写一遍；
+ * 后台回了文件名就显示「已保存：文件名」（现有文案），否则留空。
+ */
+export function successDetail(response) {
+  const name = response && ((response.data && response.data.filename) || response.filename);
+  if (!name) return '';
+  const base = String(name).split(/[\\/]/).pop();
+  return t.content_result_saved.replace('{filename}', base);
+}
+
 export function showSuccess(message) {
   notifyOutcome({ ok: true, message: message || '' });
   setProgressState({

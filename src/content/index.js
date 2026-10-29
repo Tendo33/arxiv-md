@@ -27,6 +27,7 @@ import {
   isPendingShown,
   settlePending,
   showSuccess,
+  successDetail,
   showSubmitted,
   showPending,
   updateProgressUI,
@@ -285,7 +286,8 @@ async function handleConversionTrigger(type = 'markdown') {
             emptyContent: !!response.data.emptyContent,
           });
         } else {
-          showSuccess(t.content_progress_completed);
+          // R5-06：标题已是「已完成」，detail 不再重复同一句
+          showSuccess(successDetail(response));
         }
 
         // 通知已由 background script 处理，不需要在这里显示 Toast
@@ -355,7 +357,7 @@ async function handlePdfDownloadDirect(button) {
           showPending(t.content_download_pending, (response.data || response).downloadId);
           return;
         }
-        showSuccess(t.content_progress_completed);
+        showSuccess(successDetail(response)); // R5-06：不重复标题
         logger.info('PDF download initiated via background');
       }
     );
