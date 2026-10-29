@@ -100,6 +100,7 @@ body{min-width:320px}
 .row .row-err{flex-basis:100%;min-width:0;color:var(--danger);font-size:12px;line-height:1.4;overflow-wrap:anywhere}
 /* release-polish 设计 NTF4：失败原因最多两行，完整原文看 title */
 .row .row-err{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
+.row .row-err .nw{white-space:nowrap}
 /* release-polish 设计 NTF3：≤340px 时标题单独占第二行（徽标 · 时间 · 操作在第一行），不再被挤成「BERT: Pr…」 */
 @media (max-width:340px){.row .n{flex-basis:100%;order:2;min-width:0}.row .row-err{order:3}}
 /* rp2c（设计终验 ①）：≤378px 时 .prov 仍只给读屏，失败原因前加 aria-hidden 的「{后端} · 」，视觉可见、读屏不重复；在 .row-err 内，沿用两行截断 */

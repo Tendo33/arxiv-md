@@ -1,5 +1,9 @@
 import { translations } from '@config/locales';
 import { taskErrorText, taskErrorTitle } from './task-error-text';
+import { rowErrSegments } from './row-err-segments';
+
+// 设计 D3（AX-07）：已知中文短文案按语义段包 .nw，段内不断行
+const errNodes = (doc, text) => { const seg = rowErrSegments(text); return seg ? seg.map((x) => el(doc, 'span', { class: 'nw' }, [x])) : [text]; };
 import { TASK_STATUS } from '@config/constants';
 import { formatTimeAgo } from '@utils/time-ago';
 import { providerLabel } from '@config/pdf-providers';
@@ -79,7 +83,7 @@ export function createTaskRow(task, doc = globalThis.document) {
   if (status === TASK_STATUS.FAILED && error) row.append(el(doc, 'span', { class: 'row-err', title: taskErrorTitle(task, String(error)) }, [
     // rp2c（设计终验 ①）：窄宽可见的后端名前缀；aria-hidden，读屏只读 .prov 那一次；title 仍只放原因
     el(doc, 'span', { class: 'row-err-prov', 'aria-hidden': 'true' }, [`${providerLabel(task.provider)} · `]),
-    String(error),
+    ...errNodes(doc, String(error)),
   ]));
   if (status === TASK_STATUS.AWAITING_DISCLOSURE) row.append(el(doc, 'span', { class: 'row-note' }, [t.pdf_disc_needed_title]));
   return row;
