@@ -38,7 +38,7 @@
 
 ## 安装
 
-**Chrome**：从 [Chrome 应用商店](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd) 安装。
+**Chrome**：从 [Chrome 应用商店](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd) 安装。需要 Chrome 121 或更高版本。
 
 **Edge / Firefox**：计划中，尚未上架。
 

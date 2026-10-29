@@ -40,7 +40,7 @@
 
 ## Install
 
-**Chrome**: install from the [Chrome Web Store](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd).
+**Chrome**: install from the [Chrome Web Store](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd). Requires Chrome 121 or later.
 
 **Edge / Firefox**: planned, not yet listed.
 
