@@ -22,3 +22,19 @@ test('写明 OA 规则：arXiv 视为 OA，其余或判断不了先确认', () =
   expect(doc).toMatch(/cannot be determined, nothing is sent/);
   expect(doc).toMatch(/popup, right-click menu, floating button and keyboard shortcut/);
 });
+
+describe('路线 2：界面 / README / ARCHITECTURE 与实际行为一致（arXiv PDF 文件本身发往 PaddleOCR）', () => {
+  const { translations } = require('../src/config/locales');
+  const rd = (f) => require('fs').readFileSync(require('path').join(__dirname, '..', f), 'utf8');
+  test.each(['zh', 'en'])('%s 设置页 PaddleOCR 说明写明发 PDF 文件（≤50 MB）、非 arXiv 只发链接', (l) => {
+    const d = translations[l].pdf_desc_paddleocr;
+    expect(d).toMatch(/50 MB/);
+    expect(d).toMatch(l === 'zh' ? /PDF 文件本身[\s\S]*只发链接/ : /PDF file itself[\s\S]*only the link/);
+  });
+  test('README / ARCHITECTURE 提到 bcebos 与 ZIP 结构', () => {
+    expect(rd('README.md')).toMatch(/\*\.bj\.bcebos\.com/);
+    expect(rd('README.md')).toMatch(/full\.md/);
+    expect(rd('docs/ARCHITECTURE.md')).toMatch(/\*\.bj\.bcebos\.com/);
+    expect(rd('docs/ARCHITECTURE.md')).toMatch(/≤50 MB/);
+  });
+});

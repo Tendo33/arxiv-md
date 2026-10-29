@@ -30,7 +30,7 @@
 - **PDFs named by title**: `Attention Is All You Need (2017).pdf` instead of `1706.03762.pdf`.
 - **Copy BibTeX**: uses arXiv's official citation, or builds one from the page title, authors and year.
 - **Copy for AI or notes**: after a conversion, a result card on the page offers "Copy Markdown".
-- **Optional PDF parsing**: with your own API key, the PDF is parsed in the background by the provider you pick in Settings — PaddleOCR (default, free quota) or MinerU; PaddleOCR results are saved as a `.md` file (a ZIP when there are images), MinerU results as its original ZIP; progress shows in the popup.
+- **Optional PDF parsing**: with your own API key, the PDF is parsed in the background by the provider you pick in Settings — PaddleOCR (default, free quota) or MinerU; PaddleOCR results are saved as a ZIP laid out like MinerU's (`full.md` + `images/`), MinerU results as its original ZIP; progress shows in the popup.
 - **Several entry points**: page buttons, toolbar popup, context menu, keyboard shortcut, and a floating button on PDF pages.
 - **Chinese and English UI**, light and dark themes.
 
@@ -102,6 +102,7 @@ Changes are saved automatically.
 | `ar5iv.org`, `ar5iv.labs.arxiv.org` | ar5iv fallback when official HTML is missing |
 | `mineru.net`, `cdn-mineru.openxlab.org.cn` | Only when you use MinerU: submit tasks and download results |
 | `paddleocr.aistudio-app.com` (optional) | Requested only when you select PaddleOCR; revocable in Settings |
+| `*.bj.bcebos.com` (optional) | Requested together with PaddleOCR access; PaddleOCR serves parse results and figures from this Baidu storage domain |
 | `declarativeNetRequestWithHostAccess` (optional) | Requested together with PaddleOCR access; only removes the `Origin` header on requests to that domain |
 | Content script on `arxiv.org/abs/*`, `arxiv.org/pdf/*`, `arxiv.org/html/*` | Adds the page buttons, result card and PDF floating button on those pages |
 
@@ -109,7 +110,7 @@ Changes are saved automatically.
 
 - No backend, no analytics, no data collection.
 - In Standard mode, conversion runs entirely in your browser and only talks to arXiv and ar5iv.
-- Only when you use PDF parsing is the paper's arXiv PDF URL sent, with your key, to the one provider you selected (PaddleOCR or MinerU, third-party services under their own terms). The extension never switches providers on its own.
+- Only when you use PDF parsing is the paper sent, with your key, to the one provider you selected (PaddleOCR or MinerU, third-party services under their own terms): MinerU gets the arXiv PDF URL; PaddleOCR gets the arXiv PDF file itself (uploaded, up to 50 MB), and only the link for non-arXiv PDFs. The extension never switches providers on its own.
 - See [PRIVACY.md](./PRIVACY.md).
 
 ## FAQ
