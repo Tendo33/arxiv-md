@@ -152,6 +152,7 @@ export function showError(message) {
  * batch9 设计验收 M3/S3：PDF 下载被取消或已从下载列表移除——标题「已取消」而不是「失败」，读屏用 status/polite。
  * R5-04：中性「已取消」样式（state 'canceled'，不是红色错误卡片），带「关闭」按钮，
  * 与已完成 / 已提交一样 10 秒自动收起（悬停/焦点暂停）。用户主动取消，不算失败。
+ * R5-05（已决定 A）：带操作按钮的卡片保留到手动关闭，其他已完成卡片 10 秒后收起。
  */
 export function showCanceled(message) {
   notifyOutcome({ ok: false, error: message || t.content_error_download_canceled });
@@ -184,7 +185,7 @@ function sendShortcutResult(extra) {
   } catch (_) { /* 扩展已重载，消息发不出去 */ }
 }
 
-/** 成功 / 已提交提示至少停留这么久（WCAG 2.2.1：给足阅读时间；rp2c 设计终验 ④：8 秒 → 10 秒），同时提供关闭按钮 */
+/** R5-05：带操作按钮的卡片保留到手动关闭，其他已完成卡片 10 秒后收起。成功 / 已提交 / 已取消提示至少停留这么久（WCAG 2.2.1：给足阅读时间；rp2c 设计终验 ④：8 秒 → 10 秒），同时提供关闭按钮 */
 export const SUCCESS_VISIBLE_MS = 10000;
 /** rp2c ④：暂停后恢复时至少再留这么久，避免移出后立刻消失 */
 export const AUTO_HIDE_RESUME_MIN_MS = 2000;

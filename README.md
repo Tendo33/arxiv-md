@@ -29,7 +29,7 @@
 - **Optional YAML frontmatter**: `title`, `arxiv_id`, `source`, `authors`, `year` for Obsidian, Logseq, Zotero and similar tools.
 - **PDFs named by title**: `Attention Is All You Need (2017).pdf` instead of `1706.03762.pdf`.
 - **Copy BibTeX**: uses arXiv's official citation, or builds one from the page title, authors and year.
-- **Copy for AI or notes**: after a conversion, a result card on the page offers "Copy Markdown".
+- **Copy for AI or notes**: after a conversion, a result card on the page offers "Copy Markdown". Cards with action buttons stay until you close them; other finished cards hide after 10 seconds (paused while hovered or focused).
 - **Optional PDF parsing**: with your own API key, the PDF is parsed in the background by the provider you pick in Settings — PaddleOCR (default, free quota) or MinerU; PaddleOCR results are saved as a ZIP laid out like MinerU's (`full.md` + `images/`), MinerU results as its original ZIP; progress shows in the popup.
 - **Several entry points**: page buttons, toolbar popup, context menu, keyboard shortcut, and a floating button on PDF pages.
 - **Chinese and English UI**, light and dark themes.

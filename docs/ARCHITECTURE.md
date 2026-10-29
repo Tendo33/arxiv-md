@@ -27,7 +27,7 @@
 
 - `src/content/index.js` 负责初始化、语言和消息
 - `src/content/page-buttons.js` 注入 `Markdown`、`PDF`、`BibTeX`
-- `src/content/progress-ui.js` 显示进度
+- `src/content/progress-ui.js` 显示进度和结果卡片：带操作按钮的卡片保留到手动关闭，其他已完成卡片 10 秒后收起（`SUCCESS_VISIBLE_MS`，悬停/焦点暂停）
 - `src/content/markdown-convert.js` 在页面里把 HTML 转成 Markdown
 - `src/content/page-download.js` 触发文本或 Blob 下载
 
