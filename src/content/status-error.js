@@ -9,6 +9,13 @@ import logger from '@utils/logger';
  * @returns {string} 状态卡文案
  */
 export function statusCardErrorText(failure, t, context = 'Conversion failed', { download: fallback = false } = {}) {
+  // 审查 P3-c：runtime.reload（设置页「重新初始化」/ L-01 自动重载）后，已打开的 arXiv 页面里旧内容脚本失效，
+  // chrome.runtime.sendMessage 会同步抛「Extension context invalidated」，走不到回调里的 lastError 分支。
+  // 没有 scripting 权限，不能重新注入，所以复用现有文案提示用户刷新页面。
+  if (isContextInvalidated(failure) && t?.content_error_extension_reloaded) {
+    logger.warn(`${context}: extension context invalidated`);
+    return t.content_error_extension_reloaded;
+  }
   const body = failure?.data?.success === false ? failure.data : failure;
   if (body?.errorCode === 'NETWORK_OFFLINE' || failure?.errorCode === 'NETWORK_OFFLINE') return t.content_error_offline;
   // 附录 C10：还没确认数据说明（设置页已打开）
@@ -36,4 +43,10 @@ export function isCanceledDownload(failure) {
 export function isDisclosureNeeded(failure) {
   const body = failure?.data?.success === false ? failure.data : failure;
   return !!(body?.disclosureNeeded || failure?.disclosureNeeded);
+}
+
+/** 扩展重载后旧内容脚本调用扩展 API 抛出的异常（Chrome："Extension context invalidated."） */
+export function isContextInvalidated(failure) {
+  const msg = failure instanceof Error ? failure.message : '';
+  return /extension context invalidated/i.test(msg || '');
 }
