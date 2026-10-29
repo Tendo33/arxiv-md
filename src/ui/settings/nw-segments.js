@@ -1,6 +1,9 @@
 // design-abs-buttons-2026-10-29 R09 / B8：中文按短语断行。
 // CJK 的 text-wrap: pretty 不生效，窄屏会把「默认策|略」这类词拆开；这里把句子切成 .nw 片段，片段内不换行。
 // 只对 zh 生效；片段拼起来必须与文案一字不差（测试保证），AR-04：只用 DOM API。
+/** 自动切分片段超过这个长度不加 .nw（设计验收 30a6e1b #2） */
+export const NW_MAX = 12;
+
 export const NW_ZH = {
   mode_desc: ['选择论文转换的', '默认策略'],
   mode_standard_desc: ['先 arXiv HTML，', '再 ar5iv，', '失败时下载 PDF'],
@@ -25,10 +28,13 @@ export function splitZh(text) {
 export function nwNodes(doc, key, text, lang) {
   if (lang !== 'zh' || !text) return [text];
   const table = NW_ZH[key];
-  const segs = table && table.join('') === text ? table : splitZh(text);
+  const manual = !!(table && table.join('') === text);
+  const segs = manual ? table : splitZh(text);
   if (segs.length < 2) return [text];
   return segs.map((s) => {
     if (/^\s+$/.test(s)) return doc.createTextNode(s); // C11 #3：空格在 span 外，可在此换行
+    // 设计验收 30a6e1b #2：自动切分的兜底片段超过 NW_MAX 字就不加 .nw，宁可词内断行也不溢出
+    if (!manual && s.trim().length > NW_MAX) return doc.createTextNode(s);
     const sp = doc.createElement('span');
     sp.className = 'nw';
     sp.textContent = s;
