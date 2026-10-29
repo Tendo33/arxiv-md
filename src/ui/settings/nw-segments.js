@@ -18,6 +18,8 @@ export const NW_ZH = {
   // 设计验收 30a6e1b #3：卡片描述手工分段，避免「百|度」「免|费」「页|数」拆词；空格单列放在 span 外
   pdf_card_paddleocr: ['把来自 arXiv 的', ' ', 'PDF 文件', '（50 MB 以内）', '上传到', '百度飞桨星河社区；', '其他 PDF', ' ', '只发送链接。', '每日有免费额度。'],
   pdf_card_mineru: ['只把 PDF 链接', '发往', ' ', 'mineru.net，', '免费账号', '每日有页数上限。'],
+  // 设计 C14：PaddleOCR 隐私链接文字两段，↗ 跟在「（中文）」后面
+  pdf_disc_link_paddleocr: ['百度隐私权保护声明', '（中文）'],
   advanced_pdf_fab: ['在 PDF 页显示', '悬浮导出按钮'],
 };
 

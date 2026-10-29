@@ -765,7 +765,8 @@ a:focus-visible {
 .pd-body { margin: 0; font-size: 13px; line-height: 1.6; color: var(--text-secondary); }
 .pd-link { display: inline-flex; align-items: center; gap: 4px; min-height: 24px; justify-self: start; font-size: 13px; font-weight: 500; color: var(--accent); text-decoration: none; border-radius: 4px; }
 .pd-link:hover { text-decoration: underline; text-underline-offset: 2px; }
-.pd-link svg { width: 14px; height: 14px; flex: none; }
+.pd-link svg { width: 14px; height: 14px; flex: none; margin-left: 4px; vertical-align: -2px; } /* C14：图标在 .nw 里随最后一段走 */
+.pd-link .nw { white-space: nowrap; }
 .pd-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
 .pd-actions .btn { box-sizing: border-box; width: auto; height: 36px; min-height: 36px; padding: 0 16px; line-height: 20px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
 @media (max-width: 359px) { .pd-actions .btn { flex: 1 1 100%; width: 100%; } }
