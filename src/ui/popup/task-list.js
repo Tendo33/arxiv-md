@@ -63,7 +63,7 @@ export function createTaskRow(task, doc = globalThis.document) {
     act.push(el(doc, 'button', { class: 'btn btn-ghost', 'data-action': 'retry', 'data-task-id': eid }, [t.popup_action_retry]));
   }
   act.push(el(doc, 'button', { class: 'btn btn-ghost', 'data-action': 'delete', 'data-task-id': eid, title: t.popup_action_delete, 'aria-label': t.popup_action_delete }, ['×']));
-  const side = busy ? el(doc, 'small', { class: 'pct' }, [`${Number(progress) || 0}%`]) : el(doc, 'small', {}, [String(timeAgo)]);
+  const side = busy ? el(doc, 'small', { class: 'pct' }, [`${Number(progress) || 0}%`]) : el(doc, 'small', { class: 't' }, [String(timeAgo)]);
   const row = el(doc, 'div', { class: 'row', 'data-task-id': eid, 'data-status': status ?? '' }, [
     el(doc, 'span', { class: `badge ${cls}` }, [String(label ?? '')]),
     el(doc, 'span', { class: 'n', title }, [title]),

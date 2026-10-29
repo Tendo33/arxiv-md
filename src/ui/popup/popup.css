@@ -38,6 +38,8 @@ body{min-width:320px}
 /* AF3 设计验收：英文 Download 文字更长，≤379px（含默认 360 宽）也只留图标，aria-label/title 不变 */
 @media (max-width:379px){html[lang="en"] .row .row-act .btn-dl{padding:0 5px}html[lang="en"] .row .row-act .btn-dl .lbl{display:none}}
 .row .pct{font-variant-numeric:tabular-nums}
+/* R4-04：时间列也用等宽数字 + 固定最小宽度、右对齐，不同行的「3 分钟前 / 12 分钟前」不再左右跳 */
+.row .t,.row .pct{font-variant-numeric:tabular-nums;min-width:4.5em;text-align:right}
 /* 确认对话框（删除 MinerU 任务） */
 .confirm-overlay{position:fixed;inset:0;background:rgb(0 0 0/.5);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity var(--dur) var(--ease);z-index:100;padding:var(--sp-4)}
 .confirm-overlay.show{opacity:1;pointer-events:auto}
