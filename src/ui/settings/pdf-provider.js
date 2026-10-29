@@ -97,11 +97,20 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
     for (const id of UI_PROVIDERS) state.acked[id] = await isDisclosureAcked(id, local);
     await render();
     // C10：从摘要页 / popup / 右键菜单跳过来（#disclose=<provider>）→ 直接打开该后端的数据说明
+    await openFromHash();
+    // 设计验收 30a6e1b 建议 b / a：设置页已开着、后台把它切到 #disclose=<provider> 时同样展开面板并聚焦标题
+    const win = doc.defaultView;
+    if (win && typeof win.addEventListener === 'function') win.addEventListener('hashchange', () => { openFromHash(); });
+  }
+
+  async function openFromHash() {
     const want = parseDisclosureHash(loc && loc.hash);
-    if (want && !state.acked[want]) {
-      state.fromHash = want;
-      openDisclosure(want);
-    }
+    if (!want || !registry.has(want)) return;
+    state.acked[want] = await isDisclosureAcked(want, local);
+    if (state.acked[want]) return;
+    state.fromHash = want;
+    const panel = openDisclosure(want);
+    if (panel && typeof panel.scrollIntoView === 'function') panel.scrollIntoView({ block: 'nearest' });
   }
 
   // ---- 附录 C：数据说明面板 ----

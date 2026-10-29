@@ -104,7 +104,14 @@ async function c10(env, lang, provider) {
   // 1) 首次点击：被拦
   const s1 = await clickAndWaitSettings();
   res.firstOpened = s1 ? new URL(s1.url()).hash : null;
-  await p.waitForSelector('.arxiv-md-progress.error', { timeout: 8000 }).catch(() => {});
+  // 设计验收 30a6e1b 建议 b：拦截打开的设置页 600ms 内自动展开面板，焦点在面板标题
+  if (s1) {
+    await s1.waitForTimeout(600);
+    res.panelAt600 = await s1.evaluate(() => { const pn = document.getElementById('pdPanel'); return { open: !!pn, provider: pn && pn.dataset.provider, focusTitle: !!(document.activeElement && document.activeElement.classList.contains('pd-title')) }; });
+  }
+  // 设计验收 30a6e1b #5：拦截是中性提示（canceled 样式 + data-notice），不是 .error
+  await p.waitForSelector('.arxiv-md-progress[data-notice="disclosure"]', { timeout: 8000 }).catch(() => {});
+  res.noticeNeutral = await p.evaluate(() => { const b = document.querySelector('.arxiv-md-progress'); return !!b && !b.classList.contains('error') && b.getAttribute('role') === 'status'; });
   res.notice = await p.evaluate(() => (document.querySelector('.arxiv-md-progress .progress-detail') || {}).textContent || '');
   res.shift = JSON.stringify(base) !== JSON.stringify(await rects());
   if (s1) await s1.screenshot({ path: process.env.E2E_ABS_SHOTS ? path.join(process.env.E2E_ABS_SHOTS, `c10-settings-${provider}-${lang}.png`) : path.join(os.tmpdir(), 'pp-e2e-abs-shot.png'), fullPage: false }).catch(() => {});
@@ -154,6 +161,8 @@ async function c10(env, lang, provider) {
         const bad = [];
         if (r.firstOpened !== `#disclose=${provider}`) bad.push('settings not opened with #disclose');
         if (!r.notice) bad.push('no notice on the abs page');
+        if (!r.noticeNeutral) bad.push('gate notice is not neutral (#5)');
+        if (!r.panelAt600 || !r.panelAt600.open || r.panelAt600.provider !== provider || !r.panelAt600.focusTitle) bad.push(`panel/focus at 600ms: ${JSON.stringify(r.panelAt600)}`);
         if (provider === 'mineru' && /上传|upload/i.test(r.notice)) bad.push('MinerU notice says upload');
         if (r.shift) bad.push('R05 button shift');
         if (!r.afterCancelBlocked) bad.push('not blocked after cancel');
