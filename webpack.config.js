@@ -59,8 +59,9 @@ module.exports = (env, argv) => ({
   },
   performance: {
     hints: "warning",
-    // AR-09：只排除 background.js（另有 BackgroundBudgetPlugin 预算），其余 .js 仍受默认 244 KiB 限制
-    assetFilter: (file) => /\.js$/.test(file) && file !== "background.js",
+    // AR-09：只排除 background.js（另有 BackgroundBudgetPlugin 预算），其余 .js 和 .css 仍受默认 244 KiB 限制
+    // （rp2b：CSS 恢复计入，与 webpack 默认 assetFilter 一致）
+    assetFilter: (f) => /\.(js|css)$/.test(f) && f !== "background.js",
   },
   plugins: [
     new BackgroundBudgetPlugin(),

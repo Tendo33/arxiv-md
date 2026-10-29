@@ -12,6 +12,11 @@ test('assetFilter 只排除 background.js', () => {
   for (const n of ['content.js', 'popup.js', 'settings.js', 'new-entry.js']) expect(f(n)).toBe(true);
   expect(f('background.js.map')).toBe(false);
 });
+test('rp2b：CSS 仍计入默认体积提示（与 webpack 默认 assetFilter 一致）', () => {
+  const f = cfg.performance.assetFilter;
+  for (const n of ['popup.css', 'settings.css', 'ui-v2.css', 'new.css']) expect(f(n)).toBe(true);
+  for (const n of ['manifest.json', 'icon-128.png', 'popup.html']) expect(f(n)).toBe(false);
+});
 function runBudget(size) {
   const plugin = cfg.plugins.find((p) => p.constructor.name === 'BackgroundBudgetPlugin');
   expect(plugin).toBeTruthy();
