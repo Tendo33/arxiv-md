@@ -1,6 +1,7 @@
 import { API } from '@config/constants';
 import logger from '@utils/logger';
 import { isAr5ivHtmlAvailable } from './ar5iv-availability';
+import { ParseError, ERROR_REASONS } from '@pdf-core/errors';
 
 export const HTML_PAPER_SOURCES = [
   { id: 'arxiv-html', label: 'arXiv HTML', base: API.ARXIV_HTML_BASE },
@@ -58,7 +59,11 @@ export async function loadHtmlPaper(source, arxivId, fetchImpl = fetch, onError 
     logger.debug(
       `HTML source ${source.id}: ${arxivId} -> ${usable}, status ${response.status}, url: ${finalUrl}`,
     );
-    if (!usable) return null;
+    if (!usable) {
+      // AR-02：页面在，但没有正文（ar5iv「No content available」等）→ 告诉调用方是“空内容”，不是“没有 HTML”
+      if (onError && response.ok && hasLtxDocument(html) && isNoContentPage(html)) onError(new ParseError('PROVIDER_FAILED', { provider: source.id, reason: ERROR_REASONS.EMPTY_RESULT }));
+      return null;
+    }
     return {
       source: source.id,
       label: source.label,

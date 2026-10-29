@@ -4,6 +4,7 @@ import { parseHTML } from 'linkedom';
 import logger from '@utils/logger';
 import { isNetworkError, offlineError } from '@utils/network-error';
 import { measureSource, measureMarkdown, assessIntegrity } from './integrity';
+import { assertSavableMarkdown, isEmptyResultError } from '@pdf-core/output/pre-save';
 import { HTML_PAPER_SOURCES, loadHtmlPaper, selectConversionSource } from '../html-paper';
 
 class Ar5ivConverter {
@@ -160,6 +161,7 @@ class Ar5ivConverter {
 
     let networkFailures = 0;
     let networkError = null;
+    let emptyError = null; // AR-02：任一来源是“有页面没正文”，最终按空内容处理
     for (const source of HTML_PAPER_SOURCES) {
       const paper = await loadHtmlPaper(source, arxivId, undefined, (error) => {
         if (isNetworkError(error)) {
@@ -167,6 +169,7 @@ class Ar5ivConverter {
           networkError = error;
         } else {
           lastError = error;
+          if (isEmptyResultError(error)) emptyError = error;
         }
       });
       if (!paper) continue;
@@ -174,6 +177,8 @@ class Ar5ivConverter {
       try {
         const cleaned = this.cleanHtml(paper.html);
         const markdown = await this.toMarkdown(cleaned.content, tabId, paper.finalUrl);
+        // AR-02：共用写前检查。这个来源转出来没有正文 → 试下一个来源，最后都没有就按空内容退回 PDF
+        assertSavableMarkdown(markdown, { provider: paper.source });
         const integrity = assessIntegrity(cleaned.integritySource, measureMarkdown(markdown));
         if (!integrity.complete) {
           logger.warn(`HTML export may be incomplete for ${arxivId}:`, integrity);
@@ -204,6 +209,7 @@ class Ar5ivConverter {
         };
       } catch (error) {
         lastError = error;
+        if (isEmptyResultError(error)) emptyError = error;
         logger.warn(`HTML source ${paper.source} conversion failed for ${arxivId}:`, error);
       }
     }
@@ -214,8 +220,8 @@ class Ar5ivConverter {
       throw offlineError(networkError);
     }
     // 部分来源可达（如 arXiv HTML 404、ar5iv 连接失败）：不是断网，抛普通错误让上层退回 PDF
-    logger.error(`HTML conversion failed for ${arxivId}:`, lastError);
-    throw lastError;
+    logger.error(`HTML conversion failed for ${arxivId}:`, emptyError || lastError);
+    throw emptyError || lastError;
   }
 
   /**
