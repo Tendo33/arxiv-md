@@ -9,6 +9,7 @@ import { showConfirm } from './confirm-dialog';
 import { confirmSendFlow, refocusTask } from './send-consent';
 import { renderTaskRows, setTaskListLanguage } from './task-list';
 import { bindListScroll, fitListToHalfRow } from './list-scroll';
+import { NW_ZH, setNwText } from '../settings/nw-segments';
 import { pageContext, recentTasks } from './page-context';
 import { renderShortcutGuide } from './shortcut-guide';
 import { providerLabel } from '@config/pdf-providers';
@@ -184,7 +185,9 @@ function showOk(text, title = null, state = 'ok') {
 function showNeedKey(title, hint) {
   hideAlerts();
   $('keyHereTitle').textContent = title;
-  $('keyHereHint').textContent = hint || '';
+  // R09：zh 按短语 .nw 分段（表见 nw-segments.js）；没有手工表的走 splitZh 兜底
+  const key = Object.keys(NW_ZH).find((k) => NW_ZH[k].join('') === hint) || '';
+  setNwText($('keyHereHint'), key, hint || '', currentLang);
   $('alertKey').classList.remove('hidden');
 }
 

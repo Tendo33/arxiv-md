@@ -20,6 +20,10 @@ export const NW_ZH = {
   pdf_card_mineru: ['只把 PDF 链接', '发往', ' ', 'mineru.net，', '免费账号', '每日有页数上限。'],
   // 设计 C14：PaddleOCR 隐私链接文字两段，↗ 跟在「（中文）」后面
   pdf_disc_link_paddleocr: ['百度隐私权保护声明', '（中文）'],
+  // 设计复验 15fe0f9 必须改 3（R09）：弹窗无 Key / 未确认提示 #keyHereHint 不拆词（「解|析」「备|的」）
+  popup_key_here_hint: ['Key 不会', '跨设备同步，', '请在本设备的', '设置 › PDF 解析', '里重新填写'],
+  popup_err_token_hint: ['到', '设置 › PDF 解析', '填写 Key，', '或改用普通导出'],
+  pdf_disc_needed_body: ['已打开设置页，', '确认后', '回到这里', '再点一次。'],
   advanced_pdf_fab: ['在 PDF 页显示', '悬浮导出按钮'],
 };
 
