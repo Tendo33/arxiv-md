@@ -47,7 +47,8 @@ describe('P-2：图被识别成表格（Attention Fig 4）', () => {
   test('裁剪失败 → 单张图片失败，正文留注释，图注保留，任务不失败', async () => {
     const { out } = await deliver(ATT, { crop: async () => { throw new Error('crop unsupported'); } });
     expect(out.failedImages).toHaveLength(1);
-    expect(out.markdown).toMatch(/<!-- 图片下载失败：page-3\/imgs\/img_in_image_box_212_167_1326_1059\.jpg -->/);
+    expect(out.markdown).toMatch(/> ⚠️ 图片下载失败（image failed to download）：`page-3\/imgs\/img_in_image_box_212_167_1326_1059\.jpg`/);
+    expect(out.markdown).not.toMatch(/<!-- 图片下载失败/);
     expect(out.markdown).toMatch(/Figure 4: Two attention heads/);
   });
 
