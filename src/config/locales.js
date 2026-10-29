@@ -184,6 +184,8 @@ export const translations = {
     notify_download_pending_body: 'Still downloading. It will appear in the download list when finished.',
     notify_download_canceled_title: 'Download canceled',
     notify_download_canceled_body: 'The PDF download was canceled.',
+    notify_download_removed_title: 'Download canceled',
+    notify_download_removed_body: 'The download was canceled or removed from the download list.',
     content_progress_failed: 'Failed',
     content_progress_submitted: 'Submitted',
     content_result_saved: 'Saved: {filename}',
@@ -203,6 +205,7 @@ export const translations = {
     content_error_download_file: 'Download failed: could not write the file.',
     content_download_pending: 'Still downloading. It will appear in the download list when finished.',
     content_error_download_canceled: 'Download canceled',
+    content_error_download_removed: 'The download was canceled or removed from the download list.',
     content_ar5iv_unavailable:
       'No HTML version is available for this paper. PDF fallback is still available.',
     content_auto_prompt_title: 'Auto-convert enabled',
@@ -395,6 +398,8 @@ export const translations = {
     notify_download_pending_body: '仍在下载，完成后会出现在下载列表',
     notify_download_canceled_title: '下载已取消',
     notify_download_canceled_body: 'PDF 下载已取消。',
+    notify_download_removed_title: '下载已取消',
+    notify_download_removed_body: '下载已取消或已从列表移除',
     content_progress_failed: '失败',
     content_progress_submitted: '已提交',
     content_result_saved: '已保存：{filename}',
@@ -413,6 +418,7 @@ export const translations = {
     content_error_download_file: '下载失败：文件无法写入',
     content_download_pending: '仍在下载，完成后会出现在下载列表',
     content_error_download_canceled: '下载已取消',
+    content_error_download_removed: '下载已取消或已从列表移除',
     content_ar5iv_unavailable:
       '该论文暂无 HTML 版本，仍可使用 PDF 兜底。',
     content_auto_prompt_title: '已开启自动转换',

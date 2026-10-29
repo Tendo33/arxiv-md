@@ -42,6 +42,7 @@ function fakeChrome(mode) {
         removeListener: jest.fn((l) => listeners.delete(l)),
       },
       search: jest.fn(async ({ id }) => {
+        if (mode.searchEmpty) return [];
         if (mode.searchState) return [{ id, state: mode.searchState, error: mode.searchError }];
         return [{ id, state: 'in_progress' }];
       }),
@@ -210,6 +211,7 @@ const CASES = [
   [{ interrupt: 'NETWORK_FAILED' }, 'download_failed_network', 'content_error_offline', 'NETWORK_OFFLINE'],
   [{ interrupt: 'USER_CANCELED' }, 'download_canceled', 'content_error_download_canceled', undefined],
   [{ interrupt: 'FILE_NO_SPACE' }, 'download_failed_file', 'content_error_download_file', undefined],
+  [{ searchEmpty: true }, 'download_removed', 'content_error_download_removed', undefined],
   [{ startError: 'Invalid filename' }, 'download_failed', 'content_error_download_other', undefined],
 ];
 const last = () => showNotification.mock.calls[showNotification.mock.calls.length - 1];
@@ -268,7 +270,7 @@ describe.each([['zh'], ['en']])('通知与状态卡（%s）', (lang) => {
 test('zh/en 新增 key 对齐', () => {
   const pick = (l) => Object.keys(translations[l]).filter((k) => /^(notify_download_|content_error_download_)/.test(k)).sort();
   expect(pick('zh')).toEqual(pick('en'));
-  expect(pick('zh')).toHaveLength(17);
+  expect(pick('zh')).toHaveLength(20);
 });
 
 test('content/index.js 两处 PDF 按钮失败都按下载失败显示', () => {
@@ -344,5 +346,49 @@ describe('batch9 ①：4 分钟后仍在下载 → 不报失败、不取消；�
   test('content/index.js 两处结果处理都先看 pending', () => {
     const src = require('fs').readFileSync(require('path').join(__dirname, '../src/content/index.js'), 'utf8');
     expect(src.match(/pending\) \{\n\s*showSuccess\(t\.content_download_pending\)/g)).toHaveLength(2);
+  });
+});
+
+describe('batch9 ②：search 返回空数组 → 立刻 reject「已取消或已从列表移除」', () => {
+  test('不等超时；监听器和定时器都清掉', async () => {
+    jest.useFakeTimers();
+    const c = fakeChrome({ searchEmpty: true });
+    const settled = downloadFile('u', 'p.pdf').catch((e) => e);
+    await jest.advanceTimersByTimeAsync(0);
+    const err = await settled;
+    expect(err.code).toBe('DOWNLOAD_REMOVED');
+    expect(downloadFailureKind(err)).toBe('removed');
+    expect(c.listeners.size).toBe(0);
+    expect(jest.getTimerCount()).toBe(1); // 只剩假下载自己的 5ms 事件
+  });
+
+  test('keepalive 中途变成空数组（用户之后才移除）→ 那一次 poll 就 reject', async () => {
+    jest.useFakeTimers();
+    const c = fakeChrome({ never: true });
+    const settled = downloadFile('u', 'p.pdf').catch((e) => e);
+    await jest.advanceTimersByTimeAsync(30_000);
+    c.downloads.search.mockImplementation(async () => []);
+    await jest.advanceTimersByTimeAsync(10_000);
+    expect((await settled).code).toBe('DOWNLOAD_REMOVED');
+    expect(c.listeners.size).toBe(0);
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
+  test('search 返回 undefined 或抛错时不算移除，继续等', async () => {
+    jest.useFakeTimers();
+    const c = fakeChrome({ never: true });
+    c.downloads.search.mockImplementation(async () => undefined);
+    let state = 'waiting';
+    downloadFile('u', 'p.pdf', { timeoutMs: 60_000 }).catch((e) => { state = e.code; });
+    await jest.advanceTimersByTimeAsync(30_000);
+    expect(state).toBe('waiting');
+    await jest.advanceTimersByTimeAsync(30_001);
+    expect(state).toBe('DOWNLOAD_STILL_RUNNING');
+  });
+
+  test('zh/en 文案', () => {
+    expect(translations.zh.content_error_download_removed).toBe('下载已取消或已从列表移除');
+    expect(translations.zh.notify_download_removed_body).toBe('下载已取消或已从列表移除');
+    expect(translations.en.content_error_download_removed).toBe('The download was canceled or removed from the download list.');
   });
 });

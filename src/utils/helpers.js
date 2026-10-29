@@ -139,7 +139,15 @@ export function downloadFile(url, filename, { timeoutMs = DOWNLOAD_TIMEOUT_MS, k
         early.splice(0).filter((d) => d.id === id).forEach(settle);
         if (done) return;
         const poll = () => Promise.resolve(downloads.search({ id })).then((items) => {
-          if (!done && items && items[0]) settle(items[0]);
+          if (done) return;
+          // batch9 ②（审查 P3）：search 返回空数组 = 下载已被取消并从列表里清掉，或用户把它从列表移除了，不必等到超时
+          if (Array.isArray(items) && items.length === 0) {
+            const error = new Error('Download removed from the download list');
+            error.code = 'DOWNLOAD_REMOVED';
+            finish(reject, error);
+            return;
+          }
+          if (items && items[0]) settle(items[0]);
         }, () => { /* search 失败就继续等 onChanged / 超时 */ });
         poll();
         if (!done) keepalive = setInterval(poll, keepaliveMs);
@@ -152,10 +160,11 @@ export function downloadFile(url, filename, { timeoutMs = DOWNLOAD_TIMEOUT_MS, k
 
 /**
  * batch8 AB7-01：下载失败归类，用于选 zh/en 文案；原始原因只进日志。
- * @returns {'network'|'server'|'canceled'|'file'|'pending'|'other'}
+ * @returns {'network'|'server'|'canceled'|'file'|'pending'|'removed'|'other'}
  */
 export function downloadFailureKind(error) {
   if (error?.code === 'DOWNLOAD_STILL_RUNNING') return 'pending';
+  if (error?.code === 'DOWNLOAD_REMOVED') return 'removed';
   const reason = error?.code === 'DOWNLOAD_INTERRUPTED' ? String(error.downloadError || '') : '';
   if (/^NETWORK_/.test(reason)) return 'network';
   if (/^SERVER_/.test(reason)) return 'server';
