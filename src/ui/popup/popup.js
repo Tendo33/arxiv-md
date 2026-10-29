@@ -1,12 +1,16 @@
 // Popup v2（Round 3 C-2）：当前页上下文 + 三个导出动作 + 最近 MinerU 任务
 
+import { keyHereMessage, renderKeyHint } from './key-hint';
+import { ctxBadgeState } from './ctx-badge';
 import logger from '@utils/logger';
 import storage from '@utils/storage';
 import { translations } from '@config/locales';
 import { showConfirm } from './confirm-dialog';
+import { confirmSendFlow, refocusTask } from './send-consent';
 import { createTaskRow, setTaskListLanguage } from './task-list';
 import { pageContext, recentTasks } from './page-context';
 import { renderShortcutGuide } from './shortcut-guide';
+import { providerLabel } from '@config/pdf-providers';
 
 let currentTasks = [];
 let currentLang = 'en';
@@ -16,6 +20,7 @@ let tabId = null;
 let showAll = false;
 let busy = false;
 let lastMode = 'markdown';
+let active = { id: 'paddleocr', hasKey: false };
 
 const $ = (id) => document.getElementById(id);
 const t = () => translations[currentLang];
@@ -25,6 +30,7 @@ document.addEventListener('DOMContentLoaded', init);
 async function init() {
   await initLanguage();
   $('settingsBtn').addEventListener('click', openSettings);
+  $('keySettingsBtn').addEventListener('click', openSettings);
   $('clearCompletedBtn').addEventListener('click', clearCompleted);
   $('recentAll').addEventListener('click', () => { showAll = !showAll; renderRecent(); });
   $('refreshBtn').addEventListener('click', () => {
@@ -45,12 +51,14 @@ async function init() {
   } catch (error) {
     logger.warn('tabs.query failed:', error);
   }
+  await loadActiveProvider();
   renderContext();
   await loadTasks();
 
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'local' && changes.mineruTasks) scheduleLoadTasks();
     if (area === 'sync' && changes.language) updateLanguage(changes.language.newValue);
+    if ((area === 'sync' && changes.pdfProvider) || (area === 'local' && changes.providerKeys)) loadActiveProvider();
   });
 }
 
@@ -71,6 +79,19 @@ function renderShortcut() {
   renderShortcutGuide(document, shortcutCmds, navigator.userAgent, t(), (url) => {
     Promise.resolve(chrome.tabs.create({ url })).catch(() => {});
   });
+}
+
+/** R4-15：按钮旁小字显示当前后端 */
+async function loadActiveProvider() {
+  try { active = await storage.getActivePdfProvider(); } catch (error) { logger.warn('provider lookup failed:', error); }
+  renderBackend();
+}
+
+function renderBackend() {
+  const el = $('backendLabel');
+  if (el) el.textContent = (t().popup_backend || '({provider})').replace('{provider}', providerLabel(active.id));
+  // 复审 P2-A：后端随 sync 过来了，但 Key 不同步 → 打开弹窗就提示在本设备重新填写
+  renderKeyHint(document, active, t(), providerLabel(active.id));
 }
 
 function scheduleLoadTasks() {
@@ -99,6 +120,7 @@ function updateLanguage(lang) {
     const key = el.getAttribute('data-i18n-aria');
     if (tr[key]) el.setAttribute('aria-label', tr[key]);
   });
+  renderBackend();
   renderContext();
   renderRecent();
   renderShortcut();
@@ -122,11 +144,8 @@ function renderContext() {
   $('ctxTitle').textContent = ctx.title;
   $('ctxTitle').title = ctx.title;
   $('ctxMeta').textContent = `arXiv:${ctx.arxivId}`;
-  if (busy) setBadge('run', tr.popup_badge_run);
-  else if (ctx.loading) setBadge('dis', tr.popup_badge_dis);
-  else if (ctx.state === 'ok') setBadge('ok', tr.popup_badge_ok);
-  else if (ctx.state === 'err') setBadge('err', tr.popup_badge_err);
-  else setBadge('idle', tr[`popup_badge_${ctx.kind}`]);
+  const [cls, text] = ctxBadgeState({ busy, loading: ctx.loading, state: ctx.state, kind: ctx.kind }, tr);
+  setBadge(cls, text);
 }
 
 function setBusy(on) {
@@ -152,6 +171,13 @@ function showOk(text) {
   $('alertOk').classList.remove('hidden');
 }
 
+function showNeedKey(title, hint) {
+  hideAlerts();
+  $('keyHereTitle').textContent = title;
+  $('keyHereHint').textContent = hint || '';
+  $('alertKey').classList.remove('hidden');
+}
+
 function showErr(title, hint) {
   hideAlerts();
   ctx.state = 'err';
@@ -172,9 +198,13 @@ async function runExport(mode) {
   hideAlerts();
   const tr = t();
   if (mode === 'mineru') {
-    const token = await storage.getMinerUToken();
-    if (!token) {
-      showErr(tr.popup_err_token_title, tr.popup_err_token_hint);
+    await loadActiveProvider();
+    if (!active.hasKey) {
+      const here = keyHereMessage(active, tr, providerLabel(active.id));
+      // 设计建议 A：缺 Key 不是失败，用现有的 info 提示框（#alertKey）加「打开设置」，红框只留给真正的错误
+      if (here) showNeedKey(here.title, here.hint);
+      else showNeedKey(tr.popup_err_token_title.replace('{provider}', providerLabel(active.id)), tr.popup_err_token_hint);
+      ctx.state = 'needkey'; // 设计复核 S1：没有任务失败，卡片用中性的「需要 Key」
       renderContext();
       return;
     }
@@ -189,7 +219,7 @@ async function runExport(mode) {
   }
   setBusy(false);
   if (res && res.ok) {
-    showOk(mode === 'mineru' ? tr.popup_saved_bg : (res.filename || res.message || ''));
+    showOk(mode === 'mineru' ? tr.popup_saved_bg.replace('{provider}', providerLabel(active.id)) : (res.filename || res.message || ''));
   } else {
     showErr(res?.error || tr.popup_badge_err, res?.unreachable ? '' : tr.popup_err_generic_hint);
     showRefresh(!!res?.unreachable);
@@ -221,7 +251,11 @@ function renderRecent() {
   $('taskList').classList.toggle('hidden', empty);
   if (empty) { $('recentAll').classList.add('hidden'); $('clearCompletedBtn').classList.add('hidden'); return; }
   const list = showAll ? recentTasks(currentTasks, Infinity) : recentTasks(currentTasks, 3);
+  // 设计验收 M8：重绘会替换掉行内按钮；焦点原本在任务行里就按 taskId 找回来，不让它掉到 body
+  const focused = document.activeElement;
+  const keepId = focused && $('taskList').contains(focused) && focused.dataset ? focused.dataset.taskId : null;
   $('taskList').innerHTML = list.map(createTaskRow).join('');
+  if (keepId) refocusTask(document, keepId);
   const more = currentTasks.length > 3;
   const all = $('recentAll');
   all.classList.toggle('hidden', !more);
@@ -238,6 +272,7 @@ function bindTaskActions() {
     const { action, taskId, url } = btn.dataset;
     if (action === 'download') handleDownload(url);
     else if (action === 'retry') await handleRetry(taskId);
+    else if (action === 'consent') await handleConsent(taskId, btn.dataset.provider);
     else if (action === 'delete') await handleDelete(taskId);
   });
 }
@@ -259,6 +294,13 @@ async function taskCall(message, okKey, failKey, extra) {
     logger.error(`${message.type} failed:`, error);
     showToast(t()[failKey]);
   }
+}
+
+async function handleConsent(taskId, providerId) {
+  const task = currentTasks.find((x) => x.id === taskId) || taskId;
+  await confirmSendFlow(task, providerId, { showConfirm, sendMessage: (m) => chrome.runtime.sendMessage(m), tr: t() });
+  await loadTasks();
+  refocusTask(document, taskId);
 }
 
 async function handleRetry(taskId) {

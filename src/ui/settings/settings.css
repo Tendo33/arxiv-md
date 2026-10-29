@@ -262,8 +262,6 @@ body {
   background: var(--surface-2);
   color: var(--text-secondary);
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 .mode-badge-recommended {
@@ -711,3 +709,26 @@ body {
   color: var(--text-secondary);
   font-size: 13px;
 }
+
+/* R4-14：PDF 解析分组 */
+select.input-field { appearance: auto; cursor: pointer; width: 100%; }
+.permission-row, .revoke-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 8px; font-size: 13px; color: var(--text-secondary, #475569); }
+.permission-row[hidden], .revoke-row[hidden] { display: none; }
+
+/* 设计验收 M4：窄屏下 Key 输入框缩小，显示/测试按钮留在同一行 */
+.input-group { flex-wrap: nowrap; }
+.input-group input { min-width: 0; flex: 1; }
+.input-group .btn-icon { flex: none; }
+
+/* 设计验收 M5：授权/撤销按钮用设置页按钮样式；窄屏下不拉满整行 */
+.permission-row .btn, .revoke-row .btn { min-height: 36px; padding: 0 12px; width: auto; flex: none; }
+
+/* 设计验收 M6：权限被拒的说明 */
+.permission-row.denied #permissionStatus { color: var(--danger); }
+
+/* 设计建议：测试按钮悬停/聚焦时图标保持白色，不出现红图标压绿底 */
+.btn-test:hover, .btn-test:focus-visible { color: var(--on-success); }
+.token-status-link { color: inherit; text-decoration: underline; font-weight: 600; }
+
+/* 语言按钮：可访问名称以可见文字开头 */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}

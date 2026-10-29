@@ -1,0 +1,10 @@
+{
+  "name": "pdf-parse-core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Provider-agnostic PDF parsing core (MinerU / PaddleOCR) shared by arxiv-md and journal-md",
+  "license": "MIT",
+  "type": "module",
+  "main": "src/index.js",
+  "files": ["src"]
+}

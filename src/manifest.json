@@ -18,6 +18,9 @@
     "alarms",
     "contextMenus"
   ],
+  "optional_permissions": [
+    "declarativeNetRequestWithHostAccess"
+  ],
   "host_permissions": [
     "https://arxiv.org/*",
     "https://ar5iv.org/*",
@@ -25,6 +28,9 @@
     "https://export.arxiv.org/*",
     "https://mineru.net/*",
     "https://cdn-mineru.openxlab.org.cn/*"
+  ],
+  "optional_host_permissions": [
+    "https://paddleocr.aistudio-app.com/*"
   ],
   "background": {
     "service_worker": "background.js"

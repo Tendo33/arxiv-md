@@ -37,6 +37,10 @@
           <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/></svg>
           <div><b id="errTitle"></b><span id="errHint"></span><button id="refreshBtn" class="btn btn-secondary btn-xxs btn-refresh hidden" data-i18n="popup_btn_refresh">刷新</button></div>
         </div>
+        <div id="alertKey" class="alert info hidden" role="status">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/></svg>
+          <div><b id="keyHereTitle"></b><span id="keyHereHint"></span><button id="keySettingsBtn" class="btn btn-secondary btn-xxs btn-refresh" data-i18n="popup_btn_settings">打开设置</button></div>
+        </div>
         <div id="alertInfo" class="alert info hidden">
           <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/></svg>
           <div id="infoText" data-i18n="popup_dis_loading">页面仍在加载，就绪后可导出</div>
@@ -46,14 +50,14 @@
           <button id="exportBtn" class="btn btn-primary" disabled>
             <svg class="btn-icon" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg><span class="spinner hidden" aria-hidden="true"></span><span class="label" data-i18n="popup_btn_export">导出 Markdown</span>
           </button>
-          <button id="mineruBtn" class="btn btn-secondary" disabled data-i18n="popup_btn_mineru">MinerU 高质量</button>
-          <button id="pdfBtn" class="btn btn-secondary" disabled data-i18n="popup_btn_pdf">下载 PDF</button>
+          <button id="mineruBtn" class="btn btn-secondary" disabled aria-describedby="backendLabel"><span data-i18n="popup_btn_mineru">PDF 解析</span> <small id="backendLabel" class="backend-label"></small></button>
+          <button id="pdfBtn" class="btn btn-secondary" disabled><span data-i18n="popup_btn_pdf">下载 PDF</span></button>
         </div>
 
         <div id="recent" class="recent hidden">
-          <div class="sec-h"><span data-i18n="popup_recent">MinerU 任务</span><span class="sec-x"><button id="clearCompletedBtn" class="btn btn-ghost btn-xxs hidden" data-i18n="popup_btn_clear_completed">清空已完成</button><button id="recentAll" class="btn btn-ghost btn-xxs hidden" aria-expanded="false"></button></span></div>
-          <div id="recentEmpty" class="card recent-empty hidden" data-i18n="popup_recent_empty">用 MinerU 高质量导出后，任务进度会显示在这里</div>
-          <div id="taskList" class="card list" role="region" aria-live="polite" data-i18n-aria="popup_task_list" aria-label="任务列表"></div>
+          <div class="sec-h"><span data-i18n="popup_recent">PDF 解析任务</span><span class="sec-x"><button id="clearCompletedBtn" class="btn btn-ghost btn-xxs hidden" data-i18n="popup_btn_clear_completed">清空已完成</button><button id="recentAll" class="btn btn-ghost btn-xxs hidden" aria-expanded="false"></button></span></div>
+          <div id="recentEmpty" class="card recent-empty hidden" data-i18n="popup_recent_empty">用 PDF 解析导出后，任务进度会显示在这里</div>
+          <div id="taskList" class="card list" tabindex="-1" role="region" aria-live="polite" data-i18n-aria="popup_task_list" aria-label="任务列表"></div>
         </div>
       </main>
 
@@ -65,6 +69,7 @@
 
     <div class="confirm-overlay" id="confirmOverlay" hidden inert>
       <div class="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirmMessage" tabindex="-1">
+        <h2 class="confirm-title" id="confirmTitle" hidden></h2>
         <p class="confirm-message" id="confirmMessage" data-i18n="popup_confirm_delete">确定要删除吗？</p>
         <div class="confirm-actions">
           <button class="confirm-btn confirm-cancel" id="confirmCancel" data-i18n="popup_btn_cancel">取消</button>

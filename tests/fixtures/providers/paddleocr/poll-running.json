@@ -1,0 +1,1 @@
+{ "code": 0, "msg": "Success", "data": { "jobId": "fixture-job-0001", "state": "running", "extractProgress": { "totalPages": 12, "extractedPages": 5, "startTime": "2026-10-28 20:00:00" } } }

@@ -2,7 +2,7 @@
  * 显示自定义确认对话框
  * @returns {Promise<boolean>}
  */
-export function showConfirm(message) {
+export function showConfirm(message, { title = null, okLabel = null, tone = 'danger' } = {}) {
   return new Promise((resolve) => {
     const overlay = document.getElementById('confirmOverlay');
     const msgEl = document.getElementById('confirmMessage');
@@ -20,24 +20,40 @@ export function showConfirm(message) {
       );
 
     msgEl.textContent = message;
+    // 设计验收 M10：有标题时 标题=名字、正文=描述；没有标题（删除确认）时仍用正文当名字
+    const titleEl = document.getElementById('confirmTitle');
+    if (titleEl) {
+      titleEl.textContent = title || '';
+      titleEl.hidden = !title;
+    }
+    if (title && titleEl) {
+      dialog.setAttribute('aria-labelledby', 'confirmTitle');
+      dialog.setAttribute('aria-describedby', 'confirmMessage');
+    } else {
+      dialog.setAttribute('aria-labelledby', 'confirmMessage');
+      dialog.removeAttribute('aria-describedby');
+    }
+    // 非删除类确认（如「发送并解析」）：换按钮文字，用品牌色而不是危险色
+    const prevOkLabel = okBtn.textContent;
+    if (okLabel) okBtn.textContent = okLabel;
+    okBtn.classList.toggle('brand', tone === 'brand');
     // 关闭时 hidden + inert：读屏和 Tab 都进不去（axe aria-hidden-focus）
     overlay.hidden = false;
     overlay.inert = false;
     overlay.removeAttribute('inert');
     overlay.classList.add('show');
 
+    // 初始焦点显式放在「取消」（破坏性最小，WAI-ARIA APG Alert Dialog），不依赖按钮的 DOM 顺序
     const focusFirst = () => {
-      const focusable = getFocusable();
-      if (focusable.length > 0) {
-        focusable[0].focus();
-      } else {
-        dialog.focus();
-      }
+      if (cancelBtn && !cancelBtn.disabled) cancelBtn.focus();
+      else dialog.focus();
     };
 
     const cleanup = () => {
       overlay.classList.remove('show');
       overlay.hidden = true;
+      if (okLabel) okBtn.textContent = prevOkLabel;
+      okBtn.classList.remove('brand');
       overlay.inert = true;
       overlay.setAttribute('inert', '');
       okBtn.removeEventListener('click', onOk);

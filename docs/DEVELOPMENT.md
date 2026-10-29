@@ -76,7 +76,7 @@ npm run package
 
 #### MinerU 路径
 
-1. 在设置页填入有效 Token 并切换到 `MinerU Mode`
+1. 在设置页填入有效 Token 并切换到 `PDF parsing mode`
 2. 回到论文页点击 `Markdown`
 3. 打开 Popup，看任务是否进入 `Pending/Processing`
 4. 等待完成后验证 ZIP 下载、重试、删除、复制链接

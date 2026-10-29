@@ -72,4 +72,13 @@ describe('AF3-01 不规范 </li></li> 不再截断正文', () => {
     expect(article.querySelector('ul.share')).toBeNull();
     expect(article.querySelector('#outside')).toBeNull();
   });
+  // AF3 复审 P3：非 nav 标签的 .ltx_TOC 落在 article 外也不收
+  test('rescueEscapedContent 不收 <div class="ltx_TOC">', () => {
+    const { document } = parseHTML('<html><body><div class="ltx_page_main"><article class="ltx_document"><p>a</p></article>'
+      + '<div class="ltx_TOC ltx_list_toc">toc</div><section class="ltx_section" id="S5">b</section></div></body></html>');
+    const article = document.querySelector('article');
+    expect(rescueEscapedContent(article)).toBe(1);
+    expect(article.querySelector('#S5')).not.toBeNull();
+    expect(article.textContent).not.toContain('toc');
+  });
 });

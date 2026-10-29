@@ -4,13 +4,18 @@
   "description": "Chrome extension to save arXiv papers as Markdown",
   "author": "SimonSun",
   "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "build": "webpack --mode production",
     "dev": "webpack --mode development --watch",
-    "lint": "eslint src/**/*.js",
+    "lint": "eslint src/**/*.js \"packages/pdf-parse-core/src/**/*.js\"",
     "test": "jest --runInBand",
-    "test:e2e": "npm run build && node scripts/e2e-shortcut.js",
-    "package": "npm run build && node scripts/package.js"
+    "test:e2e": "npm run build && node scripts/e2e-shortcut.js && node scripts/e2e-popup-a11y.js && node scripts/e2e-popup-tasklist.js",
+    "package": "npm run build && node scripts/package.js",
+    "check:keys": "node scripts/check-no-keys.js",
+    "test:core-coverage": "jest --runInBand tests/pdf-core --coverage --collectCoverageFrom='packages/pdf-parse-core/src/**/*.js' --coverageThreshold='{\"global\":{\"lines\":85}}'"
   },
   "dependencies": {
     "linkedom": "^0.18.12",

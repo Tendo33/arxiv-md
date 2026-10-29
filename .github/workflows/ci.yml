@@ -20,8 +20,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
-      - run: npm test
+      # 先 build：tests/manifest-locales 要校验 dist/_locales（CI=true 时 dist 缺失直接失败）
       - run: npm run build
+      - run: npm test
+      - run: npm run check:keys
 
   # batch6：扩展 e2e（有界面的 Chromium + xvfb）。新增 e2e 脚本时只需往 E2E_SCRIPTS 里追加一行。
   # 本仓库不依赖 playwright，这里装到仓库外的临时目录，经 E2E_PLAYWRIGHT_DIR 交给脚本。
@@ -32,6 +34,8 @@ jobs:
       PLAYWRIGHT_VERSION: 1.60.0
       E2E_SCRIPTS: |
         scripts/e2e-shortcut.js
+        scripts/e2e-popup-a11y.js
+        scripts/e2e-popup-tasklist.js
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7

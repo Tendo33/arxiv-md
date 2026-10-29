@@ -1,6 +1,16 @@
 import { translations } from '@config/locales';
+import { providerLabel } from '@config/pdf-providers';
 
 let t = translations.en;
+let provider = providerLabel();
+
+export function setProgressProvider(id) {
+  provider = providerLabel(id);
+}
+
+export function withProvider(text) {
+  return String(text || '').replace(/\{provider\}/g, provider);
+}
 
 export function setProgressText(next) {
   t = next || translations.en;
@@ -14,13 +24,13 @@ export function updateProgressUI(progress) {
     checking: t.content_progress_checking,
     downloading: t.content_progress_downloading,
     submitting: t.content_progress_submitting,
-    processing: t.content_progress_processing,
+    processing: t.content_progress_parsing,
     extracting: t.content_progress_extracting,
     completed: t.content_progress_completed,
   };
 
   setProgressState({
-    text: stageText[progress.stage] || t.content_progress_processing,
+    text: withProvider(stageText[progress.stage] || t.content_progress_processing),
     percent: Math.round(progress.progress || 0),
     state: 'processing',
   });

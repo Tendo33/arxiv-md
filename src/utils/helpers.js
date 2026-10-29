@@ -1,3 +1,4 @@
+import { toDownloadUrl } from '@pdf-core/output/save';
 import { REGEX, STORAGE_KEYS } from '@config/constants';
 
 export function extractArxivId(text) {
@@ -160,11 +161,11 @@ export function downloadBlob(blob, filename) {
     .replace(/_+/g, '_')
     .replace(/^_+|_+$/g, '');
 
-  const reader = new FileReader();
-  reader.onloadend = () => {
+  // R4-10：Chrome SW 用 data URL；有 URL.createObjectURL 的环境（Firefox 后台/页面）用 blob URL
+  return toDownloadUrl(blob).then(({ url, revoke, kind }) => {
     chrome.downloads.download(
       {
-        url: reader.result,
+        url,
         filename: asciiSafeFilename,
         saveAs: false,
         conflictAction: 'uniquify',
@@ -173,16 +174,17 @@ export function downloadBlob(blob, filename) {
         if (chrome.runtime.lastError) {
           // 回退：使用保存对话框
           chrome.downloads.download({
-            url: reader.result,
+            url,
             filename: cleanFilename,
             saveAs: true,
             conflictAction: 'uniquify',
           });
         }
+        if (kind === 'blob') setTimeout(revoke, 60000);
+        return downloadId;
       },
     );
-  };
-  reader.readAsDataURL(blob);
+  });
 }
 
 export async function showNotification(title, message, type = 'basic') {

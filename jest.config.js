@@ -9,6 +9,7 @@ module.exports = {
     }],
   },
   moduleNameMapper: {
+    '^@pdf-core/(.*)$': '<rootDir>/packages/pdf-parse-core/src/$1',
     '^@core/(.*)$': '<rootDir>/src/core/$1',
     '^@utils/(.*)$': '<rootDir>/src/utils/$1',
     '^@config/(.*)$': '<rootDir>/src/config/$1',

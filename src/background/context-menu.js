@@ -2,6 +2,7 @@
 // 依赖全部注入，便于在 node 里测试。
 import { translations } from '@config/locales';
 import { defaultTimers } from './action-badge';
+import { providerLabel } from '@config/pdf-providers';
 
 export const PAGE_PATTERNS = [
   'https://arxiv.org/abs/*',
@@ -32,17 +33,21 @@ export function arxivIdFromLink(url, isValid) {
 }
 
 /** 生成菜单项（纯函数） */
-export function buildMenuItems(lang, { shortcut = '', hasToken = false } = {}) {
+export function buildMenuItems(lang, { shortcut = '', hasToken = false, provider = 'mineru' } = {}) {
   const t = translations[lang] || translations.en;
-  const pageTitle = shortcut ? `${t.menu_page_download} (${shortcut})` : t.menu_page_download;
-  return [
-    { id: MENU.PAGE, title: pageTitle, contexts: ['page'], documentUrlPatterns: PAGE_PATTERNS },
-    {
+  const pageTitle = shortcut
+    ? t.menu_with_shortcut.replace('{label}', t.menu_page_download).replace('{shortcut}', shortcut)
+    : t.menu_page_download;
+  // R4-15：id 保持 page-mineru（兼容）；只在当前后端已配 Key 时显示
+  const items = [{ id: MENU.PAGE, title: pageTitle, contexts: ['page'], documentUrlPatterns: PAGE_PATTERNS }];
+  if (hasToken) {
+    items.push({
       id: MENU.MINERU, contexts: ['page'], documentUrlPatterns: PAGE_PATTERNS,
-      title: hasToken ? t.menu_page_mineru : t.menu_page_mineru_no_token, enabled: hasToken,
-    },
-    { id: MENU.LINK, title: t.menu_link_download, contexts: ['link'], targetUrlPatterns: LINK_PATTERNS },
-  ];
+      title: t.menu_page_mineru.replace('{provider}', providerLabel(provider)),
+    });
+  }
+  items.push({ id: MENU.LINK, title: t.menu_link_download, contexts: ['link'], targetUrlPatterns: LINK_PATTERNS });
+  return items;
 }
 
 /**
@@ -56,14 +61,18 @@ export function createContextMenus({ menus, tabs, runtime, commands, storage, is
 
   async function rebuild() {
     const lang = (await storage.getLanguage().catch(() => 'en')) || 'en';
-    const hasToken = !!(await storage.getMinerUToken().catch(() => ''));
+    const active = storage.getActivePdfProvider
+      ? await storage.getActivePdfProvider().catch(() => ({ id: 'mineru', hasKey: false }))
+      : { id: 'mineru', hasKey: !!(await storage.getMinerUToken().catch(() => '')) };
+    const hasToken = active.hasKey;
+    const provider = active.id;
     let shortcut = '';
     try {
       const all = commands && commands.getAll ? await commands.getAll() : [];
       shortcut = (all.find((c) => c.name === 'convert-current-paper') || {}).shortcut || '';
     } catch (_) { /* 无快捷键 */ }
     await new Promise((r) => menus.removeAll(() => r()));
-    buildMenuItems(lang, { shortcut, hasToken }).forEach((item) => {
+    buildMenuItems(lang, { shortcut, hasToken, provider }).forEach((item) => {
       menus.create(item, () => { if (runtime.lastError) log(`menu ${item.id}: ${runtime.lastError.message}`); });
     });
   }

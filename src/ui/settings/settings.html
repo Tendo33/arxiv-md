@@ -17,9 +17,9 @@
             <h1>arXiv to Markdown</h1>
           </div>
           <div class="header-actions">
-            <button class="btn-lang" id="langToggle" data-i18n-title="lang_switch" data-i18n-aria="lang_switch" title="Switch Language" aria-label="Switch Language">
+            <button class="btn-lang" id="langToggle" data-i18n-title="lang_switch" title="Switch Language">
               <span id="langIcon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></span>
-              <span id="langText">中文</span>
+              <span id="langText">中文</span><span class="sr-only" data-i18n="lang_switch">Switch language</span>
             </button>
             <div class="version" id="versionDisplay">v</div>
           </div>
@@ -69,70 +69,77 @@
               <div class="mode-content">
                 <div class="mode-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="m6 3 6-1 6 1 4 6-10 13L2 9l4-6Z"/><path d="m2 9h20M6 3l6 6 6-6M12 9v12"/></svg></div>
                 <div class="mode-title" data-i18n="mode_mineru_title">
-                  MinerU mode
+                  PDF parsing mode
                 </div>
                 <div class="mode-description" data-i18n="mode_mineru_desc">
-                  Always use MinerU (manual, requires token)
+                  Always use PDF parsing (with the backend chosen below)
                 </div>
                 <div class="mode-badge" data-i18n="mode_requires_token">
-                  Requires token
+                  Requires key
                 </div>
               </div>
             </label>
           </div>
         </section>
 
-        <!-- MinerU API Section -->
-        <section class="settings-section">
-          <h2 data-i18n="mineru_title">MinerU API configuration</h2>
-          <p class="section-description" data-i18n="mineru_desc">
-            Optional: For manual MinerU mode only
+        <!-- R4-14：PDF 解析（后端选择 + Key） -->
+        <section class="settings-section" id="pdfProviderSection" aria-labelledby="pdfProviderTitle">
+          <h2 id="pdfProviderTitle" data-i18n="pdf_title">PDF parsing</h2>
+          <p class="section-description" data-i18n="pdf_desc">
+            Used for the high-quality PDF path. Your PDF link is sent to the provider you choose.
           </p>
 
           <div class="form-group">
-            <label for="mineruToken" data-i18n="mineru_token_label"
-              >API Token</label
-            >
+            <label for="pdfProvider" data-i18n="pdf_provider_label">Provider</label>
+            <select id="pdfProvider" class="input-field" aria-describedby="pdfProviderDesc">
+              <option value="paddleocr" data-i18n="pdf_provider_paddleocr">PaddleOCR (default, free quota)</option>
+              <option value="mineru" data-i18n="pdf_provider_mineru">MinerU</option>
+            </select>
+            <p class="form-hint" id="pdfProviderDesc" aria-live="polite"></p>
+            <div class="permission-row" id="permissionRow" hidden>
+              <span id="permissionStatus" role="status"></span>
+              <button type="button" id="grantPermissionBtn" class="btn btn-secondary" data-i18n="pdf_grant_btn" hidden>Grant access</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="providerKey" id="providerKeyLabel" data-i18n="pdf_key_label">API Key</label>
             <div class="input-group">
               <input
                 type="password"
-                id="mineruToken"
-                data-i18n-placeholder="mineru_token_placeholder"
-                placeholder="Enter your MinerU API Token"
+                id="providerKey"
+                data-provider="paddleocr"
+                autocomplete="off"
+                spellcheck="false"
+                data-i18n-placeholder="pdf_key_placeholder"
+                placeholder="Paste your API key"
                 class="input-field"
+                aria-describedby="keyHereHint tokenStatus getKeyHint"
               />
-              <button id="toggleTokenBtn" class="btn-icon" data-i18n-title="token_toggle" data-i18n-aria="token_toggle" title="Show/Hide" aria-label="Show/Hide">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                >
+              <button type="button" id="toggleTokenBtn" class="btn-icon" data-i18n-title="token_toggle" data-i18n-aria="token_toggle" title="Show/Hide" aria-label="Show/Hide" aria-pressed="false">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                   <circle cx="12" cy="12" r="3" />
                 </svg>
               </button>
-              <button id="testTokenBtn" class="btn-icon btn-test" data-i18n-title="mineru_test_btn" data-i18n-aria="mineru_test_btn" title="Test connection" aria-label="Test connection">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <button type="button" id="testTokenBtn" class="btn-icon btn-test" data-i18n-title="mineru_test_btn" data-i18n-aria="mineru_test_btn" title="Test connection" aria-label="Test connection">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                   <polyline points="22 4 12 14.01 9 11.01" />
                 </svg>
               </button>
             </div>
-            <div class="form-hint">
+            <div class="form-hint" id="getKeyHint">
               🔗
-              <a
-                href="https://mineru.net"
-                target="_blank"
-                data-i18n="mineru_visit"
-                >Visit mineru.net</a
-              >
-              <span data-i18n="mineru_hint"
-                >to register and get your token</span
-              >
+              <a id="getKeyLink" href="https://aistudio.baidu.com/account/accessToken" target="_blank" rel="noopener noreferrer" data-i18n="pdf_get_key">Get a key</a>
             </div>
-            <div class="token-status" id="tokenStatus"></div>
+            <div class="form-hint key-here" id="keyHereHint" role="status" hidden></div>
+            <div class="token-status" id="tokenStatus" role="status" aria-live="polite"></div>
+          </div>
+
+          <div class="form-group revoke-row" id="revokeRow" hidden>
+            <span id="revokeText"></span>
+            <button type="button" id="revokePermissionBtn" class="btn btn-secondary" data-i18n="pdf_revoke_btn">Revoke</button>
           </div>
         </section>
 
@@ -199,7 +206,7 @@
             <div class="stat-item">
               <div class="stat-number" id="mineruSuccess">0</div>
               <div class="stat-label" data-i18n="stats_mineru">
-                MinerU success
+                PDF parsing success
               </div>
             </div>
             <div class="stat-item">

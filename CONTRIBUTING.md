@@ -48,7 +48,7 @@ Also do manual verification when behavior changes. At minimum:
 
 - test one paper that has official arXiv HTML
 - test one paper where both HTML sources are unavailable and PDF fallback is expected
-- test MinerU mode if you touched task flow, popup behavior, or settings
+- test PDF parsing mode if you touched task flow, popup behavior, or settings
 
 ## Documentation Is Part Of The Change
 

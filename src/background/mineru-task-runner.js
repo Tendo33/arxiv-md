@@ -1,154 +1,63 @@
-import mineruClient from '@core/converter/mineru-client';
+// R4-11：保留旧模块路径（兼容旧 import）；实现已迁到 parse-task-runner.js，一个版本后删除
 import taskManager from '@core/task-manager';
 import logger from '@utils/logger';
 import { generateFilename } from '@utils/helpers';
 import storage from '@utils/storage';
-import { TASK_STATUS } from '@config/constants';
 import { createDeletedTaskGuard } from '@core/deleted-task-guard';
+import { downloadZip } from '@core/converter/mineru-client';
+import { createDefaultRegistry } from '@pdf-core/providers/index';
+import { saveDeliverable } from '@pdf-core/output/save';
+import { createParseTaskRunner } from './parse-task-runner';
+import { taskNotificationText } from './task-notification-text';
 
 export const deletedTaskGuard = createDeletedTaskGuard(chrome.storage.local);
+export const providerRegistry = createDefaultRegistry();
 
-/**
- * 后台处理 MinerU 任务
- */
-export async function processMinerUTaskInBackground(taskId) {
-  logger.info('Processing MinerU task in background:', taskId);
-
-  // 检查任务是否已被删除
-  if (await deletedTaskGuard.consume(taskId)) {
-    logger.info('Task was deleted before processing, skipping:', taskId);
-    return;
-  }
-
-  const task = await taskManager.getTask(taskId);
-  if (!task) {
-    logger.error('Task not found:', taskId);
-    return;
-  }
-
-  const token = await storage.getMinerUToken();
-  if (!token) {
-    logger.error('MinerU Token not configured');
-    await taskManager.updateTask(taskId, {
-      status: TASK_STATUS.FAILED,
-      error: '未配置 MinerU API Token',
+function downloadViaChrome(opts) {
+  return new Promise((resolve, reject) => {
+    chrome.downloads.download(opts, (id) => {
+      if (chrome.runtime.lastError) reject(new Error(chrome.runtime.lastError.message)); else resolve(id);
     });
-    showTaskNotification(task, 'failed', '未配置 MinerU Token');
-    return;
-  }
-
-  try {
-    logger.info('Starting MinerU API call for task:', taskId);
-
-    // 更新为处理中
-    await taskManager.updateTask(taskId, {
-      status: TASK_STATUS.PROCESSING,
-      progress: 0,
-    });
-
-    // 调用 MinerU API
-    const pdfUrl = task.paperInfo.pdfUrl || `https://arxiv.org/pdf/${task.paperInfo.arxivId}.pdf`;
-    logger.info('PDF URL:', pdfUrl);
-
-    // 生成统一格式的文件名（与其他功能保持一致）
-    const paperInfo = task.paperInfo;
-    const filename = generateFilename(
-      {
-        title: paperInfo.title,
-        authors: paperInfo.authors,
-        year: paperInfo.year,
-        arxivId: paperInfo.arxivId,
-      },
-      'zip'
-    );
-
-    const result = await mineruClient.convert(
-      pdfUrl,
-      token,
-      { ...paperInfo, filename },
-      async (progress) => {
-        // 实时更新进度
-        logger.debug(`Task ${taskId} progress:`, progress.progress);
-        await taskManager.updateTask(taskId, {
-          progress: Math.round(progress.progress || 0),
-        });
-      }
-    );
-
-    logger.info('MinerU API call completed for task:', taskId);
-
-    // 在任务完成前检查是否被删除
-    if (await deletedTaskGuard.consume(taskId)) {
-      logger.info('Task was deleted during processing, skipping download notification:', taskId);
-      return;
-    }
-
-    // 标记为完成
-    await taskManager.updateTask(taskId, {
-      status: TASK_STATUS.COMPLETED,
-      progress: 100,
-      zipUrl: result.zipUrl,
-      downloadId: result.downloadId,
-      taskId: result.metadata.taskId,
-      completedAt: Date.now(),
-    });
-
-    // 增加统计
-    await storage.incrementConversion('mineru_api');
-
-    // 发送成功通知
-    showTaskNotification(task, 'completed', result.zipUrl);
-    logger.info('MinerU task completed:', taskId);
-  } catch (error) {
-    logger.error('MinerU task failed:', taskId, error);
-    logger.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    });
-
-    // 标记为失败
-    await taskManager.updateTask(taskId, {
-      status: TASK_STATUS.FAILED,
-      error: error.message || '未知错误',
-    });
-
-    // 发送失败通知
-    showTaskNotification(task, 'failed', error.message);
-  }
+  });
 }
 
-/**
- * 显示任务通知
- */
-function showTaskNotification(task, status, detail = '') {
-  const title = task.paperInfo.title || task.paperInfo.arxivId;
-  const truncatedTitle = title.length > 40 ? title.substring(0, 40) + '…' : title;
-
-  let notificationConfig = {
-    type: 'basic',
-    iconUrl: '/assets/icon-128.png',
-  };
-
-  if (status === 'completed') {
-    notificationConfig.title = '✅ MinerU 转换完成';
-    notificationConfig.message = `${truncatedTitle}\n\n点击查看下载链接`;
-    notificationConfig.buttons = [{ title: '查看任务' }];
-  } else if (status === 'failed') {
-    notificationConfig.title = '❌ MinerU 转换失败';
-    notificationConfig.message = `${truncatedTitle}\n\n${detail || '未知错误'}`;
-  }
-
-  chrome.notifications.create(
-    `mineru_task_${task.id}`,
-    notificationConfig,
-    (notificationId) => {
-      if (chrome.runtime.lastError) {
-        logger.error('Failed to create notification:', chrome.runtime.lastError);
-      } else {
-        logger.debug('Notification created:', notificationId);
-      }
-    }
-  );
+/** 任务通知；id 前缀沿用 mineru_task_（点击处理兼容）。文案按扩展设置的语言，见 task-notification-text.js */
+export async function showTaskNotification(task, status, detail = '', provider = null) {
+  const label = (provider && provider.label) || 'MinerU';
+  if (status === 'failed') logger.error('Parse task failed:', detail && (detail.message || detail));
+  const lang = await storage.getLanguage().catch(() => null);
+  const n = taskNotificationText(task, status, detail, label, lang);
+  const config = { type: 'basic', iconUrl: '/assets/icon-128.png', title: n.title, message: n.message };
+  if (n.button) config.buttons = [{ title: n.button }];
+  chrome.notifications.create(`mineru_task_${task.id}`, config, () => {
+    if (chrome.runtime.lastError) logger.error('Failed to create notification:', chrome.runtime.lastError);
+  });
 }
 
+export const parseTaskRunner = createParseTaskRunner({
+  permissions: typeof chrome !== 'undefined' && chrome.permissions ? chrome.permissions : null,
+  registry: providerRegistry,
+  taskManager,
+  storage,
+  guard: deletedTaskGuard,
+  downloadUrl: downloadZip,
+  saveDeliverable: (result, base) => saveDeliverable(result, base, { download: downloadViaChrome }),
+  makeFilename: (meta, ext) => generateFilename(meta, ext),
+  notify: showTaskNotification,
+  log: logger,
+});
+
+/** 旧名字：处理任意 provider 的任务 */
+export function processMinerUTaskInBackground(taskId) {
+  return parseTaskRunner.process(taskId);
+}
+/** 审查 P1-1：用户确认把非 OA PDF 的链接发给后端 */
+export function confirmPdfSend(taskId) {
+  return parseTaskRunner.confirmSend(taskId);
+}
+export const processParseTask = processMinerUTaskInBackground;
+
+/** R4-12：续上 SW 被杀前未完成的任务 */
+export function resumeParseTasks() {
+  return parseTaskRunner.resumeActiveTasks();
+}

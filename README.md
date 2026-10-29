@@ -30,7 +30,7 @@
 - **PDFs named by title**: `Attention Is All You Need (2017).pdf` instead of `1706.03762.pdf`.
 - **Copy BibTeX**: uses arXiv's official citation, or builds one from the page title, authors and year.
 - **Copy for AI or notes**: after a conversion, a result card on the page offers "Copy Markdown".
-- **Optional MinerU mode**: with your own MinerU token, the PDF is parsed by MinerU in the background; the result is a ZIP and progress shows in the popup.
+- **Optional PDF parsing**: with your own API key, the PDF is parsed in the background by the provider you pick in Settings — PaddleOCR (default, free quota) or MinerU; PaddleOCR results are saved as a `.md` file (a ZIP when there are images), MinerU results as its original ZIP; progress shows in the popup.
 - **Several entry points**: page buttons, toolbar popup, context menu, keyboard shortcut, and a floating button on PDF pages.
 - **Chinese and English UI**, light and dark themes.
 
@@ -59,14 +59,14 @@ Open `chrome://extensions`, enable Developer mode, click "Load unpacked" and pic
 
 1. Open any arXiv paper, e.g. <https://arxiv.org/abs/1706.03762>.
 2. Click `Markdown` on the page to convert with your default mode and download a `.md` file.
-3. Or click the toolbar icon and choose Export Markdown, MinerU, or Download PDF.
+3. Or click the toolbar icon and choose Export Markdown, PDF parsing, or Download PDF.
 
 | Entry point | What it does |
 | --- | --- |
 | Page buttons | Under `Submission history`: `Markdown`, `PDF`, `BibTeX` |
-| Toolbar popup | Detects the current paper; export buttons and the MinerU task list |
+| Toolbar popup | Detects the current paper; export buttons, the current PDF parsing provider and the PDF parsing task list |
 | Shortcut | `Alt+Shift+M` (`Option+Shift+M` on macOS) converts the current paper on abs, PDF and HTML pages. If it shows "not set", use the popup's set-up link or `chrome://extensions/shortcuts` |
-| Context menu | On a paper page: "Export this paper as Markdown", "Export with MinerU (high quality)"; on an arXiv link: "Export linked arXiv paper as Markdown" |
+| Context menu | On a paper page: "Export this paper as Markdown", "Convert with PDF parsing (provider)" (shown only when the selected provider has a key); on an arXiv link: "Export linked arXiv paper as Markdown" |
 | PDF floating button | Bottom-right on `arxiv.org/pdf/*`; can be turned off in Settings |
 
 <img src="docs/screenshots/popup.png" width="300" alt="Toolbar popup">
@@ -77,11 +77,11 @@ Open `chrome://extensions`, enable Developer mode, click "Load unpacked" and pic
 
 | Setting | Description |
 | --- | --- |
-| Conversion mode | `Standard` (recommended): official HTML → ar5iv → PDF; `MinerU`: always use MinerU, needs a token |
-| MinerU API token | Optional, MinerU mode only; can be tested from Settings |
+| Conversion mode | `Standard` (recommended): official HTML → ar5iv → PDF; `PDF parsing mode`: always use PDF parsing with the selected provider, needs its key |
+| PDF parsing | Pick the provider (PaddleOCR by default, or MinerU) and enter its API key; keys stay in `chrome.storage.local` on this device and never sync; the connection can be tested from Settings |
 | Auto convert | Show a convert prompt when you open a paper |
 | Markdown metadata | Write YAML frontmatter or not |
-| Desktop notifications | Notify when a MinerU task finishes or fails |
+| Desktop notifications | Notify when a PDF parsing task finishes or fails |
 | PDF floating button | Show the floating button on PDF pages |
 | Language | 中文 / English |
 | Usage statistics | Conversion counters kept in `chrome.storage.sync` (synced with your browser account if sync is on), never uploaded; can be reset |
@@ -92,28 +92,30 @@ Changes are saved automatically.
 
 | Permission | Why |
 | --- | --- |
-| `storage` | Settings, your MinerU token and usage statistics are kept in `chrome.storage.sync`, so they sync with your browser account if browser sync is on; MinerU task state stays in `chrome.storage.local` on this device |
-| `downloads` | Saves Markdown, PDF or MinerU ZIP files |
+| `storage` | Settings (including the selected PDF parsing provider) and usage statistics are kept in `chrome.storage.sync`, so they sync with your browser account if browser sync is on; provider API keys and PDF parsing task state stay in `chrome.storage.local` on this device. A MinerU token saved by an older version is moved to local storage (copied, then deleted from sync); keys never sync, so on another device you are asked to re-enter the key |
+| `downloads` | Saves Markdown, PDF or PDF parsing results |
 | `activeTab` | Reads the arXiv page you are on so it can be converted |
-| `notifications` | Desktop notice when a MinerU task finishes or fails |
-| `alarms` | Wakes the background worker to poll running MinerU tasks |
+| `notifications` | Desktop notice when a PDF parsing task finishes or fails |
+| `alarms` | Wakes the background worker to poll running PDF parsing tasks |
 | `contextMenus` | Adds the right-click menu items |
 | `arxiv.org`, `export.arxiv.org` | Paper HTML, metadata and PDF |
 | `ar5iv.org`, `ar5iv.labs.arxiv.org` | ar5iv fallback when official HTML is missing |
 | `mineru.net`, `cdn-mineru.openxlab.org.cn` | Only when you use MinerU: submit tasks and download results |
+| `paddleocr.aistudio-app.com` (optional) | Requested only when you select PaddleOCR; revocable in Settings |
+| `declarativeNetRequestWithHostAccess` (optional) | Requested together with PaddleOCR access; only removes the `Origin` header on requests to that domain |
 | Content script on `arxiv.org/abs/*`, `arxiv.org/pdf/*`, `arxiv.org/html/*` | Adds the page buttons, result card and PDF floating button on those pages |
 
 ## Privacy
 
 - No backend, no analytics, no data collection.
 - In Standard mode, conversion runs entirely in your browser and only talks to arXiv and ar5iv.
-- Only when you choose MinerU is the paper's arXiv PDF URL sent to MinerU with your token (a third-party service under its own terms).
+- Only when you use PDF parsing is the paper's arXiv PDF URL sent, with your key, to the one provider you selected (PaddleOCR or MinerU, third-party services under their own terms). The extension never switches providers on its own.
 - See [PRIVACY.md](./PRIVACY.md).
 
 ## FAQ
 
 **Why did I get a PDF instead of Markdown?**
-Neither the official HTML nor ar5iv has a convertible version of that paper, so Standard mode falls back to the PDF. Try MinerU mode.
+Neither the official HTML nor ar5iv has a convertible version of that paper, so Standard mode falls back to the PDF. Try PDF parsing.
 
 **Are images downloaded?**
 No. Images in the Markdown are remote links to arXiv / ar5iv.

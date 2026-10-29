@@ -7,11 +7,13 @@ import logger from '@utils/logger';
 import storage from '@utils/storage';
 import { TASK_STATUS } from '@config/constants';
 import { arxivApiUrl } from '@core/metadata-extractor';
-import { deletedTaskGuard, processMinerUTaskInBackground } from './mineru-task-runner';
+import { installPaddleOriginRuleListeners } from './paddle-origin-rule';
+import { deletedTaskGuard, processMinerUTaskInBackground, providerRegistry, resumeParseTasks, confirmPdfSend } from './mineru-task-runner';
 import { KEEP_ALIVE_ALARM, syncKeepAlive } from './keep-alive';
-import { isTrustedArxivSender, isValidArxivId, triggerConversionInActiveTab } from './message-guards';
+import { isExtensionPageSender, isTrustedArxivSender, isValidArxivId, triggerConversionInActiveTab } from './message-guards';
 import { createActionBadge, handleShortcutResult, conversionBadgeState } from './action-badge';
 import { createContextMenus } from './context-menu';
+import { runMigrations } from '@utils/migrations';
 
 const actionBadge = createActionBadge(chrome.action);
 if (chrome.tabs && chrome.tabs.onUpdated) {
@@ -33,9 +35,16 @@ if (contextMenus) {
   if (chrome.runtime.onStartup) chrome.runtime.onStartup.addListener(() => contextMenus.refresh());
   chrome.contextMenus.onClicked.addListener((info, tab) => contextMenus.onClicked(info, tab));
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === 'sync' && (changes.language || changes.mineruToken)) contextMenus.refresh();
+    if ((area === 'sync' && (changes.language || changes.pdfProvider)) || (area === 'local' && changes.providerKeys)) contextMenus.refresh();
   });
 }
+
+// R4-05：老配置迁移。onInstalled(update) 跑一次；SW 每次启动也跑（幂等，已是最新版本时直接返回），
+// 保证中途失败后下次启动能补上。迁移完成后刷新右键菜单（Token 位置变了）。
+const migrationsReady = runMigrations(chrome.storage)
+  .then((r) => { if (r.ran) logger.info('Storage migrated:', r); if (r.ran && contextMenus) contextMenus.refresh(); return r; })
+  .catch((e) => { logger.error('Storage migration failed, will retry on next start:', e); return null; });
+chrome.runtime.onInstalled.addListener(() => { migrationsReady.then(() => runMigrations(chrome.storage)).catch(() => {}); });
 
 logger.info('Background service worker initialized');
 
@@ -72,13 +81,31 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     handleGetStatistics(sendResponse);
     return true;
 
+  case 'START_PDF_TASK':
+    // R4-11：通用入口 {data: paperInfo, provider?, force?}
+    _doStartPdfTask(message.data, sendResponse, !!message.force, message.provider);
+    return true;
+
   case 'START_MINERU_TASK':
+    // 旧消息名（别名）：走当前 PDF 后端
     handleStartMinerUTask(message.data, sendResponse);
     return true;
 
   case 'START_MINERU_TASK_FORCE':
     // 强制创建任务，跳过重复检查
     handleStartMinerUTaskForce(message.data, sendResponse);
+    return true;
+
+  case 'CONFIRM_PDF_SEND':
+    // 审查 P1-1：非 OA PDF 用户确认后才发送；只接受扩展页面发来的确认
+    if (!isExtensionPageSender(sender, chrome.runtime.id)) {
+      logger.warn('CONFIRM_PDF_SEND rejected: untrusted sender', sender && sender.url);
+      sendResponse({ success: false, error: 'Untrusted sender' });
+      return false;
+    }
+    confirmPdfSend(message.taskId)
+      .then((r) => { refreshKeepAlive(); sendResponse({ success: !!(r && r.confirmed), skipped: r && r.skipped }); })
+      .catch((e) => sendResponse({ success: false, error: e && e.message }));
     return true;
 
   case 'GET_TASKS':
@@ -207,10 +234,17 @@ async function handleCheckAr5iv(arxivId, sendResponse) {
  * @param {Function} sendResponse - 消息响应函数
  * @param {boolean} skipDuplicateCheck - 是否跳过重复任务检查
  */
-async function _doStartMinerUTask(paperInfo, sendResponse, skipDuplicateCheck) {
+async function resolvePdfProvider(requested) {
+  if (requested && providerRegistry.has(requested)) return requested;
+  // R4-13：已选 → 用它；老用户有 MinerU token → mineru；否则 paddleocr
+  return storage.getPdfProvider((id) => providerRegistry.has(id));
+}
+
+async function _doStartPdfTask(paperInfo, sendResponse, skipDuplicateCheck, requestedProvider) {
   try {
+    const provider = await resolvePdfProvider(requestedProvider);
     if (!skipDuplicateCheck) {
-      const existingTask = await taskManager.findTaskByArxivId(paperInfo.arxivId);
+      const existingTask = await taskManager.findTaskByArxivId(paperInfo.arxivId, provider);
       if (existingTask) {
         sendResponse({
           success: false,
@@ -220,25 +254,29 @@ async function _doStartMinerUTask(paperInfo, sendResponse, skipDuplicateCheck) {
             status: existingTask.status,
             arxivId: existingTask.paperInfo.arxivId,
             title: existingTask.paperInfo.title,
+            provider: existingTask.provider,
           }
         });
         return;
       }
     }
 
-    const task = await taskManager.addTask(paperInfo, 'mineru');
-    sendResponse({ success: true, taskId: task.id });
+    const task = await taskManager.addTask(paperInfo, 'mineru', provider);
+    sendResponse({ success: true, taskId: task.id, provider });
 
     // 立即异步处理任务（不阻塞响应）
-    // 使用 Promise.resolve().then() 而非 setImmediate（浏览器兼容）
     Promise.resolve().then(() => {
       processMinerUTaskInBackground(task.id);
       refreshKeepAlive();
     });
   } catch (error) {
-    logger.error('Failed to start MinerU task:', error);
+    logger.error('Failed to start PDF task:', error);
     sendResponse({ success: false, error: error.message });
   }
+}
+
+function _doStartMinerUTask(paperInfo, sendResponse, skipDuplicateCheck) {
+  return _doStartPdfTask(paperInfo, sendResponse, skipDuplicateCheck, null);
 }
 
 /**
@@ -303,6 +341,10 @@ async function handleRetryTask(taskId, sendResponse) {
       status: TASK_STATUS.PENDING,
       progress: 0,
       error: null,
+      errorCode: null,
+      errorReason: null,
+      jobId: null, // 重试 = 重新提交
+      startedAt: null,
     });
 
     sendResponse({ success: true });
@@ -375,12 +417,25 @@ async function refreshKeepAlive() {
   }
 }
 
+// R4-12：alarm 唤醒（SW 可能刚被杀掉重启）→ 先续上未完成任务（按 jobId 继续轮询，不重新提交），再同步 alarm
+async function resumeAndRefresh() {
+  try {
+    await migrationsReady;
+    const resumed = await resumeParseTasks();
+    if (resumed.length) logger.info('Resumed parse tasks:', resumed);
+  } catch (error) {
+    logger.warn('Failed to resume parse tasks:', error);
+  }
+  await refreshKeepAlive();
+}
+
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === KEEP_ALIVE_ALARM) {
-    refreshKeepAlive();
+    resumeAndRefresh();
   }
 });
-refreshKeepAlive();
+resumeAndRefresh();
+// DNR 可选权限：用户授权后才安装星河 Origin 规则
+installPaddleOriginRuleListeners();
 
-// 导出函数供其他模块使用
 export { processMinerUTaskInBackground };

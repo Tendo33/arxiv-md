@@ -1,6 +1,7 @@
 import { translations } from '@config/locales';
 import { TASK_STATUS } from '@config/constants';
 import { formatTimeAgo } from '@utils/time-ago';
+import { providerLabel } from '@config/pdf-providers';
 
 let currentLang = 'en';
 
@@ -187,7 +188,10 @@ export function getTaskActions(task) {
  */
 export function createTaskRow(task) {
   const t = translations[currentLang];
-  const { id, status, progress, paperInfo = {}, createdAt, zipUrl, error } = task;
+  const { id, status, progress, paperInfo = {}, createdAt, zipUrl } = task;
+  // 三审 P3：有 errorReason 且有对应 err_reason_* 文案时按当前语言显示，否则沿用后台原文
+  const reasonMsg = task.errorReason && t[`err_reason_${task.errorReason}`];
+  const error = reasonMsg ? reasonMsg.replace(/\{provider\}/g, providerLabel(task.provider)) : task.error;
   const title = paperInfo.title || paperInfo.arxivId || '';
   // 设计验收 R3 建议 1：行内用短格式（11 min. ago），给标题留宽度
   const timeAgo = formatTimeAgo(createdAt, currentLang, t.popup_time_just_now, Date.now(), 'narrow');
@@ -196,6 +200,7 @@ export function createTaskRow(task) {
     [TASK_STATUS.PROCESSING]: ['run', t.popup_status_processing],
     [TASK_STATUS.COMPLETED]: ['ok', t.popup_status_completed],
     [TASK_STATUS.FAILED]: ['err', t.popup_status_failed],
+    [TASK_STATUS.AWAITING_CONSENT]: ['wait', t.popup_status_awaiting], // 在等用户，和“处理中”区分
   };
   const [cls, label] = map[status] || ['idle', t.popup_status_unknown];
   const busy = status === TASK_STATUS.PENDING || status === TASK_STATUS.PROCESSING;
@@ -203,10 +208,13 @@ export function createTaskRow(task) {
   let act = '';
   if (status === TASK_STATUS.COMPLETED && zipUrl) {
     act = `<button class="btn btn-ghost btn-dl" data-action="download" data-url="${escapeHtml(zipUrl)}" title="${t.popup_action_download}" aria-label="${t.popup_action_download}"><svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg><span class="lbl"> ${t.popup_action_download}</span></button>`;
+  } else if (status === TASK_STATUS.AWAITING_CONSENT) {
+    // 审查 P1-1：非 OA PDF，点了才弹确认框
+    act = `<button class="btn btn-ghost" data-action="consent" data-task-id="${eid}" data-provider="${escapeHtml(task.provider || '')}">${t.popup_action_consent}</button>`;
   } else if (status === TASK_STATUS.FAILED) {
     act = `<button class="btn btn-ghost" data-action="retry" data-task-id="${eid}">${t.popup_action_retry}</button>`;
   }
   act += `<button class="btn btn-ghost" data-action="delete" data-task-id="${eid}" title="${t.popup_action_delete}" aria-label="${t.popup_action_delete}">×</button>`;
   const side = busy ? `<small class="pct">${Number(progress) || 0}%</small>` : `<small>${escapeHtml(timeAgo)}</small>`;
-  return `<div class="row" data-task-id="${eid}" data-status="${escapeHtml(status)}"${error ? ` title="${escapeHtml(error)}"` : ''}><span class="badge ${cls}">${escapeHtml(label)}</span><span class="n" title="${escapeHtml(title)}">${escapeHtml(title)}</span>${side}<span class="row-act">${act}</span></div>`;
+  return `<div class="row" data-task-id="${eid}" data-status="${escapeHtml(status)}"><span class="badge ${cls}">${escapeHtml(label)}</span><span class="n" title="${escapeHtml(title)}">${escapeHtml(title)}</span><span class="prov">${escapeHtml(providerLabel(task.provider))}</span>${side}<span class="row-act">${act}</span>${status === TASK_STATUS.FAILED && error ? `<span class="row-err">${escapeHtml(error)}</span>` : ''}</div>`;
 }

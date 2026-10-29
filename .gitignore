@@ -41,7 +41,7 @@ temp/
 *.tmp
 
 .history/
-output/
+/output/
 project_document/
 .worktrees/
 screenshots/round*/

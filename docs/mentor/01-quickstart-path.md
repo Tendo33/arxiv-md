@@ -38,7 +38,7 @@ npm run dev
 
 ## 第 3 步：看一次模式读取
 
-去设置页切换成 `MinerU Mode`，再回到论文页刷新。
+去设置页切换成 `PDF parsing mode`，再回到论文页刷新。
 
 你会发现 Markdown 按钮副标题从 `HTML` 变成 `MinerU`。
 

@@ -25,6 +25,7 @@ function notifyLang() {
     .then(() => storage.getLanguage())
     .catch(() => null);
 }
+import { ParseError } from '@pdf-core/errors';
 
 /**
  * 主转换器 - 智能三层降级架构
@@ -49,7 +50,7 @@ class MainConverter {
     const mineruToken = await storage.getMinerUToken();
     const includeMetadata = await storage.getIncludeMetadata();
 
-    // popup「MinerU 高质量」按钮（C-2）带 forceMineru：有 Token 就直接走 MinerU
+    // popup「PDF 解析」按钮（C-2）带 forceMineru：有 Key 就直接走 PDF 解析
     if ((mode === CONVERSION_MODE.ALWAYS_MINERU || paperInfo.forceMineru) && mineruToken) {
       return this._convertWithMinerU(paperInfo, onProgress, tabId);
     }
@@ -161,7 +162,7 @@ class MainConverter {
 
     const mineruToken = await storage.getMinerUToken();
     if (!mineruToken) {
-      throw new Error(ERROR_MESSAGES.MINERU_TOKEN_MISSING);
+      throw new ParseError('AUTH_INVALID', { provider: 'mineru' });
     }
 
     // 检测运行环境：background 还是 content script

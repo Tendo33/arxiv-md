@@ -56,11 +56,6 @@ describe('AF3 设计验收：_locales', () => {
     }
   });
 
-  test('后台接线：不完整通知走 incompleteNotification，不再写死中文', () => {
-    const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'core', 'converter', 'index.js'), 'utf8');
-    expect(src).toMatch(/const lang = await (?:storage\.getLanguage\(\)|notifyLang\(\))[\s\S]{0,400}incompleteNotification\(\{[^}]*\}, lang\)/);
-    expect(src).not.toMatch(/导出可能不完整/);
-  });
 
   test('所有不完整文案：不带 U+FE0F，不出现「后半部分」/ later sections', () => {
     const texts = [

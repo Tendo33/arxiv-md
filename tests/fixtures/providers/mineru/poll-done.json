@@ -1,0 +1,1 @@
+{ "code": "0", "msg": "ok", "data": { "extract_result": { "task_id": "00000000-0000-4000-8000-00000000m001", "state": "done", "full_zip_url": "https://cdn-mineru.example.invalid/pdf/fixture/result.zip", "err_msg": "" } } }
