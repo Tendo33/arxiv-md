@@ -116,3 +116,12 @@ body{min-width:320px}
 
 /* 审查 30a6e1b P2：数据说明未确认的任务，中性说明行 */
 .row .row-note{flex-basis:100%;min-width:0;font-size:12px;line-height:18px;color:var(--text-2)}
+
+/* 附录 D1（AX-03）：状态区在按钮行下方；全部隐藏时不占位（也不吃 .body 的 gap） */
+.status-zone{display:flex;flex-direction:column;gap:8px}
+.status-zone:not(:has(> :not(.hidden))){display:none}
+/* 进度改成上下文卡片底边 3px 细条，脱离文档流；卡片必须 flex:none，否则长列表时被压扁、#ctxMeta 被裁（不用 overflow:hidden） */
+#ctxCard{position:relative;flex:none}
+#ctxProg{position:absolute;left:0;right:0;bottom:0;gap:0}
+#ctxProg .l{display:none}
+#ctxProg .bar{height:3px;border-radius:0 0 calc(var(--r-lg) - 1px) calc(var(--r-lg) - 1px);background:transparent}

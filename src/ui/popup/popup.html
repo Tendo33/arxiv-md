@@ -28,31 +28,34 @@
           <b class="empty-title" data-i18n="popup_unsupported_title">当前页面暂不支持</b><br /><span data-i18n="popup_unsupported_desc">打开 arXiv 论文页（/abs、/pdf、/html）后可用</span>
         </div>
 
-        <div id="alertOk" class="alert ok hidden" role="status">
-          <svg id="okIconDone" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
-          <svg id="okIconPending" class="hidden" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-          <div><b id="okTitle"></b><span id="okFile"></span></div>
-          <div class="x"><button id="okOpen" class="btn btn-ghost btn-xs hidden" data-i18n="popup_btn_open">打开</button></div>
-        </div>
-        <div id="alertErr" class="alert err hidden" role="alert">
-          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/></svg>
-          <div><b id="errTitle"></b><span id="errHint"></span><button id="refreshBtn" class="btn btn-secondary btn-xxs btn-refresh hidden" data-i18n="popup_btn_refresh">刷新</button></div>
-        </div>
-        <div id="alertKey" class="alert info hidden" role="status">
-          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/></svg>
-          <div><b id="keyHereTitle"></b><span id="keyHereHint"></span><button id="keySettingsBtn" class="btn btn-secondary btn-xxs btn-refresh" data-i18n="popup_btn_settings">打开设置</button></div>
-        </div>
-        <div id="alertInfo" class="alert info hidden">
-          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/></svg>
-          <div id="infoText" data-i18n="popup_dis_loading">页面仍在加载，就绪后可导出</div>
-        </div>
-
         <div class="acts">
           <button id="exportBtn" class="btn btn-primary" disabled>
             <svg class="btn-icon" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg><span class="spinner hidden" aria-hidden="true"></span><span class="label" data-i18n="popup_btn_export">导出 Markdown</span>
           </button>
           <button id="mineruBtn" class="btn btn-secondary" disabled aria-describedby="backendLabel"><span data-i18n="popup_btn_mineru">PDF 解析</span> <small id="backendLabel" class="backend-label"></small></button>
           <button id="pdfBtn" class="btn btn-secondary" disabled><span data-i18n="popup_btn_pdf">下载 PDF</span></button>
+        </div>
+
+        <!-- 附录 D1（AX-03）：提示放在按钮行下方，出现/消失时主按钮不动；子元素各自带 role，外层不再叠 live region -->
+        <div class="status-zone" id="statusZone">
+          <div id="alertOk" class="alert ok hidden" role="status">
+            <svg id="okIconDone" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
+            <svg id="okIconPending" class="hidden" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            <div><b id="okTitle"></b><span id="okFile"></span></div>
+            <div class="x"><button id="okOpen" class="btn btn-ghost btn-xs hidden" data-i18n="popup_btn_open">打开</button></div>
+          </div>
+          <div id="alertErr" class="alert err hidden" role="alert">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/></svg>
+            <div><b id="errTitle"></b><span id="errHint"></span><button id="refreshBtn" class="btn btn-secondary btn-xxs btn-refresh hidden" data-i18n="popup_btn_refresh">刷新</button></div>
+          </div>
+          <div id="alertKey" class="alert info hidden" role="status">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/></svg>
+            <div><b id="keyHereTitle"></b><span id="keyHereHint"></span><button id="keySettingsBtn" class="btn btn-secondary btn-xxs btn-refresh" data-i18n="popup_btn_settings">打开设置</button></div>
+          </div>
+        </div>
+        <div id="alertInfo" class="alert info hidden">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/></svg>
+          <div id="infoText" data-i18n="popup_dis_loading">页面仍在加载，就绪后可导出</div>
         </div>
 
         <div id="recent" class="recent hidden">
