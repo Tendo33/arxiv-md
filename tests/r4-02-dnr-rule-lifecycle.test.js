@@ -98,6 +98,6 @@ describe('R4-02 规则生命周期', () => {
     const files = ['src/ui', 'src/content'].flatMap((d) => walk(path.join(__dirname, '..', d))).filter((f) => f.endsWith('.js'));
     for (const f of files) expect([f, /updateDynamicRules/.test(fs.readFileSync(f, 'utf8'))]).toEqual([f, false]);
     const runnerSrc = fs.readFileSync(path.join(__dirname, '../src/background/mineru-task-runner.js'), 'utf8');
-    expect(runnerSrc).toMatch(/beforeSubmit:[^\n]*ensurePaddleOriginRule/);
+    expect(runnerSrc).toMatch(/beforeSubmit:[^\n]*requirePaddleOriginRule/);
   });
 });

@@ -144,7 +144,8 @@ export function createParseTaskRunner(deps) {
       const creds = { token: key };
       // R4-02：首次提交前（还没有 jobId）让 background 确认该 provider 需要的网络规则已就绪（幂等）
       if (deps.beforeSubmit && !task.jobId) {
-        try { await deps.beforeSubmit(provider); } catch (e) { log.error('beforeSubmit failed', e); }
+        // R5-01：不再吞掉错误继续提交（规则没装好提交必然 403 / 卡住），直接让任务失败并给可读原因
+        try { await deps.beforeSubmit(provider); } catch (e) { return { error: await fail(task, e, provider) }; }
       }
       await taskManager.updateTask(taskId, { status: TASK_STATUS.PROCESSING, ...(task.jobId ? {} : { progress: 0 }) });
       try {

@@ -32,6 +32,7 @@ export const ERROR_REASONS = Object.freeze({
   FORBIDDEN_EMPTY_BODY: 'forbidden_empty',
   KEY_NOT_ON_DEVICE: 'key_not_on_device', // Key 不跨设备同步：后端选过但本设备没有 Key
   EMPTY_RESULT: 'empty_result', // AR-02：结果没有正文，不保存
+  DNR_NOT_READY: 'dnr_not_ready', // R5-01：PaddleOCR 的网络规则（去 Origin 头）没装上
 });
 
 export class ParseError extends Error {

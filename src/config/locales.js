@@ -267,6 +267,7 @@ export const translations = {
     err_reason_forbidden_empty: '{provider} rejected this request (not a key or quota problem). Retry later or switch provider',
     err_reason_empty_result: 'The parse result has no content, so nothing was saved. Open the PDF directly or try another provider',
     err_reason_key_not_on_device: 'No {provider} key on this device (keys don’t sync between devices). Re-enter it on this device in Settings › PDF parsing',
+    err_reason_dnr_not_ready: '{provider}\'s network rule isn\'t ready. Re-grant access in Settings › PDF parsing or restart the browser, then retry',
     // rp2b：界面上已单独显示后端名（popup 任务行、设置页「{provider} 解析失败：」）时用的不带后端名版本
     err_short_AUTH_INVALID: 'Invalid or missing key',
     err_short_QUOTA_EXCEEDED: 'Quota exhausted. Try again later or switch provider',
@@ -280,6 +281,7 @@ export const translations = {
     err_short_failed_plain: 'Couldn\'t parse this PDF. Retry, or switch provider in Settings',
     err_short_reason_forbidden_empty: 'Request rejected (not a key or quota problem). Retry later or switch provider',
     err_short_reason_key_not_on_device: 'No key on this device (keys don\'t sync). Add it in Settings › PDF parsing',
+    err_short_reason_dnr_not_ready: 'Network rule not ready. Re-grant access in Settings or restart the browser, then retry',
     err_action_settings: 'Open settings',
     err_action_switch: 'Switch provider',
     err_action_retry: 'Retry',
@@ -549,6 +551,7 @@ export const translations = {
     err_reason_forbidden_empty: '{provider} 拒绝了这次请求（与 Key 或额度无关），可以稍后重试或换一个后端',
     err_reason_empty_result: '解析结果没有正文，未保存文件。请直接打开 PDF，或换一个后端再试',
     err_reason_key_not_on_device: '本设备还没有 {provider} 的 Key（Key 不会跨设备同步），请在本设备的设置 › PDF 解析里重新填写',
+    err_reason_dnr_not_ready: '{provider} 的网络规则没装好，请在设置 › PDF 解析里重新授权，或重启浏览器后重试',
     // rp2b：界面上已单独显示后端名（popup 任务行、设置页「{provider} 解析失败：」）时用的不带后端名版本
     err_short_AUTH_INVALID: 'Key 无效或未填写',
     err_short_QUOTA_EXCEEDED: '额度已用完，请稍后再试或换一个后端',
@@ -562,6 +565,7 @@ export const translations = {
     err_short_failed_plain: '没能解析这个 PDF，可以重试，或在设置里换一个后端',
     err_short_reason_forbidden_empty: '请求被拒绝（与 Key 或额度无关），可以稍后重试或换一个后端',
     err_short_reason_key_not_on_device: '本设备还没有 Key（Key 不会跨设备同步），请在设置 › PDF 解析里填写',
+    err_short_reason_dnr_not_ready: '网络规则没装好，请在设置里重新授权或重启浏览器后重试',
     err_action_settings: '去设置',
     err_action_switch: '换后端',
     err_action_retry: '重试',
