@@ -1,6 +1,8 @@
 const path = require("path");
 const webpack = require("webpack");
 const CopyPlugin = require("copy-webpack-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
+const { ThirdPartyNoticesPlugin } = require("./scripts/third-party-notices");
 
 module.exports = (env, argv) => ({
   entry: {
@@ -31,6 +33,8 @@ module.exports = (env, argv) => ({
   optimization: {
     // 禁用 Webpack 自动注入 process.env.NODE_ENV，改由下方 DefinePlugin 显式控制
     nodeEnv: false,
+    // AR-06：不再生成 *.js.LICENSE.txt，许可证统一进 THIRD_PARTY_NOTICES.txt
+    minimizer: [new TerserPlugin({ extractComments: false })],
   },
   plugins: [
     new webpack.DefinePlugin({
@@ -45,11 +49,12 @@ module.exports = (env, argv) => ({
         { from: "src/ui/settings/settings.html", to: "settings.html" },
         { from: "src/ui/settings/settings.css", to: "settings.css" },
         { from: "src/ui/shared/ui-v2.css", to: "ui-v2.css" },
-        // R3 perf：只拷扩展实际用到的资源，README 截图（paper-page.png / popup.png）不进包
+        // R3 perf：只拷扩展实际用到的资源，README 截图（paper-page.png / popup.png）不进包；
+        // AR-06：icon.svg（约 200KB）也不进包，设置页 logo 改用 icon-128.png
         { from: "assets/icon-*.png", to: "assets/[name][ext]" },
-        { from: "assets/icon.svg", to: "assets/icon.svg" },
       ],
     }),
+    new ThirdPartyNoticesPlugin(),
   ],
   resolve: {
     extensions: [".js"],
