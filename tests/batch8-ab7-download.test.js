@@ -334,9 +334,16 @@ describe('batch9 ①：4 分钟后仍在下载 → 不报失败、不取消；�
   });
 
   test('zh/en 文案', () => {
-    expect(translations.zh.content_download_pending).toBe('仍在下载，完成后会出现在下载列表');
-    expect(translations.zh.notify_download_pending_body).toBe('仍在下载，完成后会出现在下载列表');
-    expect(translations.en.content_download_pending).toBe('Still downloading. It will appear in the download list when finished.');
+    // batch9 设计验收 M1：标题已是「仍在下载」，正文不再重复
+    expect(translations.zh.content_download_pending).toBe('完成后会出现在浏览器的下载列表');
+    expect(translations.zh.notify_download_pending_body).toBe('完成后会出现在浏览器的下载列表');
+    expect(translations.en.content_download_pending).toBe('It\'ll appear in your browser\'s downloads when it finishes.');
+    expect(translations.en.notify_download_pending_body).toBe(translations.en.content_download_pending);
+    for (const l of ['zh', 'en']) {
+      const title = translations[l].content_progress_still_downloading;
+      expect(translations[l].content_download_pending).not.toContain(title);
+      expect(translations[l].notify_download_pending_body).not.toContain(title);
+    }
     for (const l of ['zh', 'en']) {
       expect(translations[l].notify_download_pending_title).not.toBe(translations[l].notify_download_failed_title);
       expect(translations[l]).not.toHaveProperty('content_error_download_timeout');
