@@ -9,6 +9,7 @@ import { translations } from '@config/locales';
 import { bindInstantSave } from './instant-save';
 import { createDefaultRegistry } from '@pdf-core/providers/index';
 import { createPdfProviderSection } from './pdf-provider';
+import { renderCopyrightYear } from './copyright';
 
 const pdfSection = createPdfProviderSection({
   doc: document,
@@ -25,6 +26,7 @@ document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
   logger.debug('Settings page initialized');
+  renderCopyrightYear(document);
 
   // 加载语言设置
   const savedLang = await storage.getLanguage();
