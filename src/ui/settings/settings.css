@@ -769,3 +769,8 @@ a:focus-visible {
 /* R09 / B8：中文按短语断行（text-wrap:pretty 对 CJK 无效） */
 .nw { white-space: nowrap; }
 .btn { white-space: nowrap; }
+
+/* 设计 18:16 #2：「重新初始化」ghost 按钮（无边框、透明底，hover/focus 浅底，保留 focus 环） */
+.btn-ghost { background: transparent; color: var(--text-secondary); border: none; box-shadow: none; }
+.btn-ghost:hover, .btn-ghost:focus-visible { background: var(--surface-2); color: var(--text-primary); }
+.permission-row .btn-ghost { box-sizing: border-box; height: 36px; min-height: 36px; }
