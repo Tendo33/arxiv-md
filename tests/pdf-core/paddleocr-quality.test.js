@@ -70,6 +70,21 @@ describe('P-2：cropImage（createImageBitmap + OffscreenCanvas）', () => {
     expect(Array.from(out)).toEqual([5]);
     expect(draw).toHaveBeenCalledWith(expect.anything(), 106, 83, 557, 446, 0, 0, 557, 446);
   });
+  test('drawImage 抛错时位图仍然 close', async () => {
+    const close = jest.fn();
+    global.createImageBitmap = jest.fn(async () => ({ width: 10, height: 10, close }));
+    global.OffscreenCanvas = jest.fn(function C() { this.getContext = () => ({ drawImage: () => { throw new Error('boom'); } }); });
+    await expect(cropImage(new Uint8Array([1]), { bbox: [0, 0, 5, 5] })).rejects.toThrow('boom');
+    expect(close).toHaveBeenCalledTimes(1);
+  });
+  test('正常裁剪也 close；越界抛错也 close', async () => {
+    const close = jest.fn();
+    global.createImageBitmap = jest.fn(async () => ({ width: 10, height: 10, close }));
+    global.OffscreenCanvas = jest.fn(function C() { this.getContext = () => ({ drawImage() {} }); this.convertToBlob = async () => ({ arrayBuffer: async () => new ArrayBuffer(1) }); });
+    await cropImage(new Uint8Array([1]), { bbox: [0, 0, 5, 5] });
+    await expect(cropImage(new Uint8Array([1]), { bbox: [20, 20, 30, 30] })).rejects.toThrow('out of range');
+    expect(close).toHaveBeenCalledTimes(2);
+  });
   test('环境不支持 → 抛错（由 downloadImages 记为单图失败）', async () => {
     await expect(cropImage(new Uint8Array([1]), { bbox: [0, 0, 1, 1] })).rejects.toThrow('crop unsupported');
   });
@@ -230,5 +245,25 @@ describe('P-7：被当成页眉丢掉的节标题', () => {
   test('已有同名标题不重复', () => {
     const t = '## ACKNOWLEDGMENT\n\nWe would like to thank everyone involved here.';
     expect(restoreDroppedHeadings(t, pg(blk('header', 'ACKNOWLEDGMENT', [0, 0, 500, 20]), blk('text', 'We would like to thank everyone involved here.', [0, 30, 500, 80])))).toBe(t);
+  });
+});
+
+describe('P-2：页图缓存用完即释放', () => {
+  test('每页最后一张裁图完成后缓存项删除，仍只下载一次', async () => {
+    const fm = createFetchMock().on('https://p/', [{ body: new Uint8Array([1]) }], { sticky: true });
+    const crop = { bbox: [0, 0, 1, 1], width: 2, height: 2 };
+    const pageCache = new Map(); const sizes = [];
+    const cropImage = async () => { sizes.push(pageCache.size); return new Uint8Array([7]); };
+    await downloadImages([{ src: 'a', url: 'https://p/1.jpg', crop }, { src: 'b', url: 'https://p/1.jpg', crop }, { src: 'c', url: 'https://p/2.jpg', crop }], { fetch: fm.fetch, cropImage, pageCache }, 1);
+    expect(fm.callsTo('https://p/')).toHaveLength(2);
+    expect(sizes).toEqual([1, 1, 1]); // 第 1 页裁完才释放，第 2 页开始时缓存里只剩它
+    expect(pageCache.size).toBe(0);
+  });
+  test('裁剪抛错也释放', async () => {
+    const fm = createFetchMock().on('https://p/', [{ body: new Uint8Array([1]) }], { sticky: true });
+    const pageCache = new Map();
+    const imgs = await downloadImages([{ src: 'a', url: 'https://p/1.jpg', crop: { bbox: [0, 0, 1, 1] } }], { fetch: fm.fetch, cropImage: async () => { throw new Error('x'); }, pageCache });
+    expect(imgs[0].error).toBe('x');
+    expect(pageCache.size).toBe(0);
   });
 });

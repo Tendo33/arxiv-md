@@ -140,20 +140,27 @@ async function fetchBytes(url, ctx) {
 export async function cropImage(bytes, { bbox, width, height }) {
   if (typeof createImageBitmap !== 'function' || typeof OffscreenCanvas !== 'function') throw new Error('crop unsupported');
   const bmp = await createImageBitmap(new Blob([bytes]));
-  const sx = width ? bmp.width / width : 1; const sy = height ? bmp.height / height : 1;
-  const x = Math.max(0, Math.floor(bbox[0] * sx)); const y = Math.max(0, Math.floor(bbox[1] * sy));
-  const w = Math.min(bmp.width - x, Math.ceil((bbox[2] - bbox[0]) * sx)); const h = Math.min(bmp.height - y, Math.ceil((bbox[3] - bbox[1]) * sy));
-  if (!(w > 0 && h > 0)) throw new Error('crop out of range');
-  const canvas = new OffscreenCanvas(w, h);
-  canvas.getContext('2d').drawImage(bmp, x, y, w, h, 0, 0, w, h);
-  if (bmp.close) bmp.close();
+  let canvas;
+  try {
+    const sx = width ? bmp.width / width : 1; const sy = height ? bmp.height / height : 1;
+    const x = Math.max(0, Math.floor(bbox[0] * sx)); const y = Math.max(0, Math.floor(bbox[1] * sy));
+    const w = Math.min(bmp.width - x, Math.ceil((bbox[2] - bbox[0]) * sx)); const h = Math.min(bmp.height - y, Math.ceil((bbox[3] - bbox[1]) * sy));
+    if (!(w > 0 && h > 0)) throw new Error('crop out of range');
+    canvas = new OffscreenCanvas(w, h);
+    canvas.getContext('2d').drawImage(bmp, x, y, w, h, 0, 0, w, h);
+  } finally {
+    if (bmp.close) bmp.close(); // 出错也释放位图
+  }
   const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.92 });
   return new Uint8Array(await blob.arrayBuffer());
 }
 
 export async function downloadImages(images, ctx = {}, concurrency = 4) {
   const out = images.map((i) => ({ ...i, data: null, contentType: null, error: null }));
-  const pageCache = new Map();
+  const pageCache = ctx.pageCache || new Map();
+  // 每张页图还剩几张图要裁：最后一张裁完就释放整页原图，页数多时不占内存
+  const pending = new Map();
+  for (const i of out) if (i.crop && i.url) pending.set(i.url, (pending.get(i.url) || 0) + 1);
   let next = 0;
   async function worker() {
     while (next < out.length) {
@@ -163,11 +170,17 @@ export async function downloadImages(images, ctx = {}, concurrency = 4) {
         if (img.crop) {
           // P-2：同一页图只下载一次；裁剪失败按单张图片失败处理（正文留注释，不让任务失败）
           if (!pageCache.has(img.url)) pageCache.set(img.url, fetchBytes(img.url, ctx));
-          const page = await pageCache.get(img.url);
-          if (page.error) { img.error = page.error; continue; }
-          const crop = ctx.cropImage || cropImage;
-          img.data = await crop(page.data, img.crop);
-          img.contentType = 'image/jpeg';
+          try {
+            const page = await pageCache.get(img.url);
+            if (page.error) { img.error = page.error; continue; }
+            const crop = ctx.cropImage || cropImage;
+            img.data = await crop(page.data, img.crop);
+            img.contentType = 'image/jpeg';
+          } finally {
+            const left = pending.get(img.url) - 1;
+            pending.set(img.url, left);
+            if (left <= 0) pageCache.delete(img.url);
+          }
           continue;
         }
         const r = await fetchBytes(img.url, ctx);
