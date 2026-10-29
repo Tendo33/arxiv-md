@@ -8,7 +8,7 @@ import { translations } from '@config/locales';
 import { showConfirm } from './confirm-dialog';
 import { confirmSendFlow, refocusTask } from './send-consent';
 import { renderTaskRows, setTaskListLanguage } from './task-list';
-import { bindListScroll, fitListToHalfRow } from './list-scroll';
+import { bindListScroll, fitListToHalfRow, refitOnResize } from './list-scroll';
 import { NW_ZH, setNwText } from '../settings/nw-segments';
 import { pageContext, recentTasks } from './page-context';
 import { renderShortcutGuide } from './shortcut-guide';
@@ -286,6 +286,7 @@ function renderRecent() {
 
 function bindTaskActions() {
   bindListScroll($('taskList'), window);
+  refitOnResize($('statusZone'), $('taskList'), window); // 必须改 6：showNeedKey/hideAlerts 后重算
   $('taskList').addEventListener('click', async (e) => {
     const btn = e.target.closest('[data-action]');
     if (!btn) return;

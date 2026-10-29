@@ -20,10 +20,11 @@ function setup(rowH, n, avail) {
   return list;
 }
 
-test('溢出：max-height = 被截行 offsetTop + 高度/2，能滚未到底，可聚焦', () => {
-  const list = setup(46, 6, 150); // 第 4 行 offsetTop=142 < 150 被截
+test('溢出：max-height = 中线在可用高度内的最后一行 offsetTop + 高度/2（必须改 6），能滚未到底，可聚焦', () => {
+  const list = setup(46, 6, 150); // 第 4 行中线 165 > 150；第 3 行中线 119 ≤ 150 → 停在第 3 行一半
   const s = fitListToHalfRow(list);
-  expect(list.style.maxHeight).toBe(`${142 + 23}px`);
+  expect(list.style.maxHeight).toBe(`${96 + 23}px`);
+  expect(list.style.minHeight).toBe(`${96 + 23}px`); // Q1：2.5 行下限
   expect(s).toEqual({ can: true, atEnd: false });
   expect(list.classList.contains('can-scroll')).toBe(true);
   expect(list.getAttribute('tabindex')).toBe('0');

@@ -6,11 +6,15 @@
 /** 重新计算 max-height；listEl 需 position:relative（offsetTop 以列表为参照）。 */
 export function fitListToHalfRow(listEl) {
   listEl.style.maxHeight = '';
+  listEl.style.minHeight = '';
+  const rows = Array.from(listEl.children).filter((r) => r.offsetHeight > 0);
+  // 设计 Q1 裁定：列表至少露出 2 整行 + 0.5 行（320 下行变高、有提示卡时也一样）；超出部分由 .body 滚动
+  if (rows.length >= 3) listEl.style.minHeight = `${Math.round(rows[2].offsetTop + rows[2].offsetHeight / 2)}px`;
   const avail = listEl.clientHeight;
   if (!(listEl.scrollHeight > avail + 1)) return updateListScrollState(listEl);
-  const rows = Array.from(listEl.children).filter((r) => r.offsetHeight > 0);
+  // 设计复验 15fe0f9 必须改 6：被截行要能露出半行（中线在可用高度内），否则 .pop 的 max-height 会把半行再压掉
   let cut = null;
-  for (const r of rows) { if (r.offsetTop < avail) cut = r; else break; }
+  for (const r of rows) { if (r.offsetTop + r.offsetHeight / 2 <= avail) cut = r; else break; }
   if (cut) listEl.style.maxHeight = `${Math.round(cut.offsetTop + cut.offsetHeight / 2)}px`;
   return updateListScrollState(listEl);
 }
@@ -27,4 +31,13 @@ export function updateListScrollState(listEl) {
 export function bindListScroll(listEl, win = globalThis.window) {
   listEl.addEventListener('scroll', () => updateListScrollState(listEl), { passive: true });
   if (win && win.addEventListener) win.addEventListener('resize', () => fitListToHalfRow(listEl));
+}
+
+/** 必须改 6：状态区（提示卡出现 / 消失）高度变化后重算列表高度 */
+export function refitOnResize(zoneEl, listEl, win = globalThis.window) {
+  const RO = win && win.ResizeObserver;
+  if (!RO || !zoneEl) return null;
+  const ro = new RO(() => fitListToHalfRow(listEl));
+  ro.observe(zoneEl);
+  return ro;
 }

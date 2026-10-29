@@ -12,6 +12,8 @@ body{min-width:320px}
 .alert>div{min-width:0;overflow-wrap:anywhere}
 /* 设计验收 R3 B1：只让任务列表滚动，导出按钮始终可见 */
 .body{display:flex;flex-direction:column;overflow:hidden}
+/* 设计 Q1：列表有 2.5 行下限（list-scroll.js），放不下时整个 .body 滚动，按钮区不被裁 */
+.body{overflow-y:auto}
 .recent{display:flex;flex-direction:column;gap:12px;flex:1 1 auto;min-height:0}
 .recent.hidden{display:none}
 .sec-h{min-height:24px}
@@ -36,6 +38,13 @@ body{min-width:320px}
 #alertErr .btn-refresh,#alertKey .btn-refresh{margin-top:6px}
 /* R4 合入 A2：「打开设置」单独一行左对齐，不随提示文字长度漂移 */
 #alertKey .btn-refresh{display:block;width:max-content}
+/* 设计复验 15fe0f9 Q1 裁定：收紧提示卡（按钮放右侧两行居中），不压列表 */
+#alertKey{padding:8px 10px}
+#alertKey>div{display:grid;grid-template-columns:1fr auto;column-gap:8px;row-gap:2px;align-items:center;flex:1;min-width:0}
+#alertKey b{grid-column:1;grid-row:1}
+#alertKey #keyHereHint{grid-column:1;grid-row:2;font-size:12px;line-height:18px}
+#alertKey #keySettingsBtn{grid-column:2;grid-row:1/span 2;margin:0;align-self:center;white-space:nowrap}
+.pop:has(#alertKey:not(.hidden)){max-height:600px}
 .row .row-act{flex:none;display:flex;gap:2px;margin:-2px 0;margin-left:auto}
 .row .row-act .btn{min-height:24px;padding:0 6px;font-size:12px}
 .row .row-act .btn{min-width:24px}
