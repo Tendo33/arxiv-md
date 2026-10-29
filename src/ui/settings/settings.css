@@ -693,7 +693,7 @@ body {
 /* 设计验收 M6：权限被拒的说明 */
 .permission-row.denied #permissionStatus { color: var(--danger); }
 
-.token-status-link { color: inherit; text-decoration: underline; font-weight: 600; display: inline-block; padding: 4px 2px; margin: -4px -2px; border-radius: 4px; }
+.token-status-link { color: inherit; text-decoration: underline; font-weight: 600; display: inline-block; padding: 4px 0; margin: -4px 0; border-radius: 4px; } /* 设计复验 15fe0f9 必须改 2（R22）：横向不外扩，Key 无效时 #tokenStatus 不溢出 */
 /* 设计 D4（AX-08）：状态行内链接扩大点击区但不改行高；焦点环 2px --focus-ring（亮 #2563eb / 暗 #60a5fa）。#getKeyLink 不在此列 */
 .token-status-link:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 0; }
 

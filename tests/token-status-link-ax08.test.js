@@ -3,9 +3,9 @@ import fs from 'fs';
 import path from 'path';
 const css = fs.readFileSync(path.join(__dirname, '../src/ui/settings/settings.css'), 'utf8');
 const rule = (sel) => (css.match(new RegExp(`(?:^|\\n)${sel.replace(/[.:#-]/g, (c) => `\\${c}`)}\\s*\\{([^}]*)\\}`)) || [])[1] || '';
-test('点击区：inline-block + padding 4px 2px + 负 margin + 圆角 4px', () => {
+test('点击区：inline-block + padding 4px 0 + 负 margin（R22 收窄） + 圆角 4px', () => {
   const r = rule('.token-status-link');
-  for (const d of ['display: inline-block', 'padding: 4px 2px', 'margin: -4px -2px', 'border-radius: 4px']) expect(r).toContain(d);
+  for (const d of ['display: inline-block', 'padding: 4px 0', 'margin: -4px 0', 'border-radius: 4px']) expect(r).toContain(d);
 });
 test('focus-visible：2px --focus-ring', () => {
   expect(rule('.token-status-link:focus-visible')).toContain('outline: 2px solid var(--focus-ring)');
