@@ -8,18 +8,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
-### 改进
-
-- PaddleOCR 结果质量：
-  - 被识别成表格的图改为从页图裁出图片，图注保留。
-  - 公式编号补成 `\tag{n}`。
-  - 去掉 PaddleOCR 的居中 div 和表格展示属性。
-  - 被当成页眉丢掉的致谢和编号节标题会恢复，层级按编号深度；跨页重复的页眉模板不会被当成标题。
-- 下面这些整理规则在通用的「整理」（normalize）流程里，**对 MinerU 结果开启「整理」时同样生效**，不只作用于 PaddleOCR：
-  - 表格单元格里的裸 LaTeX 补 `$…$`（`\cite`、`\ref`、`\textbf` 这类文字命令不包）。
-  - 被拆成两段的行内公式合并。
-  - `\mathrm{}` / `\text{}` 里被 OCR 拆开的字母拼回去。
-
 ## [1.2.0] - 2026-10-29
 
 ### 新增
