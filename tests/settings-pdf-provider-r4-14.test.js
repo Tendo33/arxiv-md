@@ -141,7 +141,8 @@ describe('R4-14 设置页：后端选择 + Key', () => {
     const r = await h.sec.onTest();
     expect(r.ok).toBe(false);
     expect(global.fetch.mock.calls[0][1].method).toBe('GET');
-    expect(h.document.getElementById('tokenStatus').textContent).toMatch(/403/);
+    expect(h.document.getElementById('tokenStatus').textContent).toMatch(/与 Key 或额度无关/);
+    expect(h.document.getElementById('tokenStatus').textContent).not.toMatch(/403|\{provider\}/); // rp2：状态码只进日志
     delete global.fetch;
   });
 });

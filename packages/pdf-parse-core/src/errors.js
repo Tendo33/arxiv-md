@@ -138,10 +138,11 @@ export async function readErrorResponse(response) {
  */
 export function formatParseError(err, t, { providerLabel, host } = {}) {
   const e = isParseError(err) ? err : new ParseError('PROVIDER_FAILED', { raw: String((err && err.message) || err), message: (err && err.message) || String(err) });
+  // rp2：{reason} 先替换——forbidden_empty 文案里本身带 {provider}，要在后面一并填上
   const fill = (s) => String(s || '')
+    .replace(/\{reason\}/g, e.reason === ERROR_REASONS.FORBIDDEN_EMPTY_BODY ? (t.err_reason_forbidden_empty || e.reason) : (e.reason || (e.raw && typeof e.raw === 'object' ? (e.raw.msg || e.raw.message || e.raw.errorMsg) : e.raw) || e.message || ''))
     .replace(/\{provider\}/g, providerLabel || e.provider || '')
-    .replace(/\{host\}/g, host || e.host || '')
-    .replace(/\{reason\}/g, e.reason === ERROR_REASONS.FORBIDDEN_EMPTY_BODY ? (t.err_reason_forbidden_empty || e.reason) : (e.reason || (e.raw && typeof e.raw === 'object' ? (e.raw.msg || e.raw.message || e.raw.errorMsg) : e.raw) || e.message || ''));
+    .replace(/\{host\}/g, host || e.host || '');
   const key = e.code === 'PROVIDER_FAILED' && e.reason === ERROR_REASONS.FORBIDDEN_EMPTY_BODY ? 'err_PROVIDER_FAILED' : `err_${e.code}`;
   return {
     code: e.code,

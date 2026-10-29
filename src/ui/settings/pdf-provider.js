@@ -155,7 +155,7 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
       status.className = 'token-status success'; status.textContent = tr.token_api_valid;
     } else {
       const e = r.error || {};
-      const reason = e.reason === 'forbidden_empty' ? tr.err_reason_forbidden_empty : (e.message || '');
+      const reason = e.reason === 'forbidden_empty' ? fmt(tr.err_reason_forbidden_empty, { provider: p.label }) : (e.message || '');
       status.className = 'token-status error';
       // 设计建议：已经填了 Key 时不说「未填写」；失败一律带 ❌，Key 问题附「获取 Key」链接
       const msg = e.code === 'AUTH_INVALID'

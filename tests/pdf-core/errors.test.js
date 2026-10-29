@@ -108,7 +108,7 @@ describe('classifyHttpError：403 空 body vs 401 vs 额度', () => {
 describe('formatParseError', () => {
   test('填入后端名和动作', () => {
     const f = formatParseError(new ParseError('QUOTA_EXCEEDED', { provider: 'paddleocr' }), translations.zh, { providerLabel: 'PaddleOCR' });
-    expect(f.message).toBe('PaddleOCR 的额度已用完，请明天再试或换一个后端');
+    expect(f.message).toBe('PaddleOCR 的额度已用完，请稍后再试或换一个后端');
     expect(f.actions).toEqual([{ id: 'switch', label: '换后端' }]);
   });
   test('PERMISSION_MISSING 填域名', () => {
@@ -118,7 +118,9 @@ describe('formatParseError', () => {
   test('403 空 body 的提示和额度/Key 不同', () => {
     const e = classifyHttpError({ status: 403, bodyText: '' }, 'paddleocr');
     const f = formatParseError(e, translations.zh, { providerLabel: 'PaddleOCR' });
-    expect(f.message).toContain('HTTP 403');
+    expect(f.message).toContain('PaddleOCR 拒绝了这次请求（与 Key 或额度无关）');
+    expect(f.message).not.toMatch(/403|\{provider\}/); // rp2：状态码只进日志
+    expect(e.httpStatus).toBe(403);
     expect(f.message).not.toBe(formatParseError(new ParseError('QUOTA_EXCEEDED'), translations.zh, { providerLabel: 'PaddleOCR' }).message);
     expect(f.message).not.toBe(formatParseError(new ParseError('AUTH_INVALID'), translations.zh, { providerLabel: 'PaddleOCR' }).message);
   });

@@ -36,13 +36,13 @@ describe('已知 reason / code', () => {
   test('zh：reason=forbidden_empty → err_reason_forbidden_empty', async () => {
     const c = await send('zh', 'failed', err());
     expect(c.title).toBe('❌ PDF 解析失败（MinerU）');
-    expect(c.message).toContain(translations.zh.err_reason_forbidden_empty);
+    expect(c.message).toContain(translations.zh.err_reason_forbidden_empty.replace('{provider}', 'MinerU'));
     expect(c.message).not.toContain('RAW-403');
   });
   test('en：reason=forbidden_empty → 英文，且无中文', async () => {
     const c = await send('en', 'failed', err());
     expect(c.title).toBe('❌ PDF parsing failed (MinerU)');
-    expect(c.message).toContain(translations.en.err_reason_forbidden_empty);
+    expect(c.message).toContain(translations.en.err_reason_forbidden_empty.replace('{provider}', 'MinerU'));
     expect(c.message).not.toContain('RAW-403');
     expect(c.title + c.message.replace(task.paperInfo.title, '')).not.toMatch(han);
   });

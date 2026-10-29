@@ -50,6 +50,8 @@ export function createParseTaskRunner(deps) {
       errorHttpStatus: e.httpStatus || null,
       errorHost: e.host || null, // R4-03：PERMISSION_MISSING 文案要用
     });
+    // rp2：界面文案不再出现 HTTP 状态码，状态码只进日志（和任务记录 errorHttpStatus）
+    try { log.error(`PDF parse task ${task.id} failed: ${e.code}${e.reason ? ` (${e.reason})` : ''}${e.httpStatus ? ` HTTP ${e.httpStatus}` : ''}`); } catch { /* 日志失败不影响任务 */ }
     notify(task, 'failed', e, provider); // 通知层按 code/reason 选文案，不展示 e.message
     return e;
   }

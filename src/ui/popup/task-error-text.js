@@ -13,7 +13,8 @@ export function taskErrorText(task, t, providerLabel = (id) => id || '') {
   }
   const label = providerLabel(provider);
   const fill = (s) => String(s).replace(/\{provider\}/g, label).replace(/\{host\}/g, task.errorHost || '');
-  const reasonMsg = task.errorReason && t[`err_reason_${task.errorReason}`];
+  // 任务行旁边已有后端名（S-2：每行只出现一次），forbidden_empty 的通用文案带 {provider}，任务行用不带后端名的版本
+  const reasonMsg = task.errorReason && ((task.errorReason === 'forbidden_empty' && t.err_task_forbidden_empty) || t[`err_reason_${task.errorReason}`]);
   if (reasonMsg) return fill(reasonMsg);
   // RATE_LIMITED 的 err_ 文案是“稍后自动重试”，任务已失败时不成立 → 用任务专用文案
   if (code === 'RATE_LIMITED') return fill(t.err_task_rate_limited);
