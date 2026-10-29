@@ -47,3 +47,17 @@ runBuild('（RP_BUILD=1）实际构建：dist 里没有 icon.svg / LICENSE.txt�
   const notices = fs.readFileSync(path.join(root, 'dist/THIRD_PARTY_NOTICES.txt'), 'utf8');
   for (const name of ['linkedom@', 'turndown@', 'turndown-plugin-gfm@', 'htmlparser2@', '@babel/helpers@']) expect(notices).toContain(name);
 }, 120000);
+
+// rp2 AR-06：webpack.config.js 直接 require terser-webpack-plugin，必须是显式 devDependency（不靠 npm 提升）
+test('terser-webpack-plugin 是 devDependency，且与 lockfile 已安装的主版本一致', () => {
+  const fs2 = require('fs');
+  const p2 = require('path');
+  const root = p2.join(__dirname, '..');
+  const pkg = JSON.parse(fs2.readFileSync(p2.join(root, 'package.json'), 'utf8'));
+  const lock = JSON.parse(fs2.readFileSync(p2.join(root, 'package-lock.json'), 'utf8'));
+  const range = pkg.devDependencies['terser-webpack-plugin'];
+  expect(range).toMatch(/^\^5\./);
+  expect(lock.packages[''].devDependencies['terser-webpack-plugin']).toBe(range);
+  expect(lock.packages['node_modules/terser-webpack-plugin'].version.split('.')[0]).toBe('5');
+  expect(fs2.readFileSync(p2.join(root, 'webpack.config.js'), 'utf8')).toMatch(/require\("terser-webpack-plugin"\)/);
+});
