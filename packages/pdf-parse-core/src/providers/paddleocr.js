@@ -6,7 +6,7 @@ import { defineProvider } from '../provider.js';
 import { ParseError, classifyHttpError, readErrorResponse, isParseError, fromFetchFailure } from '../errors.js';
 import { fetchWithTimeout } from '../http.js';
 import { withKeepAlive } from '../keepalive.js';
-import { fixPageFromBlocks } from './paddleocr-blocks.js';
+import { fixPageFromBlocks, cleanPaddleHtml } from './paddleocr-blocks.js';
 
 export const PADDLEOCR_BASE = 'https://paddleocr.aistudio-app.com';
 export const PADDLEOCR_JOBS_URL = `${PADDLEOCR_BASE}/api/v2/ocr/jobs`;
@@ -102,7 +102,7 @@ export function parsePaddleJsonl(text) {
       const imgMap = { ...(md.images || {}) };
       // P-2：版面块修正（图被识别成表格 → 按 bbox 从预处理页图裁图）；裁剪源只用预处理图（bbox 坐标系就是它）
       const fixed = fixPageFromBlocks(String(md.text || ''), pg);
-      let t = fixed.text;
+      let t = cleanPaddleHtml(fixed.text); // P-8
       const crops = new Map();
       const pageImg = pre[i] || null;
       for (const c of fixed.crops) {

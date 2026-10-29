@@ -9,6 +9,7 @@ const { webcrypto } = require('crypto');
 const REAL = path.join(__dirname, '../fixtures/providers/paddleocr/real');
 const ATT = fs.readFileSync(path.join(REAL, '1706.03762-pages-4-13-14.jsonl'), 'utf8');
 const GELU = fs.readFileSync(path.join(REAL, '1606.08415-pages-1-2-7.jsonl'), 'utf8');
+const TABLES = fs.readFileSync(path.join(REAL, '1706.03762-tables.jsonl'), 'utf8');
 
 async function deliver(jsonl, { crop = async () => new Uint8Array([1, 2, 3]) } = {}) {
   const parsed = parsePaddleJsonl(jsonl);
@@ -159,5 +160,31 @@ describe('P-6：\\mathrm / \\text 里的拆字母', () => {
   test('走完整 normalizeMarkdown', () => {
     const { normalizeMarkdown } = require('@pdf-core/normalize');
     expect(normalizeMarkdown('$$ \\mathrm{G E L U}(x)=x\\Phi(x) $$').markdown).toContain('\\mathrm{GELU}(x)');
+  });
+});
+
+describe('P-8：去掉居中 div 和表格展示属性', () => {
+  const { cleanPaddleHtml } = require('@pdf-core/providers/paddleocr-blocks');
+  test('居中 div 拆壳', () => {
+    expect(cleanPaddleHtml('<div style="text-align: center;"><img src="imgs/a.jpg" alt="Image" width="40%" /></div>'))
+      .toBe('<img src="imgs/a.jpg" alt="Image" width="40%" />');
+    expect(cleanPaddleHtml('<div style="text-align: center;">Figure 1: x</div>')).toBe('Figure 1: x');
+    expect(cleanPaddleHtml('<div class="x">k</div>')).toBe('<div class="x">k</div>');
+  });
+  test('表格只留 colspan/rowspan', () => {
+    const t = `<table border=1 style='margin: auto; word-wrap: break-word;'><tr><td style='text-align: center; word-wrap: break-word;' colspan="2">a</td><td rowspan=2 style='x'>b</td></tr></table>`;
+    expect(cleanPaddleHtml(t)).toBe('<table><tr><td colspan="2">a</td><td rowspan=2>b</td></tr></table>');
+  });
+  test('真实 1706 表格页：交付结果里没有 border/style/居中 div，合并单元格还在', async () => {
+    const { out } = await deliver(TABLES);
+    const md = out.markdown;
+    expect(md).not.toMatch(/border=|style=|text-align/);
+    expect(md).toMatch(/<td (colspan|rowspan)=/);
+    expect(md).toMatch(/<table>/);
+  });
+  test('真实图片：不再有 div 包着的 img', async () => {
+    const { out } = await deliver(ATT);
+    expect(out.markdown).not.toMatch(/<div style/);
+    expect(out.markdown).toMatch(/!\[[^\]]*\]\(images\//);
   });
 });

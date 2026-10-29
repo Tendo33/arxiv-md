@@ -68,3 +68,19 @@ export function fixPageFromBlocks(text, pg) {
   const r = replaceFigureTables(addFormulaTags(text, pg), pg);
   return { text: r.text, crops: r.crops };
 }
+
+/**
+ * P-8：PaddleOCR 的展示性 HTML 外壳。
+ * - 去掉 <div style="text-align: center;">…</div>（图片、图注、表格外面都有），内容原样保留；
+ * - 表格标签只保留 colspan/rowspan，去掉 border= / style= 等展示属性。
+ * 只认 PaddleOCR 生成的这一种居中 div，别的 div 不动。
+ */
+const CENTER_DIV = /<div style=(["'])text-align:\s*center;?\1>([\s\S]*?)<\/div>/g;
+export function cleanPaddleHtml(text) {
+  return text
+    .replace(CENTER_DIV, (_, __, inner) => inner.trim())
+    .replace(/<(table|thead|tbody|tr|td|th)\b([^>]*)>/gi, (_, tag, attrs) => {
+      const keep = attrs.match(/\b(?:colspan|rowspan)\s*=\s*(?:"[^"]*"|'[^']*'|\d+)/gi) || [];
+      return `<${tag}${keep.map((a) => ` ${a}`).join('')}>`;
+    });
+}
