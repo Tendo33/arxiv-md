@@ -108,6 +108,7 @@ function setFileLine(progressIndicator, detailEl, file) {
 }
 
 export function clearProgressState() {
+  cancelAutoHide(); // rp2c ④：手动关闭 / 清掉卡片时一并取消自动收起计时
   const progressIndicator = document.querySelector('.arxiv-md-progress');
   if (!progressIndicator) return;
   removeResultActions(progressIndicator);
@@ -174,9 +175,81 @@ function sendShortcutResult(extra) {
   } catch (_) { /* 扩展已重载，消息发不出去 */ }
 }
 
-/** 成功提示至少停留这么久（WCAG 2.2.1：给足阅读时间），同时提供关闭按钮 */
-export const SUCCESS_VISIBLE_MS = 8000;
+/** 成功 / 已提交提示至少停留这么久（WCAG 2.2.1：给足阅读时间；rp2c 设计终验 ④：8 秒 → 10 秒），同时提供关闭按钮 */
+export const SUCCESS_VISIBLE_MS = 10000;
+/** rp2c ④：暂停后恢复时至少再留这么久，避免移出后立刻消失 */
+export const AUTO_HIDE_RESUME_MIN_MS = 2000;
 let successTimer = null;
+
+/*
+ * rp2c（设计终验 ④，WCAG 2.2.1 / 2.2.2）：自动收起的计时
+ * —— 页面上只有一张 .arxiv-md-progress 卡片，successTimer 是模块级、唯一的一份：
+ *    「已完成」和「已提交」两种卡片共用它；pending / 新的转换 / 关闭会取消它；错误卡片本来就不自动收起。
+ * —— 鼠标悬停或焦点在卡片内：暂停，记下剩余时间；时间到时若仍悬停/有焦点也不收起（焦点在内永不收起）。
+ * —— 鼠标和焦点都离开后：按剩余时间继续（至少 2 秒），不是重新计时。
+ * —— 收起就是 display:none，卡片本身没有过渡动画，减少动态偏好下也一样。
+ */
+let autoHideState = null; // { state, remaining, startedAt }
+let cardHovered = false;
+
+function cardHasFocus(el) {
+  const a = document.activeElement;
+  return !!(a && a !== document.body && el.contains(a));
+}
+
+function pauseAutoHide() {
+  if (!autoHideState || successTimer == null) return;
+  clearTimeout(successTimer);
+  successTimer = null;
+  autoHideState.remaining = Math.max(AUTO_HIDE_RESUME_MIN_MS, autoHideState.remaining - (Date.now() - autoHideState.startedAt));
+}
+
+function scheduleAutoHide() {
+  const el = document.querySelector('.arxiv-md-progress');
+  if (!autoHideState || !el || successTimer != null) return;
+  if (cardHovered || cardHasFocus(el)) return; // 仍暂停
+  const st = autoHideState;
+  st.startedAt = Date.now();
+  successTimer = setTimeout(() => {
+    successTimer = null;
+    const cur = document.querySelector('.arxiv-md-progress');
+    // 期间若已开始下一次转换（状态变了），不要误清
+    if (!cur || autoHideState !== st || !cur.classList.contains(st.state)) return;
+    if (cardHovered || cardHasFocus(cur)) { st.remaining = AUTO_HIDE_RESUME_MIN_MS; return; }
+    autoHideState = null;
+    clearProgressState();
+  }, st.remaining);
+}
+
+function bindAutoHidePause(el) {
+  if (!el || el.dataset.amdAutoHideBound === '1') return;
+  el.dataset.amdAutoHideBound = '1';
+  el.addEventListener('mouseenter', () => { cardHovered = true; pauseAutoHide(); });
+  el.addEventListener('mouseleave', () => { cardHovered = false; scheduleAutoHide(); });
+  el.addEventListener('focusin', () => pauseAutoHide());
+  el.addEventListener('focusout', (e) => {
+    if (!autoHideState) return;
+    if (e.relatedTarget && el.contains(e.relatedTarget)) return; // 焦点仍在卡片内
+    // focusout 时 activeElement 可能还是旧元素，下一拍再判断
+    setTimeout(() => scheduleAutoHide(), 0);
+  });
+}
+
+function startAutoHide(state) {
+  cancelAutoHide();
+  const el = document.querySelector('.arxiv-md-progress');
+  autoHideState = { state, remaining: SUCCESS_VISIBLE_MS, startedAt: Date.now() };
+  // rp2c 复审 P2：悬停时点「关闭」不会再有 mouseleave，cardHovered 会卡在 true；按指针的真实位置复位
+  try { cardHovered = !!(el && el.matches(':hover')); } catch (_) { cardHovered = false; }
+  bindAutoHidePause(el);
+  scheduleAutoHide();
+}
+
+function cancelAutoHide() {
+  autoHideState = null;
+  clearTimeout(successTimer);
+  successTimer = null;
+}
 
 export function showSuccess(message) {
   notifyOutcome({ ok: true, message: message || '' });
@@ -195,12 +268,7 @@ export function showSuccess(message) {
     progressIndicator.appendChild(actions);
   }
 
-  clearTimeout(successTimer);
-  successTimer = setTimeout(() => {
-    // 期间若已开始下一次转换（状态不再是 success），不要误清
-    const el = document.querySelector('.arxiv-md-progress');
-    if (el && el.classList.contains('success')) clearProgressState();
-  }, SUCCESS_VISIBLE_MS);
+  startAutoHide('success');
 }
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -245,12 +313,8 @@ export function showSubmitted(providerId) {
     actions.appendChild(createCloseButton());
     progressIndicator.appendChild(actions);
   }
-  // 与之前的提交提示一样 8 秒后收起（系统通知会在完成时再提醒）；期间开始新转换则不误清
-  clearTimeout(successTimer);
-  successTimer = setTimeout(() => {
-    const el = document.querySelector('.arxiv-md-progress');
-    if (el && el.classList.contains('submitted')) clearProgressState();
-  }, SUCCESS_VISIBLE_MS);
+  // 与已完成提示一样 10 秒后收起（rp2c：悬停/焦点暂停）（系统通知会在完成时再提醒）；期间开始新转换则不误清
+  startAutoHide('submitted');
 }
 
 /**
@@ -277,7 +341,7 @@ export function showPending(message, downloadId = null) {
     progressIndicator.appendChild(actions);
   }
   // batch9 M2（Simon 决定）：pending 不自动收起，留到用户点「关闭」、新的转换替换它，或下载补完成（settlePending）
-  clearTimeout(successTimer);
+  cancelAutoHide();
 }
 
 /** batch9 M2：页面上是否仍是 pending 卡片；P3①：给了 downloadId 时还要是同一次下载 */
