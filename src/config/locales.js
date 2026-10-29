@@ -160,7 +160,7 @@ export const translations = {
     content_progress_completed: 'Completed',
     content_progress_incomplete: '⚠ Export may be incomplete',
     content_progress_empty: '⚠ HTML has no content',
-    content_result_empty: 'No Markdown was saved. The PDF was downloaded instead — use PDF parse to get Markdown.',
+    content_result_empty: 'No Markdown was saved. The PDF was downloaded instead — use PDF parsing to get Markdown.',
     // 与 _locales/en 的 notify_incomplete_* 一致（后台按扩展设置的语言选用）
     notify_incomplete_title: '⚠ Export may be incomplete',
     notify_incomplete_body: 'Only {actual} of ~{expected} headings exported — please check.\nSaved: {filename}',
