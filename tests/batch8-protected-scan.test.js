@@ -76,3 +76,37 @@ describe('审查 P3①：转义的 \\$ 不算公式定界符', () => {
     expect(strip('a \\\\$x<b>y</b>$ b')).toBe('a \\\\$x<b>y</b>$ b');
   });
 });
+
+describe('batch9 ③：围栏和同一行 $$ 的扫描是线性的', () => {
+  const time = (fn) => { const t0 = Date.now(); fn(); return Date.now() - t0; };
+  test('2 万个未闭合围栏 < 1s（原来约 4.9s）', () => {
+    const s = Array.from({ length: 20000 }, (_, k) => '`'.repeat(3 + (k % 3)) + 'py\nx <b>y</b>').join('\n');
+    let out;
+    expect(time(() => { out = strip(s); })).toBeLessThan(1000);
+    expect(out).not.toContain('<b>');
+  });
+  test('长度各不相同的未闭合围栏 < 1s', () => {
+    const s = Array.from({ length: 400 }, (_, k) => '~'.repeat(3 + k) + '\n<b>z</b>').join('\n');
+    expect(time(() => strip(s))).toBeLessThan(1000);
+  });
+  test('同一行 5000 个 $$a$$ < 1s（原来约 3.1s），都受保护', () => {
+    const s = '$$a<b>$$ '.repeat(5000);
+    let out;
+    expect(time(() => { out = strip(s); })).toBeLessThan(1000);
+    expect(out).toBe(s);
+  });
+  test('大量未闭合 $$ < 1s', () => {
+    const s = '$$ <b>x</b> '.repeat(1) + 'a\n'.repeat(1) + ('$x$ <b>y</b> ').repeat(20000);
+    expect(time(() => strip(s))).toBeLessThan(1000);
+  });
+  test('语义不变：只有同一个串独占一行才闭合；更长或带字符的行不算', () => {
+    expect(strip('```\n<b>a</b>\n````\n<b>b</b>\n```  \n<b>c</b>')).toBe('```\n<b>a</b>\n````\n<b>b</b>\n```  \nc');
+    expect(strip('~~~~\n<b>a</b>\n~~~x\n~~~~\n<b>c</b>')).toBe('~~~~\n<b>a</b>\n~~~x\n~~~~\nc');
+    expect(strip('```\n<b>a</b>')).toBe('```\na');
+    expect(strip('前 <b>x</b>\n```\n```\n```\n<b>y</b>')).toBe('前 x\n```\n```\n```\ny');
+  });
+  test('同一行 $$ 之后的 $…$ 和行内代码照常判定', () => {
+    expect(strip('$$a$$ <b>x</b> $c<b>d$ `<b>` <b>e</b>')).toBe('$$a$$ x $c<b>d$ `<b>` e');
+    expect(strip('$$a\n<b>b</b>$$ <b>c</b> $d<b>$')).toBe('$$a\n<b>b</b>$$ c $d<b>$');
+  });
+});
