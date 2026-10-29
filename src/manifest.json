@@ -89,7 +89,8 @@
   ],
   "browser_specific_settings": {
     "gecko": {
-      "id": "arxiv-md@tendo33"
+      "id": "arxiv-md@tendo33",
+      "strict_min_version": "124.0"
     }
   }
 }

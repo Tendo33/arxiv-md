@@ -18,7 +18,7 @@ function walk(dir) {
 
 describe('AR-04 manifest', () => {
   test('gecko id + background.scripts 兜底 + 最低 Chrome 121', () => {
-    expect(manifest.browser_specific_settings).toEqual({ gecko: { id: 'arxiv-md@tendo33' } });
+    expect(manifest.browser_specific_settings.gecko.id).toBe('arxiv-md@tendo33');
     expect(manifest.background).toEqual({ service_worker: 'background.js', scripts: ['background.js'] });
     expect(manifest.minimum_chrome_version).toBe('121');
   });
