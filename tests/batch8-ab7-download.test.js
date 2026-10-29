@@ -380,6 +380,38 @@ describe('batch9 ①：4 分钟后仍在下载 → 不报失败、不取消；�
     expect(c.tabs.sendMessage).toHaveBeenCalledWith(42, { type: 'PDF_DOWNLOAD_SETTLED', data: { ok: true, filename: 'p.pdf', downloadId: 7 } });
   });
 
+  // release-polish batch9 P3②：Tier 1 失败退回 PDF 时把发起页 tabId 一路带下去
+  test('P3②：convert 退回 _fallbackToPdf 时传 tabId', async () => {
+    fakeChrome({ complete: true });
+    const ar5iv = require('@core/converter/ar5iv-converter').default;
+    ar5iv.convert.mockRejectedValueOnce(new Error('No content available'));
+    const spy = jest.spyOn(converter, '_fallbackToPdf').mockResolvedValue({ success: true });
+    try {
+      await converter.convert(paper, null, 42);
+      expect(spy).toHaveBeenCalledWith(paper, null, 42);
+    } finally { spy.mockRestore(); }
+  });
+
+  test('P3②：发起页已关闭（sendMessage reject）→ 被吃掉，没有 unhandledRejection', async () => {
+    jest.useFakeTimers();
+    const unhandled = jest.fn();
+    process.on('unhandledRejection', unhandled);
+    try {
+      for (const mode of [{ completeAt: 300_000 }, {}]) {
+        const c = fakeChrome(mode);
+        c.tabs = { sendMessage: jest.fn(() => Promise.reject(new Error('Could not establish connection'))) };
+        converter._fallbackToPdf(paper, null, 42);
+        await jest.advanceTimersByTimeAsync(240_001);
+        if (!mode.completeAt) [...c.listeners].forEach((l) => l({ id: 7, state: { current: 'interrupted' }, error: { current: 'NETWORK_FAILED' } }));
+        await jest.advanceTimersByTimeAsync(60_000);
+        expect(c.tabs.sendMessage).toHaveBeenCalledWith(42, expect.objectContaining({ type: 'PDF_DOWNLOAD_SETTLED' }));
+      }
+      jest.useRealTimers();
+      await new Promise((r) => setImmediate(r));
+      expect(unhandled).not.toHaveBeenCalled();
+    } finally { process.off('unhandledRejection', unhandled); }
+  });
+
   // release-polish batch9 P3①：pending 结果与 SETTLED 都带 downloadId，页面按 id 匹配卡片
   test('P3①：pending 结果与补发的 SETTLED（成功 / 失败）都带 downloadId', async () => {
     jest.useFakeTimers();
