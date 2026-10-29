@@ -216,3 +216,28 @@ describe('P-7：被当成页眉丢掉的节标题', () => {
     expect(restoreDroppedHeadings(t, pg(blk('header', 'ACKNOWLEDGMENT', [0, 0, 500, 20]), blk('text', 'We would like to thank everyone involved here.', [0, 30, 500, 80])))).toBe(t);
   });
 });
+
+describe('裁图排除贴边文字块', () => {
+  const { shrinkCropBox, replaceFigureTables } = require('@pdf-core/providers/paddleocr-blocks');
+  const blk = (label, bbox) => ({ block_label: label, block_content: 'x', block_bbox: bbox });
+  test('左侧竖排图注 → 左边界收到图注右边', () => {
+    expect(shrinkCropBox([200, 100, 1300, 1000], [blk('figure_title', [200, 120, 260, 980])])).toEqual([260, 100, 1300, 1000]);
+  });
+  test('下方相邻图注（gap 3px）和上方重叠标题都排除', () => {
+    expect(shrinkCropBox([100, 100, 900, 600], [blk('figure_title', [80, 603, 920, 650]), blk('paragraph_title', [90, 80, 910, 130])])).toEqual([100, 130, 900, 600]);
+  });
+  test.each([
+    ['远处文字', [blk('text', [100, 800, 900, 900])]],
+    ['图片块不算', [blk('image', [200, 120, 260, 980])]],
+    ['框内小数字（坐标轴标签）', [blk('vision_footnote', [500, 300, 520, 310])]],
+    ['收缩过多就放弃', [blk('text', [100, 100, 900, 500])]],
+  ])('不收缩：%s', (_, bl) => expect(shrinkCropBox([100, 100, 900, 600], bl)).toEqual([100, 100, 900, 600]));
+  test('假表格裁图用收缩后的框，文件名仍按原框', () => {
+    const pg = { prunedResult: { width: 1000, height: 1000, parsing_res_list: [
+      { block_label: 'table', block_content: '<table><tr><td>Figure 4: heads</td></tr></table>', block_bbox: [100, 100, 900, 600] },
+      blk('figure_title', [100, 120, 150, 580])] } };
+    const r = replaceFigureTables('<table><tr><td>Figure 4: heads</td></tr></table>', pg);
+    expect(r.crops[0].bbox).toEqual([150, 100, 900, 600]);
+    expect(r.crops[0].name).toBe('imgs/img_in_image_box_100_100_900_600.jpg');
+  });
+});
