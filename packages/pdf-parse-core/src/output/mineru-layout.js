@@ -17,11 +17,17 @@ function extOf(img) {
 
 const escRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-/** 下载失败的图：整个 <img>/<div 包裹>/![]() 换成注释，正文不留坏链接 */
+/**
+ * QA L-04：下载失败（quality 分支上裁剪失败也走这里）的图在渲染后的 Markdown 里要看得见，
+ * 所以是一行引用块而不是 HTML 注释；前后空行保证它在行内位置也单独成段
+ */
+export const failedImageNote = (src) => `\n\n> ⚠️ 图片下载失败（image failed to download）：\`${src}\`\n\n`;
+
+/** 下载失败的图：整个 <img>/<div 包裹>/![]() 换成可见提示，正文不留坏链接 */
 export function markFailedImages(md, failedSrcs) {
   let out = md;
   for (const src of failedSrcs) {
-    const e = escRe(src); const note = `<!-- 图片下载失败：${src} -->`;
+    const e = escRe(src); const note = failedImageNote(src);
     out = out
       .replace(new RegExp(`<div[^>]*>\\s*<img\\b[^>]*\\bsrc\\s*=\\s*["']${e}["'][^>]*>\\s*</div>`, 'gi'), note)
       .replace(new RegExp(`<img\\b[^>]*\\bsrc\\s*=\\s*["']${e}["'][^>]*>`, 'gi'), note)

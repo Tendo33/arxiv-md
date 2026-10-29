@@ -30,14 +30,16 @@ test('sha256Hex 与 node crypto 一致', async () => {
   expect(await sha256Hex(A, subtle)).toBe(hex(A));
 });
 
-test('引用改成 images/<sha256>.<ext>；同内容去重；下载失败的图换成注释', async () => {
+test('引用改成 images/<sha256>.<ext>；同内容去重；下载失败的图换成可见提示', async () => {
   const r = await buildMineruLayout(fetched, { subtle });
   expect(r).toMatchObject({ deliver: 'zip', layout: 'mineru', failedImages: ['page-4/imgs/gone.jpg'] });
   expect(r.markdown).toContain(`![](images/${hex(A)}.jpg)`); // 和 MinerU 一样用 ![]()，不再保留 <img>
   expect(r.markdown).toContain(`![](images/${hex(B)}.png)`);
   expect(r.markdown.match(new RegExp(`images/${hex(A)}\\.jpg`, 'g'))).toHaveLength(2);
-  expect(r.markdown).toContain('<!-- 图片下载失败：page-4/imgs/gone.jpg -->');
-  expect(r.markdown.replace(/<!--[^>]*-->/g, '')).not.toMatch(/page-\d+\/imgs|figures\//);
+  // QA L-04：可见的引用块（不是 HTML 注释），渲染后读者能看到
+  expect(r.markdown).toMatch(/^> ⚠️ 图片下载失败（image failed to download）：`page-4\/imgs\/gone\.jpg`$/m);
+  expect(r.markdown).not.toContain('<!--');
+  expect(r.markdown.replace(/^> ⚠️ 图片下载失败.*$/gm, '')).not.toMatch(/page-\d+\/imgs|figures\//);
   expect(r.images.map((i) => i.to).sort()).toEqual([`images/${hex(A)}.jpg`, `images/${hex(B)}.png`].sort());
 });
 
@@ -66,6 +68,8 @@ test('markFailedImages：三种写法都替换，其他图不动', () => {
   const md = '<div style="x"><img src="p/a.jpg"/></div>\n<img src=\'p/a.jpg\'>\n![t](p/a.jpg "c")\n![k](p/b.jpg)';
   const out = markFailedImages(md, ['p/a.jpg']);
   expect(out.match(/图片下载失败/g)).toHaveLength(3);
+  expect(out.match(/^> ⚠️ 图片下载失败/gm)).toHaveLength(3); // QA L-04：每条都单独成段、可见
+  expect(out).not.toContain('<!--');
   expect(out).toContain('![k](p/b.jpg)');
 });
 
