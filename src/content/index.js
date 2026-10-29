@@ -3,6 +3,7 @@
 import metadataExtractor from '@core/metadata-extractor';
 import { paperTabTitle } from './bibtex';
 import logger from '@utils/logger';
+import { statusCardErrorText } from './status-error';
 import { REGEX } from '@config/constants';
 import storage from '@utils/storage';
 import { translations } from '@config/locales';
@@ -243,11 +244,7 @@ async function handleConversionTrigger(type = 'markdown') {
           ? response
           : response?.data?.success === false ? response.data : null;
         if (failure) {
-          showError(
-            failure.errorCode === 'NETWORK_OFFLINE'
-              ? t.content_error_offline
-              : failure.error || t.content_error_generic,
-          );
+          showError(statusCardErrorText(failure, t, 'Conversion failed'));
           return;
         }
 
@@ -281,7 +278,7 @@ async function handleConversionTrigger(type = 'markdown') {
     }
 
     const progressIndicator = document.querySelector('.arxiv-md-progress');
-    showError(error.message || t.content_error_generic);
+    showError(statusCardErrorText(error, t, 'Conversion trigger failed'));
   }
 }
 
@@ -335,7 +332,7 @@ async function handlePdfDownloadDirect(button) {
         }
 
         if (response && (response.success === false || response.data?.success === false)) {
-          showError(response.error || response.data?.error || t.content_error_generic);
+          showError(statusCardErrorText(response, t, 'PDF download failed'));
           return;
         }
 
@@ -346,7 +343,7 @@ async function handlePdfDownloadDirect(button) {
   } catch (error) {
     logger.error('PDF download failed:', error);
     restoreButton();
-    showError(error.message || t.content_error_generic);
+    showError(statusCardErrorText(error, t, 'PDF download failed'));
   }
 }
 
