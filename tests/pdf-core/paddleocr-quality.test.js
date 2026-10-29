@@ -8,7 +8,7 @@ const path = require('path');
 const { webcrypto } = require('crypto');
 const REAL = path.join(__dirname, '../fixtures/providers/paddleocr/real');
 const ATT = fs.readFileSync(path.join(REAL, '1706.03762-pages-4-13-14.jsonl'), 'utf8');
-const GELU = fs.readFileSync(path.join(REAL, '1606.08415-pages-1-7.jsonl'), 'utf8');
+const GELU = fs.readFileSync(path.join(REAL, '1606.08415-pages-1-2-7.jsonl'), 'utf8');
 
 async function deliver(jsonl, { crop = async () => new Uint8Array([1, 2, 3]) } = {}) {
   const parsed = parsePaddleJsonl(jsonl);
@@ -122,4 +122,22 @@ describe('P-4：公式编号 → \\tag{n}', () => {
   test('支持 (A.1) 这类编号', () => {
     expect(addFormulaTags('$$ a=b $$', pg([F(100), N(110, '(A.1)')]))).toBe('$$ a=b\\tag{A.1} $$');
   });
+});
+
+describe('P-5：被段落切断的行内公式', () => {
+  const { mergeSplitInlineMath } = require('@pdf-core/normalize/math');
+  test('GELU 真实切片：Φ(x)=P(X≤x) 合回一个段落、一个公式', async () => {
+    const md = (await deliver(GELU)).out.markdown;
+    expect(md).toMatch(/\$ \\Phi\(x\) = P\(X \\leq x\), X \\sim \\mathcal\{N\}\(0,1\) \$ is the cumulative/);
+    expect(md).not.toMatch(/\n\$ x\), X/);
+  });
+  test.each([
+    ['正常段落', 'a $x$ b\n\n$y$ c'],
+    ['括号都闭合', 'a $ f(x) $\n\n$ y) $ c'],
+    ['下一段不以公式开头', 'a $ P(X \\leq $\n\nx) $ y $'],
+    ['下一段公式括号平衡', 'a $ P(X \\leq $\n\n$ (y) $ c'],
+    ['块公式', 'a $ P(X $\n\n$$ y) $$'],
+    ['标题', '## A $ P(X $\n\n$ y) $ c'],
+  ])('不合并：%s', (_, t) => expect(mergeSplitInlineMath(t)).toBe(t));
+  test('最小例子', () => expect(mergeSplitInlineMath('where $ P(a \\leq $\n\n$ b) $ is')).toBe('where $ P(a \\leq b) $ is'));
 });
