@@ -31,6 +31,6 @@ test('en：纯文本，不加 .nw', () => {
   expect(n.textContent).toBe(translations.en.popup_note_dnr_wait);
 });
 test('样式：.row-note 中性 --text-2 12/18，.nw 不换行', () => {
-  expect(css).toMatch(/\.row \.row-note\{[^}]*font-size:12px;line-height:18px;color:var\(--text-2\)\}/);
+  expect(css).toMatch(/\.row \.row-note\{[^}]*font-size:12px;line-height:18px;color:var\(--text-2\)[;}]/);
   expect(css).toMatch(/\.row \.row-note \.nw\{white-space:nowrap\}/);
 });

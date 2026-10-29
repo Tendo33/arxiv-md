@@ -10,6 +10,8 @@ body{min-width:360px}
 .btn-xxs{min-height:24px;padding:0 6px;font-size:12px}
 .alert>svg{flex:none;margin-top:1px}
 .alert>div{min-width:0;overflow-wrap:anywhere}
+/* 设计复验 6a49976 M1 附带：提示标题末行不留单个词（en「… on this |device」「… is not |set」） */
+.alert b{text-wrap:pretty}
 /* 设计验收 R3 B1：只让任务列表滚动，导出按钮始终可见 */
 .body{display:flex;flex-direction:column;overflow:hidden}
 /* 设计 Q1：列表有 2.5 行下限（list-scroll.js），放不下时整个 .body 滚动，按钮区不被裁 */
@@ -133,7 +135,7 @@ body{min-width:360px}
 @media (prefers-reduced-motion:reduce){#ctxProg .bar.indeterminate>i{animation:none!important;transform:none;width:30%}}
 
 /* 审查 30a6e1b P2：数据说明未确认的任务，中性说明行 */
-.row .row-note{flex-basis:100%;min-width:0;font-size:12px;line-height:18px;color:var(--text-2)}
+.row .row-note{flex-basis:100%;min-width:0;font-size:12px;line-height:18px;color:var(--text-2);text-wrap:pretty}
 
 /* 附录 D1（AX-03）：状态区在按钮行下方；全部隐藏时不占位（也不吃 .body 的 gap） */
 .status-zone{display:flex;flex-direction:column;gap:8px}
