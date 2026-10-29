@@ -37,10 +37,39 @@ export async function syncPaddleOriginRule(c = globalThis.chrome) {
   }
 }
 
+/**
+ * R4-02：提交前在 background 里确认规则状态（幂等）。
+ * 有权限且规则已在 → 什么都不做；有权限但规则不在（授权后 SW 没收到事件 / 之前装失败）→ 重装；
+ * 没权限 → 交给 sync 确保规则不存在。只在 background 调用，popup/options 永远不碰 updateDynamicRules。
+ * 每次都从参数（默认 globalThis.chrome）现取 declarativeNetRequest：刚授权时命名空间可能才出现。
+ */
+export async function ensurePaddleOriginRule(c = globalThis.chrome) {
+  try {
+    if (!c || !c.permissions) return false;
+    const granted = await c.permissions.contains({ permissions: [DNR_PERMISSION] });
+    const dnr = c.declarativeNetRequest;
+    if (granted && dnr && dnr.getDynamicRules) {
+      const rules = await dnr.getDynamicRules();
+      if ((rules || []).some((r) => r && r.id === PADDLE_ORIGIN_RULE_ID)) return true;
+    }
+    return await syncPaddleOriginRule(c);
+  } catch (e) {
+    logger.warn('ensurePaddleOriginRule failed:', e);
+    return false;
+  }
+}
+
+/** 只处理和 DNR 权限有关的变化；onAdded 装规则，onRemoved 删规则 */
+const touchesDnr = (p) => !p || !p.permissions || p.permissions.includes(DNR_PERMISSION);
+
 export function installPaddleOriginRuleListeners(c = globalThis.chrome) {
   if (!c || !c.permissions || !c.permissions.onAdded) return;
-  const onChange = () => { syncPaddleOriginRule(c); };
-  c.permissions.onAdded.addListener(onChange);
-  c.permissions.onRemoved.addListener(onChange);
+  c.permissions.onAdded.addListener((p) => { if (touchesDnr(p)) syncPaddleOriginRule(c); });
+  c.permissions.onRemoved.addListener((p) => {
+    if (!touchesDnr(p)) return;
+    const dnr = c.declarativeNetRequest;
+    // 权限已撤销时 contains=false，sync 会只做 remove；命名空间若已消失，规则随权限一并失效
+    if (dnr) syncPaddleOriginRule(c);
+  });
   syncPaddleOriginRule(c);
 }

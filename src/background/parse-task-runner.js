@@ -128,6 +128,10 @@ export function createParseTaskRunner(deps) {
         try { await ensureProviderPermission(deps.permissions, provider); } catch (e) { return { error: await fail(task, e, provider) }; }
       }
       const creds = { token: key };
+      // R4-02：首次提交前（还没有 jobId）让 background 确认该 provider 需要的网络规则已就绪（幂等）
+      if (deps.beforeSubmit && !task.jobId) {
+        try { await deps.beforeSubmit(provider); } catch (e) { log.error('beforeSubmit failed', e); }
+      }
       await taskManager.updateTask(taskId, { status: TASK_STATUS.PROCESSING, ...(task.jobId ? {} : { progress: 0 }) });
       try {
         const out = provider.mode === 'sync' ? await runSync(task, provider, creds) : await runAsync(task, provider, creds);

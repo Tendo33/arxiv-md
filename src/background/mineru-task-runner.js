@@ -9,6 +9,7 @@ import { createDefaultRegistry } from '@pdf-core/providers/index';
 import { saveDeliverable } from '@pdf-core/output/save';
 import { createParseTaskRunner } from './parse-task-runner';
 import { taskNotificationText } from './task-notification-text';
+import { ensurePaddleOriginRule } from './paddle-origin-rule';
 
 export const deletedTaskGuard = createDeletedTaskGuard(chrome.storage.local);
 export const providerRegistry = createDefaultRegistry();
@@ -44,6 +45,8 @@ export const parseTaskRunner = createParseTaskRunner({
   saveDeliverable: (result, base) => saveDeliverable(result, base, { download: downloadViaChrome }),
   makeFilename: (meta, ext) => generateFilename(meta, ext),
   notify: showTaskNotification,
+  // R4-02：PaddleOCR 提交前确认 DNR 规则 4001 已装（只在 background）
+  beforeSubmit: (provider) => (provider && provider.id === 'paddleocr' ? ensurePaddleOriginRule() : undefined),
   log: logger,
 });
 
