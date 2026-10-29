@@ -8,6 +8,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### 修复
+
+- PaddleOCR 解析修好，交付结构和 MinerU 一致：arXiv PDF 先下载再上传（星河拒收 arXiv 链接，错误码 10004），结果改读 JSONL，图片一起下载，打包成 ZIP（`full.md` + `images/`）。上传超时放宽到 5 分钟。
+- PaddleOCR 请求规则没就绪时最多等 5 秒并重装，仍不行就提示，不再卡住。
+- 弹窗任务列表：认不出的错误显示通用文案，原文只放在悬停提示里；页面卡片新增中性的「已取消」样式（可关闭，10 秒后自动隐藏）；PDF 下载成功卡片不再重复标题。
+
+### 权限（待批准）
+
+- PaddleOCR 结果文件在 `*.bj.bcebos.com`，加入可选域名权限（只在选用 PaddleOCR 时申请）。
+
+### 依赖
+
+- 依赖：npm audit fix 升级了 webpack 5.112 等传递 dev 依赖；其中 ajv-formats 2→3、es-module-lexer 1→2、commander 8→15 是跨大版本的传递 dev 依赖（node 22 满足）；katex 升到 0.19.1（仅测试使用）。
+
 ## [1.2.0] - 2026-10-29
 
 ### 新增
