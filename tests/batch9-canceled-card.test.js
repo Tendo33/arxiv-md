@@ -30,7 +30,9 @@ describe('batch9 已取消卡片', () => {
     expect(box.getAttribute('role')).toBe('status');
     expect(box.getAttribute('aria-live')).toBe('polite');
     expect(box.querySelector('.progress-percent').textContent).toBe('');
-    expect(box.classList.contains('error')).toBe(true); // 样式暂沿用错误卡，中性样式在 backlog
+    // R5-04：中性「已取消」样式，不再是红色错误卡
+    expect(box.classList.contains('canceled')).toBe(true);
+    expect(box.classList.contains('error')).toBe(false);
   });
 
   test('真正的失败仍是 alert/assertive', () => {
@@ -64,5 +66,42 @@ describe('batch9 已取消卡片', () => {
     const src = require('fs').readFileSync(require('path').join(__dirname, '../src/content/index.js'), 'utf8');
     expect(src.match(/\(isCanceledDownload\([\w.]+\) \? showCanceled : showError\)\(statusCardErrorText/g)).toHaveLength(4);
     expect(src).toMatch(/else if \(message\.data && isPendingShown\(id\)\)/); // P3①
+  });
+});
+
+describe('R5-04 已取消卡片：关闭按钮 + 10 秒自动收起', () => {
+  afterEach(() => jest.useRealTimers());
+  test('有「关闭」按钮，点击即收起', () => {
+    const box = mount();
+    showCanceled('x');
+    const btn = box.querySelector('.arxiv-md-result-close');
+    expect(btn).not.toBeNull();
+    expect(btn.textContent).toBe(t.content_btn_close);
+    btn.dispatchEvent(new window.Event('click'));
+    expect(box.style.display).toBe('none');
+  });
+  test('10 秒后自动收起（9.9 秒时仍在）', () => {
+    jest.useFakeTimers();
+    const box = mount();
+    showCanceled('x');
+    jest.advanceTimersByTime(9900);
+    expect(box.style.display).toBe('flex');
+    jest.advanceTimersByTime(200);
+    expect(box.style.display).toBe('none');
+  });
+  test('期间开始新状态（失败）→ 不误清', () => {
+    jest.useFakeTimers();
+    const box = mount();
+    showCanceled('x');
+    showError('boom');
+    jest.advanceTimersByTime(11000);
+    expect(box.style.display).toBe('flex');
+    expect(box.classList.contains('error')).toBe(true);
+  });
+  test('CSS：.canceled 是中性色，不用 danger', () => {
+    const css = require('fs').readFileSync(require('path').join(__dirname, '../src/content/page-button-styles.js'), 'utf8');
+    const m = css.match(/\.arxiv-md-progress\.canceled \{([^}]*)\}/);
+    expect(m).not.toBeNull();
+    expect(m[1]).not.toMatch(/danger/);
   });
 });

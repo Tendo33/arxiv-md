@@ -57,10 +57,10 @@ export function setProgressState({ text, percent = null, detail = '', file = '',
   delete progressIndicator.dataset.pending;
   delete progressIndicator.dataset.downloadId;
   removeResultActions(progressIndicator);
-  progressIndicator.classList.remove('error', 'success', 'warning', 'submitted');
+  progressIndicator.classList.remove('error', 'success', 'warning', 'submitted', 'canceled');
   const icon = progressIndicator.querySelector('.progress-icon');
   if (icon) icon.remove();
-  if (state === 'error' || state === 'success' || state === 'warning' || state === 'submitted') {
+  if (state === 'error' || state === 'success' || state === 'warning' || state === 'submitted' || state === 'canceled') {
     progressIndicator.classList.add(state);
   }
   // 读屏：进度/成功用 polite 播报，错误用 alert 立即播报
@@ -113,7 +113,7 @@ export function clearProgressState() {
   if (!progressIndicator) return;
   removeResultActions(progressIndicator);
   progressIndicator.style.display = 'none';
-  progressIndicator.classList.remove('error', 'success', 'warning', 'submitted');
+  progressIndicator.classList.remove('error', 'success', 'warning', 'submitted', 'canceled');
   const icon = progressIndicator.querySelector('.progress-icon');
   if (icon) icon.remove();
   // 隐藏时同时清空文字，避免残留上一次的“Completed 100%”
@@ -149,8 +149,9 @@ export function showError(message) {
 }
 
 /**
- * batch9 设计验收 M3/S3：PDF 下载被取消或已从下载列表移除——标题「已取消」而不是「失败」，
- * 读屏用 status/polite。样式暂时沿用错误卡片（中性「已取消」样式在 backlog）。
+ * batch9 设计验收 M3/S3：PDF 下载被取消或已从下载列表移除——标题「已取消」而不是「失败」，读屏用 status/polite。
+ * R5-04：中性「已取消」样式（state 'canceled'，不是红色错误卡片），带「关闭」按钮，
+ * 与已完成 / 已提交一样 10 秒自动收起（悬停/焦点暂停）。用户主动取消，不算失败。
  */
 export function showCanceled(message) {
   notifyOutcome({ ok: false, error: message || t.content_error_download_canceled });
@@ -158,10 +159,18 @@ export function showCanceled(message) {
     text: t.content_progress_canceled,
     detail: message || t.content_error_download_canceled,
     percent: null,
-    state: 'error',
+    state: 'canceled',
     polite: true,
   });
+  const progressIndicator = document.querySelector('.arxiv-md-progress');
+  if (progressIndicator) {
+    const actions = document.createElement('div');
+    actions.className = 'arxiv-md-result-actions';
+    actions.appendChild(createCloseButton());
+    progressIndicator.appendChild(actions);
+  }
   reportShortcutFailure();
+  startAutoHide('canceled');
 }
 
 /** 让后台把快捷键徽标从「…」换成「!」；不是快捷键发起的转换，后台会忽略 */

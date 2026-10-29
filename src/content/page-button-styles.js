@@ -132,6 +132,13 @@ export const PAGE_BUTTON_STYLES = `
     }
     .progress-icon { flex: none; }
 
+    /* R5-04：已取消——中性灰（用户主动取消，不是错误），左边框也去掉品牌红 */
+    .arxiv-md-progress.canceled {
+      background: var(--amd-surface-2);
+      border-color: var(--amd-border-strong);
+      color: var(--amd-text);
+    }
+
     .arxiv-md-progress.warning {
       background: var(--amd-warning-bg);
       border-color: var(--amd-warning);
@@ -165,6 +172,7 @@ export const PAGE_BUTTON_STYLES = `
     .arxiv-md-progress.error .progress-detail,
     .arxiv-md-progress.success .progress-detail,
     .arxiv-md-progress.submitted .progress-detail,
+    .arxiv-md-progress.canceled .progress-detail,
     .arxiv-md-progress.warning .progress-detail { color: var(--amd-text); }
     .progress-file {
       font-size: 12px;
