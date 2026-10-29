@@ -395,8 +395,10 @@ describe('batch9 ②：search 返回空数组 → 立刻 reject「已取消或�
   });
 
   test('zh/en 文案', () => {
-    expect(translations.zh.content_error_download_removed).toBe('下载已取消或已从列表移除');
-    expect(translations.zh.notify_download_removed_body).toBe('下载已取消或已从列表移除');
-    expect(translations.en.content_error_download_removed).toBe('The download was canceled or removed from the download list.');
+    // batch9 设计验收 M3：卡片和通知同一句
+    expect(translations.zh.content_error_download_removed).toBe('下载已取消，或已从下载列表中移除');
+    expect(translations.zh.notify_download_removed_body).toBe('下载已取消，或已从下载列表中移除');
+    expect(translations.en.content_error_download_removed).toBe('The download was canceled or removed from your downloads.');
+    expect(translations.en.notify_download_removed_body).toBe(translations.en.content_error_download_removed);
   });
 });
