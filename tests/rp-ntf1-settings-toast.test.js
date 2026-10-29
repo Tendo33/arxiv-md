@@ -15,7 +15,8 @@ describe('NTF1 设置页 toast 位置', () => {
     const narrow = css.slice(css.indexOf('@media (max-width: 720px)'));
     expect(narrow).toMatch(/--footer-h: 112px;/);
   });
-  test('操作栏仍然吸底（toast 要让开它）', () => {
-    expect(css).toMatch(/\.actions-bar \{[^}]*position: sticky;[^}]*bottom: 0;/);
+  // design-abs-buttons-2026-10-29 R03：操作栏改回文档流（见 settings-focus-r07.test.js）
+  test('操作栏不再吸底', () => {
+    expect(css).not.toMatch(/\.actions-bar \{[^}]*position: sticky;/);
   });
 });
