@@ -134,6 +134,8 @@ describe('链接导出：监听清理、超时与失败徽标', () => {
 
 describe('设置页接线', () => {
   test('settings.js 真的调用 bindInstantSave：改模式立即写入', async () => {
+    // AR-09：设置页 toast 的 3 秒计时器会拖住 jest 退出；用随真实时间推进的假计时器，测完清掉
+    jest.useFakeTimers({ advanceTimers: true });
     const html = fs.readFileSync(path.join(__dirname, '../src/ui/settings/settings.html'), 'utf8');
     const { window, document } = parseHTML(html);
     const calls = [];
@@ -148,5 +150,7 @@ describe('设置页接线', () => {
     always.dispatchEvent(new window.Event('change'));
     await flush();
     expect(calls.some((c) => c[0] === 'setConversionMode' && c[1] === 'always')).toBe(true);
+    jest.clearAllTimers();
+    jest.useRealTimers();
   });
 });

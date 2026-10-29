@@ -13,8 +13,13 @@ export const BADGE_CLEAR_MS = { running: 120000, success: 4000, error: 6000, war
 
 // A2-01：Chrome 里 setTimeout/clearTimeout 脱离 globalThis 调用会抛 "Illegal invocation"，
 // 所以默认实现用箭头函数包一层，调用时 this 仍是全局对象。
+// AR-09：在 Node（jest）里计时器是对象，unref 后不会拖住进程退出；浏览器里返回数字，不受影响。
 export const defaultTimers = {
-  setTimeout: (fn, ms) => setTimeout(fn, ms),
+  setTimeout: (fn, ms) => {
+    const id = setTimeout(fn, ms);
+    if (id && typeof id.unref === 'function') id.unref();
+    return id;
+  },
   clearTimeout: (id) => clearTimeout(id),
 };
 
