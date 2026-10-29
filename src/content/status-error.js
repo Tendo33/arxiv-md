@@ -19,3 +19,10 @@ export function statusCardErrorText(failure, t, context = 'Conversion failed', {
   if (kind || fallback) return t.content_error_download_other || t.content_error_generic;
   return t.content_error_generic;
 }
+
+/** batch9 M3：下载被取消（用户取消 / 已从下载列表移除）不算失败，状态卡用「已取消」 */
+export function isCanceledDownload(failure) {
+  const body = failure?.data?.success === false ? failure.data : failure;
+  const kind = body?.downloadFailure;
+  return kind === 'canceled' || kind === 'removed';
+}

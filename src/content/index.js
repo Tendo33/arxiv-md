@@ -3,7 +3,7 @@
 import metadataExtractor from '@core/metadata-extractor';
 import { paperTabTitle } from './bibtex';
 import logger from '@utils/logger';
-import { statusCardErrorText } from './status-error';
+import { isCanceledDownload, statusCardErrorText } from './status-error';
 import { REGEX } from '@config/constants';
 import storage from '@utils/storage';
 import { translations } from '@config/locales';
@@ -19,6 +19,7 @@ import {
   reportShortcutFailure,
   setProgressState,
   setProgressText,
+  showCanceled,
   showError,
   showResult,
   showSuccess,
@@ -245,7 +246,7 @@ async function handleConversionTrigger(type = 'markdown') {
           ? response
           : response?.data?.success === false ? response.data : null;
         if (failure) {
-          showError(statusCardErrorText(failure, t, 'Conversion failed'));
+          (isCanceledDownload(failure) ? showCanceled : showError)(statusCardErrorText(failure, t, 'Conversion failed'));
           return;
         }
 
@@ -336,7 +337,7 @@ async function handlePdfDownloadDirect(button) {
         }
 
         if (response && (response.success === false || response.data?.success === false)) {
-          showError(statusCardErrorText(response, t, 'PDF download failed', { download: true }));
+          (isCanceledDownload(response) ? showCanceled : showError)(statusCardErrorText(response, t, 'PDF download failed', { download: true }));
           return;
         }
 
@@ -351,7 +352,7 @@ async function handlePdfDownloadDirect(button) {
   } catch (error) {
     logger.error('PDF download failed:', error);
     restoreButton();
-    showError(statusCardErrorText(error, t, 'PDF download failed', { download: true }));
+    (isCanceledDownload(error) ? showCanceled : showError)(statusCardErrorText(error, t, 'PDF download failed', { download: true }));
   }
 }
 
