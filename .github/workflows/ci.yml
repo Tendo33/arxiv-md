@@ -13,8 +13,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -33,8 +33,8 @@ jobs:
       E2E_SCRIPTS: |
         scripts/e2e-shortcut.js
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -58,3 +58,58 @@ jobs:
             xvfb-run -a node "$s"
             echo "::endgroup::"
           done
+
+  # batch8 ③：用真实 markdown-it（html:true）渲染全部夹具输出，断言没有意外的 raw HTML token（tests/batch8-rendered.test.js）。
+  # markdown-it 只临时装（--no-save --ignore-scripts，精确版本），不进 package.json / package-lock。
+  # continue-on-error 暂时保留：首次真实运行通过后由主管移除。
+  rendered-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    env:
+      MARKDOWN_IT_VERSION: 14.3.3
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm install --no-save --ignore-scripts "markdown-it@${MARKDOWN_IT_VERSION}"
+      - name: jest rendered check
+        env:
+          MD_RENDERER_DIR: ${{ github.workspace }}
+        run: |
+          set -o pipefail
+          npx jest --runInBand tests/batch8-rendered.test.js 2>&1 | tee "$RUNNER_TEMP/rendered.log"
+          # 渲染断言必须真的跑过（不是 skipped），且版本与安装的一致
+          grep -q "^rendered check: markdown-it ${MARKDOWN_IT_VERSION}, " "$RUNNER_TEMP/rendered.log"
+
+  # batch8 ③：在线冒烟（原 tools/selftest-arxiv.mjs，现 scripts/selftest-live.js）。依赖 arxiv.org 外网，
+  # 网络抖动不应挡住合并，所以 continue-on-error；结果看日志里的 PASS/FAIL 行。
+  selftest-live:
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 20
+    continue-on-error: true
+    env:
+      PLAYWRIGHT_VERSION: 1.60.0
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install Playwright Chromium
+        run: |
+          mkdir -p "$RUNNER_TEMP/e2e-tools"
+          cd "$RUNNER_TEMP/e2e-tools"
+          npm init -y >/dev/null
+          npm install --no-save --no-audit --no-fund "playwright@${PLAYWRIGHT_VERSION}"
+          npx playwright install --with-deps chromium
+          sudo apt-get install -y xvfb
+          echo "E2E_PLAYWRIGHT_DIR=$RUNNER_TEMP/e2e-tools" >> "$GITHUB_ENV"
+          echo "CHROME_PATH=$(node -p "require('playwright').chromium.executablePath()")" >> "$GITHUB_ENV"
+      - run: npm run build
+      - run: xvfb-run -a node scripts/selftest-live.js
