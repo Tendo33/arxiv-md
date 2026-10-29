@@ -20,7 +20,7 @@ jest.mock('@utils/helpers', () => ({
   showNotification: jest.fn(),
 }));
 import storage from '@utils/storage';
-import { downloadFile, downloadFailureKind, showNotification } from '@utils/helpers';
+import { downloadFile, downloadFailureKind, showNotification, DOWNLOAD_TIMEOUT_MS, DOWNLOAD_KEEPALIVE_MS } from '@utils/helpers';
 import converter from '@core/converter';
 import { translations } from '@config/locales';
 import { statusCardErrorText } from '../src/content/status-error';
@@ -53,6 +53,8 @@ function fakeChrome(mode) {
           return;
         }
         if (mode.earlyComplete) fire({ id: 7, state: { previous: 'in_progress', current: 'complete' } });
+        if (mode.earlyOther) fire({ id: 99, state: { previous: 'in_progress', current: 'complete' } });
+        if (mode.completeAt) setTimeout(() => fire({ id: 7, state: { previous: 'in_progress', current: 'complete' } }), mode.completeAt);
         cb(7);
         setTimeout(() => {
           fire({ id: 99, state: { current: 'interrupted' }, error: { current: 'NETWORK_FAILED' } }); // 别的下载，不应影响
@@ -111,6 +113,63 @@ describe('downloadFile 等待终态', () => {
     else await expect(p).resolves.toBe(7);
     expect(c.downloads.search).toHaveBeenCalledWith({ id: 7 });
     expect(c.listeners.size).toBe(0);
+  });
+
+  test('审查 P3②：拿到 id 前另一个下载（id 99）先 complete → 不算本次成功，仍等自己的事件', async () => {
+    const c = fakeChrome({ earlyOther: true, interrupt: 'SERVER_FORBIDDEN' });
+    await expect(downloadFile('u', 'p.pdf')).rejects.toMatchObject({ code: 'DOWNLOAD_INTERRUPTED', downloadError: 'SERVER_FORBIDDEN' });
+    expect(c.listeners.size).toBe(0);
+  });
+
+  test('审查阻断项：超过 30 秒的下载，等待期间每 20 秒 search 一次（keepalive），完成后停止', async () => {
+    jest.useFakeTimers();
+    const c = fakeChrome({ completeAt: 75_000 });
+    let result;
+    const p = downloadFile('u', 'p.pdf').then((v) => { result = v; });
+    await jest.advanceTimersByTimeAsync(0);
+    expect(c.downloads.search).toHaveBeenCalledTimes(1); // 拿到 id 后立即一次
+    await jest.advanceTimersByTimeAsync(20_000);
+    expect(c.downloads.search).toHaveBeenCalledTimes(2);
+    await jest.advanceTimersByTimeAsync(20_000); // 40s：没有任何 onChanged，仍靠 search 保持活跃
+    expect(c.downloads.search).toHaveBeenCalledTimes(3);
+    expect(result).toBeUndefined();
+    await jest.advanceTimersByTimeAsync(40_000); // 60s 再 poll 一次，75s complete
+    await p;
+    expect(result).toBe(7);
+    expect(c.downloads.search).toHaveBeenCalledTimes(4);
+    expect(c.listeners.size).toBe(0);
+    await jest.advanceTimersByTimeAsync(120_000);
+    expect(c.downloads.search).toHaveBeenCalledTimes(4); // 结束后不再调用
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
+  test('审查阻断项：search 兜底漏掉的 onChanged（50 秒时 search 看到 complete）', async () => {
+    jest.useFakeTimers();
+    const c = fakeChrome({ never: true });
+    const p = downloadFile('u', 'p.pdf');
+    await jest.advanceTimersByTimeAsync(30_000);
+    c.downloads.search.mockImplementation(async ({ id }) => [{ id, state: 'complete' }]);
+    await jest.advanceTimersByTimeAsync(10_000); // 40s poll
+    await expect(p).resolves.toBe(7);
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
+  test('审查阻断项：默认超时 4 分钟（低于 Chrome 单事件 5 分钟上限），之后不再 poll', async () => {
+    jest.useFakeTimers();
+    const c = fakeChrome({ never: true });
+    expect(DOWNLOAD_TIMEOUT_MS).toBe(240_000);
+    expect(DOWNLOAD_KEEPALIVE_MS).toBeLessThan(30_000);
+    const settled = downloadFile('u', 'p.pdf').catch((e) => e);
+    await jest.advanceTimersByTimeAsync(239_000);
+    expect(c.listeners.size).toBe(1);
+    await jest.advanceTimersByTimeAsync(1_001);
+    expect((await settled).code).toBe('DOWNLOAD_TIMEOUT');
+    const calls = c.downloads.search.mock.calls.length;
+    expect(calls).toBe(12); // 立即 1 次 + 20s…220s 共 11 次；240s 那次与超时同刻，超时先注册先触发
+    await jest.advanceTimersByTimeAsync(60_000);
+    expect(c.downloads.search.mock.calls.length).toBe(calls);
+    expect(c.listeners.size).toBe(0);
+    expect(jest.getTimerCount()).toBe(0);
   });
 
   test('超时 → reject DOWNLOAD_TIMEOUT，监听器已移除，之后的事件不再生效', async () => {

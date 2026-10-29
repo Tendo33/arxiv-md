@@ -50,22 +50,28 @@ export function sleep(ms) {
 // batch8 AB7-01：拿到 downloadId 只代表下载开始了，不代表保存成功（404/403/429/500、DNS 失败、用户取消都会先给 id）。
 // 这里等到 chrome.downloads.onChanged 报 complete / interrupted 才 resolve / reject：
 // - 监听器在调用 download() 之前就挂上，id 未知时先缓存事件；拿到 id 后再 search() 一次，覆盖「监听前已结束」的竞态；
-// - 超时（默认 5 分钟）reject，code = DOWNLOAD_TIMEOUT；任何结局都移除监听器、清掉定时器。
+// - 超时（默认 4 分钟）reject，code = DOWNLOAD_TIMEOUT；任何结局都移除监听器、清掉定时器。
+// - 审查阻断项：MV3 service worker 30 秒内没有事件 / 扩展 API 调用会被回收，onChanged 不报进度。
+//   等待期间每 20 秒调用一次 downloads.search({id})：扩展 API 调用会重置空闲计时器（keepalive），
+//   同时兜底漏掉的 onChanged 事件。超时降到 4 分钟，留在 Chrome 单个事件 5 分钟上限之内。
 // - interrupted 时 reject 的 Error 带 code = DOWNLOAD_INTERRUPTED 和 downloadError（Chrome 的 InterruptReason，如 SERVER_FORBIDDEN）。
-export const DOWNLOAD_TIMEOUT_MS = 5 * 60 * 1000;
+export const DOWNLOAD_TIMEOUT_MS = 4 * 60 * 1000;
+export const DOWNLOAD_KEEPALIVE_MS = 20 * 1000;
 
-export function downloadFile(url, filename, { timeoutMs = DOWNLOAD_TIMEOUT_MS } = {}) {
+export function downloadFile(url, filename, { timeoutMs = DOWNLOAD_TIMEOUT_MS, keepaliveMs = DOWNLOAD_KEEPALIVE_MS } = {}) {
   const downloads = chrome.downloads;
   return new Promise((resolve, reject) => {
     let id = null;
     let done = false;
     let timer = null;
+    let keepalive = null;
     const early = [];
 
     const finish = (fn, value) => {
       if (done) return;
       done = true;
       if (timer) clearTimeout(timer);
+      if (keepalive) clearInterval(keepalive);
       downloads.onChanged.removeListener(onChanged);
       fn(value);
     };
@@ -104,9 +110,11 @@ export function downloadFile(url, filename, { timeoutMs = DOWNLOAD_TIMEOUT_MS } 
         id = downloadId;
         early.splice(0).filter((d) => d.id === id).forEach(settle);
         if (done) return;
-        Promise.resolve(downloads.search({ id })).then((items) => {
+        const poll = () => Promise.resolve(downloads.search({ id })).then((items) => {
           if (!done && items && items[0]) settle(items[0]);
         }, () => { /* search 失败就继续等 onChanged / 超时 */ });
+        poll();
+        if (!done) keepalive = setInterval(poll, keepaliveMs);
       });
     } catch (error) {
       finish(reject, error);
