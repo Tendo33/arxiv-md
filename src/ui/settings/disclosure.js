@@ -29,7 +29,7 @@ export function buildDisclosurePanel(doc, tr, provider, seg = (k, t) => t) {
     svg(doc, EXT),
     h(doc, 'span', { class: 'sr-only' }, tr.link_new_tab),
   ]);
-  const ok = h(doc, 'button', { type: 'button', class: 'btn btn-primary pd-ok' }, fmt(tr.pdf_disc_ok, vars));
+  const ok = h(doc, 'button', { type: 'button', class: 'btn btn-primary pd-ok' }, tr.pdf_disc_ok);
   const cancel = h(doc, 'button', { type: 'button', class: 'btn btn-secondary pd-cancel' }, tr.pdf_disc_cancel);
   const panel = h(doc, 'div', { class: 'pd-panel', id: 'pdPanel', 'data-provider': id, role: 'group', 'aria-labelledby': titleId, 'aria-describedby': bodyId }, [
     title, body, link, h(doc, 'div', { class: 'pd-actions' }, [ok, cancel]),

@@ -35,7 +35,7 @@ describe('附录 C1：首次选择后端先显示数据说明', () => {
     expect(panel.getAttribute('role')).toBe('group');
     expect(h.document.getElementById(panel.getAttribute('aria-labelledby')).textContent).toBe('使用 MinerU 前请确认');
     expect(panel.querySelector('.pd-body').textContent).toBe(translations.zh.pdf_disc_body_mineru);
-    expect(panel.querySelector('.pd-ok').textContent).toBe('同意并使用 MinerU');
+    expect(panel.querySelector('.pd-ok').textContent).toBe('确认并继续');
     expect(panel.querySelector('a.pd-link').getAttribute('target')).toBe('_blank');
     expect(h.permissions.request).not.toHaveBeenCalled();
     expect(h.storage.setPdfProvider).not.toHaveBeenCalled();
