@@ -76,7 +76,9 @@ export async function injectConvertButton() {
   // 创建 PDF 按钮
   const pdfButton = document.createElement('button');
   pdfButton.className = 'arxiv-pdf-download-btn arxiv-md-btn arxiv-md-btn-secondary';
-  pdfButton.setAttribute('aria-label', t.content_btn_pdf);
+  // release-polish 设计：可见文字只有「PDF（标题）」，完整含义放在 title 和 aria-label 里
+  pdfButton.setAttribute('aria-label', t.content_btn_pdf_label);
+  pdfButton.title = t.content_btn_pdf_label;
   pdfButton.innerHTML = `
     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
       <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
