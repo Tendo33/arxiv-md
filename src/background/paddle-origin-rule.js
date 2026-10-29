@@ -11,6 +11,17 @@ export const DNR_READY_TIMEOUT_MS = 5000;
 // R5-02：权限撤销后命名空间还在，但调用会抛这个错；此时规则已随权限失效，不算故障
 const NOT_AVAILABLE = /not available in this context|is not a function|Cannot read propert/i;
 
+/**
+ * initiatorDomains 要的是扩展页面的 host：Chrome 里就是扩展 id；Firefox 里 runtime.id 是 arxiv-md@tendo33
+ * （不是合法域名，updateDynamicRules 直接报 Invalid domain，规则装不上），要用 moz-extension://<uuid>/ 的 uuid
+ */
+export function extensionHost(c = globalThis.chrome) {
+  const rt = c && c.runtime;
+  if (!rt) return undefined;
+  try { if (typeof rt.getURL === 'function') { const h = new URL(rt.getURL('/')).hostname; if (h) return h; } } catch { /* 回退到 id */ }
+  return rt.id;
+}
+
 export function buildPaddleOriginRule(extensionId) {
   return {
     id: PADDLE_ORIGIN_RULE_ID,
@@ -33,7 +44,7 @@ export async function syncPaddleOriginRule(c = globalThis.chrome) {
     if (!dnr) return false;
     await dnr.updateDynamicRules({
       removeRuleIds: [PADDLE_ORIGIN_RULE_ID],
-      ...(granted ? { addRules: [buildPaddleOriginRule(c.runtime && c.runtime.id)] } : {}),
+      ...(granted ? { addRules: [buildPaddleOriginRule(extensionHost(c))] } : {}),
     });
     return granted;
   } catch (e) {
@@ -73,7 +84,7 @@ export async function requirePaddleOriginRule(c = globalThis.chrome, { timeoutMs
       try {
         if (dnr && dnr.getDynamicRules) {
           if (hasRule(await dnr.getDynamicRules())) return true;
-          await dnr.updateDynamicRules({ removeRuleIds: [PADDLE_ORIGIN_RULE_ID], addRules: [buildPaddleOriginRule(c.runtime && c.runtime.id)] });
+          await dnr.updateDynamicRules({ removeRuleIds: [PADDLE_ORIGIN_RULE_ID], addRules: [buildPaddleOriginRule(extensionHost(c))] });
           if (hasRule(await dnr.getDynamicRules())) return true;
         } else {
           last = 'dnr api missing';
