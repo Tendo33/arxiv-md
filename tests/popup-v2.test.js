@@ -4,6 +4,10 @@ import { pageContext, recentTasks, taskForPaper } from '../src/ui/popup/page-con
 import { createTaskRow, setTaskListLanguage } from '../src/ui/popup/task-list';
 import { translations } from '../src/config/locales';
 import { onNextOutcome, notifyOutcome } from '../src/content/progress-ui';
+import { parseHTML as __parseHTML } from 'linkedom';
+// release-polish AR-04：createTaskRow 返回 DOM 节点，这里在 linkedom 文档里构建后取 outerHTML 再断言
+const __doc = __parseHTML('<!doctype html><html><body></body></html>').document;
+const rowHtml = (task) => require('../src/ui/popup/task-list').createTaskRow(task, __doc).outerHTML;
 
 const read = (f) => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
 
@@ -35,15 +39,15 @@ describe('C-2 紧凑任务行', () => {
   test.each(['zh', 'en'])('%s：完成/失败/进行中各自的徽标与动作，标题转义', (lang) => {
     setTaskListLanguage(lang);
     const tr = translations[lang];
-    const done = createTaskRow({ id: 'a', status: 'completed', zipUrl: 'https://z/a.zip', createdAt: Date.now(), paperInfo: { title: '<b>T</b>' } });
+    const done = rowHtml({ id: 'a', status: 'completed', zipUrl: 'https://z/a.zip', createdAt: Date.now(), paperInfo: { title: '<b>T</b>' } });
     expect(done).toContain('badge ok');
     expect(done).toContain('data-action="download"');
     expect(done).toContain('&lt;b&gt;T');
     expect(done).toContain(tr.popup_status_completed);
-    const fail = createTaskRow({ id: 'b', status: 'failed', createdAt: Date.now(), paperInfo: { arxivId: '1' }, error: 'boom' });
+    const fail = rowHtml({ id: 'b', status: 'failed', createdAt: Date.now(), paperInfo: { arxivId: '1' }, error: 'boom' });
     expect(fail).toContain('badge err');
     expect(fail).toContain('data-action="retry"');
-    const run = createTaskRow({ id: 'c', status: 'processing', progress: 42, createdAt: Date.now(), paperInfo: {} });
+    const run = rowHtml({ id: 'c', status: 'processing', progress: 42, createdAt: Date.now(), paperInfo: {} });
     expect(run).toContain('badge run');
     expect(run).toContain('42%');
   });

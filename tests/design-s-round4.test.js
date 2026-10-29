@@ -4,6 +4,10 @@ const path = require('path');
 const read = (f) => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
 import { translations } from '../src/config/locales';
 import { ctxBadgeState } from '../src/ui/popup/ctx-badge';
+import { parseHTML as __parseHTML } from 'linkedom';
+// release-polish AR-04：createTaskRow 返回 DOM 节点，这里在 linkedom 文档里构建后取 outerHTML 再断言
+const __doc = __parseHTML('<!doctype html><html><body></body></html>').document;
+const rowHtml = (task) => require('../src/ui/popup/task-list').createTaskRow(task, __doc).outerHTML;
 
 describe('S1 没有 Key：卡片徽标中性「需要 Key」而不是 Failed', () => {
   test.each([['zh', '需要 Key'], ['en', 'Key needed']])('%s', (l, text) => {
@@ -36,7 +40,7 @@ describe('design S3: row actions right-aligned, awaiting title >= 80px', () => {
   });
   test('N1: provider name read once (in .prov), not repeated in the title tooltip', () => {
     const { createTaskRow } = require('../src/ui/popup/task-list');
-    const html = createTaskRow({ id: 'p', status: 'awaiting_consent', provider: 'mineru', paperInfo: { title: 'Paper T' }, createdAt: Date.now() });
+    const html = rowHtml({ id: 'p', status: 'awaiting_consent', provider: 'mineru', paperInfo: { title: 'Paper T' }, createdAt: Date.now() });
     expect(html).toContain('title="Paper T"');
     expect(html).toContain('<span class="prov">MinerU</span>');
     expect(html.split('MinerU').length - 1).toBe(1);
@@ -80,8 +84,8 @@ describe('design S7', () => {
 describe('design S8: failed row has no duplicate title', () => {
   test('error appears once, only in .row-err', () => {
     const { createTaskRow } = require('../src/ui/popup/task-list');
-    const html = createTaskRow({ id: 'x', status: 'failed', error: 'Boom here', paperInfo: { title: 'T' }, provider: 'paddleocr' });
-    const rowTag = html.match(/^<div class="row"[^>]*>/)[0];
+    const html = rowHtml({ id: 'x', status: 'failed', error: 'Boom here', paperInfo: { title: 'T' }, provider: 'paddleocr' });
+    const rowTag = html.match(/^<div [^>]*class="row"[^>]*>/)[0];
     expect(rowTag).not.toMatch(/\stitle=/);
     expect(html).toContain('<span class="row-err">Boom here</span>');
     expect(html.split('Boom here').length - 1).toBe(1);

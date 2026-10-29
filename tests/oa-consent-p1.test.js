@@ -6,6 +6,10 @@ import { isExtensionPageSender } from '../src/background/message-guards';
 import { confirmSendFlow } from '../src/ui/popup/send-consent';
 import { translations } from '../src/config/locales';
 import { makeHarness, fakeProvider } from './helpers/runner-harness';
+import { parseHTML as __parseHTML } from 'linkedom';
+// release-polish AR-04：createTaskRow 返回 DOM 节点，这里在 linkedom 文档里构建后取 outerHTML 再断言
+const __doc = __parseHTML('<!doctype html><html><body></body></html>').document;
+const rowHtml = (task) => require('../src/ui/popup/task-list').createTaskRow(task, __doc).outerHTML;
 
 const task = (pdfUrl, extra = {}) => ({ paperInfo: { arxivId: '2401.00001', pdfUrl }, ...extra });
 const read = (p) => fs.readFileSync(path.join(__dirname, '..', p), 'utf8');
@@ -177,8 +181,10 @@ describe('任务行', () => {
   test('待确认任务显示「待确认」和「确认解析」按钮', () => {
     const { createTaskRow, setTaskListLanguage } = require('../src/ui/popup/task-list');
     setTaskListLanguage('zh');
-    const html = createTaskRow({ id: 't1', status: 'awaiting_consent', provider: 'paddleocr', paperInfo: { title: 'T' }, createdAt: Date.now() });
+    const html = rowHtml({ id: 't1', status: 'awaiting_consent', provider: 'paddleocr', paperInfo: { title: 'T' }, createdAt: Date.now() });
     expect(html).toContain('待确认');
-    expect(html).toMatch(/data-action="consent" data-task-id="t1" data-provider="paddleocr">确认解析</);
+    const btn = html.match(/<button[^>]*data-action="consent"[^>]*>确认解析</)[0];
+    expect(btn).toContain('data-task-id="t1"');
+    expect(btn).toContain('data-provider="paddleocr"');
   });
 });

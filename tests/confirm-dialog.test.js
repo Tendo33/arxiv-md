@@ -100,6 +100,6 @@ describe('设计验收 M8 + 焦点：取消显式聚焦，关闭后按 taskId �
   test('popup：handleConsent 在 loadTasks 之后 refocus；renderRecent 重绘保留焦点', () => {
     const js = fs.readFileSync(path.join(__dirname, '../src/ui/popup/popup.js'), 'utf8');
     expect(js).toMatch(/await loadTasks\(\);\s*refocusTask\(document, taskId\);/);
-    expect(js).toMatch(/innerHTML = list\.map\(createTaskRow\)\.join\(''\);\s*if \(keepId\) refocusTask\(document, keepId\);/);
+    expect(js).toMatch(/renderTaskRows\(\$\('taskList'\), list, document\);\s*if \(keepId\) refocusTask\(document, keepId\);/);
   });
 });

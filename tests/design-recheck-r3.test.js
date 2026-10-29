@@ -17,7 +17,8 @@ test('N1：标题列 min-width:0 + flex:1 1 auto + 省略号，去掉 min-width:
 });
 
 test('N1：Download 按钮带 aria-label/title，≤339px 只显示图标', () => {
-  expect(list).toMatch(/class="btn btn-ghost btn-dl" data-action="download"[^>]*title="\$\{t\.popup_action_download\}" aria-label="\$\{t\.popup_action_download\}"><svg aria-hidden="true"[\s\S]*?<span class="lbl">/);
+  expect(list).toMatch(/el\(doc, 'button', \{ class: 'btn btn-ghost btn-dl', 'data-action': 'download', 'data-url': zipUrl, title: t\.popup_action_download, 'aria-label': t\.popup_action_download \},\s*\[downloadIcon\(doc\), el\(doc, 'span', \{ class: 'lbl' \}/);
+  expect(list).toContain("'aria-hidden': 'true', viewBox: '0 0 24 24'");
   expect(css).toMatch(/@media \(max-width:339px\)\{[^\n]*\.btn-dl \.lbl\{display:none\}/);
 });
 

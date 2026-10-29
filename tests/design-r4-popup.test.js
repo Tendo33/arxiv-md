@@ -2,6 +2,10 @@
 import fs from 'fs';
 import path from 'path';
 import { translations } from '../src/config/locales';
+import { parseHTML as __parseHTML } from 'linkedom';
+// release-polish AR-04：createTaskRow 返回 DOM 节点，这里在 linkedom 文档里构建后取 outerHTML 再断言
+const __doc = __parseHTML('<!doctype html><html><body></body></html>').document;
+const rowHtml = (task) => require('../src/ui/popup/task-list').createTaskRow(task, __doc).outerHTML;
 
 const css = fs.readFileSync(path.join(__dirname, '../src/ui/popup/popup.css'), 'utf8');
 
@@ -19,8 +23,8 @@ describe('建议：待确认有单独的等待样式', () => {
   test('task-list 用 wait；CSS 有 .badge.wait 且与 run 不同色', () => {
     const { createTaskRow, setTaskListLanguage } = require('../src/ui/popup/task-list');
     setTaskListLanguage('zh');
-    const wait = createTaskRow({ id: 'a', status: 'awaiting_consent', provider: 'paddleocr', paperInfo: { title: 'T' }, createdAt: Date.now() });
-    const run = createTaskRow({ id: 'b', status: 'processing', provider: 'paddleocr', paperInfo: { title: 'T' }, createdAt: Date.now() });
+    const wait = rowHtml({ id: 'a', status: 'awaiting_consent', provider: 'paddleocr', paperInfo: { title: 'T' }, createdAt: Date.now() });
+    const run = rowHtml({ id: 'b', status: 'processing', provider: 'paddleocr', paperInfo: { title: 'T' }, createdAt: Date.now() });
     expect(wait).toContain('class="badge wait"');
     expect(run).toContain('class="badge run"');
     expect(css).toMatch(/\.badge\.wait\{background:var\(--info-bg\);color:var\(--info\)/);
@@ -51,9 +55,9 @@ describe('建议：后端标签字号 ≥12px', () => {
 describe('建议：失败原因直接显示在行内', () => {
   const { createTaskRow } = require('../src/ui/popup/task-list');
   test('failed 行带 .row-err（已转义），其他状态没有', () => {
-    const html = createTaskRow({ id: 'x', status: 'failed', error: 'Key <bad>', paperInfo: { title: 'T' }, provider: 'paddleocr' });
+    const html = rowHtml({ id: 'x', status: 'failed', error: 'Key <bad>', paperInfo: { title: 'T' }, provider: 'paddleocr' });
     expect(html).toMatch(/<span class="row-err">Key &lt;bad&gt;<\/span><\/div>$/);
-    expect(createTaskRow({ id: 'y', status: 'completed', zipUrl: 'https://a/b.zip', paperInfo: { title: 'T' } })).not.toMatch(/row-err/);
+    expect(rowHtml({ id: 'y', status: 'completed', zipUrl: 'https://a/b.zip', paperInfo: { title: 'T' } })).not.toMatch(/row-err/);
     expect(css).toMatch(/\.row\{flex-wrap:wrap;row-gap:2px\}/);
   });
 });

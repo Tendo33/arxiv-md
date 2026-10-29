@@ -2,6 +2,10 @@ import fs from 'fs';
 import path from 'path';
 import { parseHTML } from 'linkedom';
 import { translations } from '../src/config/locales';
+import { parseHTML as __parseHTML } from 'linkedom';
+// release-polish AR-04：createTaskRow 返回 DOM 节点，这里在 linkedom 文档里构建后取 outerHTML 再断言
+const __doc = __parseHTML('<!doctype html><html><body></body></html>').document;
+const rowHtml = (task) => require('../src/ui/popup/task-list').createTaskRow(task, __doc).outerHTML;
 
 const html = fs.readFileSync(path.join(__dirname, '../src/ui/popup/popup.html'), 'utf8');
 const CJK = /[\u4e00-\u9fff]/;
@@ -59,7 +63,7 @@ describe('R4-15 popup 文案泛化', () => {
   test('任务行显示后端标签（老记录没有 provider 按 MinerU）', () => {
     const { createTaskRow } = require('../src/ui/popup/task-list');
     const base = { id: 't1', status: 'completed', paperInfo: { title: 'X' }, createdAt: Date.now() };
-    expect(createTaskRow({ ...base, provider: 'paddleocr' })).toContain('<span class="prov">PaddleOCR</span>');
-    expect(createTaskRow(base)).toContain('<span class="prov">MinerU</span>');
+    expect(rowHtml({ ...base, provider: 'paddleocr' })).toContain('<span class="prov">PaddleOCR</span>');
+    expect(rowHtml(base)).toContain('<span class="prov">MinerU</span>');
   });
 });

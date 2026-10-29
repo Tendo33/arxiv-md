@@ -13,6 +13,6 @@ test('英文 ≤379px 隐藏 Download 文字', () => {
 });
 
 test('Download 按钮仍带 aria-label/title，popup 按语言设置 html lang', () => {
-  expect(list).toMatch(/btn-dl" data-action="download"[^>]*aria-label="\$\{t\.popup_action_download\}"/);
+  expect(list).toMatch(/el\(doc, 'button', \{ class: 'btn btn-ghost btn-dl', 'data-action': 'download', 'data-url': zipUrl, title: t\.popup_action_download, 'aria-label': t\.popup_action_download \},\s*\[downloadIcon\(doc\), el\(doc, 'span', \{ class: 'lbl' \}/);
   expect(js).toMatch(/document\.documentElement\.lang = currentLang === 'zh' \? 'zh-CN' : 'en'/);
 });
