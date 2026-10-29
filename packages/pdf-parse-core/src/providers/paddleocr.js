@@ -42,14 +42,31 @@ export function shouldUploadFile(url) {
   try { const u = new URL(url); return u.protocol === 'https:' && UPLOAD_HOSTS.has(u.hostname); } catch { return false; }
 }
 
+/** 边读边数：超过 max 立刻取消读取并返回 null（没有 Content-Length 时不把整个大文件读进内存）；不支持流时退回整读 */
+async function readCapped(res, max) {
+  const reader = res.body && typeof res.body.getReader === 'function' ? res.body.getReader() : null;
+  if (!reader) { const b = new Uint8Array(await res.arrayBuffer()); return b.length > max ? null : b; }
+  const chunks = []; let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.length;
+    if (total > max) { try { await reader.cancel(); } catch { /* ignore */ } return null; }
+    chunks.push(value);
+  }
+  const out = new Uint8Array(total); let off = 0;
+  for (const c of chunks) { out.set(c, off); off += c.length; }
+  return out;
+}
+
 /** 后台下载 arXiv PDF → Blob；超 50 MB → TOO_LARGE；非 PDF → FILE_UNSUPPORTED */
 export async function downloadPdf(url, ctx = {}) {
   const res = await fetchWithTimeout(url, { method: 'GET' }, { ctx, provider: ID, timeoutMs: ctx.downloadTimeoutMs || 120000 });
   if (!res.ok) throw classifyHttpError(await readErrorResponse(res), ID);
   const len = Number(res.headers && res.headers.get && res.headers.get('content-length'));
   if (len > PADDLEOCR_MAX_UPLOAD_BYTES) throw new ParseError('TOO_LARGE', { provider: ID, reason: 'upload_limit' });
-  const buf = new Uint8Array(await res.arrayBuffer());
-  if (buf.length > PADDLEOCR_MAX_UPLOAD_BYTES) throw new ParseError('TOO_LARGE', { provider: ID, reason: 'upload_limit' });
+  const buf = await readCapped(res, PADDLEOCR_MAX_UPLOAD_BYTES);
+  if (!buf) throw new ParseError('TOO_LARGE', { provider: ID, reason: 'upload_limit' });
   // %PDF 魔数；arXiv 偶尔返回 HTML（撤稿/未就绪）
   if (!(buf[0] === 0x25 && buf[1] === 0x50 && buf[2] === 0x44 && buf[3] === 0x46)) throw new ParseError('FILE_UNSUPPORTED', { provider: ID, reason: 'not_pdf' });
   return new Blob([buf], { type: 'application/pdf' });
