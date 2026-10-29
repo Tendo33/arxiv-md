@@ -29,12 +29,14 @@ export function mapPaddleError(err) {
   return fromFetchFailure(err, ID);
 }
 
-/** 星河 multipart 上传上限 50 MB（官方文档：链接 200 MB、上传 50 MB） */
+/** 星河 multipart 上传上限 50 MB（官方文档：链接 200 MB、上传 50 MB）。
+ * 审查 P3-d：按十进制 50 MB = 50,000,000 字节执行，和所有文案里的「50 MB」字面一致；
+ * 官方没说是 MB 还是 MiB，取较小的十进制值，介于两者之间的文件本地就拦下，不会白传一遍再被星河拒绝。 */
 // 实测（2026-10-29）：2.2 MB 的 arXiv PDF 从海外上传到星河用了 137s，30s 默认超时必然失败
 // 与 Chrome「单个请求 5 分钟」上限不冲突：上传期间 withKeepAlive 每 20 秒调扩展 API，按官方说明会重置该计时器，
 // 所以 5 分钟由我们自己的 AbortController 计时，先于（或不受制于）浏览器回收，用户看到的是可读的超时错误。
 export const PADDLEOCR_UPLOAD_TIMEOUT_MS = 5 * 60 * 1000;
-export const PADDLEOCR_MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
+export const PADDLEOCR_MAX_UPLOAD_BYTES = 50 * 1000 * 1000; // 50,000,000 bytes
 const UPLOAD_HOSTS = new Set(['arxiv.org', 'www.arxiv.org', 'export.arxiv.org']);
 
 /** 是否走「下载后上传」：只限 arXiv 自家域名（扩展有权限） */

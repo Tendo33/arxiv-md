@@ -197,7 +197,7 @@
 其中最关键的边界差异是：
 
 - 标准模式：先从 `arxiv.org/html` 拉 HTML，没有可转换正文时再从 ar5iv 拉，然后本地转 Markdown
-- PDF 解析模式：把论文和当前后端（MinerU 或 PaddleOCR）的 Key 发给该后端——MinerU 收 arXiv PDF 链接；PaddleOCR 收 arXiv PDF 文件本身（multipart 上传，≤50 MB），非 arXiv 的 PDF 只发链接；PaddleOCR 结果打包成与 MinerU 相同结构的 ZIP（`full.md` + `images/<sha256>.<ext>`）；Key 只存于本设备 `chrome.storage.local`，非 arXiv 托管的 PDF 需在弹窗确认后才发送
+- PDF 解析模式：把论文和当前后端（MinerU 或 PaddleOCR）的 Key 发给该后端——MinerU 收 arXiv PDF 链接；PaddleOCR 收 arXiv PDF 文件本身（multipart 上传，≤50 MB，即 50,000,000 字节），非 arXiv 的 PDF 只发链接；PaddleOCR 结果打包成与 MinerU 相同结构的 ZIP（`full.md` + `images/<sha256>.<ext>`）；Key 只存于本设备 `chrome.storage.local`，非 arXiv 托管的 PDF 需在弹窗确认后才发送
 
 ## 最容易误读的几点
 
