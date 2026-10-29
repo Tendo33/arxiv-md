@@ -713,7 +713,7 @@ a:focus-visible {
 
 /* ===== design-abs-buttons-2026-10-29 §2 / §5.1：PDF 解析 v2 ===== */
 /* R01：后端单选卡片（fieldset），不再是原生 select */
-.provider-group { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); grid-auto-flow: row dense; gap: 12px; }
+.provider-group { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-flow: row dense; gap: 12px; }
 .provider-group > legend { padding: 0; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: var(--text-primary); }
 .provider-card { position: relative; display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); cursor: pointer; font-weight: 400; margin: 0; }
 .provider-card:hover { border-color: var(--border-strong); }
@@ -783,3 +783,6 @@ a:focus-visible {
 
 /* 设计验收 30a6e1b #7：主按钮 focus-visible 只留蓝色 outline，不叠红色阴影 */
 .btn-primary:focus-visible { box-shadow: none; }
+
+/* 设计验收 30a6e1b 建议 c：两张卡片两列等宽（1280 下不再留空第三轨）；<540 保持原来的单列 */
+@media (max-width: 539px) { .provider-group { grid-template-columns: minmax(0, 1fr); } }
