@@ -15,7 +15,13 @@ beforeAll(() => {
   fake = fs.mkdtempSync(path.join(os.tmpdir(), 'e2e-fakepw-'));
   fs.mkdirSync(path.join(fake, 'node_modules/playwright'), { recursive: true });
   fs.writeFileSync(path.join(fake, 'package.json'), '{}');
-  fs.writeFileSync(path.join(fake, 'node_modules/playwright/index.js'), 'module.exports={chromium:{}};');
+  // batch7：E2E_FAKE_LAUNCH_ERR 设置时 launchPersistentContext 抛这个错，用来模拟启动失败
+  fs.writeFileSync(path.join(fake, 'node_modules/playwright/index.js'),
+    'module.exports={chromium:{launchPersistentContext:async()=>{throw new Error(process.env.E2E_FAKE_LAUNCH_ERR||"x")}}};');
+  fs.writeFileSync(path.join(fake, 'chrome'), '');
+  fs.chmodSync(path.join(fake, 'chrome'), 0o755);
+  fs.mkdirSync(path.join(fake, 'dist'));
+  fs.writeFileSync(path.join(fake, 'dist/manifest.json'), JSON.stringify({ commands: { 'convert-current-paper': { suggested_key: { default: 'Alt+Shift+A' } } } }));
 });
 afterAll(() => fs.rmSync(fake, { recursive: true, force: true }));
 
@@ -39,26 +45,53 @@ describe('e2e-shortcut 环境前置检查', () => {
   // batch6 AB5-01：没有 dist/ 时提示先构建，退出 2
   test('没有 dist/：提示请先构建（npm run build）并退出 2', () => {
     const chrome = path.join(fake, 'chrome');
-    fs.writeFileSync(chrome, '');
-    const r = run({ E2E_PLAYWRIGHT_DIR: fake, CHROME_PATH: chrome, DISPLAY: ':99', E2E_DIST: path.join(fake, 'no-dist') });
+    const r = run({ E2E_PLAYWRIGHT_DIR: fake, CHROME_PATH: chrome, DISPLAY: 'localhost:99', E2E_DIST: path.join(fake, 'no-dist') });
     expect(r.status).toBe(2);
     expect(r.stderr).toMatch(/请先构建（npm run build）/);
     expect(r.stderr).not.toMatch(/ENOENT|\n\s+at /);
   });
   // batch6 AB5-02：CHROME_PATH 指向目录 / 没有 DISPLAY 时提示并退出 2，不带堆栈
   test('CHROME_PATH 指向目录：提示并退出 2', () => {
-    const r = run({ E2E_PLAYWRIGHT_DIR: fake, CHROME_PATH: fake, DISPLAY: ':99' });
+    const r = run({ E2E_PLAYWRIGHT_DIR: fake, CHROME_PATH: fake, DISPLAY: 'localhost:99' });
     expect(r.status).toBe(2);
     expect(r.stderr).toMatch(/CHROME_PATH 指向的是目录/);
     expect(r.stderr).not.toMatch(/\n\s+at /);
   });
   (process.platform === 'linux' ? test : test.skip)('没有 DISPLAY：提示用 xvfb-run 并退出 2', () => {
     const chrome = path.join(fake, 'chrome');
-    fs.writeFileSync(chrome, '');
     const r = run({ E2E_PLAYWRIGHT_DIR: fake, CHROME_PATH: chrome, DISPLAY: undefined, WAYLAND_DISPLAY: undefined });
     expect(r.status).toBe(2);
     expect(r.stderr).toMatch(/没有可用的显示器（DISPLAY 未设置）/);
     expect(r.stderr).toMatch(/xvfb-run/);
     expect(r.stderr).not.toMatch(/\n\s+at /);
+  });
+  // batch7 AB6-01/02/04（对应 zhihu ZB6-01/02/04）
+  test('CHROME_PATH 是没有执行权限的文件：提示并退出 2，不带 EACCES 堆栈', () => {
+    const r = run({ E2E_PLAYWRIGHT_DIR: fake, CHROME_PATH: path.join(fake, 'package.json'), DISPLAY: 'localhost:99' });
+    expect(r.status).toBe(2);
+    expect(r.stderr).toMatch(/CHROME_PATH 不是可执行文件/);
+    expect(r.stderr).not.toMatch(/EACCES|\n\s+at /);
+  });
+  (process.platform === 'linux' && !fs.existsSync('/tmp/.X11-unix/X777') ? test : test.skip)('DISPLAY=:777 没有 X server：提示用 xvfb-run 并退出 2', () => {
+    const r = run({ E2E_PLAYWRIGHT_DIR: fake, CHROME_PATH: path.join(fake, 'chrome'), DISPLAY: ':777', WAYLAND_DISPLAY: undefined });
+    expect(r.status).toBe(2);
+    expect(r.stderr).toMatch(/DISPLAY=:777 连接不上/);
+    expect(r.stderr).toMatch(/xvfb-run/);
+    expect(r.stderr).not.toMatch(/\n\s+at /);
+  });
+  test.each([
+    ['XServer', 'browserType.launchPersistentContext: Target page, context or browser has been closed\nLooks like you launched a headed browser without having a XServer running.', /没有可用的 X server/],
+    ['EACCES', 'browserType.launchPersistentContext: Failed to launch: Error: spawn /x/chrome EACCES', /CHROME_PATH 不是可执行的 Chrome/],
+    ['其他', 'boom', /Chrome 启动失败：boom/],
+  ])('启动失败（%s）：中文提示、退出 2、删掉 /tmp/e2e-shortcut-* 临时目录', (_n, err, hint) => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'e2e-tmp-'));
+    const r = run({ E2E_PLAYWRIGHT_DIR: fake, CHROME_PATH: path.join(fake, 'chrome'), DISPLAY: 'localhost:99',
+      E2E_DIST: path.join(fake, 'dist'), E2E_FAKE_LAUNCH_ERR: err, TMPDIR: tmp });
+    const left = fs.readdirSync(tmp).filter((f) => f.startsWith('e2e-shortcut-'));
+    fs.rmSync(tmp, { recursive: true, force: true });
+    expect(r.status).toBe(2);
+    expect(r.stderr).toMatch(hint);
+    expect(r.stderr).not.toMatch(/\n\s+at /);
+    expect(left).toEqual([]);
   });
 });
