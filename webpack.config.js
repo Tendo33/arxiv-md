@@ -4,6 +4,27 @@ const CopyPlugin = require("copy-webpack-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
 const { ThirdPartyNoticesPlugin } = require("./scripts/third-party-notices");
 
+// AR-09：background.js 是扩展后台脚本，从本地包加载，不走网络，webpack 默认 244 KiB 的
+// "web performance" 告警对它没有意义（主要是 HTML→Markdown 转换 + PDF 解析内核）。
+// 只把这一个已知大包移出默认检查，其余入口仍按默认 244 KiB 告警；
+// background.js 另设 500 KiB 预算，超出照样告警，防止它悄悄继续变大。
+const BACKGROUND_BUDGET = 500 * 1024;
+class BackgroundBudgetPlugin {
+  apply(compiler) {
+    compiler.hooks.thisCompilation.tap("BackgroundBudgetPlugin", (compilation) => {
+      compilation.hooks.processAssets.tap(
+        { name: "BackgroundBudgetPlugin", stage: webpack.Compilation.PROCESS_ASSETS_STAGE_REPORT },
+        (assets) => {
+          const a = assets["background.js"];
+          if (a && a.size() > BACKGROUND_BUDGET) {
+            compilation.warnings.push(new webpack.WebpackError(
+              `background.js (${Math.round(a.size() / 1024)} KiB) exceeds its ${BACKGROUND_BUDGET / 1024} KiB budget (AR-09)`));
+          }
+        });
+    });
+  }
+}
+
 module.exports = (env, argv) => ({
   entry: {
     background: "./src/background/index.js",
@@ -36,7 +57,13 @@ module.exports = (env, argv) => ({
     // AR-06：不再生成 *.js.LICENSE.txt，许可证统一进 THIRD_PARTY_NOTICES.txt
     minimizer: [new TerserPlugin({ extractComments: false })],
   },
+  performance: {
+    hints: "warning",
+    // AR-09：只排除 background.js（另有 BackgroundBudgetPlugin 预算），其余 .js 仍受默认 244 KiB 限制
+    assetFilter: (file) => /\.js$/.test(file) && file !== "background.js",
+  },
   plugins: [
+    new BackgroundBudgetPlugin(),
     new webpack.DefinePlugin({
       "process.env.NODE_ENV": JSON.stringify(argv.mode || "development"),
     }),
