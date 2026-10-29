@@ -13,7 +13,7 @@ export function statusCardErrorText(failure, t, context = 'Conversion failed', {
   if (body?.errorCode === 'NETWORK_OFFLINE' || failure?.errorCode === 'NETWORK_OFFLINE') return t.content_error_offline;
   // 附录 C10：还没确认数据说明（设置页已打开）
   if (body?.disclosureNeeded) {
-    const title = t[`pdf_disc_needed_title_${body.provider}`] || t.pdf_disc_needed_title;
+    const title = t.pdf_disc_needed_title;
     return /[\u4e00-\u9fff]/.test(title) ? `${title}。${t.pdf_disc_needed_body}` : `${title}. ${t.pdf_disc_needed_body}`;
   }
   const raw = body?.error || failure?.error || failure?.data?.error || failure?.message;

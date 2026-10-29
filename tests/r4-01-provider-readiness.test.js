@@ -90,11 +90,11 @@ describe('附录 C10：没确认数据说明 → 四个入口都不建任务、�
       expect(chrome.tabs.create).toHaveBeenCalledWith({ url: `chrome-extension://x/settings.html#disclose=${provider}` });
     }
   });
-  test('状态卡文案：PaddleOCR 说「上传说明」，MinerU 不说上传', () => {
+  test('状态卡文案：两家共用「需要先确认数据说明」（C11）', () => {
     const { statusCardErrorText } = require('../src/content/status-error');
     const { translations } = require('../src/config/locales');
     const zh = translations.zh;
-    expect(statusCardErrorText({ success: false, disclosureNeeded: true, provider: 'paddleocr' }, zh)).toBe('需要先确认上传说明。已打开设置页，确认后回到这里再点一次。');
+    expect(statusCardErrorText({ success: false, disclosureNeeded: true, provider: 'paddleocr' }, zh)).toBe('需要先确认数据说明。已打开设置页，确认后回到这里再点一次。');
     expect(statusCardErrorText({ data: { success: false, disclosureNeeded: true, provider: 'mineru' } }, zh)).not.toMatch(/上传/);
     expect(statusCardErrorText({ success: false, disclosureNeeded: true, provider: 'mineru' }, translations.en)).toBe("Review what's shared first. Settings is open. Confirm there, then click again here.");
   });
