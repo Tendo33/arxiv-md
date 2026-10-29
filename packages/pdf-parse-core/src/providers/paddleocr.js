@@ -6,7 +6,7 @@ import { defineProvider } from '../provider.js';
 import { ParseError, classifyHttpError, readErrorResponse, isParseError, fromFetchFailure } from '../errors.js';
 import { fetchWithTimeout } from '../http.js';
 import { withKeepAlive } from '../keepalive.js';
-import { fixPageFromBlocks, cleanPaddleHtml } from './paddleocr-blocks.js';
+import { fixPageFromBlocks, cleanPaddleHtml, repeatedHeaders } from './paddleocr-blocks.js';
 
 export const PADDLEOCR_BASE = 'https://paddleocr.aistudio-app.com';
 export const PADDLEOCR_JOBS_URL = `${PADDLEOCR_BASE}/api/v2/ocr/jobs`;
@@ -88,9 +88,12 @@ function fileNameOf(url) {
 export function parsePaddleJsonl(text) {
   const lines = String(text || '').split(/\r?\n/).filter((l) => l.trim());
   const parts = []; const images = []; let page = 0;
-  for (const line of lines) {
-    let row;
-    try { row = JSON.parse(line); } catch { throw new ParseError('PROVIDER_FAILED', { provider: ID, reason: 'bad_jsonl' }); }
+  const rows = lines.map((line) => {
+    try { return JSON.parse(line); } catch { throw new ParseError('PROVIDER_FAILED', { provider: ID, reason: 'bad_jsonl' }); }
+  });
+  // P-7：跨页重复的页眉（模板）不恢复成节标题
+  const repeated = repeatedHeaders(rows.flatMap((r) => (r && r.result && r.result.layoutParsingResults) || []));
+  for (const row of rows) {
     if (row.errorCode != null && Number(row.errorCode) !== 0) {
       throw new ParseError('PROVIDER_FAILED', { provider: ID, reason: row.errorMsg || `errorCode ${row.errorCode}`, raw: { errorCode: row.errorCode, errorMsg: row.errorMsg } });
     }
@@ -101,7 +104,7 @@ export function parsePaddleJsonl(text) {
       const md = (pg && pg.markdown) || {};
       const imgMap = { ...(md.images || {}) };
       // P-2：版面块修正（图被识别成表格 → 按 bbox 从预处理页图裁图）；裁剪源只用预处理图（bbox 坐标系就是它）
-      const fixed = fixPageFromBlocks(String(md.text || ''), pg);
+      const fixed = fixPageFromBlocks(String(md.text || ''), pg, { repeated });
       let t = cleanPaddleHtml(fixed.text); // P-8
       const crops = new Map();
       const pageImg = pre[i] || null;

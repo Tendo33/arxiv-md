@@ -72,12 +72,40 @@ export function replaceFigureTables(text, pg) {
  */
 const ACK_RE = /^\s*(?:\d+\.?\s*)?acknowledge?ments?\s*$/i;
 const CAPS_SECTION_RE = /^\s*(?:[A-Z]|\d+(?:\.\d+)*)\.?\s+[A-Z][A-Z0-9 ,:-]{8,}$/;
-export function restoreDroppedHeadings(text, pg) {
+// arXiv 模板页眉常用词：命中就不当节标题（「A PREPRINT - OCTOBER 12, 2023」「A TECHNICAL REPORT」）
+const TEMPLATE_HEADER_RE = /\b(?:PREPRINT|TECHNICAL REPORT|UNDER REVIEW|WORKSHOP|CONFERENCE|ARXIV)\b/i;
+const normHeader = (s) => String(s || '').trim().replace(/\s+/g, ' ');
+/** 编号深度定层级：「3」「A」→ ##，「3.2」→ ###，「3.2.1」→ ####（最多 ######）；致谢 → ## */
+const headingLevel = (title) => {
+  const m = /^\s*(\d+(?:\.\d+)*)/.exec(title);
+  return '#'.repeat(Math.min(6, 1 + (m ? m[1].split('.').length : 1)));
+};
+/** 在 ≥2 页的 header 块里重复出现的文字（页眉页脚模板） */
+export function repeatedHeaders(pages) {
+  const seen = new Map();
+  for (const pg of pages) {
+    const texts = new Set(blocksOf(pg).filter((b) => b.block_label === 'header').map((b) => normHeader(b.block_content)));
+    for (const t of texts) seen.set(t, (seen.get(t) || 0) + 1);
+  }
+  return new Set([...seen].filter(([, n]) => n >= 2).map(([t]) => t));
+}
+
+/**
+ * P-7：版面模型把「ACKNOWLEDGMENT」这类节标题标成 header（页眉），markdown_ignore_labels 会把它整块丢掉。
+ * 只恢复两类确定是节标题的 header：致谢，以及全大写、带编号的节标题（如 GELU 附录「A NEURAL NETWORK …」）。
+ * 跨页重复的页眉模板和带模板词的页眉不恢复；层级按编号深度。
+ * 插到它正下方第一个能在正文里找到的块前面。「Published as a conference paper …」这类真页眉不碰。
+ * 标题大小写被模型改写（3.3 Twitter POS Tagging）来自 block_content 本身，属已知问题。
+ * @param {{repeated?: Set<string>}} [opts] repeated：repeatedHeaders(全部页) 的结果
+ */
+export function restoreDroppedHeadings(text, pg, { repeated } = {}) {
   const blocks = blocksOf(pg);
   let out = text;
   for (const h of blocks.filter((b) => b.block_label === 'header')) {
-    const title = String(h.block_content || '').trim();
-    if (!ACK_RE.test(title) && !CAPS_SECTION_RE.test(title)) continue;
+    const title = normHeader(h.block_content);
+    const ack = ACK_RE.test(title);
+    if (!ack && (!CAPS_SECTION_RE.test(title) || TEMPLATE_HEADER_RE.test(title))) continue;
+    if (repeated && repeated.has(title)) continue;
     if (out.includes(`# ${title}`)) continue;
     const below = blocks
       .filter((b) => b !== h && b.block_bbox[1] >= h.block_bbox[3] - 2 && b.block_bbox[0] < h.block_bbox[2] && b.block_bbox[2] > h.block_bbox[0])
@@ -87,7 +115,7 @@ export function restoreDroppedHeadings(text, pg) {
       if (head.length < 20) continue;
       const at = out.indexOf(head);
       if (at < 0) continue;
-      out = `${out.slice(0, at)}## ${title}\n\n${out.slice(at)}`;
+      out = `${out.slice(0, at)}${ack ? '##' : headingLevel(title)} ${title}\n\n${out.slice(at)}`;
       break;
     }
   }
@@ -95,9 +123,9 @@ export function restoreDroppedHeadings(text, pg) {
 }
 
 /** 单页总入口 */
-export function fixPageFromBlocks(text, pg) {
+export function fixPageFromBlocks(text, pg, opts = {}) {
   const r = replaceFigureTables(addFormulaTags(text, pg), pg);
-  return { text: restoreDroppedHeadings(r.text, pg), crops: r.crops };
+  return { text: restoreDroppedHeadings(r.text, pg, opts), crops: r.crops };
 }
 
 /**

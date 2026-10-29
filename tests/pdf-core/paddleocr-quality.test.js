@@ -211,6 +211,22 @@ describe('P-7：被当成页眉丢掉的节标题', () => {
     const t = 'We use a shallow architecture with two convolutional layers.';
     expect(restoreDroppedHeadings(t, pg(blk('header', h, [100, 10, 900, 30]), blk('text', t, [100, 40, 900, 90])))).toBe(t);
   });
+  const T = 'We use a shallow architecture with two convolutional layers.';
+  const one = (h) => pg(blk('header', h, [100, 10, 900, 30]), blk('text', T, [100, 40, 900, 90]));
+  test.each(['A PREPRINT - OCTOBER 12, 2023', 'A TECHNICAL REPORT', 'A WORKSHOP PAPER AT NEURIPS 2023'])('模板页眉词不当标题：%s', (h) => {
+    expect(restoreDroppedHeadings(T, one(h))).toBe(T);
+  });
+  test('跨页重复的页眉不恢复（parsePaddleJsonl 全文统计）', () => {
+    const page = (h) => ({ markdown: { text: T }, prunedResult: { parsing_res_list: [blk('header', h, [100, 10, 900, 30]), blk('text', T, [100, 40, 900, 90])] } });
+    const jsonl = JSON.stringify({ result: { layoutParsingResults: [page('B SOME REPEATED RUNNING TITLE'), page('B SOME REPEATED RUNNING TITLE')] } });
+    expect(parsePaddleJsonl(jsonl).markdown).not.toMatch(/#+ B SOME/);
+    const { repeatedHeaders } = require('@pdf-core/providers/paddleocr-blocks');
+    expect(restoreDroppedHeadings(T, one('B SOME REPEATED RUNNING TITLE'), { repeated: repeatedHeaders([one('B SOME REPEATED RUNNING TITLE'), one('B SOME REPEATED RUNNING TITLE')]) })).toBe(T);
+    expect(restoreDroppedHeadings(T, one('B SOME REPEATED RUNNING TITLE'))).toMatch(/^## B SOME/);
+  });
+  test.each([
+    ['3 EXPERIMENTS AND RESULTS', '##'], ['3.2 EXPERIMENTAL SETUP', '###'], ['3.2.1 DATA AND METRICS', '####'], ['B HISTORY OF THE GELU', '##'], ['ACKNOWLEDGMENTS', '##'],
+  ])('层级按编号深度：%s → %s', (h, lv) => expect(restoreDroppedHeadings(T, one(h))).toBe(`${lv} ${h}\n\n${T}`));
   test('已有同名标题不重复', () => {
     const t = '## ACKNOWLEDGMENT\n\nWe would like to thank everyone involved here.';
     expect(restoreDroppedHeadings(t, pg(blk('header', 'ACKNOWLEDGMENT', [0, 0, 500, 20]), blk('text', 'We would like to thank everyone involved here.', [0, 30, 500, 80])))).toBe(t);
