@@ -13,6 +13,7 @@ import {
 import {
   generateFilename,
   downloadFile,
+  downloadFailureKind,
   showNotification,
 } from '@utils/helpers';
 import { incompleteNotification } from './incomplete-notification';
@@ -28,6 +29,17 @@ function notifyLang() {
 /**
  * 主转换器 - 智能三层降级架构
  */
+// batch8 AB7-01：PDF 下载失败 → 失败类别 + 通知 key。网络类沿用 AB6-06 的 NETWORK_OFFLINE（状态卡显示网络文案）。
+function pdfDownloadFailure(error) {
+  const kind = isNetworkError(error) ? 'network' : downloadFailureKind(error);
+  const notifyKey = { network: 'download_failed_network', server: 'download_failed_server', canceled: 'download_canceled',
+    file: 'download_failed_file', timeout: 'download_timeout' }[kind] || 'download_failed';
+  return {
+    notifyKey,
+    fields: { downloadFailure: kind, ...(kind === 'network' ? { errorCode: NETWORK_OFFLINE_CODE } : {}) },
+  };
+}
+
 class MainConverter {
   async convert(paperInfo, onProgress = null, tabId = null) {
     const { arxivId } = paperInfo;
@@ -284,13 +296,15 @@ class MainConverter {
       return { success: true, tier: CONVERSION_TIER.PDF_FALLBACK, filename };
     } catch (error) {
       logger.error('PDF download failed:', error);
-      // 原始错误只进日志（上一行），通知给通用文案
-      const n = converterNotification('convert_failed', {}, await notifyLang());
+      // 原始错误只进日志（上一行）。batch8 AB7-01：按下载失败原因选通知，状态卡用同一类别（downloadFailure）
+      const { notifyKey, fields } = pdfDownloadFailure(error);
+      const n = converterNotification(notifyKey, {}, await notifyLang());
       showNotification(n.title, n.message, 'basic');
       return {
         success: false,
         tier: CONVERSION_TIER.PDF_FALLBACK,
         error: error.message,
+        ...fields,
       };
     }
   }
@@ -324,15 +338,14 @@ class MainConverter {
       return { success: true, filename };
     } catch (error) {
       logger.error('PDF download failed:', error);
-      // 原始错误只进日志（上一行），通知按原因区分：网络（AB6-06）/ 其他
-      const network = isNetworkError(error);
-      const key = network ? 'download_failed_network' : 'download_failed';
-      const n = converterNotification(key, {}, await notifyLang());
+      // 原始错误只进日志（上一行），通知按原因区分：网络（AB6-06）/ 服务端 / 取消 / 文件 / 超时 / 其他（batch8 AB7-01）
+      const { notifyKey, fields } = pdfDownloadFailure(error);
+      const n = converterNotification(notifyKey, {}, await notifyLang());
       showNotification(n.title, n.message, 'basic');
       return {
         success: false,
         error: error.message,
-        ...(network ? { errorCode: NETWORK_OFFLINE_CODE } : {}),
+        ...fields,
       };
     }
   }

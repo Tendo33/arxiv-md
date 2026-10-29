@@ -10,6 +10,7 @@ jest.mock('@utils/storage', () => ({
 jest.mock('@core/converter/ar5iv-converter', () => ({ __esModule: true, default: { convert: jest.fn() } }));
 jest.mock('@utils/helpers', () => ({
   __esModule: true, generateFilename: jest.fn(() => 'p.pdf'), downloadFile: jest.fn(async () => {}), showNotification: jest.fn(),
+  downloadFailureKind: jest.requireActual('@utils/helpers').downloadFailureKind,
 }));
 import storage from '@utils/storage';
 import ar5iv from '@core/converter/ar5iv-converter';

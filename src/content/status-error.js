@@ -5,11 +5,17 @@ import logger from '@utils/logger';
  * @param {object|Error|null} failure 后台返回的失败体或异常
  * @param {object} t 当前语言文案
  * @param {string} context 日志前缀
+ * @param {{download?: boolean}} [opts] download: 这是一次 PDF 下载（页面 PDF 按钮），没有类别时也用「下载失败」
  * @returns {string} 状态卡文案
  */
-export function statusCardErrorText(failure, t, context = 'Conversion failed') {
-  if (failure?.errorCode === 'NETWORK_OFFLINE') return t.content_error_offline;
-  const raw = failure?.error || failure?.data?.error || failure?.message;
+export function statusCardErrorText(failure, t, context = 'Conversion failed', { download: fallback = false } = {}) {
+  const body = failure?.data?.success === false ? failure.data : failure;
+  if (body?.errorCode === 'NETWORK_OFFLINE' || failure?.errorCode === 'NETWORK_OFFLINE') return t.content_error_offline;
+  const raw = body?.error || failure?.error || failure?.data?.error || failure?.message;
   if (raw) logger.error(`${context}:`, raw);
+  // batch8 AB7-01/02：PDF 下载失败时状态卡和通知用同一类文案（下载失败 / 已取消 / …），不再写「转换失败」
+  const kind = body?.downloadFailure;
+  if (kind && t[`content_error_download_${kind}`]) return t[`content_error_download_${kind}`];
+  if (kind || fallback) return t.content_error_download_other || t.content_error_generic;
   return t.content_error_generic;
 }

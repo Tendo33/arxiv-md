@@ -10,6 +10,7 @@ jest.mock('@utils/storage', () => ({
 jest.mock('@core/converter/ar5iv-converter', () => ({ __esModule: true, default: { convert: jest.fn() } }));
 jest.mock('@utils/helpers', () => ({
   __esModule: true, generateFilename: jest.fn(() => 'p.pdf'), downloadFile: jest.fn(async () => {}), showNotification: jest.fn(),
+  downloadFailureKind: jest.requireActual('@utils/helpers').downloadFailureKind,
 }));
 import storage from '@utils/storage';
 import ar5iv from '@core/converter/ar5iv-converter';
@@ -37,8 +38,10 @@ describe.each([['zh'], ['en']])('语言 %s', (lang) => {
     await converter._fallbackToPdf(paper);
     expect(last()[0]).toBe(t.notify_pdf_fallback_title);
     downloadFile.mockRejectedValueOnce(new Error(RAW));
-    await converter._fallbackToPdf(paper);
-    expect(last()).toEqual([t.notify_convert_failed_title, t.notify_convert_failed_body, 'basic']);
+    const r = await converter._fallbackToPdf(paper);
+    // batch8 AB7-02：降级的 PDF 也下载失败时，通知和状态卡一样说「下载失败」
+    expect(last()).toEqual([t.notify_download_failed_title, t.notify_download_failed_body, 'basic']);
+    expect(r.downloadFailure).toBe('other');
   });
   test('直接下载 PDF 成功 / 失败', async () => {
     await converter.downloadPdf(paper);
@@ -68,7 +71,7 @@ test('converter 源码不再硬编码通知文案', () => {
 test('所有通知不含原始错误和 MinerU 字样；zh/en key 对齐', () => {
   for (const lang of ['zh', 'en']) {
     const keys = Object.keys(translations[lang]).filter((k) => /^notify_(done|task_submitted|pdf_fallback|convert_failed|pdf_saved|download_failed)_/.test(k));
-    expect(keys).toHaveLength(14); // AB6-06 新增 download_failed_network_title/body
+    expect(keys).toHaveLength(18); // AB6-06 新增 download_failed_network_*；batch8 AB7-01 新增 download_failed_server_* / download_failed_file_*
     keys.forEach((k) => expect(translations[lang][k]).not.toMatch(/MinerU/));
   }
   for (const c of showNotification.mock.calls) expect(c.join(' ')).not.toContain('ERR_SECRET');

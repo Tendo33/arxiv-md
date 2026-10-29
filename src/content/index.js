@@ -332,7 +332,7 @@ async function handlePdfDownloadDirect(button) {
         }
 
         if (response && (response.success === false || response.data?.success === false)) {
-          showError(statusCardErrorText(response, t, 'PDF download failed'));
+          showError(statusCardErrorText(response, t, 'PDF download failed', { download: true }));
           return;
         }
 
@@ -343,7 +343,7 @@ async function handlePdfDownloadDirect(button) {
   } catch (error) {
     logger.error('PDF download failed:', error);
     restoreButton();
-    showError(statusCardErrorText(error, t, 'PDF download failed'));
+    showError(statusCardErrorText(error, t, 'PDF download failed', { download: true }));
   }
 }
 

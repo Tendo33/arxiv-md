@@ -47,23 +47,85 @@ export function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function downloadFile(url, filename) {
+// batch8 AB7-01：拿到 downloadId 只代表下载开始了，不代表保存成功（404/403/429/500、DNS 失败、用户取消都会先给 id）。
+// 这里等到 chrome.downloads.onChanged 报 complete / interrupted 才 resolve / reject：
+// - 监听器在调用 download() 之前就挂上，id 未知时先缓存事件；拿到 id 后再 search() 一次，覆盖「监听前已结束」的竞态；
+// - 超时（默认 5 分钟）reject，code = DOWNLOAD_TIMEOUT；任何结局都移除监听器、清掉定时器。
+// - interrupted 时 reject 的 Error 带 code = DOWNLOAD_INTERRUPTED 和 downloadError（Chrome 的 InterruptReason，如 SERVER_FORBIDDEN）。
+export const DOWNLOAD_TIMEOUT_MS = 5 * 60 * 1000;
+
+export function downloadFile(url, filename, { timeoutMs = DOWNLOAD_TIMEOUT_MS } = {}) {
+  const downloads = chrome.downloads;
   return new Promise((resolve, reject) => {
-    chrome.downloads.download(
-      {
-        url: url,
-        filename: filename,
-        saveAs: false,
-      },
-      (downloadId) => {
-        if (chrome.runtime.lastError) {
-          reject(chrome.runtime.lastError);
-        } else {
-          resolve(downloadId);
+    let id = null;
+    let done = false;
+    let timer = null;
+    const early = [];
+
+    const finish = (fn, value) => {
+      if (done) return;
+      done = true;
+      if (timer) clearTimeout(timer);
+      downloads.onChanged.removeListener(onChanged);
+      fn(value);
+    };
+    const interrupted = (reason) => {
+      const error = new Error(`Download interrupted: ${reason || 'UNKNOWN'}`);
+      error.code = 'DOWNLOAD_INTERRUPTED';
+      error.downloadError = reason || 'UNKNOWN';
+      return error;
+    };
+    // item 可以是 onChanged 的 delta（state.current / error.current）或 search() 的 DownloadItem（state / error）
+    const settle = (item) => {
+      const state = item?.state && typeof item.state === 'object' ? item.state.current : item?.state;
+      const err = item?.error && typeof item.error === 'object' ? item.error.current : item?.error;
+      if (state === 'complete') finish(resolve, id);
+      else if (state === 'interrupted') finish(reject, interrupted(err));
+    };
+    function onChanged(delta) {
+      if (done) return;
+      if (id === null) { early.push(delta); return; }
+      if (delta.id === id) settle(delta);
+    }
+
+    downloads.onChanged.addListener(onChanged);
+    timer = setTimeout(() => {
+      const error = new Error(`Download timed out after ${timeoutMs} ms`);
+      error.code = 'DOWNLOAD_TIMEOUT';
+      finish(reject, error);
+    }, timeoutMs);
+
+    try {
+      downloads.download({ url, filename, saveAs: false }, (downloadId) => {
+        if (chrome.runtime.lastError || downloadId === undefined) {
+          finish(reject, chrome.runtime.lastError || new Error('Download failed to start'));
+          return;
         }
-      },
-    );
+        id = downloadId;
+        early.splice(0).filter((d) => d.id === id).forEach(settle);
+        if (done) return;
+        Promise.resolve(downloads.search({ id })).then((items) => {
+          if (!done && items && items[0]) settle(items[0]);
+        }, () => { /* search 失败就继续等 onChanged / 超时 */ });
+      });
+    } catch (error) {
+      finish(reject, error);
+    }
   });
+}
+
+/**
+ * batch8 AB7-01：下载失败归类，用于选 zh/en 文案；原始原因只进日志。
+ * @returns {'network'|'server'|'canceled'|'file'|'timeout'|'other'}
+ */
+export function downloadFailureKind(error) {
+  if (error?.code === 'DOWNLOAD_TIMEOUT') return 'timeout';
+  const reason = error?.code === 'DOWNLOAD_INTERRUPTED' ? String(error.downloadError || '') : '';
+  if (/^NETWORK_/.test(reason)) return 'network';
+  if (/^SERVER_/.test(reason)) return 'server';
+  if (reason === 'USER_CANCELED' || reason === 'USER_SHUTDOWN') return 'canceled';
+  if (/^FILE_/.test(reason)) return 'file';
+  return 'other';
 }
 
 export function downloadBlob(blob, filename) {
