@@ -32,7 +32,8 @@ export function updateProgressUI(progress) {
   setProgressState({
     text: withProvider(stageText[progress.stage] || t.content_progress_processing),
     // AB8-05：下载阶段总大小未知时 progress 为 null，不显示百分比
-    percent: progress.progress == null && progress.stage === 'downloading' ? null : Math.round(progress.progress || 0),
+    // M-1：检查阶段没有真实进度，也不显示百分比
+    percent: progress.progress == null || progress.stage === 'checking' ? null : Math.round(progress.progress),
     state: 'processing',
   });
 }
@@ -62,10 +63,19 @@ export function setProgressState({ text, percent = null, detail = '', file = '',
   progressIndicator.setAttribute('aria-live', assertive ? 'assertive' : 'polite');
   progressIndicator.setAttribute('aria-atomic', 'true');
 
-  if (textEl) textEl.textContent = text || t.content_progress_processing;
-  if (percentEl) {
-    percentEl.textContent =
-      percent === null || Number.isNaN(percent) ? '' : `${percent}%`;
+  // M-1：只在阶段文字变化时写入，避免每次进度刷新都让读屏重读
+  const nextText = text || t.content_progress_processing;
+  if (textEl && textEl.textContent !== nextText) textEl.textContent = nextText;
+  const known = typeof percent === 'number' && !Number.isNaN(percent);
+  if (percentEl) percentEl.textContent = known ? `${percent}%` : '';
+  const bar = progressIndicator.querySelector('.progress-bar');
+  if (bar) {
+    // 进度条只在进行中显示；拿不到总大小时为不确定态，不设 aria-valuenow
+    bar.hidden = state !== 'processing' && state !== '';
+    bar.classList.toggle('indeterminate', !known);
+    if (known) bar.setAttribute('aria-valuenow', String(percent));
+    else bar.removeAttribute('aria-valuenow');
+    if (bar.firstElementChild) bar.firstElementChild.style.width = known ? `${percent}%` : '';
   }
   if (detailEl) {
     detailEl.textContent = detail || '';

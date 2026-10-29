@@ -135,6 +135,19 @@ export const PAGE_BUTTON_STYLES = `
       font-weight: 600;
     }
 
+    /* M-1：页面进度卡的进度条（亮色品牌红/灰轨道，暗色跟随宿主 data-theme） */
+    .progress-percent { font-variant-numeric: tabular-nums; min-width: 4ch; text-align: right; }
+    .progress-bar { align-self: stretch; min-width: 160px; height: 4px; border-radius: 2px; background: #d0d4dc; overflow: hidden; margin-top: 6px; }
+    .progress-bar[hidden] { display: none; }
+    .progress-fill { display: block; height: 100%; width: 0; border-radius: 2px; background: #b31b1b; transition: width .2s; }
+    .arxiv-md-btn-container[data-theme="dark"] .progress-bar { background: #3a3f47; }
+    .arxiv-md-btn-container[data-theme="dark"] .progress-fill { background: #f87171; }
+    .progress-bar.indeterminate .progress-fill { width: 30%; animation: amd-indet 1.2s ease-in-out infinite; }
+    @keyframes amd-indet { 0% { transform: translateX(-100%); } 100% { transform: translateX(340%); } }
+    @media (prefers-reduced-motion: reduce) {
+      .progress-bar.indeterminate .progress-fill { animation: none; transform: none; width: 30%; }
+    }
+
     .progress-detail {
       font-size: 12px;
       color: var(--amd-text-2);

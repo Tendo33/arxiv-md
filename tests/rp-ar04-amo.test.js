@@ -120,7 +120,7 @@ describe('AR-04 摘要页按钮', () => {
     expect(pdf.querySelector('.arxiv-md-btn-sub').textContent).toBe(`(${t.content_btn_sub_title})`);
     const prog = document.querySelector('.arxiv-md-progress');
     expect(prog.querySelector('.progress-text').textContent).toBe(t.content_progress_processing);
-    expect(prog.querySelector('.progress-percent').textContent).toBe('0%');
+    expect(prog.querySelector('.progress-percent').textContent).toBe(""); // M-1：开始时不写死 0%
     expect(prog.querySelector('.progress-detail')).toBeTruthy();
     const auto = document.querySelector('.arxiv-md-auto');
     expect(auto.querySelector('[data-action="auto-confirm"]').textContent).toBe(t.content_auto_prompt_confirm);

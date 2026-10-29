@@ -153,7 +153,7 @@ async function handleConversionTrigger(type = 'markdown') {
     clearHint(hintIndicator);
     setProgressState({
       text: t.content_progress_processing,
-      percent: 0,
+      percent: null, // M-1：开始时还没有真实进度
       state: 'processing',
     });
 

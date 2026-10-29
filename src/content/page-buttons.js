@@ -100,8 +100,13 @@ export async function injectConvertButton() {
   setChildren(progressIndicator,
     h(document, 'div', { class: 'progress-row' }, [
       h(document, 'span', { class: 'progress-text' }, t.content_progress_processing),
-      h(document, 'span', { class: 'progress-percent', style: 'margin-left: 6px; font-weight: 600;' }, '0%'),
+      // M-1：百分比不进读屏（live 区只播阶段文字），开始时不写死 0%
+      h(document, 'span', { class: 'progress-percent', 'aria-hidden': 'true' }, ''),
     ]),
+    h(document, 'div', {
+      class: 'progress-bar indeterminate', role: 'progressbar',
+      'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-label': t.content_progress_bar_label,
+    }, h(document, 'i', { class: 'progress-fill' })),
     h(document, 'div', { class: 'progress-detail' }));
 
   const hintIndicator = document.createElement('div');
