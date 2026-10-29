@@ -13,7 +13,7 @@ export const translations = {
     popup_empty_desc: 'Markdown conversions download directly and are counted above. PDF parsing tasks will appear here.',
     popup_status_pending: 'Pending',
     // QA P2-DNR / 审查 P3(a)：等 DNR 规则就绪（需扩展自重载一次）时不再静默 0%
-    popup_note_dnr_wait: 'Finishing network setup. Close this popup and the settings page; the extension restarts once and continues automatically.',
+    popup_note_dnr_wait: 'Finishing network setup. Close this popup and the settings page, and the extension will restart once and continue.',
     popup_status_processing: 'Processing',
     popup_status_completed: 'Completed',
     popup_status_failed: 'Failed',
@@ -329,7 +329,7 @@ export const translations = {
     popup_empty_title: '暂无 PDF 解析任务',
     popup_empty_desc: 'Markdown 转换会直接下载，并计入上方总数；PDF 解析任务会显示在这里',
     popup_status_pending: '等待处理',
-    popup_note_dnr_wait: '正在完成网络设置。请关闭此弹窗和设置页，扩展会自动重启一次后继续。',
+    popup_note_dnr_wait: '正在完成网络设置。关闭此弹窗和设置页后，扩展会自动重启一次并继续。',
     popup_status_processing: '正在处理',
     popup_status_completed: '已完成',
     popup_status_failed: '失败',

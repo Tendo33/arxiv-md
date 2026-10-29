@@ -7,6 +7,7 @@ const errNodes = (doc, text) => { const seg = rowErrSegments(text); return seg ?
 import { TASK_STATUS } from '@config/constants';
 import { formatTimeAgo } from '@utils/time-ago';
 import { providerLabel } from '@config/pdf-providers';
+import { nwNodes } from '../settings/nw-segments';
 
 let currentLang = 'en';
 
@@ -86,7 +87,7 @@ export function createTaskRow(task, doc = globalThis.document) {
     ...errNodes(doc, String(error)),
   ]));
   // QA P2-DNR + 审查 P3(a)：等扩展页关闭后自重载的任务，明确说明在等什么、要用户做什么
-  if (status === TASK_STATUS.PENDING && task.dnrReinitWaitSince != null) row.append(el(doc, 'span', { class: 'row-note', role: 'status' }, [t.popup_note_dnr_wait]));
+  if (status === TASK_STATUS.PENDING && task.dnrReinitWaitSince != null) row.append(el(doc, 'span', { class: 'row-note', role: 'status' }, nwNodes(doc, 'popup_note_dnr_wait', t.popup_note_dnr_wait, currentLang))); // 设计复验 6a49976 裁定 3：zh 用 .nw 分段
   if (status === TASK_STATUS.AWAITING_DISCLOSURE) row.append(el(doc, 'span', { class: 'row-note' }, [t.pdf_disc_needed_title]));
   return row;
 }
