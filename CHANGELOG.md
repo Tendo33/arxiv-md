@@ -8,20 +8,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
-### 修复
-
-- PaddleOCR 解析修好，交付结构和 MinerU 一致：arXiv PDF 先下载再上传（星河拒收 arXiv 链接，错误码 10004），结果改读 JSONL，图片一起下载，打包成 ZIP（`full.md` + `images/`）。上传超时放宽到 5 分钟。
-- PaddleOCR 请求规则没就绪时最多等 5 秒并重装，仍不行就提示，不再卡住。
-- 弹窗任务列表：认不出的错误显示通用文案，原文只放在悬停提示里；页面卡片新增中性的「已取消」样式（可关闭，10 秒后自动隐藏；带操作按钮的卡片保留到手动关闭，其他已完成卡片 10 秒后收起）；PDF 下载成功卡片不再重复标题。
-
-### 权限（待批准）
-
-- PaddleOCR 结果文件在 `*.bj.bcebos.com`，加入可选域名权限（只在选用 PaddleOCR 时申请）。
-
-### 依赖
-
-- 依赖：npm audit fix 升级了 webpack 5.112 等传递 dev 依赖；其中 ajv-formats 2→3、es-module-lexer 1→2、commander 8→15 是跨大版本的传递 dev 依赖（node 22 满足）；katex 升到 0.19.1（仅测试使用）。
-
 ## [1.2.0] - 2026-10-29
 
 ### 新增
@@ -41,6 +27,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### 修复
 
+- PaddleOCR 解析修好，交付结构和 MinerU 一致：arXiv PDF 先下载再上传（星河拒收 arXiv 链接，错误码 10004），结果改读 JSONL，图片一起下载，打包成 ZIP（`full.md` + `images/`）。上传超时放宽到 5 分钟。
+- PaddleOCR 请求规则没就绪时最多等 5 秒并重装，仍不行就提示，不再卡住。
+- 弹窗任务列表：认不出的错误显示通用文案，原文只放在悬停提示里；页面卡片新增中性的「已取消」样式（可关闭，10 秒后自动隐藏；带操作按钮的卡片保留到手动关闭，其他已完成卡片 10 秒后收起）；PDF 下载成功卡片不再重复标题。
 - ar5iv 返回「No content available」空页面或转换结果为空时，自动改用 PDF，不再保存空的 Markdown。
 - 旧式 arXiv 编号（如 `math/0211159`）的 `/html/` 页面也能用快捷键转换。
 - 取消下载后，如果页面上已经显示了下载卡片，就不再额外弹系统通知；卡片按下载任务对应，不会串号。
@@ -50,6 +39,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - 可以提交到 Firefox 附加组件商店：加入 Firefox 扩展 ID，后台脚本兼容 Firefox；页面里不再用 `innerHTML` 写入内容。最低 Chrome 版本为 121。
 - 安装包更小：去掉约 200KB 的 `icon.svg` 和零散的许可证文件，第三方许可证合并为 `THIRD_PARTY_NOTICES.txt`。
+
+### 依赖
+
+- 依赖：npm audit fix 升级了 webpack 5.112 等传递 dev 依赖；其中 ajv-formats 2→3、es-module-lexer 1→2、commander 8→15 是跨大版本的传递 dev 依赖（node 22 满足）；katex 升到 0.19.1（仅测试使用）。
 
 ## [1.1.12] - 2026-10-10
 

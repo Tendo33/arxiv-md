@@ -13,9 +13,9 @@ test('package.json / package-lock / manifest 都是 1.2.0', () => {
   expect(JSON.parse(read('src/manifest.json')).version).toBe('1.2.0');
 });
 
-test('CHANGELOG：[Unreleased] 之后紧跟 1.2.0 中文说明（[Unreleased] 可记未发布改动）', () => {
+test('CHANGELOG：[Unreleased] 为空，紧跟 1.2.0 中文说明', () => {
   const md = read('CHANGELOG.md');
-  const m = md.match(/## \[Unreleased\]\n[\s\S]*?\n## \[1\.2\.0\] - \d{4}-\d{2}-\d{2}\n([\s\S]*?)\n## \[1\.1\.12\]/);
+  const m = md.match(/## \[Unreleased\]\n\n## \[1\.2\.0\] - \d{4}-\d{2}-\d{2}\n([\s\S]*?)\n## \[1\.1\.12\]/);
   expect(m).toBeTruthy();
   for (const h of ['### 新增', '### 改进', '### 修复']) expect(m[1]).toContain(h);
   expect(m[1]).toMatch(/[\u4e00-\u9fff]/);
