@@ -114,6 +114,13 @@ function loadPlaywright() {
             fail++;
           }
         }
+        // rp2c 建议项：滚到底时最后一行和列表底边之间留出 ≥8px，失败原因不被截半行
+        const gap = await p.evaluate(() => {
+          const l = document.getElementById('taskList'); l.scrollTop = l.scrollHeight;
+          const last = [...l.querySelectorAll('.row')].pop();
+          return l.getBoundingClientRect().bottom - parseFloat(getComputedStyle(l).borderBottomWidth) - last.getBoundingClientRect().bottom;
+        });
+        if (!(gap >= 6.5)) { console.error(`e2e a11y: FAIL ${lang}@${w} 列表底部留白 ${gap}px（要求约 8px，scrollTop 取整允许 <1.5px 误差）`); fail++; }
         await p.close();
       }
       const shots = process.env.E2E_A11Y_SHOTS;
@@ -127,6 +134,11 @@ function loadPlaywright() {
           await p.evaluate((th) => document.documentElement.setAttribute('data-theme', th), theme);
           await p.waitForTimeout(300);
           await p.screenshot({ path: path.join(shots, `popup-rows-${lang}-${theme}-${w}.png`) });
+          // rp2c：展开全部并滚到底，看最后一行的失败原因是否完整
+          await p.click('#recentAll');
+          await p.evaluate(() => { const l = document.getElementById('taskList'); l.scrollTop = l.scrollHeight; });
+          await p.waitForTimeout(200);
+          await p.screenshot({ path: path.join(shots, `popup-listbottom-${lang}-${theme}-${w}.png`) });
           await p.close();
         }
       }

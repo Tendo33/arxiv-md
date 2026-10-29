@@ -18,6 +18,8 @@ body{min-width:320px}
 .sec-x{display:flex;gap:4px}
 /* 审查员 S 增量 C / R4 合入 C2：列表最小高度默认 46px（一整行），含待确认行时 72px（见下一条），按钮不被内部滚动区截断 */
 #taskList{padding:4px 10px;overflow-y:auto;min-height:46px;overscroll-behavior:contain}
+/* rp2c 建议项：滚到底时最后一行的失败原因不贴着列表底边被截半行 */
+#taskList{padding-bottom:8px}
 /* R4 合入 C2：默认只保证一整行（46px，窄宽时 flex 不会把列表压到半行）；出现待确认行（按钮可能折行）时才保证 72px */
 #taskList:has(.row[data-status=awaiting_consent]){min-height:72px}
 .recent-empty{padding:10px;color:var(--text-2);font-size:var(--fs-xs)}
