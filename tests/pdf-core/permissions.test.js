@@ -69,3 +69,10 @@ describe('bcebos 结果域名（新可选权限）', () => {
     await expect(ensureProviderPermission(api, paddleocrProvider)).resolves.toBeUndefined();
   });
 });
+
+test('Simon 17:32 批准：manifest 只有一个 bcebos pattern https://*.bj.bcebos.com/*，且不在 permissions/host_permissions', () => {
+  const m = require('../../src/manifest.json');
+  const all = [...(m.permissions || []), ...(m.host_permissions || []), ...(m.optional_host_permissions || []), ...(m.optional_permissions || [])];
+  expect(all.filter((p) => /bcebos/.test(p))).toEqual(['https://*.bj.bcebos.com/*']);
+  expect(m.optional_host_permissions).toContain('https://*.bj.bcebos.com/*');
+});
