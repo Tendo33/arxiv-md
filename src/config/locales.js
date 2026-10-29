@@ -242,7 +242,7 @@ export const translations = {
     pdf_perm_missing: 'Access to {host} is required to use {provider}',
     pdf_perm_denied: 'No access to {host} was granted, so {provider} is still in use. You can grant access again when you need it.',
     pdf_regrant_btn: 'Grant access again',
-    pdf_revoke_text: 'You no longer use {provider}. Revoke its access to {host}?',
+    pdf_revoke_text: 'You no longer use {provider}. Revoke its access to {host}? If you keep it, switching back to {provider} later reuses this access — no permission prompt will appear.',
     pdf_revoke_btn: 'Revoke access',
     pdf_revoked: 'Access to {host} revoked',
     // R4-03：统一错误码
@@ -512,7 +512,7 @@ export const translations = {
     pdf_perm_missing: '需要授权访问 {host} 才能使用 {provider}',
     pdf_perm_denied: '未获得访问 {host} 的权限，仍在使用 {provider}。需要时可重新授权。',
     pdf_regrant_btn: '重新授权',
-    pdf_revoke_text: '你已不再使用 {provider}，要撤销对 {host} 的访问权限吗？',
+    pdf_revoke_text: '你已不再使用 {provider}，要撤销对 {host} 的访问权限吗？不撤销的话，以后切回 {provider} 会直接沿用这次授权，不会再弹出授权提示。',
     pdf_revoke_btn: '撤销授权',
     pdf_revoked: '已撤销对 {host} 的访问权限',
     // R4-03：统一错误码
