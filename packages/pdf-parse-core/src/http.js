@@ -3,7 +3,7 @@ import { fromFetchFailure } from './errors.js';
 
 export const DEFAULT_REQUEST_TIMEOUT = 30000;
 
-/** 合并多个 AbortSignal：有 AbortSignal.any（Chrome 116+）就用，否则手动转发 */
+/** 合并多个 AbortSignal：有 AbortSignal.any（Chrome 116+ / Firefox 124+，manifest 最低 Firefox 140）就用，否则手动转发（保留兜底） */
 export function anySignal(signals) {
   const list = signals.filter(Boolean);
   if (list.length <= 1) return list[0] || null;
