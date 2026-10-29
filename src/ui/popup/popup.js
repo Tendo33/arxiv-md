@@ -8,6 +8,7 @@ import { translations } from '@config/locales';
 import { showConfirm } from './confirm-dialog';
 import { confirmSendFlow, refocusTask } from './send-consent';
 import { renderTaskRows, setTaskListLanguage } from './task-list';
+import { bindListScroll, fitListToHalfRow } from './list-scroll';
 import { pageContext, recentTasks } from './page-context';
 import { renderShortcutGuide } from './shortcut-guide';
 import { providerLabel } from '@config/pdf-providers';
@@ -270,6 +271,7 @@ function renderRecent() {
   const keepId = focused && $('taskList').contains(focused) && focused.dataset ? focused.dataset.taskId : null;
   renderTaskRows($('taskList'), list, document);
   if (keepId) refocusTask(document, keepId);
+  fitListToHalfRow($('taskList')); // 设计 D6（AX-10）
   const more = currentTasks.length > 3;
   const all = $('recentAll');
   all.classList.toggle('hidden', !more);
@@ -280,6 +282,7 @@ function renderRecent() {
 }
 
 function bindTaskActions() {
+  bindListScroll($('taskList'), window);
   $('taskList').addEventListener('click', async (e) => {
     const btn = e.target.closest('[data-action]');
     if (!btn) return;

@@ -22,6 +22,11 @@ body{min-width:320px}
 #taskList{padding-bottom:8px}
 /* R4 合入 C2：默认只保证一整行（46px，窄宽时 flex 不会把列表压到半行）；出现待确认行（按钮可能折行）时才保证 72px */
 #taskList:has(.row[data-status=awaiting_consent]){min-height:72px}
+/* 设计 D6（AX-10）：max-height 由 list-scroll.js 停在被截行的一半；能滚未到底时底部 24px sticky 渐隐（不用 mask-image，免得淡掉卡片边框）；能滚时可聚焦 */
+#taskList{position:relative}
+#taskList.can-scroll:not(.at-end)::after{content:"";display:block;position:sticky;bottom:0;height:24px;margin-top:-24px;pointer-events:none;background:linear-gradient(to bottom,transparent,var(--surface))}
+#taskList:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){#taskList{scroll-behavior:auto}}
 .recent-empty{padding:10px;color:var(--text-2);font-size:var(--fs-xs)}
 /* AF3-02：状态标签不换行、不被标题挤压（中文按字断行，320/360 宽都会折成两行） */
 .row .badge{padding:1px 6px;flex:none;white-space:nowrap}
