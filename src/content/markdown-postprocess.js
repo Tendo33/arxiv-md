@@ -76,8 +76,23 @@ export function postProcessMarkdown(markdown) {
     'figure', 'figcaption', 'sup', 'sub', 'mark', 'small', 'big',
     'center', 'cite', 'q', 'abbr', 'address', 'time', 'label', 'input',
     'button', 'select', 'option', 'textarea', 'form', 'fieldset', 'legend'];
-  const tagPattern = new RegExp(`<\\/?(?:${nonTableTags.join('|')})[^>]*>`, 'gi');
-  result = result.replace(tagPattern, '');
+  // AB6-01：标签名后必须是空白、/ 或 >，`<EMAIL>`/`<PASSWORD>`/`<P|N>`/`<String>` 不再被当成 em/p/s 吃掉；
+  // 代码块、行内代码、公式整体跳过，原样保留。
+  const tagPattern = new RegExp(`<\\/?(?:${nonTableTags.join('|')})(?=[\\s/>])[^>]*>`, 'gi');
+  result = replaceOutsideProtected(result, (text) => text.replace(tagPattern, ''));
 
   return result;
+}
+
+// AB6-01：围栏代码块（``` / ~~~~）、$$…$$、行内代码、$…$ 不参与标签清理
+const PROTECTED_SEGMENT = /(^|\n)(`{3,}|~{3,})[^\n]*\n[\s\S]*?\n\2[ \t]*(?=\n|$)|\$\$[\s\S]*?\$\$|(`+)[^`\n]*?[^`]\3(?!`)|`[^`\n]`|\$[^$\n]+\$/g;
+
+export function replaceOutsideProtected(text, fn) {
+  let out = '';
+  let last = 0;
+  for (const m of text.matchAll(PROTECTED_SEGMENT)) {
+    out += fn(text.slice(last, m.index)) + m[0];
+    last = m.index + m[0].length;
+  }
+  return out + fn(text.slice(last));
 }
