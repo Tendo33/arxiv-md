@@ -88,6 +88,28 @@ export function parsePaddleJsonl(text) {
   return { markdown: parts.join('\n\n'), images, pages: page };
 }
 
+/** 下载 markdown.images（签名 URL，在 *.bj.bcebos.com）。单张失败不让整个任务失败：data=null，交付时在正文留注释 */
+export async function downloadImages(images, ctx = {}, concurrency = 4) {
+  const out = images.map((i) => ({ ...i, data: null, contentType: null, error: null }));
+  let next = 0;
+  async function worker() {
+    while (next < out.length) {
+      const img = out[next++];
+      try {
+        const res = await fetchWithTimeout(img.url, { method: 'GET' }, { ctx, provider: ID, timeoutMs: ctx.requestTimeoutMs || 60000 });
+        if (!res.ok) { img.error = `HTTP ${res.status}`; continue; }
+        img.data = new Uint8Array(await res.arrayBuffer());
+        img.contentType = (res.headers && res.headers.get && res.headers.get('content-type')) || null;
+      } catch (e) {
+        if (isParseError(e) && e.code === 'PERMISSION_MISSING') throw e; // 没 bcebos 权限：整体失败，让用户重新授权
+        img.error = (e && (e.code || e.message)) || 'download failed';
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, out.length) }, worker));
+  return out;
+}
+
 async function request(url, init, token, ctx) {
   // multipart：不能写死 Content-Type，boundary 由 fetch 按 FormData 生成
   const isForm = typeof FormData !== 'undefined' && init.body instanceof FormData;
@@ -118,6 +140,7 @@ export const paddleocrProvider = defineProvider({
   input: 'url', // arXiv 链接在 submit 里转成文件上传，其余仍传链接
   cost: 'free',
   output: 'markdown', // 交给 R4-09 统一整理
+  layout: 'mineru', // 交付结构对齐 MinerU：ZIP（full.md + images/<sha256>.<ext>），文件名同 MinerU
   timeoutMs: 10 * 60 * 1000,
   pollIntervalMs: 3000,
 
@@ -167,7 +190,9 @@ export const paddleocrProvider = defineProvider({
     if (!res.ok) throw mapPaddleError(await readErrorResponse(res));
     const text = await res.text();
     if (!result.jsonUrl) return { markdown: text, markdownUrl: result.markdownUrl, jsonUrl: null, images: [] };
-    return { ...parsePaddleJsonl(text), markdownUrl: null, jsonUrl: result.jsonUrl };
+    const parsed = parsePaddleJsonl(text);
+    const images = await downloadImages(parsed.images, ctx);
+    return { markdown: parsed.markdown, images, pages: parsed.pages, markdownUrl: null, jsonUrl: result.jsonUrl };
   },
 
   mapError: mapPaddleError,

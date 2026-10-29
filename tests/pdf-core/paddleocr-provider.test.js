@@ -140,10 +140,19 @@ describe('PaddleOCR 细节', () => {
     await expect(paddleocrProvider.fetchResult(doneLegacy.data.resultUrl, creds, {})).rejects.toMatchObject({ code: 'NETWORK' });
   });
 
-  test('fetchResult（实测格式）：jsonUrl → JSONL 多行多页拼接 markdown.text，图片按页加前缀', async () => {
+  test('fetchResult（实测格式）：jsonUrl → JSONL 多行多页拼接 markdown.text，图片按页加前缀并下载', async () => {
     fm.on(JSON_URL, [{ body: JSONL }]);
+    const IMG = 'https://pplines-online.bj.bcebos.example.invalid/fixture/';
+    fm.on(`${IMG}p1.jpg`, [{ body: new Uint8Array([1, 2, 3]), headers: { 'Content-Type': 'image/jpeg' } }]);
+    fm.on(`${IMG}p3a.jpg`, [{ status: 404, body: '' }]);
+    fm.on(`${IMG}p3b.png`, [new TypeError('Failed to fetch')]);
     const r = await paddleocrProvider.fetchResult(done.data.resultUrl, creds, {});
-    expect(fm.calls.map((c) => c.url)).toEqual([JSON_URL]);
+    expect(fm.calls[0].url).toBe(JSON_URL);
+    expect(fm.calls.length).toBe(4);
+    expect(r.images[0]).toMatchObject({ data: new Uint8Array([1, 2, 3]), contentType: 'image/jpeg', error: null });
+    expect(r.images[1]).toMatchObject({ data: null, error: 'HTTP 404' });
+    expect(r.images[2]).toMatchObject({ data: null, error: 'NETWORK' });
+    r.images = r.images.map(({ src, url, page }) => ({ src, url, page }));
     expect(r.jsonUrl).toBe(JSON_URL);
     expect(r.markdown.startsWith('# Fixture Paper')).toBe(true);
     expect(r.markdown).toMatch(/<table>/);
@@ -159,6 +168,13 @@ describe('PaddleOCR 细节', () => {
       { src: 'page-3/imgs/img_in_chart_box_10_20_30_40.jpg', url: 'https://pplines-online.bj.bcebos.example.invalid/fixture/p3a.jpg?authorization=fixture', page: 3 },
       { src: 'page-3/imgs/img_in_image_box_1_2_3_4.png', url: 'https://pplines-online.bj.bcebos.example.invalid/fixture/p3b.png?authorization=fixture', page: 3 },
     ]);
+  });
+
+  test('图片下载没有 bcebos 权限 → 整个任务 PERMISSION_MISSING（不静默丢图）', async () => {
+    const { ParseError } = require('@pdf-core/errors');
+    let n = 0;
+    const ctx = { fetch: async (u) => { n += 1; if (n === 1) return require('../helpers/fetch-mock').mockResponse({ body: JSONL }); throw new ParseError('PERMISSION_MISSING', { provider: 'paddleocr', host: '*.bj.bcebos.com' }); } };
+    await expect(paddleocrProvider.fetchResult(done.data.resultUrl, creds, ctx)).rejects.toMatchObject({ code: 'PERMISSION_MISSING' });
   });
 
   test('parsePaddleJsonl：行内 errorCode≠0 / 坏行 → PROVIDER_FAILED；空行忽略；页数按页累计', () => {

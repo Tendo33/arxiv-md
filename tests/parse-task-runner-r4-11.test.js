@@ -112,3 +112,20 @@ describe('R4-11 background wiring', () => {
     expect(await tm.findTaskByArxivId('2', 'mineru')).toBeNull();
   });
 });
+
+describe('路线 2：layout=mineru 的 provider 交付 MinerU 结构', () => {
+  test('jsonUrl 结果 → saveDeliverable 收到 layout:mineru、full.md 内容含 images/<sha>', async () => {
+    const { makeHarness, fakeProvider } = require('./helpers/runner-harness');
+    const p = fakeProvider({
+      layout: 'mineru',
+      fetchResult: jest.fn(async () => ({ markdown: '![](page-1/imgs/a.jpg)', images: [{ src: 'page-1/imgs/a.jpg', data: new Uint8Array([1]) }], jsonUrl: 'https://x.invalid/a.jsonl' })),
+    });
+    const h = makeHarness({ providers: [p], tasks: [{ id: 't1' }] });
+    await h.runner.process('t1');
+    const arg = h.deps.saveDeliverable.mock.calls[0][0];
+    expect(arg.layout).toBe('mineru');
+    expect(arg.markdown).toMatch(/!\[\]\(images\/[0-9a-f]{64}\.jpg\)/);
+    expect(arg.images).toHaveLength(1);
+    expect(h.store.get('t1').status).toBe('completed');
+  });
+});

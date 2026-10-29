@@ -23,12 +23,18 @@ export async function toDownloadUrl(blob, env = globalThis) {
 
 /**
  * 按整理结果打包：有图片 → ZIP（paper.md + figures/），没图片 → 直接 .md
+ * layout:'mineru'（PaddleOCR 对齐 MinerU）→ 一律 ZIP：full.md + images/<sha256>.<ext>（同名图只放一份）
  * @param {{markdown:string, images?:{to:string,data?:Uint8Array}[]}} result
  * @param {string} baseName 不含扩展名
  * @returns {{blob:Blob, filename:string}}
  */
 export function buildDeliverable(result, baseName) {
   const imgs = (result.images || []).filter((i) => i.data);
+  if (result.layout === 'mineru') {
+    const seen = new Set(); const files = [{ name: 'full.md', data: result.markdown }];
+    for (const i of imgs) if (!seen.has(i.to)) { seen.add(i.to); files.push({ name: i.to, data: i.data }); }
+    return { blob: new Blob([createZip(files)], { type: 'application/zip' }), filename: `${baseName}.zip` };
+  }
   if (!imgs.length) return { blob: new Blob([result.markdown], { type: 'text/markdown;charset=utf-8' }), filename: `${baseName}.md` };
   const zip = createZip([{ name: 'paper.md', data: result.markdown }, ...imgs.map((i) => ({ name: i.to, data: i.data }))]);
   return { blob: new Blob([zip], { type: 'application/zip' }), filename: `${baseName}.zip` };

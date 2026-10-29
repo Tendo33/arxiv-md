@@ -6,13 +6,13 @@ import { addFrontMatter, buildFrontMatter, escapeYaml } from './frontmatter.js';
 
 /**
  * @param {string} md provider 原始 Markdown
- * @param {{meta?:object, tablesToGfm?:boolean, pageOf?:(src:string)=>number}} [opts]
+ * @param {{meta?:object, tablesToGfm?:boolean, pageOf?:(src:string)=>number, rename?:(src:string)=>string|undefined}} [opts]
  * @returns {{markdown:string, images:{from:string,to:string}[], deliver:'md'|'zip'}}
  */
-export function normalizeMarkdown(md, { meta = null, tablesToGfm = false, pageOf } = {}) {
+export function normalizeMarkdown(md, { meta = null, tablesToGfm = false, pageOf, rename } = {}) {
   let out = normalizeMath(md);
   out = normalizeTables(out, { toGfm: tablesToGfm });
-  const img = normalizeImages(out, { pageOf });
+  const img = normalizeImages(out, { pageOf, rename });
   out = addFrontMatter(img.markdown.replace(/\n{3,}/g, '\n\n').trim() + '\n', meta);
   return { markdown: out, images: img.images, deliver: img.images.length ? 'zip' : 'md' };
 }

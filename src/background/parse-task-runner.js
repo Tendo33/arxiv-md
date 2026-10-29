@@ -5,6 +5,7 @@
 // - jobId 落盘后，SW 被杀也能按 jobId 续上轮询（R4-12 resume）
 import { ParseError, isParseError, ERROR_REASONS } from '@pdf-core/errors';
 import { normalizeMarkdown, shouldNormalize } from '@pdf-core/normalize/index';
+import { buildMineruLayout } from '@pdf-core/output/mineru-layout';
 import { ensureProviderPermission } from '@pdf-core/permissions';
 import { assertSavableMarkdown } from '@pdf-core/output/pre-save';
 import { TASK_STATUS } from '@config/constants';
@@ -67,7 +68,14 @@ export function createParseTaskRunner(deps) {
     // AR-02：PDF 解析结果没有正文 → 任务失败（empty_result），不写空文件、不报「完成」
     assertSavableMarkdown(fetched.markdown, { provider: provider.id });
     const includeMeta = storage.getIncludeMetadata ? (await storage.getIncludeMetadata()) !== false : true;
-    const norm = normalizeMarkdown(fetched.markdown || '', { meta: includeMeta ? { ...meta, source: provider.id } : null });
+    const fmMeta = includeMeta ? { ...meta, source: provider.id } : null;
+    // PaddleOCR：和 MinerU 一样交付 ZIP（full.md + images/<sha256>）；旧 markdownUrl 结果没有图片列表，走原流程
+    const norm = provider.layout === 'mineru' && Array.isArray(fetched.images) && fetched.jsonUrl
+      ? await buildMineruLayout(fetched, { meta: fmMeta })
+      : normalizeMarkdown(fetched.markdown || '', { meta: fmMeta });
+    if (norm.failedImages && norm.failedImages.length) {
+      try { log.error(`PDF parse task ${task.id}: ${norm.failedImages.length} image(s) failed to download`); } catch { /* noop */ }
+    }
     const base = makeFilename(meta, 'md').replace(/\.md$/, '');
     const saved = await saveDeliverable(norm, base);
     return { downloadId: saved.id, filename: saved.filename, resultUrl: fetched.markdownUrl || null };
