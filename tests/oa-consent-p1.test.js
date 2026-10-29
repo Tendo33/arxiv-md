@@ -24,7 +24,26 @@ describe('OA 判定', () => {
     'https://arxiv.org.evil.com/pdf/2401.00001.pdf',
     'https://arxiv.org/abs/2401.00001',
     'not a url',
+    // 复审 P3①：相似域名、子域名、末尾点、userinfo、非默认端口
+    'https://evilarxiv.org/pdf/2401.00001',
+    'https://foo.arxiv.org/pdf/2401.00001',
+    'https://www.arxiv.org/pdf/2401.00001',
+    'https://arxiv.org./pdf/2401.00001',
+    'https://arxiv.org@evil.com/pdf/2401.00001',
+    'https://user@arxiv.org/pdf/2401.00001',
+    'https://user:pw@arxiv.org/pdf/2401.00001',
+    'https://arxiv.org:8443/pdf/2401.00001',
+    'https://arxiv.org/pdf/2401.00001?x=1',
+    'https://arxiv.org/pdf/2401.00001#frag',
   ])('其他来源 / 判断不了 → 非 OA：%s', (u) => expect(isOpenAccessPdf(task(u))).toBe(false));
+
+  test.each(['../x', '2401.00001/../../evil', '2401.00001?x=1'])('没有 pdfUrl、arxivId 是路径注入串 %s → 非 OA', (id) => {
+    expect(isOpenAccessPdf({ paperInfo: { arxivId: id } })).toBe(false);
+  });
+
+  test('主机名大小写会被 URL 规范化，仍按 arXiv 处理', () => {
+    expect(isOpenAccessPdf(task('https://ARXIV.ORG/pdf/2401.00001'))).toBe(true);
+  });
 
   test('缺 paperInfo 或任务为空 → 非 OA', () => {
     expect(isOpenAccessPdf({})).toBe(false);

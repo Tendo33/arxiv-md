@@ -12,6 +12,8 @@ export function isOpenAccessPdf(task) {
     if (!task || !task.paperInfo) return false;
     const u = new URL(pdfUrlOf(task));
     if (u.protocol !== 'https:' || !ARXIV_PDF_HOSTS.has(u.hostname)) return false;
+    // 复审 P3①：带 userinfo（user@ / user:pw@）、非默认端口、查询串或片段的地址都不是扩展自己拼出的 arXiv PDF 链接，按非 OA 处理
+    if (u.username || u.password || u.port || u.search || u.hash) return false;
     return /^\/pdf\/(\d{4}\.\d{4,5}|[a-z-]+(\.[A-Z]{2})?\/\d{7})(v\d+)?(\.pdf)?$/.test(u.pathname);
   } catch {
     return false;
