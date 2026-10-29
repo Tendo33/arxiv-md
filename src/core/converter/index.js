@@ -3,7 +3,7 @@
 import ar5ivConverter from './ar5iv-converter';
 import storage from '@utils/storage';
 import logger from '@utils/logger';
-import { isNetworkError } from '@utils/network-error';
+import { isNetworkError, NETWORK_OFFLINE_CODE } from '@utils/network-error';
 import {
   CONVERSION_TIER,
   CONVERSION_MODE,
@@ -324,12 +324,15 @@ class MainConverter {
       return { success: true, filename };
     } catch (error) {
       logger.error('PDF download failed:', error);
-      // 原始错误只进日志（上一行），通知给通用文案
-      const n = converterNotification('download_failed', {}, await notifyLang());
+      // 原始错误只进日志（上一行），通知按原因区分：网络（AB6-06）/ 其他
+      const network = isNetworkError(error);
+      const key = network ? 'download_failed_network' : 'download_failed';
+      const n = converterNotification(key, {}, await notifyLang());
       showNotification(n.title, n.message, 'basic');
       return {
         success: false,
         error: error.message,
+        ...(network ? { errorCode: NETWORK_OFFLINE_CODE } : {}),
       };
     }
   }

@@ -68,7 +68,7 @@ test('converter 源码不再硬编码通知文案', () => {
 test('所有通知不含原始错误和 MinerU 字样；zh/en key 对齐', () => {
   for (const lang of ['zh', 'en']) {
     const keys = Object.keys(translations[lang]).filter((k) => /^notify_(done|task_submitted|pdf_fallback|convert_failed|pdf_saved|download_failed)_/.test(k));
-    expect(keys).toHaveLength(12);
+    expect(keys).toHaveLength(14); // AB6-06 新增 download_failed_network_title/body
     keys.forEach((k) => expect(translations[lang][k]).not.toMatch(/MinerU/));
   }
   for (const c of showNotification.mock.calls) expect(c.join(' ')).not.toContain('ERR_SECRET');
