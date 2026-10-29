@@ -37,6 +37,7 @@ export function setProgressState({ text, percent = null, detail = '', file = '',
   const detailEl = progressIndicator.querySelector('.progress-detail');
 
   progressIndicator.style.display = 'flex';
+  delete progressIndicator.dataset.pending;
   removeResultActions(progressIndicator);
   progressIndicator.classList.remove('error', 'success', 'warning');
   if (state === 'error' || state === 'success' || state === 'warning') {
@@ -150,6 +151,33 @@ export function showSuccess(message) {
     // 期间若已开始下一次转换（状态不再是 success），不要误清
     const el = document.querySelector('.arxiv-md-progress');
     if (el && el.classList.contains('success')) clearProgressState();
+  }, SUCCESS_VISIBLE_MS);
+}
+
+/**
+ * batch9 ①：4 分钟后下载仍在继续——中性（进行中）样式，不显示百分比，
+ * 标题「仍在下载」，不声称已完成或失败；带关闭按钮，同样停留 SUCCESS_VISIBLE_MS 后收起。
+ */
+export function showPending(message) {
+  notifyOutcome({ ok: true, pending: true, message: message || '' });
+  setProgressState({
+    text: t.content_progress_still_downloading,
+    detail: message || '',
+    percent: null,
+    state: '',
+  });
+  const progressIndicator = document.querySelector('.arxiv-md-progress');
+  if (progressIndicator) {
+    progressIndicator.dataset.pending = '1';
+    const actions = document.createElement('div');
+    actions.className = 'arxiv-md-result-actions';
+    actions.appendChild(createCloseButton());
+    progressIndicator.appendChild(actions);
+  }
+  clearTimeout(successTimer);
+  successTimer = setTimeout(() => {
+    const el = document.querySelector('.arxiv-md-progress');
+    if (el && el.dataset.pending === '1') clearProgressState();
   }, SUCCESS_VISIBLE_MS);
 }
 

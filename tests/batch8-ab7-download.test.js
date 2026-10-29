@@ -345,7 +345,8 @@ describe('batch9 ①：4 分钟后仍在下载 → 不报失败、不取消；�
 
   test('content/index.js 两处结果处理都先看 pending', () => {
     const src = require('fs').readFileSync(require('path').join(__dirname, '../src/content/index.js'), 'utf8');
-    expect(src.match(/pending\) \{\n\s*showSuccess\(t\.content_download_pending\)/g)).toHaveLength(2);
+    expect(src.match(/pending\) \{\n\s*showPending\(t\.content_download_pending\)/g)).toHaveLength(2);
+    expect(src).not.toMatch(/showSuccess\(t\.content_download_pending\)/);
   });
 });
 
