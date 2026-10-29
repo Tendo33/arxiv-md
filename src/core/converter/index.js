@@ -35,8 +35,11 @@ import { ParseError } from '@pdf-core/errors';
 function isStillRunning(error) {
   return error?.code === 'DOWNLOAD_STILL_RUNNING';
 }
+// batch9 P3③：在 Chrome 里取消 / 移除下载不算失败——发起页有卡片时只更新卡片，不再弹系统通知；没有卡片才通知
+const isCancelKind = (kind) => kind === 'canceled' || kind === 'removed';
+
 function lateSavedNotifier(key, filename, tabId = null) {
-  return () => {
+  return (downloadId) => {
     notifyLang().then((lang) => {
       const n = converterNotification(key, { filename }, lang);
       showNotification(n.title, n.message, 'basic');
@@ -44,7 +47,7 @@ function lateSavedNotifier(key, filename, tabId = null) {
     // batch9 M2：pending 卡片不自动收起，下载补完成时通知发起页把它换掉
     if (tabId != null) {
       try {
-        const r = chrome.tabs.sendMessage(tabId, { type: 'PDF_DOWNLOAD_SETTLED', data: { ok: true, filename } });
+        const r = chrome.tabs.sendMessage(tabId, { type: 'PDF_DOWNLOAD_SETTLED', data: { ok: true, filename, ...(downloadId != null ? { downloadId } : {}) } });
         if (r && typeof r.catch === 'function') r.catch(() => {});
       } catch { /* 页面已关闭 */ }
     }
@@ -54,16 +57,20 @@ function lateSavedNotifier(key, filename, tabId = null) {
 function lateFailureNotifier(tabId = null) {
   return (error) => {
     const { notifyKey, fields } = pdfDownloadFailure(error);
-    notifyLang().then((lang) => {
+    const notify = () => notifyLang().then((lang) => {
       const n = converterNotification(notifyKey, {}, lang);
       showNotification(n.title, n.message, 'basic');
     }).catch(() => {});
+    const downloadId = error?.downloadId;
+    let reply = Promise.resolve(null);
     if (tabId != null) {
       try {
-        const r = chrome.tabs.sendMessage(tabId, { type: 'PDF_DOWNLOAD_SETTLED', data: { ok: false, success: false, ...fields } });
-        if (r && typeof r.catch === 'function') r.catch(() => {});
+        const r = chrome.tabs.sendMessage(tabId, { type: 'PDF_DOWNLOAD_SETTLED', data: { ok: false, success: false, ...fields, ...(downloadId != null ? { downloadId } : {}) } });
+        if (r && typeof r.then === 'function') reply = r.catch(() => null);
       } catch { /* 页面已关闭 */ }
     }
+    if (!isCancelKind(fields.downloadFailure)) notify();
+    else reply.then((res) => { if (!res?.handled) notify(); });
   };
 }
 // release-polish AB8-05：页面 PDF 按钮的下载进度发回页面状态卡（progress 为 null = 总大小未知，不显示百分比）
@@ -342,7 +349,7 @@ class MainConverter {
         if (!isStillRunning(error)) throw error;
         logger.warn('PDF download still running after timeout:', filename);
         await notifyStillRunning();
-        return { success: true, pending: true, tier: CONVERSION_TIER.PDF_FALLBACK, filename };
+        return { success: true, pending: true, tier: CONVERSION_TIER.PDF_FALLBACK, filename, downloadId: error.downloadId ?? null };
       }
       await storage.incrementConversion(CONVERSION_TIER.PDF_FALLBACK);
 
@@ -357,8 +364,11 @@ class MainConverter {
       logger.error('PDF download failed:', error);
       // 原始错误只进日志（上一行）。batch8 AB7-01：按下载失败原因选通知，状态卡用同一类别（downloadFailure）
       const { notifyKey, fields } = pdfDownloadFailure(error);
-      const n = converterNotification(notifyKey, {}, await notifyLang());
-      showNotification(n.title, n.message, 'basic');
+      // batch9 P3③：页面发起的下载被取消时，状态卡会显示「已取消」，不再额外弹系统通知
+      if (!(tabId != null && isCancelKind(fields.downloadFailure))) {
+        const n = converterNotification(notifyKey, {}, await notifyLang());
+        showNotification(n.title, n.message, 'basic');
+      }
       return {
         success: false,
         tier: CONVERSION_TIER.PDF_FALLBACK,
@@ -394,7 +404,7 @@ class MainConverter {
         if (!isStillRunning(error)) throw error;
         logger.warn('PDF download still running after timeout:', filename);
         await notifyStillRunning();
-        return { success: true, pending: true, filename };
+        return { success: true, pending: true, filename, downloadId: error.downloadId ?? null };
       }
 
       const n = converterNotification('pdf_saved', { filename }, await notifyLang());
@@ -406,8 +416,11 @@ class MainConverter {
       logger.error('PDF download failed:', error);
       // 原始错误只进日志（上一行），通知按原因区分：网络（AB6-06）/ 服务端 / 取消 / 文件 / 其他（batch8 AB7-01）；超时不算失败（batch9）
       const { notifyKey, fields } = pdfDownloadFailure(error);
-      const n = converterNotification(notifyKey, {}, await notifyLang());
-      showNotification(n.title, n.message, 'basic');
+      // batch9 P3③：页面发起的下载被取消时，状态卡会显示「已取消」，不再额外弹系统通知
+      if (!(tabId != null && isCancelKind(fields.downloadFailure))) {
+        const n = converterNotification(notifyKey, {}, await notifyLang());
+        showNotification(n.title, n.message, 'basic');
+      }
       return {
         success: false,
         error: error.message,

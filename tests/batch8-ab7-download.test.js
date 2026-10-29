@@ -377,7 +377,69 @@ describe('batch9 ①：4 分钟后仍在下载 → 不报失败、不取消；�
     await jest.advanceTimersByTimeAsync(240_001);
     expect(c.tabs.sendMessage).not.toHaveBeenCalled();
     await jest.advanceTimersByTimeAsync(60_000);
-    expect(c.tabs.sendMessage).toHaveBeenCalledWith(42, { type: 'PDF_DOWNLOAD_SETTLED', data: { ok: true, filename: 'p.pdf' } });
+    expect(c.tabs.sendMessage).toHaveBeenCalledWith(42, { type: 'PDF_DOWNLOAD_SETTLED', data: { ok: true, filename: 'p.pdf', downloadId: 7 } });
+  });
+
+  // release-polish batch9 P3①：pending 结果与 SETTLED 都带 downloadId，页面按 id 匹配卡片
+  test('P3①：pending 结果与补发的 SETTLED（成功 / 失败）都带 downloadId', async () => {
+    jest.useFakeTimers();
+    let c = fakeChrome({ completeAt: 300_000 });
+    c.tabs = { sendMessage: jest.fn(() => Promise.resolve()) };
+    let r;
+    converter.downloadPdf(paper, 42).then((v) => { r = v; });
+    await jest.advanceTimersByTimeAsync(240_001);
+    expect(r).toMatchObject({ pending: true, downloadId: 7 });
+    c = fakeChrome({});
+    c.tabs = { sendMessage: jest.fn(() => Promise.resolve()) };
+    converter.downloadPdf(paper, 42);
+    await jest.advanceTimersByTimeAsync(240_001);
+    [...c.listeners].forEach((l) => l({ id: 7, state: { current: 'interrupted' }, error: { current: 'NETWORK_FAILED' } }));
+    expect(c.tabs.sendMessage).toHaveBeenCalledWith(42, expect.objectContaining({ data: expect.objectContaining({ ok: false, downloadId: 7 }) }));
+  });
+
+  // release-polish batch9 P3③：在 Chrome 里取消 / 移除——页面有卡片时只更新卡片，不弹系统通知；没卡片才通知
+  describe('P3③：取消不重复弹系统通知', () => {
+    beforeEach(() => { showNotification.mockClear(); storage.getLanguage.mockResolvedValue('zh'); });
+    test.each([['USER_CANCELED']])('超时后 %s 且页面回 handled → 只有「仍在下载」一条通知', async (reason) => {
+      jest.useFakeTimers();
+      const c = fakeChrome({});
+      c.tabs = { sendMessage: jest.fn(() => Promise.resolve({ received: true, handled: true })) };
+      converter.downloadPdf(paper, 42);
+      await jest.advanceTimersByTimeAsync(240_001);
+      [...c.listeners].forEach((l) => l({ id: 7, state: { current: 'interrupted' }, error: { current: reason } }));
+      await jest.advanceTimersByTimeAsync(0);
+      expect(showNotification).toHaveBeenCalledTimes(1);
+    });
+    test.each([
+      ['页面没回复', () => Promise.resolve(undefined)],
+      ['页面已关闭（reject）', () => Promise.reject(new Error('no receiver'))],
+      ['handled:false', () => Promise.resolve({ handled: false })],
+    ])('超时后取消、%s → 仍补发取消通知', async (_n, reply) => {
+      jest.useFakeTimers();
+      const c = fakeChrome({});
+      c.tabs = { sendMessage: jest.fn(reply) };
+      converter.downloadPdf(paper, 42);
+      await jest.advanceTimersByTimeAsync(240_001);
+      [...c.listeners].forEach((l) => l({ id: 7, state: { current: 'interrupted' }, error: { current: 'USER_CANCELED' } }));
+      await jest.advanceTimersByTimeAsync(0);
+      expect(showNotification).toHaveBeenCalledTimes(2);
+    });
+    test.each([
+      ['downloadPdf', (p, tab) => converter.downloadPdf(p, tab)],
+      ['_fallbackToPdf', (p, tab) => converter._fallbackToPdf(p, null, tab)],
+    ])('%s：4 分钟内取消——有发起页不通知，没有才通知', async (_n, run) => {
+      jest.useFakeTimers();
+      fakeChrome({ interruptAt: 1000 });
+      let p = run(paper, 42);
+      await jest.advanceTimersByTimeAsync(1001);
+      expect(await p).toMatchObject({ success: false, downloadFailure: 'canceled' });
+      expect(showNotification).not.toHaveBeenCalled();
+      fakeChrome({ interruptAt: 1000 });
+      p = run(paper, null);
+      await jest.advanceTimersByTimeAsync(1001);
+      await p;
+      expect(showNotification).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe.each([['zh'], ['en']])('通知与状态卡（%s）', (lang) => {
@@ -442,7 +504,7 @@ describe('batch9 ①：4 分钟后仍在下载 → 不报失败、不取消；�
 
   test('content/index.js 两处结果处理都先看 pending', () => {
     const src = require('fs').readFileSync(require('path').join(__dirname, '../src/content/index.js'), 'utf8');
-    expect(src.match(/pending\) \{\n\s*showPending\(t\.content_download_pending\)/g)).toHaveLength(2);
+    expect(src.match(/pending\) \{\n\s*showPending\(t\.content_download_pending, /g)).toHaveLength(2); // P3①：带 downloadId
     expect(src).not.toMatch(/showSuccess\(t\.content_download_pending\)/);
   });
 });

@@ -80,13 +80,20 @@ async function init() {
       break;
 
     case 'PDF_DOWNLOAD_SETTLED':
-      // batch9 M2：pending 的 PDF 下载后来完成了
-      if (message.data?.ok) settlePending(t.content_progress_completed);
+    // batch9 M2：pending 的 PDF 下载后来完成了
+    {
+      // batch9 P3①：按 downloadId 匹配卡片；P3③：回复 handled，后台据此决定取消时还要不要弹系统通知
+      const id = message.data?.downloadId ?? null;
+      let handled = false;
+      if (message.data?.ok) handled = settlePending(t.content_progress_completed, id);
       // batch9 审查 P3②：超时后又中断——仍是 pending 卡片时换成对应的失败 / 已取消卡
-      else if (message.data && isPendingShown()) {
+      else if (message.data && isPendingShown(id)) {
         (isCanceledDownload(message.data) ? showCanceled : showError)(statusCardErrorText(message.data, t, 'PDF download failed', { download: true }));
+        handled = true;
       }
-      break;
+      sendResponse({ received: true, handled });
+      return false;
+    }
 
     case 'CONVERSION_PROGRESS':
       updateProgressUI(message.data);
@@ -263,7 +270,7 @@ async function handleConversionTrigger(type = 'markdown') {
 
         // batch9 ①：4 分钟后下载还在继续，不是失败
         if (response?.data?.pending) {
-          showPending(t.content_download_pending);
+          showPending(t.content_download_pending, response.data.downloadId);
         } else if (response?.data?.background) {
           showSuccess(t.content_progress_submitted);
         } else if (response?.data?.filename) {
@@ -353,7 +360,7 @@ async function handlePdfDownloadDirect(button) {
         }
 
         if (response?.data?.pending || response?.pending) {
-          showPending(t.content_download_pending);
+          showPending(t.content_download_pending, (response.data || response).downloadId);
           return;
         }
         showSuccess(t.content_progress_completed);

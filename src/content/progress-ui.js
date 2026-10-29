@@ -49,6 +49,7 @@ export function setProgressState({ text, percent = null, detail = '', file = '',
 
   progressIndicator.style.display = 'flex';
   delete progressIndicator.dataset.pending;
+  delete progressIndicator.dataset.downloadId;
   removeResultActions(progressIndicator);
   progressIndicator.classList.remove('error', 'success', 'warning');
   if (state === 'error' || state === 'success' || state === 'warning') {
@@ -187,7 +188,7 @@ export function showSuccess(message) {
  * batch9 ①：4 分钟后下载仍在继续——中性（进行中）样式，不显示百分比，
  * 标题「仍在下载」，不声称已完成或失败；带关闭按钮，不自动收起（M2）。
  */
-export function showPending(message) {
+export function showPending(message, downloadId = null) {
   notifyOutcome({ ok: true, pending: true, message: message || '' });
   setProgressState({
     text: t.content_progress_still_downloading,
@@ -198,6 +199,9 @@ export function showPending(message) {
   const progressIndicator = document.querySelector('.arxiv-md-progress');
   if (progressIndicator) {
     progressIndicator.dataset.pending = '1';
+    // batch9 P3①：记住是哪一次下载，后来的 PDF_DOWNLOAD_SETTLED 只认同一个 id
+    if (downloadId != null) progressIndicator.dataset.downloadId = String(downloadId);
+    else delete progressIndicator.dataset.downloadId;
     const actions = document.createElement('div');
     actions.className = 'arxiv-md-result-actions';
     actions.appendChild(createCloseButton());
@@ -207,15 +211,17 @@ export function showPending(message) {
   clearTimeout(successTimer);
 }
 
-/** batch9 M2：页面上是否仍是 pending 卡片 */
-export function isPendingShown() {
+/** batch9 M2：页面上是否仍是 pending 卡片；P3①：给了 downloadId 时还要是同一次下载 */
+export function isPendingShown(downloadId = null) {
   const el = document.querySelector('.arxiv-md-progress');
-  return !!el && el.dataset.pending === '1' && el.style.display !== 'none';
+  if (!el || el.dataset.pending !== '1' || el.style.display === 'none') return false;
+  if (downloadId == null || el.dataset.downloadId == null) return true;
+  return el.dataset.downloadId === String(downloadId);
 }
 
 /** batch9 M2：后台报告 pending 的下载后来完成了——仍显示 pending 卡片时换成「已完成」 */
-export function settlePending(message) {
-  if (!isPendingShown()) return false;
+export function settlePending(message, downloadId = null) {
+  if (!isPendingShown(downloadId)) return false;
   showSuccess(message);
   return true;
 }

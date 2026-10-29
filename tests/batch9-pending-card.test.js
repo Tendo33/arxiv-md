@@ -1,5 +1,5 @@
 import { parseHTML } from 'linkedom';
-import { showPending, showError, showSuccess, setProgressState, settlePending, SUCCESS_VISIBLE_MS } from '../src/content/progress-ui';
+import { showPending, showError, showSuccess, setProgressState, settlePending, isPendingShown, SUCCESS_VISIBLE_MS } from '../src/content/progress-ui';
 import { statusCardErrorText } from '../src/content/status-error';
 import { translations } from '../src/config/locales';
 
@@ -87,9 +87,25 @@ describe('batch9 ①：pending 状态卡（中性、无百分比、不说完成/
     expect(box.style.display).toBe('none');
   });
 
+  // release-polish batch9 P3①：卡片记住 downloadId，只认同一次下载的补发消息
+  test('P3①：按 downloadId 匹配 pending 卡片', () => {
+    jest.useFakeTimers();
+    showPending(t.content_download_pending, 7);
+    const box = document.querySelector('.arxiv-md-progress');
+    expect(box.dataset.downloadId).toBe('7');
+    expect(isPendingShown(8)).toBe(false);
+    expect(settlePending('done', 8)).toBe(false);
+    expect(box.dataset.pending).toBe('1');
+    expect(isPendingShown(7)).toBe(true);
+    expect(isPendingShown()).toBe(true); // 旧消息没带 id 时照旧
+    expect(settlePending(t.content_progress_completed, 7)).toBe(true);
+    expect(box.dataset.downloadId).toBeUndefined();
+  });
+
   test('content/index.js 处理 PDF_DOWNLOAD_SETTLED', () => {
     const src = require('fs').readFileSync(require('path').join(__dirname, '../src/content/index.js'), 'utf8');
-    expect(src).toMatch(/case 'PDF_DOWNLOAD_SETTLED':\n.*\n\s*if \(message\.data\?\.ok\) settlePending\(/);
+    // release-polish P3①：按 downloadId 匹配
+    expect(src).toMatch(/case 'PDF_DOWNLOAD_SETTLED':[\s\S]{0,400}if \(message\.data\?\.ok\) handled = settlePending\(t\.content_progress_completed, id\)/);
   });
 
   test('成功卡仍是 100% success（对照）', () => {

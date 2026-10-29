@@ -97,6 +97,7 @@ export function downloadFile(url, filename, { timeoutMs = DOWNLOAD_TIMEOUT_MS, k
       const error = new Error(`Download interrupted: ${reason || 'UNKNOWN'}`);
       error.code = 'DOWNLOAD_INTERRUPTED';
       error.downloadError = reason || 'UNKNOWN';
+      error.downloadId = id; // batch9 P3①：补发的 SETTLED 带上 id，页面只更新同一次下载的卡片
       return error;
     };
     // item 可以是 onChanged 的 delta（state.current / error.current）或 search() 的 DownloadItem（state / error）
@@ -157,6 +158,7 @@ export function downloadFile(url, filename, { timeoutMs = DOWNLOAD_TIMEOUT_MS, k
           if (Array.isArray(items) && items.length === 0) {
             const error = new Error('Download removed from the download list');
             error.code = 'DOWNLOAD_REMOVED';
+            error.downloadId = id;
             finish(reject, error);
             return;
           }
