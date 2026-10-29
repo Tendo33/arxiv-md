@@ -12,7 +12,7 @@ import { arxivApiUrl } from '@core/metadata-extractor';
 import { installPaddleOriginRuleListeners } from './paddle-origin-rule';
 import { deletedTaskGuard, processMinerUTaskInBackground, providerRegistry, resumeParseTasks, confirmPdfSend, abortParseTask } from './mineru-task-runner';
 import { KEEP_ALIVE_ALARM, syncKeepAlive } from './keep-alive';
-import { isExtensionPageSender, isTrustedArxivSender, isValidArxivId, triggerConversionInActiveTab } from './message-guards';
+import { handleOpenDisclosure, isExtensionPageSender, isTrustedArxivSender, isValidArxivId, triggerConversionInActiveTab } from './message-guards';
 import { createActionBadge, handleShortcutResult, conversionBadgeState } from './action-badge';
 import { createContextMenus } from './context-menu';
 import { runMigrations } from '@utils/migrations';
@@ -85,7 +85,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   case 'OPEN_DISCLOSURE':
     // 附录 C10：content script 请求打开设置页的数据说明（只接受已知后端 id，由 disclosureHash 校验格式）
-    if (['paddleocr', 'mineru'].includes(message.provider)) openDisclosureSettings(message.provider);
+    // P3-5：同时核对发送方（本扩展、arxiv.org 或扩展页面）
+    if (!handleOpenDisclosure(message, sender, chrome.runtime.id, openDisclosureSettings)) logger.warn('OPEN_DISCLOSURE rejected');
     return false;
 
   case 'START_PDF_TASK':

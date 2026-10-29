@@ -72,3 +72,12 @@ export function isExtensionPageSender(sender, runtimeId) {
   if (!sender || sender.id !== runtimeId || sender.tab) return false;
   return typeof sender.url === 'string' && sender.url.startsWith(`chrome-extension://${runtimeId}/`);
 }
+
+/** P3-5：OPEN_DISCLOSURE 只接受本扩展 arxiv.org 内容脚本 / 扩展页面发来的、已知后端 id；返回是否打开了 */
+export const DISCLOSURE_PROVIDERS = ['paddleocr', 'mineru'];
+export function handleOpenDisclosure(message, sender, runtimeId, open) {
+  if (!isTrustedArxivSender(sender, runtimeId)) return false;
+  if (!message || !DISCLOSURE_PROVIDERS.includes(message.provider)) return false;
+  open(message.provider);
+  return true;
+}
