@@ -3,6 +3,8 @@
 import { STORAGE_KEYS, DEFAULTS } from '@config/constants';
 import logger from './logger';
 import { PROVIDER_KEYS_KEY, PDF_PROVIDER_KEY, pickPdfProvider } from './migrations';
+// QA L-03：本设备最近一次自己选的后端（local，不同步）
+const PDF_PROVIDER_SET_HERE_KEY = 'pdfProviderSetHere';
 
 import { browserDefaultLanguage } from './browser-language';
 
@@ -91,12 +93,18 @@ class StorageManager {
   /** @param {string} providerId */
   async setPdfProvider(providerId) {
     await chrome.storage.sync.set({ [PDF_PROVIDER_KEY]: providerId });
+    // QA L-03：记下「这个选择是在本设备做的」，避免刚装好、刚选完就提示「在另一台设备上选了」
+    await chrome.storage.local.set({ [PDF_PROVIDER_SET_HERE_KEY]: providerId }).catch(() => {});
   }
 
-  /** 用户（可能在另一台设备上）明确选过的后端；没选过返回 null。sync 里只有选择，没有 Key */
+  /**
+   * 用户在另一台设备上明确选过的后端（随 sync 过来）；没选过、或就是在本设备选的 → null。sync 里只有选择，没有 Key
+   */
   async getChosenPdfProvider() {
     const { [PDF_PROVIDER_KEY]: v } = await chrome.storage.sync.get(PDF_PROVIDER_KEY);
-    return typeof v === 'string' && v ? v : null;
+    if (!(typeof v === 'string' && v)) return null;
+    const local = await chrome.storage.local.get(PDF_PROVIDER_SET_HERE_KEY).catch(() => ({}));
+    return local && local[PDF_PROVIDER_SET_HERE_KEY] === v ? null : v;
   }
 
   /**
