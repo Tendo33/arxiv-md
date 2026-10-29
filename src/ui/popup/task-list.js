@@ -85,6 +85,8 @@ export function createTaskRow(task, doc = globalThis.document) {
     el(doc, 'span', { class: 'row-err-prov', 'aria-hidden': 'true' }, [`${providerLabel(task.provider)} · `]),
     ...errNodes(doc, String(error)),
   ]));
+  // QA P2-DNR + 审查 P3(a)：等扩展页关闭后自重载的任务，明确说明在等什么、要用户做什么
+  if (status === TASK_STATUS.PENDING && task.dnrReinitWaitSince != null) row.append(el(doc, 'span', { class: 'row-note', role: 'status' }, [t.popup_note_dnr_wait]));
   if (status === TASK_STATUS.AWAITING_DISCLOSURE) row.append(el(doc, 'span', { class: 'row-note' }, [t.pdf_disc_needed_title]));
   return row;
 }
