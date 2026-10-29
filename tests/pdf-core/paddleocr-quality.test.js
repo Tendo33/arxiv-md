@@ -73,3 +73,28 @@ describe('P-2：cropImage（createImageBitmap + OffscreenCanvas）', () => {
     await expect(cropImage(new Uint8Array([1]), { bbox: [0, 0, 1, 1] })).rejects.toThrow('crop unsupported');
   });
 });
+
+describe('P-3：表格单元格里的裸 LaTeX 补 $', () => {
+  const { wrapCellMath, normalizeTables } = require('@pdf-core/normalize/table');
+  test.each([
+    ['1.0 \\cdot 10^{20}', '$1.0 \\cdot 10^{20}$'],
+    ['d_{model}', '$d_{model}$'],
+    ['\\epsilon_{ls}', '$\\epsilon_{ls}$'],
+    ['P_{drop}', '$P_{drop}$'],
+  ])('%s → %s', (a, b) => expect(wrapCellMath(a)).toBe(b));
+  test.each([
+    ['$ O(1) $'], ['params  $ \\times 10^{6} $'], ['Transformer (base model)'], ['28.4'], ['1.0e20'],
+    ['see \\cite{x} for details'], ['<b>x_{1}</b>'], [''],
+  ])('不动：%s', (a) => expect(wrapCellMath(a)).toBe(a));
+  test('真实 Table 2 行：数学格补 $，文字格和数字格不动，td 属性保留', () => {
+    const row = "<table><tr><td style='x'>Transformer (big)</td><td>28.4</td><td>2.3 \\cdot 10^{19}</td></tr></table>";
+    expect(normalizeTables(row)).toBe("<table><tr><td style='x'>Transformer (big)</td><td>28.4</td><td>$2.3 \\cdot 10^{19}$</td></tr></table>");
+  });
+  test('表格外的文字不动', () => expect(normalizeTables('a_{1} \\cdot b')).toBe('a_{1} \\cdot b'));
+  test('Attention 真实切片：Table 2/3 没有裸 LaTeX 单元格（修前 21 个）', async () => {
+    const md = (await deliver(fs.readFileSync(path.join(REAL, '1706.03762-tables.jsonl'), 'utf8'))).out.markdown;
+    expect(md).toContain('$1.0 \\cdot 10^{20}$');
+    const bare = [...md.matchAll(/<td[^>]*>([^<]*)<\/td>/g)].map((m) => m[1]).filter((c) => /\\[A-Za-z]+|[\^_]\{/.test(c) && !c.includes('$'));
+    expect(bare).toEqual([]);
+  });
+});

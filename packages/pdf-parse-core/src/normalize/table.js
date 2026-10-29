@@ -17,7 +17,24 @@ export function htmlTableToGfm(html) {
   return [line(rows[0]), line(new Array(w).fill('---')), ...rows.slice(1).map(line)].join('\n');
 }
 
+const LATEX_HINT = /\\[A-Za-z]+|[\^_]\{/;
+
+/** P-3：单元格是裸 LaTeX（含 \cmd、^{、_{ 且没有 $）时补 $…$；去掉命令和花括号后还剩 3 个以上连续字母的视为普通文本，不包 */
+export function wrapCellMath(cellHtml) {
+  const body = String(cellHtml);
+  const t = body.trim();
+  if (!t || t.includes('$') || /<[a-z/!]/i.test(t) || !LATEX_HINT.test(t)) return body;
+  const rest = t.replace(/\\[A-Za-z]+/g, ' ').replace(/\{[^{}]*\}/g, ' ');
+  if (/[A-Za-z]{3,}/.test(rest)) return body;
+  return `$${t}$`;
+}
+
+export function wrapTableMath(md) {
+  return withCodeProtected(md, (s) => s.replace(/<table[\s\S]*?<\/table>/gi, (tbl) => tbl.replace(/(<t([hd])\b[^>]*>)([\s\S]*?)(<\/t\2>)/gi, (_, open, _t, inner, close) => `${open}${wrapCellMath(inner)}${close}`)));
+}
+
 export function normalizeTables(md, { toGfm = false } = {}) {
+  md = wrapTableMath(md);
   if (!toGfm) return md;
   return withCodeProtected(md, (s) => s.replace(/<table[\s\S]*?<\/table>/gi, (t) => {
     const g = htmlTableToGfm(t);
