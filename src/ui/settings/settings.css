@@ -742,3 +742,14 @@ select.input-field { appearance: auto; cursor: pointer; width: 100%; }
 
 /* 语言按钮：可访问名称以可见文字开头 */
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* release-polish 设计 NTF6：所有链接用全站统一的 2px 品牌焦点环，并把可点区域加高到约 24px */
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.form-hint a,
+.footer-links a {
+  display: inline-block;
+  padding: 4px 0;
+}
