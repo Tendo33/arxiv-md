@@ -65,13 +65,6 @@ export function replaceFigureTables(text, pg) {
   return { text: out, crops };
 }
 
-/** 单页总入口 */
-/**
- * P-7：版面模型把「ACKNOWLEDGMENT」这类节标题标成 header（页眉），markdown_ignore_labels 会把它整块丢掉。
- * 只恢复两类确定是节标题的 header：致谢，以及全大写、带编号的节标题（如 GELU 附录「A NEURAL NETWORK …」）。
- * 插到它正下方第一个能在正文里找到的块前面。「Published as a conference paper …」这类真页眉不碰。
- * 标题大小写被模型改写（3.3 Twitter POS Tagging）来自 block_content 本身，属已知问题。
- */
 const ACK_RE = /^\s*(?:\d+\.?\s*)?acknowledge?ments?\s*$/i;
 const CAPS_SECTION_RE = /^\s*(?:[A-Z]|\d+(?:\.\d+)*)\.?\s+[A-Z][A-Z0-9 ,:-]{8,}$/;
 // arXiv 模板页眉常用词：命中就不当节标题（「A PREPRINT - OCTOBER 12, 2023」「A TECHNICAL REPORT」）
