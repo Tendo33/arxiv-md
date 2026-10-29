@@ -173,7 +173,7 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
   }
 
   /**
-   * 「同意并使用」（用户手势）：写确认记录、切换后端，并在同一个手势里申请权限。
+   * 「确认并继续」（用户手势）：写确认记录、切换后端，并在同一个手势里申请权限。
    * 存储写入不 await，保证 permissions.request 仍在手势内。用户拒绝授权时后端照样保存，权限行显示「需要授权访问」。
    */
   async function onAgree(id) {
