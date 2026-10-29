@@ -22,8 +22,8 @@ describe('AR-04 manifest', () => {
     expect(manifest.background).toEqual({ service_worker: 'background.js', scripts: ['background.js'] });
     expect(manifest.minimum_chrome_version).toBe('121');
   });
-  test('没有加 data_collection_permissions（只在待决策里提案）', () => {
-    expect(manifest.browser_specific_settings.gecko).not.toHaveProperty('data_collection_permissions');
+  test('已声明 data_collection_permissions（待 Simon 决定）', () => {
+    expect(manifest.browser_specific_settings.gecko).toHaveProperty('data_collection_permissions');
   });
 });
 
