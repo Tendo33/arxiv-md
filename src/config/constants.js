@@ -116,8 +116,8 @@ export const TASK_STATUS = {
   PROCESSING: 'processing', // 处理中
   COMPLETED: 'completed',   // 已完成
   FAILED: 'failed',         // 失败
-  AWAITING_CONSENT: 'awaiting_consent', // 1.2.2 前：非 OA PDF 等用户确认。现在不再产生，只为显示旧任务保留
-  AWAITING_DISCLOSURE: 'awaiting_disclosure', // 1.2.2 前：数据说明未确认。现在不再产生，只为显示旧任务保留
+  AWAITING_CONSENT: 'awaiting_consent', // 1.2.2 前的旧状态，现在不再产生；旧任务显示「需重试」
+  AWAITING_DISCLOSURE: 'awaiting_disclosure', // 1.2.2 前的旧状态，现在不再产生；旧任务显示「需重试」
 };
 
 /**

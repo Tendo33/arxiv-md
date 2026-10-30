@@ -1,5 +1,5 @@
 // 1.2.2（Simon 决定）：使用时零确认。非 OA / 非 arXiv 的 PDF 也不再停下等确认，有 Key 就直接解析；
-// 旧版本留下的 awaiting_consent / awaiting_disclosure 任务在弹窗里显示「重试」。
+// 旧版本留下的 awaiting_consent / awaiting_disclosure 任务在弹窗里显示「需重试」徽标和「重试」按钮。
 import fs from 'fs';
 import path from 'path';
 import { translations } from '../src/config/locales';
@@ -7,7 +7,7 @@ import { makeHarness, fakeProvider } from './helpers/runner-harness';
 import { parseHTML as __parseHTML } from 'linkedom';
 // release-polish AR-04：createTaskRow 返回 DOM 节点，这里在 linkedom 文档里构建后取 outerHTML 再断言
 const __doc = __parseHTML('<!doctype html><html><body></body></html>').document;
-const rowHtml = (task) => require('../src/ui/popup/task-list').createTaskRow(task, __doc).outerHTML;
+const rowNode = (task) => require('../src/ui/popup/task-list').createTaskRow(task, __doc);
 
 const read = (p) => fs.readFileSync(path.join(__dirname, '..', p), 'utf8');
 const exists = (p) => fs.existsSync(path.join(__dirname, '..', p));
@@ -73,9 +73,10 @@ describe('确认流程已整体移除', () => {
       'pdf_disc_title', 'pdf_disc_ok', 'pdf_disc_cancel', 'pdf_disc_needed_title', 'pdf_disc_needed_body', 'task_disc_needed_body', 'popup_action_disclose']) {
       expect([k, k in translations.zh, k in translations.en]).toEqual([k, false, false]);
     }
-    // 旧任务仍要显示「待确认」徽标
-    expect(translations.zh.popup_status_awaiting).toBeTruthy();
-    expect(translations.en.popup_status_awaiting).toBeTruthy();
+    // 旧任务显示「需重试」徽标，旧的「待确认」键已删除
+    expect(translations.zh.popup_status_needs_retry).toBe('需重试');
+    expect(translations.en.popup_status_needs_retry).toBe('Needs retry');
+    expect(['popup_status_awaiting' in translations.zh, 'popup_status_awaiting' in translations.en]).toEqual([false, false]);
   });
 });
 
@@ -103,15 +104,20 @@ describe('各入口都经过同一个 runner', () => {
 });
 
 describe('任务行', () => {
-  test.each(['awaiting_consent', 'awaiting_disclosure'])('旧的 %s 任务：显示「待确认」和「重试」，没有确认 / 查看说明按钮', (status) => {
+  test.each([
+    ['awaiting_consent', 'zh', '需重试'], ['awaiting_disclosure', 'zh', '需重试'],
+    ['awaiting_consent', 'en', 'Needs retry'], ['awaiting_disclosure', 'en', 'Needs retry'],
+  ])('旧的 %s 任务（%s）：徽标「%s」和「重试」按钮，没有确认 / 查看说明按钮', (status, lang, label) => {
     const { setTaskListLanguage } = require('../src/ui/popup/task-list');
+    setTaskListLanguage(lang);
+    const row = rowNode({ id: 't1', status, provider: 'paddleocr', paperInfo: { title: 'T' }, createdAt: Date.now() });
+    // 用 DOM 查询而不是匹配 HTML 字符串，断言不依赖属性顺序
+    expect(row.querySelector('.badge').textContent).toBe(label);
+    expect(row.querySelector('.badge').classList.contains('wait')).toBe(true);
+    const retry = row.querySelector('button[data-action="retry"]');
+    expect(retry).toBeTruthy();
+    expect(retry.getAttribute('data-task-id')).toBe('t1');
+    expect(row.querySelector('[data-action="consent"], [data-action="disclose"], .row-note')).toBeNull();
     setTaskListLanguage('zh');
-    const html = rowHtml({ id: 't1', status, provider: 'paddleocr', paperInfo: { title: 'T' }, createdAt: Date.now() });
-    expect(html).toContain('待确认');
-    const buttons = html.match(/<button[^>]*>/g) || [];
-    expect(buttons.some((b) => b.includes('data-action="retry"') && b.includes('data-task-id="t1"'))).toBe(true);
-    expect(html).not.toContain('data-action="consent"');
-    expect(html).not.toContain('data-action="disclose"');
-    expect(html).not.toContain('row-note');
   });
 });

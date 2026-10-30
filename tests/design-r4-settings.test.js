@@ -15,8 +15,9 @@ describe('B5（取代 M4）：Key 行 = 输入框（尾部显示按钮）+ 测�
 describe('设计验收 M5（1.2.2）：授权/撤销按钮已删除，只剩「重新初始化」', () => {
   test('没有授权 / 撤销按钮；重新初始化按钮套 .btn 基类，行内按钮 ≥36px 且不拉满', () => {
     expect(html).not.toMatch(/grantPermissionBtn|revokePermissionBtn|revokeRow|permissionStatus/);
-    expect(html).toMatch(/<div class="permission-row" id="reinitRow" hidden>\s*<button type="button" id="reinitBtn" class="btn btn-ghost"/);
-    expect(css).toMatch(/\.permission-row \.btn \{ min-height: 36px; padding: 0 12px; width: auto; flex: none; \}/);
+    expect(html).toMatch(/<div class="reinit-row" id="reinitRow" hidden>\s*<button type="button" id="reinitBtn" class="btn btn-ghost"/);
+    expect(css).toMatch(/\.reinit-row \.btn \{ min-height: 36px; padding: 0 12px; width: auto; flex: none; \}/);
+    expect(html + css).not.toMatch(/permission-row/);
     expect(css).not.toMatch(/\.revoke-row|#permissionStatus|\.pd-panel|\.pd-confirmed/);
   });
 });

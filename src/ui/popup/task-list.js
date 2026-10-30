@@ -52,9 +52,9 @@ export function createTaskRow(task, doc = globalThis.document) {
     [TASK_STATUS.PROCESSING]: ['run', t.popup_status_processing],
     [TASK_STATUS.COMPLETED]: ['ok', t.popup_status_completed],
     [TASK_STATUS.FAILED]: ['err', t.popup_status_failed],
-    // 1.2.2 前留下的「待确认」任务（非 OA / 数据说明）：不再需要确认，点重试直接解析
-    [TASK_STATUS.AWAITING_CONSENT]: ['wait', t.popup_status_awaiting],
-    [TASK_STATUS.AWAITING_DISCLOSURE]: ['wait', t.popup_status_awaiting],
+    // 1.2.2 前留下的 awaiting_* 任务：显示「需重试」，点重试直接解析
+    [TASK_STATUS.AWAITING_CONSENT]: ['wait', t.popup_status_needs_retry],
+    [TASK_STATUS.AWAITING_DISCLOSURE]: ['wait', t.popup_status_needs_retry],
   };
   const [cls, label] = map[status] || ['idle', t.popup_status_unknown];
   const busy = status === TASK_STATUS.PENDING || status === TASK_STATUS.PROCESSING;

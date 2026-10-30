@@ -13,7 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### 变更
 
 - 权限改为安装 / 更新时一次授予：PaddleOCR 的域名（`paddleocr.aistudio-app.com`、`*.bj.bcebos.com`）和 `declarativeNetRequestWithHostAccess` 从可选权限移入必需权限，Chrome 和 Firefox 包权限相同。使用时不再弹出授权请求，设置页去掉「授权访问」「撤销授权」按钮和「需要授权访问」状态行。没有新增其他域名。
-- 使用时零确认：选好后端、填好 Key 就直接解析。去掉首次使用后端前的数据说明确认，以及非 arXiv PDF 发送前的「确认解析」弹窗；旧版本留下的「待确认」任务可直接点「重试」。
+- 使用时零确认：选好后端、填好 Key 就直接解析。去掉首次使用后端前的数据说明确认，以及非 arXiv PDF 发送前的「确认解析」弹窗；旧版本留下的待确认任务改为显示「需重试」（Needs retry），点「重试」直接解析。设置页 PDF 解析分组下方列出 PaddleOCR、MinerU 的隐私政策链接。
 - 隐私政策（PRIVACY.md）和 README 的权限说明同步更新。
 
 ## [1.2.1] - 2026-10-30

@@ -154,7 +154,7 @@ function bindEvents() {
     pdfSection.render();
   });
 
-  // R4-14：后端选择 / 授权 / 撤销 / 测试连接
+  // R4-14：后端选择 / 重新初始化 / 测试连接
   pdfSection.bind();
 
   // 即时保存（A3-3）：每项改动立刻写入，不再有「保存」按钮

@@ -108,7 +108,12 @@
                 </span>
               </label>
             </fieldset>
-            <div class="permission-row" id="reinitRow" hidden>
+            <p class="form-hint privacy-links" id="pdfPrivacyLinks">
+              <span data-i18n="pdf_privacy_label">Provider privacy policies:</span>
+              <a id="privacyLinkPaddleocr" class="key-link" href="https://www.baidu.com/duty/yinsiquan.html" target="_blank" rel="noopener noreferrer"><span data-i18n="pdf_privacy_link_paddleocr">Baidu privacy policy (in Chinese)</span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></svg><span class="sr-only" data-i18n="link_new_tab">(opens in a new tab)</span></a>
+              <a id="privacyLinkMineru" class="key-link" href="https://sso.openxlab.org.cn/protocol/privacy" target="_blank" rel="noopener noreferrer"><span data-i18n="pdf_privacy_link_mineru">MinerU privacy policy (OpenXLab, in Chinese)</span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></svg><span class="sr-only" data-i18n="link_new_tab">(opens in a new tab)</span></a>
+            </p>
+            <div class="reinit-row" id="reinitRow" hidden>
               <button type="button" id="reinitBtn" class="btn btn-ghost" data-i18n="pdf_reinit_btn" hidden>Reinitialize</button>
             </div>
           </div>

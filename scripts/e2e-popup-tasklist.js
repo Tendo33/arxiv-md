@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 // 审查员 S 增量报告「任务列表最小高度」（C）回归 e2e，是 npm run test:e2e 的第三步。
 // 干净 profile 加载 dist，把当前标签页模拟成 arXiv abs 页，点「PDF 解析」触发缺 Key 提示（列表上方内容最多的状态），
-// 在 320、360、375 宽、600 高（Chrome popup 上限）下，断言首行待确认任务的按钮完整处在 #taskList 的可见区域内，按钮折行时也一样。
+// 在 320、360、375 宽、600 高（Chrome popup 上限）下，断言首行需重试任务的按钮完整处在 #taskList 的可见区域内，按钮折行时也一样。
 // 运行条件同 e2e-shortcut.js。E2E_TASKLIST_OUT=<file> 时写出测量 JSON。
 const fs = require('fs');
 const os = require('os');
@@ -71,7 +71,7 @@ function loadPlaywright() {
           return { listTop: Math.round(lr.top), listBottom: Math.round(lr.bottom), listH: Math.round(lr.height), rowH: Math.round(rr.height), wrapped: btns.length && btns[0].top > rr.top + 12, btns };
         });
         m.ok = m.btns.length > 0 && m.btns.every((b) => b.top >= m.listTop && b.bottom <= m.listBottom);
-        // 复审 P3③：Key 提示显示时，待确认行和它的按钮不能被 footer 盖住。
+        // 复审 P3③：Key 提示显示时，需重试行和它的按钮不能被 footer 盖住。
         // 先截一张原始状态；再像用户一样在 Key 提示上滚一下滚轮（.body 是 overflow:hidden，滚不动；被遮住的内容用户也看不到），然后量 bottom ≤ .ft 的 top。
         const shots = process.env.E2E_TASKLIST_SHOTS;
         if (shots) { fs.mkdirSync(shots, { recursive: true }); await p.screenshot({ path: path.join(shots, `${lang}-${w}-open.png`) }); }

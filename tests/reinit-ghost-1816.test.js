@@ -9,6 +9,6 @@ test('reinitBtn is a <button> with btn-ghost', () => {
 test('ghost styles: transparent, no border, text-secondary, 36px, light hover/focus', () => {
   expect(css).toMatch(/\.btn-ghost \{ background: transparent; color: var\(--text-secondary\); border: none;/);
   expect(css).toMatch(/\.btn-ghost:hover, \.btn-ghost:focus-visible \{ background: var\(--surface-2\)/);
-  expect(css).toMatch(/\.permission-row \.btn-ghost \{[^}]*height: 36px/);
+  expect(css).toMatch(/\.reinit-row \.btn-ghost \{[^}]*height: 36px/);
   expect(css).toMatch(/\.btn:focus-visible \{\s*outline: 2px solid var\(--focus-ring\)/);
 });

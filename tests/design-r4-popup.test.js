@@ -1,4 +1,4 @@
-// R4 设计验收：popup 版式（M3、M9）与建议项（待确认样式、后端标签字号）
+// R4 设计验收：popup 版式（M3、M9）与建议项（需重试样式、后端标签字号）
 import fs from 'fs';
 import path from 'path';
 import { translations } from '../src/config/locales';
@@ -9,9 +9,10 @@ const rowHtml = (task) => require('../src/ui/popup/task-list').createTaskRow(tas
 
 const css = fs.readFileSync(path.join(__dirname, '../src/ui/popup/popup.css'), 'utf8');
 
-describe('M9 待确认行在英文窄宽下不挤掉标题', () => {
-  test('英文徽标和行内「重试」按钮够短', () => {
-    expect(translations.en.popup_status_awaiting.length).toBeLessThanOrEqual(8);
+describe('M9 需重试行在英文窄宽下不挤掉标题', () => {
+  test('英文徽标和行内「重试」按钮够短（1.2.2：徽标改为 Needs retry，标题仍有 min-width:80px 兜底）', () => {
+    expect(translations.en.popup_status_needs_retry).toBe('Needs retry');
+    expect(translations.en.popup_status_needs_retry.length).toBeLessThanOrEqual(11);
     expect(translations.en.popup_action_retry.length).toBeLessThanOrEqual(8);
   });
   test('1.2.2：确认按钮已删除，对应的限宽规则也删掉', () => {
@@ -19,7 +20,7 @@ describe('M9 待确认行在英文窄宽下不挤掉标题', () => {
   });
 });
 
-describe('建议：待确认有单独的等待样式', () => {
+describe('建议：需重试有单独的等待样式', () => {
   test('task-list 用 wait；CSS 有 .badge.wait 且与 run 不同色', () => {
     const { createTaskRow, setTaskListLanguage } = require('../src/ui/popup/task-list');
     setTaskListLanguage('zh');

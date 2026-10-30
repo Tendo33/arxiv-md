@@ -683,11 +683,14 @@ body {
 .autosave-note.error { color: var(--danger); font-weight: 600; white-space: normal; }
 
 /* R4-14：PDF 解析分组 */
-.permission-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 8px; font-size: 13px; color: var(--text-secondary, #475569); }
-.permission-row[hidden] { display: none; }
+.reinit-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+.reinit-row[hidden] { display: none; }
 
 /* 设计验收 M5：「重新初始化」按钮用设置页按钮样式；窄屏下不拉满整行 */
-.permission-row .btn { min-height: 36px; padding: 0 12px; width: auto; flex: none; }
+.reinit-row .btn { min-height: 36px; padding: 0 12px; width: auto; flex: none; }
+
+/* 1.2.2：服务方隐私政策链接（卡片下方一行，链接样式同「获取 Key」） */
+.privacy-links { display: flex; flex-wrap: wrap; align-items: center; column-gap: 12px; margin-top: 8px; }
 
 .token-status-link { color: inherit; text-decoration: underline; font-weight: 600; display: inline-block; padding: 4px 0; margin: -4px 0; border-radius: 4px; } /* 设计复验 15fe0f9 必须改 2（R22）：横向不外扩，Key 无效时 #tokenStatus 不溢出 */
 /* 设计 D4（AX-08）：状态行内链接扩大点击区但不改行高；焦点环 2px --focus-ring（亮 #2563eb / 暗 #60a5fa）。#getKeyLink 不在此列 */
@@ -762,7 +765,7 @@ a:focus-visible {
 /* 设计 18:16 #2：「重新初始化」ghost 按钮（无边框、透明底，hover/focus 浅底，保留 focus 环） */
 .btn-ghost { background: transparent; color: var(--text-secondary); border: none; box-shadow: none; }
 .btn-ghost:hover, .btn-ghost:focus-visible { background: var(--surface-2); color: var(--text-primary); }
-.permission-row .btn-ghost { box-sizing: border-box; height: 36px; min-height: 36px; }
+.reinit-row .btn-ghost { box-sizing: border-box; height: 36px; min-height: 36px; }
 
 /* 设计验收 30a6e1b #7：主按钮 focus-visible 只留蓝色 outline，不叠红色阴影 */
 .btn-primary:focus-visible { box-shadow: none; transition: none; } /* 设计复验 15fe0f9 必须改 1（R07）：去掉 0.3s 阴影过渡，Tab 进来第一帧就没有品牌红 */

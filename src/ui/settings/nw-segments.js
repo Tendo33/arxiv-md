@@ -19,6 +19,8 @@ export const NW_ZH = {
   popup_key_here_hint: ['Key 不会', '跨设备同步，', '请在本设备的', '设置 › PDF 解析', '里重新填写'],
   popup_err_token_hint: ['到', '设置 › PDF 解析', '填写 Key，', '或改用普通导出'],
   advanced_pdf_fab: ['在 PDF 页显示', '悬浮导出按钮'],
+  pdf_privacy_link_paddleocr: ['百度隐私权保护声明', '（中文）'],
+  pdf_privacy_link_mineru: ['MinerU', ' ', '个人信息保护政策', '（OpenXLab，', '中文）'],
   // 设计复验 6a49976 裁定 3（P2-DNR 文案定稿）：popup 任务行等待提示不拆词（「展|会」「动|重」）
   popup_note_dnr_wait: ['正在完成网络设置。', '关闭此弹窗和设置页后，', '扩展会自动重启一次', '并继续。'],
 };
