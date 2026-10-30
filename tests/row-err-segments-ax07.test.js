@@ -13,7 +13,7 @@ const KEYS = ['err_short_QUOTA_EXCEEDED', 'err_short_RATE_LIMITED', 'err_short_A
 
 test('设计列出的 12 句 + {host} 句：分段拼接 = zh 原句', () => {
   expect(ZH_ROW_ERR_SEGMENTS.map((s) => s.join('')).sort()).toEqual(KEYS.map((k) => zh[k]).sort());
-  expect(rowErrSegments(zh.err_short_PERMISSION_MISSING.replace('{host}', 'paddleocr.aistudio-app.com'))).toEqual(['需要授权访问 ', 'paddleocr.aistudio-app.com']);
+  expect(rowErrSegments(zh.err_short_PERMISSION_MISSING.replace('{host}', 'paddleocr.aistudio-app.com'))).toEqual(['无法访问 ', 'paddleocr.aistudio-app.com，', '请重启浏览器', '后重试']);
   expect(rowErrSegments(translations.en.err_short_NETWORK)).toBeNull();
 });
 

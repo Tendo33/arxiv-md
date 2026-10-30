@@ -202,23 +202,6 @@ export function showError(message) {
  * 与已完成 / 已提交一样 10 秒自动收起（悬停/焦点暂停）。用户主动取消，不算失败。
  * R5-05（已决定 A）：带操作按钮的卡片保留到手动关闭，其他已完成卡片 10 秒后收起。
  */
-/**
- * 设计验收 30a6e1b #5：C10 拦截用中性提示（复用「已取消」的中性 canceled 样式，status/polite），
- * 标题是「需要先确认数据说明」，不显示「失败」，不报快捷键失败，不自动收起（设置页已打开，回来再点）。
- */
-export function showNotice(title, detail) {
-  notifyOutcome({ ok: false, notice: true, title, hint: detail, error: detail ? `${title}. ${detail}` : title });
-  setProgressState({ text: title, detail: detail || '', percent: null, state: 'canceled', polite: true });
-  const progressIndicator = document.querySelector('.arxiv-md-progress');
-  if (progressIndicator) {
-    progressIndicator.dataset.notice = 'disclosure';
-    const actions = document.createElement('div');
-    actions.className = 'arxiv-md-result-actions';
-    actions.appendChild(createCloseButton());
-    progressIndicator.appendChild(actions);
-  }
-}
-
 export function showCanceled(message) {
   notifyOutcome({ ok: false, error: message || t.content_error_download_canceled });
   setProgressState({

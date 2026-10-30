@@ -1,5 +1,5 @@
 // 加载真实的 background/index.js：chrome.* 全部 mock，收集 onMessage 监听器，能逐个入口发消息。
-// mineru-task-runner 的 process / confirmSend 换成 jest.fn，chrome.alarms.create 可断言（keepAlive 行为测试用）。
+// mineru-task-runner 的 process 换成 jest.fn，chrome.alarms.create 可断言（keepAlive 行为测试用）。
 export function loadBackground({ stats = { pending: 1, processing: 0 } } = {}) {
   const listeners = {};
   const ev = (name) => ({ addListener: (fn) => { (listeners[name] = listeners[name] || []).push(fn); } });
@@ -11,18 +11,15 @@ export function loadBackground({ stats = { pending: 1, processing: 0 } } = {}) {
     commands: { onCommand: ev('cmd') },
     contextMenus: { create: () => {}, removeAll: (cb) => cb && cb(), onClicked: ev('cm') },
     alarms: { onAlarm: ev('alarm'), create, clear: async () => true, get: async () => null },
-    storage: { local: { get: async (k) => (typeof k === 'string' && k.startsWith('disclosureAck.') ? { [k]: Date.now() } : {}), set: async () => {}, remove: async () => {} }, sync: { get: async () => ({}), set: async () => {} }, onChanged: ev('sc') },
+    storage: { local: { get: async () => ({}), set: async () => {}, remove: async () => {} }, sync: { get: async () => ({}), set: async () => {} }, onChanged: ev('sc') },
     notifications: { onClicked: ev('nc'), create: () => {} },
-    permissions: { contains: async () => true, onAdded: ev('pa'), onRemoved: ev('pr') },
   };
   let mod; let tm; let converter;
   const proc = jest.fn(async () => ({}));
-  const confirm = jest.fn(async () => ({ confirmed: true }));
   jest.isolateModules(() => {
     jest.doMock('../../src/background/mineru-task-runner', () => ({
       ...jest.requireActual('../../src/background/mineru-task-runner'),
       processMinerUTaskInBackground: proc,
-      confirmPdfSend: confirm,
     }));
     mod = require('../../src/background/index.js');
     tm = require('../../src/core/task-manager').default;
@@ -39,6 +36,6 @@ export function loadBackground({ stats = { pending: 1, processing: 0 } } = {}) {
   // 模块加载时自己会续任务并同步一次 alarm；等它跑完再清零，之后的 create 只来自被测入口
   const ready = async () => { for (let i = 0; i < 10; i++) await new Promise((r) => setTimeout(r, 0)); create.mockClear(); proc.mockClear(); };
   const keepAliveCreated = () => create.mock.calls.some(([n]) => n === 'keepAlive');
-  return { mod, tm, converter, ready, send, create, proc, confirm, keepAliveCreated };
+  return { mod, tm, converter, ready, send, create, proc, keepAliveCreated };
 }
 export const flush = () => new Promise((r) => setTimeout(r, 0));

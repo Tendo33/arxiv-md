@@ -86,7 +86,7 @@
         <section class="settings-section" id="pdfProviderSection" aria-labelledby="pdfProviderTitle">
           <h2 id="pdfProviderTitle" data-i18n="pdf_title">PDF parsing</h2>
           <p class="section-description" data-i18n="pdf_desc">
-            Used for the high-quality PDF path. Your PDF link is sent to the provider you choose.
+            PaddleOCR uploads PDFs from arXiv (up to 50 MB); MinerU, and PDFs from other sites, get only the link. Your key is stored only on this device and sent only to the provider you choose. Once a key is saved, PDFs are sent for parsing right away, with no confirmation prompt.
           </p>
 
           <div class="form-group">
@@ -107,12 +107,8 @@
                   <span class="pc-desc" id="pcDesc-mineru"><span data-i18n="pdf_card_mineru">Sends only the PDF link to mineru.net. Free accounts have a daily page limit.</span></span>
                 </span>
               </label>
-              <p class="pd-confirmed" id="pdConfirmed" role="status" aria-live="polite" hidden></p>
             </fieldset>
-            <div class="sr-only" id="pdLive" role="status" aria-live="polite"></div>
-            <div class="permission-row" id="permissionRow" hidden>
-              <span id="permissionStatus" role="status"></span>
-              <button type="button" id="grantPermissionBtn" class="btn btn-secondary" data-i18n="pdf_grant_btn" hidden>Grant access</button>
+            <div class="permission-row" id="reinitRow" hidden>
               <button type="button" id="reinitBtn" class="btn btn-ghost" data-i18n="pdf_reinit_btn" hidden>Reinitialize</button>
             </div>
           </div>
@@ -151,11 +147,6 @@
               <a id="getKeyLink" class="key-link" href="https://aistudio.baidu.com/account/accessToken" target="_blank" rel="noopener noreferrer"><span id="getKeyText" data-i18n="pdf_get_key">Get a key</span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></svg><span class="sr-only" data-i18n="link_new_tab">(opens in a new tab)</span></a>
             </div>
             <div class="form-hint key-here" id="keyHereHint" role="status" hidden></div>
-          </div>
-
-          <div class="form-group revoke-row" id="revokeRow" hidden>
-            <span id="revokeText"></span>
-            <button type="button" id="revokePermissionBtn" class="btn btn-secondary" data-i18n="pdf_revoke_btn">Revoke</button>
           </div>
         </section>
 

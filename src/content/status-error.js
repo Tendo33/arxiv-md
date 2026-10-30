@@ -18,11 +18,6 @@ export function statusCardErrorText(failure, t, context = 'Conversion failed', {
   }
   const body = failure?.data?.success === false ? failure.data : failure;
   if (body?.errorCode === 'NETWORK_OFFLINE' || failure?.errorCode === 'NETWORK_OFFLINE') return t.content_error_offline;
-  // 附录 C10：还没确认数据说明（设置页已打开）
-  if (body?.disclosureNeeded) {
-    const title = t.pdf_disc_needed_title;
-    return /[\u4e00-\u9fff]/.test(title) ? `${title}。${t.pdf_disc_needed_body}` : `${title}. ${t.pdf_disc_needed_body}`;
-  }
   const raw = body?.error || failure?.error || failure?.data?.error || failure?.message;
   if (raw) logger.error(`${context}:`, raw);
   // batch8 AB7-01/02：PDF 下载失败时状态卡和通知用同一类文案（下载失败 / 已取消 / …），不再写「转换失败」
@@ -37,12 +32,6 @@ export function isCanceledDownload(failure) {
   const body = failure?.data?.success === false ? failure.data : failure;
   const kind = body?.downloadFailure;
   return kind === 'canceled' || kind === 'removed';
-}
-
-/** 设计验收 30a6e1b #5：C10 拦截（还没确认数据说明）不是失败，走中性提示 */
-export function isDisclosureNeeded(failure) {
-  const body = failure?.data?.success === false ? failure.data : failure;
-  return !!(body?.disclosureNeeded || failure?.disclosureNeeded);
 }
 
 /** 扩展重载后旧内容脚本调用扩展 API 抛出的异常（Chrome："Extension context invalidated."） */

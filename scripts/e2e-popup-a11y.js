@@ -149,8 +149,7 @@ function loadPlaywright() {
         const p = await ctx.newPage();
         await p.setViewportSize({ width: 375, height: 700 });
         await p.addInitScript((r) => {
-          // 只在本页桩掉权限查询与网络，让 Key 测试走到各错误分支（不改 manifest、不真正授权）
-          if (chrome.permissions) chrome.permissions.contains = (_q, cb) => (cb ? cb(true) : Promise.resolve(true));
+          // 只在本页桩掉网络，让 Key 测试走到各错误分支（1.2.2 起设置页不查权限，不再桩 permissions）
           window.fetch = async () => {
             if (r.throw === 'AbortError') throw new DOMException('aborted', 'AbortError');
             if (r.throw) throw new TypeError('Failed to fetch');

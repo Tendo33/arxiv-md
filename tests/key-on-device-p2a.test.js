@@ -2,7 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import { parseHTML } from 'linkedom';
-import { installChrome, createPermissions } from './helpers/chrome-stubs';
+import { installChrome } from './helpers/chrome-stubs';
 import { createDefaultRegistry } from '@pdf-core/providers/index';
 import { createPdfProviderSection, UI_PROVIDERS } from '../src/ui/settings/pdf-provider';
 import { keyHereMessage, renderKeyHint } from '../src/ui/popup/key-hint';
@@ -67,7 +67,7 @@ describe('P2-A settings', () => {
       getChosenPdfProvider: async () => chosen,
       getProviderKey: async (id) => keys[id] || null, setProviderKey: async () => {},
     };
-    const sec = createPdfProviderSection({ doc: document, storage, permissions: createPermissions({}), registry: createDefaultRegistry(), t: () => translations[lang] });
+    const sec = createPdfProviderSection({ doc: document, storage, registry: createDefaultRegistry(), t: () => translations[lang] });
     return { document, sec };
   }
   test.each(['zh', 'en'])('%s: chosen provider without local key → hint shown', async (lang) => {

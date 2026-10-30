@@ -30,6 +30,15 @@ describe('错误码表', () => {
   test('“换后端”只是动作 id，不自动切换（只给 switch，由 UI 跳设置页）', () => {
     expect(ERROR_ACTIONS.QUOTA_EXCEEDED).toEqual(['switch']);
   });
+  test('1.2.2：权限安装时授予，PERMISSION_MISSING 不再给「去授权」动作，文案也不再说授权', () => {
+    expect(ERROR_ACTIONS.PERMISSION_MISSING).toEqual(['retry']);
+    for (const l of ['zh', 'en']) {
+      expect(translations[l]).not.toHaveProperty('err_action_grant');
+      expect(translations[l].err_PERMISSION_MISSING).not.toMatch(/授权|[Gg]rant|[Pp]ermission/);
+      expect(translations[l].err_short_PERMISSION_MISSING).not.toMatch(/授权|[Gg]rant/);
+      expect(translations[l].err_short_permission_plain).not.toMatch(/授权|[Gg]rant/);
+    }
+  });
 });
 
 describe('ParseError', () => {

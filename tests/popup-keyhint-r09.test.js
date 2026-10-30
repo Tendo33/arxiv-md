@@ -6,7 +6,7 @@ import { NW_ZH, setNwText } from '../src/ui/settings/nw-segments.js';
 import { renderKeyHint } from '../src/ui/popup/key-hint.js';
 
 const read = (p) => fs.readFileSync(path.join(__dirname, '..', p), 'utf8');
-const KEYS = ['popup_key_here_hint', 'popup_err_token_hint', 'pdf_disc_needed_body'];
+const KEYS = ['popup_key_here_hint', 'popup_err_token_hint'];
 
 describe('R09：弹窗 #keyHereHint 中文按短语不拆词', () => {
   test.each(KEYS)('%s 手工分段逐字等于 zh 文案', (k) => {

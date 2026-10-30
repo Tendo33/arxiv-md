@@ -6,4 +6,3 @@ export * from './errors.js';
 export * from './normalize/index.js';
 export { createZip, crc32 } from './output/zip.js';
 export { toDownloadUrl, buildDeliverable, saveDeliverable, canUseBlobUrl } from './output/save.js';
-export { permissionsFor, hasProviderPermission, requestProviderPermission, removeProviderPermission, canRevoke, ensureProviderPermission } from './permissions.js';

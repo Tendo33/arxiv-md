@@ -108,8 +108,9 @@ describe('C-3 右键菜单', () => {
 
   test('manifest 只新增 contextMenus，popup 页脚提示右键入口', () => {
     const mf = JSON.parse(fs.readFileSync(path.join(__dirname, '../src/manifest.json'), 'utf8'));
-    expect(mf.permissions).toEqual(['storage', 'downloads', 'activeTab', 'notifications', 'alarms', 'contextMenus']);
-    expect(mf.host_permissions).toHaveLength(6);
+    // 1.2.2：原可选的 DNR 和 PaddleOCR 两个域名移入必需权限，没有其它新增
+    expect(mf.permissions).toEqual(['storage', 'downloads', 'activeTab', 'notifications', 'alarms', 'contextMenus', 'declarativeNetRequestWithHostAccess']);
+    expect(mf.host_permissions).toHaveLength(8);
     const html = fs.readFileSync(path.join(__dirname, '../src/ui/popup/popup.html'), 'utf8');
     expect(html).toContain('data-i18n="popup_footer_menu"');
   });

@@ -101,9 +101,9 @@ Changes are saved automatically.
 | `arxiv.org`, `export.arxiv.org` | Paper HTML, metadata and PDF |
 | `ar5iv.org`, `ar5iv.labs.arxiv.org` | ar5iv fallback when official HTML is missing |
 | `mineru.net`, `cdn-mineru.openxlab.org.cn` | Only when you use MinerU: submit tasks and download results |
-| `paddleocr.aistudio-app.com` (optional) | Requested only when you select PaddleOCR; revocable in Settings |
-| `*.bj.bcebos.com` (optional) | Requested together with PaddleOCR access; PaddleOCR serves parse results and figures from this Baidu storage domain |
-| `declarativeNetRequestWithHostAccess` (optional) | Requested together with PaddleOCR access; only removes the `Origin` header on requests to that domain |
+| `paddleocr.aistudio-app.com` | Only when you use PaddleOCR: submit tasks |
+| `*.bj.bcebos.com` | Only when you use PaddleOCR: PaddleOCR serves parse results and figures from this Baidu storage domain |
+| `declarativeNetRequestWithHostAccess` | Only removes the `Origin` header on this extension's requests to `paddleocr.aistudio-app.com` |
 | Content script on `arxiv.org/abs/*`, `arxiv.org/pdf/*`, `arxiv.org/html/*` | Adds the page buttons, result card and PDF floating button on those pages |
 
 ## Privacy

@@ -5,24 +5,21 @@
 import fs from 'fs';
 import path from 'path';
 import { parseHTML } from 'linkedom';
-import { createPermissions } from './helpers/chrome-stubs';
 import { createDefaultRegistry } from '@pdf-core/providers/index';
 import { createPdfProviderSection, UI_PADDLE_RULE_ID, REINIT_CHECK_TIMEOUT_MS } from '../src/ui/settings/pdf-provider';
 import { PADDLE_ORIGIN_RULE_ID } from '../src/background/paddle-origin-rule';
 import { translations } from '../src/config/locales';
 
 const html = fs.readFileSync(path.join(__dirname, '../src/ui/settings/settings.html'), 'utf8');
-const ORIGINS = ['https://paddleocr.aistudio-app.com/*', 'https://*.bj.bcebos.com/*'];
 
 function setup({ rules = [], tasks = [], dnr } = {}) {
   const { document } = parseHTML(html);
   const storage = { getPdfProvider: async () => 'paddleocr', setPdfProvider: async () => {}, getProviderKey: async () => 'k', setProviderKey: async () => {} };
-  const permissions = createPermissions({ origins: ORIGINS, permissions: ['declarativeNetRequestWithHostAccess'], answer: true });
   const runtime = { reload: jest.fn() };
   const toast = jest.fn();
   const local = { get: async () => ({ mineruTasks: tasks }) };
   const d = dnr || { getDynamicRules: jest.fn(async () => rules), updateDynamicRules: jest.fn() };
-  const sec = createPdfProviderSection({ doc: document, storage, permissions, registry: createDefaultRegistry(), t: () => translations.zh, runtime, toast, local, dnr: d });
+  const sec = createPdfProviderSection({ doc: document, storage, registry: createDefaultRegistry(), t: () => translations.zh, runtime, toast, local, dnr: d });
   return { sec, runtime, toast, dnr: d };
 }
 
@@ -88,7 +85,7 @@ test('英文 toast：1 个用单数，2 个用复数', async () => {
   const mk = (tasks) => {
     const { document } = parseHTML(html);
     const toast = jest.fn();
-    const sec = createPdfProviderSection({ doc: document, storage: { getPdfProvider: async () => 'paddleocr', setPdfProvider: async () => {}, getProviderKey: async () => 'k', setProviderKey: async () => {} }, permissions: createPermissions({ origins: ORIGINS, permissions: ['declarativeNetRequestWithHostAccess'], answer: true }), registry: createDefaultRegistry(), t: () => translations.en, runtime: { reload: jest.fn() }, toast, local: { get: async () => ({ mineruTasks: tasks }) }, dnr: { getDynamicRules: async () => [] } });
+    const sec = createPdfProviderSection({ doc: document, storage: { getPdfProvider: async () => 'paddleocr', setPdfProvider: async () => {}, getProviderKey: async () => 'k', setProviderKey: async () => {} }, registry: createDefaultRegistry(), t: () => translations.en, runtime: { reload: jest.fn() }, toast, local: { get: async () => ({ mineruTasks: tasks }) }, dnr: { getDynamicRules: async () => [] } });
     return { sec, toast };
   };
   const a = mk([{ status: 'pending' }]); await a.sec.onReinit();

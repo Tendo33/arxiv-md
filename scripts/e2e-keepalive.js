@@ -32,7 +32,7 @@ function loadPlaywright() {
     const id = sw.url().split('/')[2];
     await sw.evaluate(async () => {
       await chrome.storage.sync.set({ language: 'en', pdfProvider: 'mineru' });
-      await chrome.storage.local.set({ providerKeys: { mineru: 'fixture-not-a-real-key' }, 'disclosureAck.mineru': 1 });
+      await chrome.storage.local.set({ providerKeys: { mineru: 'fixture-not-a-real-key' } });
       await chrome.alarms.clearAll();
     });
     const p = await ctx.newPage();

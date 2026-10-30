@@ -3,7 +3,7 @@
 import metadataExtractor from '@core/metadata-extractor';
 import { paperTabTitle } from './bibtex';
 import logger from '@utils/logger';
-import { isCanceledDownload, isDisclosureNeeded, statusCardErrorText } from './status-error';
+import { isCanceledDownload, statusCardErrorText } from './status-error';
 import { REGEX } from '@config/constants';
 import storage, { browserDefaultLanguage } from '@utils/storage';
 import { translations } from '@config/locales';
@@ -22,7 +22,6 @@ import {
   setProgressState,
   setProgressText,
   showCanceled,
-  showNotice,
   showError,
   showResult,
   isPendingShown,
@@ -269,7 +268,6 @@ async function handleConversionTrigger(type = 'markdown') {
           ? response
           : response?.data?.success === false ? response.data : null;
         if (failure) {
-          if (isDisclosureNeeded(failure)) { showNotice(t.pdf_disc_needed_title, t.pdf_disc_needed_body); return; } // 设计验收 30a6e1b #5
           (isCanceledDownload(failure) ? showCanceled : showError)(statusCardErrorText(failure, t, 'Conversion failed'));
           return;
         }
@@ -354,7 +352,6 @@ async function handlePdfDownloadDirect(button) {
         }
 
         if (response && (response.success === false || response.data?.success === false)) {
-          if (isDisclosureNeeded(response)) { showNotice(t.pdf_disc_needed_title, t.pdf_disc_needed_body); return; } // 设计验收 30a6e1b #5
           (isCanceledDownload(response) ? showCanceled : showError)(statusCardErrorText(response, t, 'PDF download failed', { download: true }));
           return;
         }

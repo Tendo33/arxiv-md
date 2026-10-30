@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Last updated: 2026-10-29**
+**Last updated: 2026-10-30**
 
 ## Overview
 
@@ -57,7 +57,7 @@ Depending on the feature you use, the extension may make requests to:
 - `https://ar5iv.labs.arxiv.org/*`
 - `https://mineru.net/*`
 - `https://cdn-mineru.openxlab.org.cn/*`
-- `https://paddleocr.aistudio-app.com/*` and its result-file domain `https://*.bj.bcebos.com/*`, only after you select PaddleOCR and grant permission
+- `https://paddleocr.aistudio-app.com/*` and its result-file domain `https://*.bj.bcebos.com/*`, only when you use PaddleOCR
 
 ### Standard Mode
 
@@ -77,13 +77,13 @@ PDF parsing is used only when you choose "PDF high-quality parsing". The extensi
 What is sent depends on where the PDF is hosted and which provider you chose:
 
 - **PDF hosted on arXiv** (`arxiv.org`, `export.arxiv.org`): PaddleOCR receives the PDF file itself (the extension downloads it from arXiv and uploads it, up to 50 MB, i.e. 50,000,000 bytes; larger files are not sent). MinerU receives only the PDF link and downloads the paper itself.
-- **Any other PDF**: both providers receive only the PDF link, never the file, and only after you confirm (see below).
+- **Any other PDF**: both providers receive only the PDF link, never the file.
 
-**Open access.** All papers on arXiv are treated as open access; the extension does not check each paper's individual license. When the PDF is hosted on arXiv (`https://arxiv.org/pdf/…` or `https://export.arxiv.org/pdf/…`), the extension sends it to the provider you selected (the file for PaddleOCR, the link for MinerU) and parsing starts right away, with no confirmation prompt. For a PDF from any other source, or when the source cannot be determined, nothing is sent until you confirm: the task waits as "Awaiting" and its PDF link is sent only after you choose "Send & parse" in the popup. Your confirmation applies to that task only (retrying the same task does not ask again) and is not remembered for other PDFs. Every way of starting a parse (popup, right-click menu, floating button and keyboard shortcut) goes through this same check before anything is sent; when a parse started outside the popup needs confirmation, you get a notification and confirm in the popup.
+**No confirmation prompt.** Choosing a provider and saving its key in Settings is your consent to send PDFs to that provider. From then on, every way of starting a parse (popup, right-click menu, floating button and keyboard shortcut) sends the PDF right away, whether or not it is hosted on arXiv, with no confirmation prompt and no runtime permission request. The extension does not check each paper's license, so don't start a PDF parse for papers you aren't allowed to share with a third party. Without a key, nothing is sent.
 
 #### PaddleOCR (default)
 
-The extension sends your access token and the model name to `paddleocr.aistudio-app.com`, operated by Baidu (AI Studio). For papers hosted on arXiv (`arxiv.org`, `export.arxiv.org`), the extension downloads the public PDF itself and uploads the PDF file (up to 50 MB), because AI Studio does not accept arXiv links. A PDF larger than 50 MB is stopped before upload: nothing is sent to AI Studio, and the extension suggests switching to MinerU, which takes the link; for any other PDF it sends only the PDF link (`fileUrl`) and does not upload the file. The parse result (Markdown text and figure images) is then downloaded from Baidu's storage domain `*.bj.bcebos.com`. Access to both domains is requested together only when you select PaddleOCR, and you can revoke it at any time.
+The extension sends your access token and the model name to `paddleocr.aistudio-app.com`, operated by Baidu (AI Studio). For papers hosted on arXiv (`arxiv.org`, `export.arxiv.org`), the extension downloads the public PDF itself and uploads the PDF file (up to 50 MB), because AI Studio does not accept arXiv links. A PDF larger than 50 MB is stopped before upload: nothing is sent to AI Studio, and the extension suggests switching to MinerU, which takes the link; for any other PDF it sends only the PDF link (`fileUrl`) and does not upload the file. The parse result (Markdown text and figure images) is then downloaded from Baidu's storage domain `*.bj.bcebos.com`. Access to both domains is granted when you install or update the extension, but the extension contacts them only when you use PaddleOCR.
 
 #### MinerU
 
@@ -109,15 +109,17 @@ Parsing providers are third parties, and their own terms govern how they process
 | `notifications` | Show optional task and completion notifications |
 | `alarms` | Periodically wake the background worker while PDF parsing tasks are running, to poll their progress; cleared when no task is active |
 | `contextMenus` | Add right-click menu items on arXiv abs/pdf/html pages and on links to arXiv papers (PDF parsing items appear only when a key is set for the selected provider) |
-| `https://paddleocr.aistudio-app.com/*` (optional) | Requested only when you select PaddleOCR |
-| `https://*.bj.bcebos.com/*` (optional) | Requested together with PaddleOCR access; downloads the parse result (Markdown and figure images) from Baidu's storage |
-| `declarativeNetRequestWithHostAccess` (optional) | Requested together with PaddleOCR access; removes the `Origin` header on requests to that domain only |
+| `https://paddleocr.aistudio-app.com/*` | Submit PaddleOCR parsing tasks; contacted only when you use PaddleOCR |
+| `https://*.bj.bcebos.com/*` | Download the PaddleOCR parse result (Markdown and figure images) from Baidu's storage; contacted only when you use PaddleOCR |
+| `declarativeNetRequestWithHostAccess` | Remove the `Origin` header on this extension's own requests to `paddleocr.aistudio-app.com` only |
+
+All permissions are granted once, when you install or update the extension. The extension never asks for more permissions while you use it.
 
 ## Your Choices
 
 You can:
 
-- remove any provider key, or revoke PaddleOCR access, in Settings
+- remove any provider key in Settings (without a key, nothing is sent to that provider)
 - disable notifications
 - clear completed or failed PDF parsing tasks from the popup
 - uninstall the extension to remove its local extension data from the profile

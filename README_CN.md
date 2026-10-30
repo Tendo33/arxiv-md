@@ -99,9 +99,9 @@ npm run build
 | `arxiv.org`、`export.arxiv.org` | 读取论文 HTML、元数据和 PDF |
 | `ar5iv.org`、`ar5iv.labs.arxiv.org` | 官方 HTML 不可用时读取 ar5iv 版本 |
 | `mineru.net`、`cdn-mineru.openxlab.org.cn` | 仅在你使用 MinerU 时提交任务、下载结果 |
-| `paddleocr.aistudio-app.com`（可选） | 仅在你选择 PaddleOCR 时申请，可在设置页撤销 |
-| `*.bj.bcebos.com`（可选） | 与 PaddleOCR 访问权限一起申请；PaddleOCR 的解析结果和图片从这个百度存储域名下载 |
-| `declarativeNetRequestWithHostAccess`（可选） | 与 PaddleOCR 访问权限一起申请，只去掉发往该域名请求的 `Origin` 头 |
+| `paddleocr.aistudio-app.com` | 仅在你使用 PaddleOCR 时提交任务 |
+| `*.bj.bcebos.com` | 仅在你使用 PaddleOCR 时访问；PaddleOCR 的解析结果和图片从这个百度存储域名下载 |
+| `declarativeNetRequestWithHostAccess` | 只去掉本扩展发往 `paddleocr.aistudio-app.com` 的请求的 `Origin` 头 |
 | 内容脚本：`arxiv.org/abs/*`、`arxiv.org/pdf/*`、`arxiv.org/html/*` | 在这些页面注入导出按钮、结果卡片和 PDF 页悬浮按钮 |
 
 ## 隐私

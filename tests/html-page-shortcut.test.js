@@ -7,8 +7,8 @@ describe('R1-01 快捷键在 /html/ 页有接收方', () => {
       expect.arrayContaining(['https://arxiv.org/abs/*', 'https://arxiv.org/pdf/*', 'https://arxiv.org/html/*']),
     );
     expect(manifest.host_permissions).toContain('https://arxiv.org/*');
-    // C-3：contextMenus 经 Simon 批准，是本轮唯一新增权限
-    expect(manifest.permissions).toEqual(['storage', 'downloads', 'activeTab', 'notifications', 'alarms', 'contextMenus']);
+    // C-3：contextMenus 经 Simon 批准；1.2.2：原可选的 DNR 移入必需权限（Simon 决定）
+    expect(manifest.permissions).toEqual(['storage', 'downloads', 'activeTab', 'notifications', 'alarms', 'contextMenus', 'declarativeNetRequestWithHostAccess']);
   });
   test('HTML 页 URL 识别', () => {
     expect(REGEX.ARXIV_HTML_PAGE.test('https://arxiv.org/html/2106.09685v2')).toBe(true);

@@ -6,7 +6,6 @@ const mk = (url, id) => {
   return {
     rules,
     runtime: { id, getURL: (p) => `${url}${p.replace(/^\//, '')}` },
-    permissions: { contains: async () => true },
     declarativeNetRequest: { updateDynamicRules: jest.fn(async ({ addRules = [] }) => { rules.splice(0, rules.length, ...addRules); }) },
   };
 };

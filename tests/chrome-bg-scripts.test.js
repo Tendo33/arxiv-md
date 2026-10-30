@@ -20,11 +20,8 @@ test('chrome：只去掉 background.scripts，其他字段不变', () => {
   expect(verifyBackground(m, 'chrome')).toEqual([]);
 });
 
-test('firefox：manifest 与源文件只差 FF-01 A 的 DNR 权限位置', () => {
-  const { optional_permissions: _o, permissions, ...rest } = manifestForTarget(src, 'firefox');
-  const { optional_permissions: _so, permissions: sp, ...srest } = src;
-  expect(rest).toEqual(srest);
-  expect(permissions).toEqual([...sp, 'declarativeNetRequestWithHostAccess']);
+test('firefox：manifest 与源文件完全相同（1.2.2 起权限都在源 manifest 里，不再搬动）', () => {
+  expect(manifestForTarget(src, 'firefox')).toEqual(src);
   expect(verifyBackground(src, 'firefox')).toEqual([]);
 });
 

@@ -1,17 +1,14 @@
 import fs from 'fs';
 import path from 'path';
 import { parseHTML } from 'linkedom';
-import { createPermissions } from './helpers/chrome-stubs';
 import { createDefaultRegistry } from '@pdf-core/providers/index';
 import { createPdfProviderSection, UI_PROVIDERS } from '../src/ui/settings/pdf-provider';
 import { bindInstantSave } from '../src/ui/settings/instant-save';
 import { translations } from '../src/config/locales';
 
 const html = fs.readFileSync(path.join(__dirname, '../src/ui/settings/settings.html'), 'utf8');
-const PADDLE = 'https://paddleocr.aistudio-app.com/*';
-const BCEBOS = 'https://*.bj.bcebos.com/*'; // 结果/图片域名，和星河域名一起申请
 
-function setup({ provider = 'paddleocr', keys = {}, origins = [], answer = true, lang = 'en' } = {}) {
+function setup({ provider = 'paddleocr', keys = {}, lang = 'en' } = {}) {
   const { document } = parseHTML(html);
   const store = { provider, keys: { ...keys } };
   const storage = {
@@ -20,11 +17,10 @@ function setup({ provider = 'paddleocr', keys = {}, origins = [], answer = true,
     getProviderKey: jest.fn(async (id) => store.keys[id] || null),
     setProviderKey: jest.fn(async (id, v) => { if (v) store.keys[id] = v; else delete store.keys[id]; }),
   };
-  const permissions = createPermissions({ origins, permissions: origins.length ? ['declarativeNetRequestWithHostAccess'] : [], answer });
   const registry = createDefaultRegistry();
   const toast = jest.fn();
-  const sec = createPdfProviderSection({ doc: document, storage, permissions, registry, t: () => translations[lang], toast });
-  return { document, storage, permissions, registry, toast, sec, store };
+  const sec = createPdfProviderSection({ doc: document, storage, registry, t: () => translations[lang], toast });
+  return { document, storage, registry, toast, sec, store };
 }
 
 describe('R4-14 设置页：后端选择 + Key', () => {
@@ -59,7 +55,7 @@ describe('R4-14 设置页：后端选择 + Key', () => {
     expect(zh.sort()).toEqual(en.sort());
   });
 
-  test('init：显示当前后端的说明（数据发往的域名）、Key、授权状态', async () => {
+  test('init：显示当前后端的说明（数据发往的域名）、Key；没有授权状态行', async () => {
     const h = setup({ keys: { paddleocr: 'fixture-key' } });
     await h.sec.init();
     const d = h.document;
@@ -67,61 +63,42 @@ describe('R4-14 设置页：后端选择 + Key', () => {
     expect(d.getElementById('getKeyText').textContent).toBe(translations.en.pdf_get_key.replace('{provider}', 'PaddleOCR'));
     expect(d.getElementById('providerKey').value).toBe('fixture-key');
     expect(d.getElementById('providerKey').dataset.provider).toBe('paddleocr');
-    expect(d.getElementById('grantPermissionBtn').hidden).toBe(false);
     expect(d.getElementById('providerKeyLabel').textContent).toBe('PaddleOCR API key');
+    expect(d.getElementById('grantPermissionBtn')).toBeNull();
+    expect(d.getElementById('permissionStatus')).toBeNull();
+    expect(d.getElementById('revokeRow')).toBeNull();
   });
 
-  test('切到 PaddleOCR：先申请权限（域名 + DNR 一次弹窗），同意后才保存', async () => {
+  test('1.2.2：切到 PaddleOCR 直接保存，不弹数据说明、不申请权限', async () => {
     const h = setup({ provider: 'mineru' });
     await h.sec.init();
     expect(await h.sec.onSelect('paddleocr')).toBe(true);
-    expect(h.permissions.request).toHaveBeenCalledTimes(1);
-    expect(h.permissions.request.mock.calls[0][0].origins).toEqual([PADDLE, BCEBOS]);
     expect(h.storage.setPdfProvider).toHaveBeenCalledWith('paddleocr');
-    expect(h.document.getElementById('grantPermissionBtn').hidden).toBe(true);
+    expect(h.sec.current).toBe('paddleocr');
+    expect([...h.document.querySelectorAll('input[name="pdfProvider"]')].find((r) => r.checked).value).toBe('paddleocr');
+    expect(h.document.getElementById('pdPanel')).toBeNull();
+    expect(h.toast).toHaveBeenCalledWith(translations.en.toast_saved, 'success');
   });
 
-  test('用户拒绝授权 → 下拉框回到原来的后端，提示 PERMISSION_MISSING，不保存', async () => {
-    const h = setup({ provider: 'mineru', answer: false });
+  test('1.2.2：单选卡片 change 事件（用户点卡片）直接切换并保存', async () => {
+    const h = setup({ provider: 'paddleocr' });
     await h.sec.init();
-    expect(await h.sec.onSelect('paddleocr')).toBe(false);
-    expect([...h.document.querySelectorAll('input[name="pdfProvider"]')].find((r) => r.checked).value).toBe('mineru');
-    expect(h.storage.setPdfProvider).not.toHaveBeenCalled();
-    expect(h.document.getElementById('permissionStatus').textContent).toContain('paddleocr.aistudio-app.com');
+    h.sec.bind();
+    const r = h.document.querySelector('input[name="pdfProvider"][value="mineru"]');
+    r.checked = true;
+    r.dispatchEvent(new h.document.defaultView.Event('change', { bubbles: true }));
+    for (let i = 0; i < 5; i++) await new Promise((res) => setImmediate(res));
+    expect(h.storage.setPdfProvider).toHaveBeenCalledWith('mineru');
+    expect(h.document.getElementById('pdPanel')).toBeNull();
   });
 
-  test('设计验收 M6：拒绝说明留在 #permissionRow（role=status）里，附「重新授权」并滚到可见处；再授权成功则切换', async () => {
-    const h = setup({ provider: 'mineru', answer: false, lang: 'zh' });
-    await h.sec.init();
-    const row = h.document.getElementById('permissionRow');
-    row.scrollIntoView = jest.fn();
-    expect(await h.sec.onSelect('paddleocr')).toBe(false);
-    expect(row.hidden).toBe(false);
-    expect(row.classList.contains('denied')).toBe(true);
-    expect(h.document.getElementById('permissionStatus').getAttribute('role')).toBe('status');
-    expect(h.document.getElementById('permissionStatus').textContent).toBe('未获得访问 paddleocr.aistudio-app.com 的权限，仍在使用 MinerU。需要时可重新授权。');
-    const btn = h.document.getElementById('grantPermissionBtn');
-    expect(btn.hidden).toBe(false);
-    expect(btn.textContent).toBe('重新授权');
-    expect(row.scrollIntoView).toHaveBeenCalledWith({ block: 'center' });
-    expect(h.document.getElementById('tokenStatus').textContent).toBe('');
-    // 再点「重新授权」：这次同意 → 切到 PaddleOCR 并保存
-    h.permissions.request = jest.fn(async () => true);
-    expect(await h.sec.onGrant()).toBe(true);
-    expect(h.storage.setPdfProvider).toHaveBeenCalledWith('paddleocr');
-    expect(row.classList.contains('denied')).toBe(false);
-  });
-
-  test('切到 MinerU（install 权限）不弹窗；旧后端 PaddleOCR 出现“撤销”，点了调用 permissions.remove', async () => {
-    const h = setup({ origins: [PADDLE, BCEBOS] });
+  test('选当前后端 / 未知后端：不保存', async () => {
+    const h = setup({ provider: 'mineru' });
     await h.sec.init();
     await h.sec.onSelect('mineru');
-    expect(h.permissions.request).not.toHaveBeenCalled();
-    expect(h.document.getElementById('revokeRow').hidden).toBe(false);
-    expect(h.document.getElementById('revokeText').textContent).toContain('PaddleOCR');
-    await h.sec.onRevoke();
-    expect(h.permissions.remove).toHaveBeenCalled();
-    expect(h.document.getElementById('revokeRow').hidden).toBe(true);
+    await h.sec.onSelect('nope');
+    expect(h.storage.setPdfProvider).not.toHaveBeenCalled();
+    expect(h.sec.current).toBe('mineru');
   });
 
   test('Key 失焦保存到当前后端（instant-save）', async () => {
@@ -135,17 +112,24 @@ describe('R4-14 设置页：后端选择 + Key', () => {
     expect(h.storage.setProviderKey).toHaveBeenCalledWith('mineru', 'fixture-mineru');
   });
 
-  test('测试连接：没权限时不发请求；有权限时调用 provider.testConnection', async () => {
-    const h = setup({ keys: { paddleocr: 'fixture-key' } });
+  test('测试连接：没填 Key 时不发请求；填了直接调用 provider.testConnection（不再查权限）', async () => {
+    const h = setup();
     await h.sec.init();
     global.fetch = jest.fn();
     expect((await h.sec.onTest()).ok).toBe(false);
     expect(global.fetch).not.toHaveBeenCalled();
     delete global.fetch;
+    const h2 = setup({ keys: { paddleocr: 'fixture-key' } });
+    await h2.sec.init();
+    const orig = h2.registry.get.bind(h2.registry);
+    const fake = { ...orig('paddleocr'), testConnection: jest.fn(async () => ({ ok: true })) };
+    h2.registry.get = (id) => (id === 'paddleocr' ? fake : orig(id));
+    expect((await h2.sec.onTest()).ok).toBe(true);
+    expect(fake.testConnection).toHaveBeenCalledWith({ token: 'fixture-key' }, {});
   });
 
   test('测试连接：空 body 403 显示“不是 Key 或额度问题”', async () => {
-    const h = setup({ keys: { paddleocr: 'fixture-key' }, origins: [PADDLE, BCEBOS], lang: 'zh' });
+    const h = setup({ keys: { paddleocr: 'fixture-key' }, lang: 'zh' });
     await h.sec.init();
     global.fetch = jest.fn(async () => ({ ok: false, status: 403, headers: { get: () => null }, text: async () => '', json: async () => { throw new Error('empty'); } }));
     const r = await h.sec.onTest();
@@ -159,7 +143,7 @@ describe('R4-14 设置页：后端选择 + Key', () => {
 
 describe('设计建议：连接测试失败', () => {
   test('Key 无效：带 ❌、不说「未填写」，并附「获取 PaddleOCR Key」链接', async () => {
-    const h = setup({ origins: [PADDLE, BCEBOS], keys: { paddleocr: 'abcdefghijklmnop' }, lang: 'zh' });
+    const h = setup({ keys: { paddleocr: 'abcdefghijklmnop' }, lang: 'zh' });
     await h.sec.init();
     const orig = h.registry.get.bind(h.registry);
     const fake = { ...orig('paddleocr'), testConnection: jest.fn(async () => ({ ok: false, error: { code: 'AUTH_INVALID' } })) };
@@ -174,7 +158,7 @@ describe('设计建议：连接测试失败', () => {
     expect(a.getAttribute('href')).toBe('https://aistudio.baidu.com/account/accessToken');
   });
   test('其他失败也带 ❌', async () => {
-    const h = setup({ origins: [PADDLE, BCEBOS], keys: { paddleocr: 'abcdefghijklmnop' }, lang: 'zh' });
+    const h = setup({ keys: { paddleocr: 'abcdefghijklmnop' }, lang: 'zh' });
     await h.sec.init();
     const orig = h.registry.get.bind(h.registry);
     const fake = { ...orig('paddleocr'), testConnection: jest.fn(async () => ({ ok: false, error: { code: 'RATE_LIMITED' } })) };

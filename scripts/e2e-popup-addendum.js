@@ -75,7 +75,7 @@ const checkShift = (m) => STATES.every((s) => m[s] === 0) && !m.metaClipped;
         const n = Date.now();
         const tasks = Array.from({ length: 6 }, (_, i) => ({ id: `t${i}`, status: i % 2 ? 'failed' : 'completed', progress: 100, createdAt: n - (i + 1) * 60e3, provider: i % 3 ? 'mineru' : 'paddleocr', zipUrl: i % 2 ? undefined : 'https://example.com/a.zip', errorCode: i % 2 ? 'QUOTA_EXCEEDED' : undefined, paperInfo: { arxivId: `2401.0000${i}`, title: `Paper ${i} with a reasonably long title for wrapping` } }));
         await chrome.storage.sync.set({ language: l, pdfProvider: 'mineru' });
-        await chrome.storage.local.set({ providerKeys: { mineru: 'fixture-not-a-real-key' }, 'disclosureAck.mineru': 1, mineruTasks: tasks });
+        await chrome.storage.local.set({ providerKeys: { mineru: 'fixture-not-a-real-key' }, mineruTasks: tasks });
       }, lang);
       for (const theme of ['light', 'dark']) {
         for (const w of [320, 360]) {

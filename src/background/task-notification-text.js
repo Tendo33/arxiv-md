@@ -26,13 +26,6 @@ export function taskNotificationText(task, status, detail, label, lang) {
   const title = (task.paperInfo && (task.paperInfo.title || task.paperInfo.arxivId)) || '';
   const short = title.length > 40 ? title.substring(0, 40) + '…' : title;
   const v = (s) => s.replace(/\{provider\}/g, label);
-  if (status === 'consent') {
-    return { title: v(t.notify_task_consent_title), message: `${short}\n\n${v(t.notify_task_consent_body)}` };
-  }
-  if (status === 'disclosure') {
-    // 审查 30a6e1b P2：中性提示，共用标题「需要先确认数据说明」
-    return { title: t.pdf_disc_needed_title, message: `${short}\n\n${t.task_disc_needed_body}` };
-  }
   if (status === 'completed') {
     return { title: v(t.notify_task_done_title), message: `${short}\n\n${t.notify_task_done_body}`, button: t.notify_task_view };
   }

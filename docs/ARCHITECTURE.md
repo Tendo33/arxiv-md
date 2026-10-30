@@ -191,13 +191,13 @@
 - `ar5iv.labs.arxiv.org`
 - `mineru.net`
 - `cdn-mineru.openxlab.org.cn`
-- `paddleocr.aistudio-app.com`（可选，`optional_host_permissions`：只有选了 PaddleOCR 并在设置页授权后才访问，可随时撤销；与可选权限 `declarativeNetRequestWithHostAccess` 一起申请，仅用于去掉发往该域名请求的 `Origin` 头）
-- `*.bj.bcebos.com`（可选，`optional_host_permissions`，与 PaddleOCR 一起申请：PaddleOCR 的 JSONL 结果和图片放在百度对象存储的签名链接上）
+- `paddleocr.aistudio-app.com`（`host_permissions`，安装 / 更新时授予，只在使用 PaddleOCR 时访问；`declarativeNetRequestWithHostAccess` 同样安装时授予，仅用于去掉发往该域名请求的 `Origin` 头）
+- `*.bj.bcebos.com`（`host_permissions`，安装 / 更新时授予：PaddleOCR 的 JSONL 结果和图片放在百度对象存储的签名链接上）
 
 其中最关键的边界差异是：
 
 - 标准模式：先从 `arxiv.org/html` 拉 HTML，没有可转换正文时再从 ar5iv 拉，然后本地转 Markdown
-- PDF 解析模式：把论文和当前后端（MinerU 或 PaddleOCR）的 Key 发给该后端——MinerU 收 arXiv PDF 链接；PaddleOCR 收 arXiv PDF 文件本身（multipart 上传，≤50 MB，即 50,000,000 字节），非 arXiv 的 PDF 只发链接；PaddleOCR 结果打包成与 MinerU 相同结构的 ZIP（`full.md` + `images/<sha256>.<ext>`）；Key 只存于本设备 `chrome.storage.local`，非 arXiv 托管的 PDF 需在弹窗确认后才发送
+- PDF 解析模式：把论文和当前后端（MinerU 或 PaddleOCR）的 Key 发给该后端——MinerU 收 arXiv PDF 链接；PaddleOCR 收 arXiv PDF 文件本身（multipart 上传，≤50 MB，即 50,000,000 字节），非 arXiv 的 PDF 只发链接；PaddleOCR 结果打包成与 MinerU 相同结构的 ZIP（`full.md` + `images/<sha256>.<ext>`）；Key 只存于本设备 `chrome.storage.local`；使用时不弹确认，有 Key 就直接发送（1.2.2 起）
 
 ## 最容易误读的几点
 

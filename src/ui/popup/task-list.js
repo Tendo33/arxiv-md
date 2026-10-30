@@ -52,8 +52,9 @@ export function createTaskRow(task, doc = globalThis.document) {
     [TASK_STATUS.PROCESSING]: ['run', t.popup_status_processing],
     [TASK_STATUS.COMPLETED]: ['ok', t.popup_status_completed],
     [TASK_STATUS.FAILED]: ['err', t.popup_status_failed],
-    [TASK_STATUS.AWAITING_CONSENT]: ['wait', t.popup_status_awaiting], // 在等用户，和“处理中”区分
-    [TASK_STATUS.AWAITING_DISCLOSURE]: ['wait', t.popup_status_awaiting], // 审查 30a6e1b P2：中性，不是失败
+    // 1.2.2 前留下的「待确认」任务（非 OA / 数据说明）：不再需要确认，点重试直接解析
+    [TASK_STATUS.AWAITING_CONSENT]: ['wait', t.popup_status_awaiting],
+    [TASK_STATUS.AWAITING_DISCLOSURE]: ['wait', t.popup_status_awaiting],
   };
   const [cls, label] = map[status] || ['idle', t.popup_status_unknown];
   const busy = status === TASK_STATUS.PENDING || status === TASK_STATUS.PROCESSING;
@@ -62,13 +63,7 @@ export function createTaskRow(task, doc = globalThis.document) {
   if (status === TASK_STATUS.COMPLETED && zipUrl) {
     act.push(el(doc, 'button', { class: 'btn btn-ghost btn-dl', 'data-action': 'download', 'data-url': zipUrl, title: t.popup_action_download, 'aria-label': t.popup_action_download },
       [downloadIcon(doc), el(doc, 'span', { class: 'lbl' }, [` ${t.popup_action_download}`])]));
-  } else if (status === TASK_STATUS.AWAITING_CONSENT) {
-    // 审查 P1-1：非 OA PDF，点了才弹确认框
-    act.push(el(doc, 'button', { class: 'btn btn-ghost', 'data-action': 'consent', 'data-task-id': eid, 'data-provider': task.provider || '' }, [t.popup_action_consent]));
-  } else if (status === TASK_STATUS.AWAITING_DISCLOSURE) {
-    act.push(el(doc, 'button', { class: 'btn btn-ghost', 'data-action': 'disclose', 'data-provider': task.provider || '' }, [t.popup_action_disclose]));
-    act.push(el(doc, 'button', { class: 'btn btn-ghost', 'data-action': 'retry', 'data-task-id': eid }, [t.popup_action_retry]));
-  } else if (status === TASK_STATUS.FAILED) {
+  } else if (status === TASK_STATUS.FAILED || status === TASK_STATUS.AWAITING_CONSENT || status === TASK_STATUS.AWAITING_DISCLOSURE) {
     act.push(el(doc, 'button', { class: 'btn btn-ghost', 'data-action': 'retry', 'data-task-id': eid }, [t.popup_action_retry]));
   }
   act.push(el(doc, 'button', { class: 'btn btn-ghost', 'data-action': 'delete', 'data-task-id': eid, title: t.popup_action_delete, 'aria-label': t.popup_action_delete }, ['×']));
@@ -88,7 +83,6 @@ export function createTaskRow(task, doc = globalThis.document) {
   ]));
   // QA P2-DNR + 审查 P3(a)：等扩展页关闭后自重载的任务，明确说明在等什么、要用户做什么
   if (status === TASK_STATUS.PENDING && task.dnrReinitWaitSince != null) row.append(el(doc, 'span', { class: 'row-note', role: 'status' }, nwNodes(doc, 'popup_note_dnr_wait', t.popup_note_dnr_wait, currentLang))); // 设计复验 6a49976 裁定 3：zh 用 .nw 分段
-  if (status === TASK_STATUS.AWAITING_DISCLOSURE) row.append(el(doc, 'span', { class: 'row-note' }, [t.pdf_disc_needed_title]));
   return row;
 }
 

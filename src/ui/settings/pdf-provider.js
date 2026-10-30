@@ -1,11 +1,7 @@
 // R4-14：设置页“PDF 解析”分组。依赖全部注入，便于在 linkedom 里测试。
-// 权限申请只发生在下拉框 change / 按钮 click（用户手势）里；用户拒绝 → 下拉框回到原来的后端。
-import { requestProviderPermission, hasProviderPermission, removeProviderPermission, canRevoke, permissionsFor } from '@pdf-core/permissions';
+// 1.2.2：所有权限安装时一次授予，选后端不再弹数据说明、不再申请 / 撤销权限，选中即保存。
 import { shortErrorText } from '../popup/task-error-text';
-import { isDisclosureAcked, ackDisclosure, needsDisclosure, parseDisclosureHash } from '@utils/disclosure-ack';
-import { buildDisclosurePanel } from './disclosure';
 import { STORAGE_KEYS, TASK_STATUS } from '@config/constants';
-import { providerLabel } from '@config/pdf-providers';
 
 /** 与 background/paddle-origin-rule.js 的 PADDLE_ORIGIN_RULE_ID 相同（tests/reinit-check-p3-3 核对）；设置页只读规则，不写 */
 export const UI_PADDLE_RULE_ID = 4001;
@@ -38,33 +34,22 @@ const hostOf = (provider) => {
 };
 
 /**
- * @param {{doc:Document, storage:any, permissions:any, registry:any, t:()=>Object, toast?:(msg:string,type?:string)=>void}} deps
+ * @param {{doc:Document, storage:any, registry:any, t:()=>Object, toast?:(msg:string,type?:string)=>void}} deps
  */
-export function createPdfProviderSection({ doc, storage, permissions, registry, t, toast = () => {}, runtime = globalThis.chrome && globalThis.chrome.runtime, local = globalThis.chrome && globalThis.chrome.storage && globalThis.chrome.storage.local, seg, location: loc = globalThis.location, dnr = globalThis.chrome && globalThis.chrome.declarativeNetRequest }) {
+export function createPdfProviderSection({ doc, storage, registry, t, toast = () => {}, runtime = globalThis.chrome && globalThis.chrome.runtime, local = globalThis.chrome && globalThis.chrome.storage && globalThis.chrome.storage.local, seg, dnr = globalThis.chrome && globalThis.chrome.declarativeNetRequest }) {
   const $ = (id) => doc.getElementById(id);
   const segOf = (k, text) => { const r = seg ? seg(k, text) : [text]; return Array.isArray(r) ? r : [r]; };
-  const state = { current: null, denied: null, acked: {}, pending: null, fromHash: null };
-
-  // 撤销按钮：只要还留着任一项（部分授权也算）就显示
-  async function hasAnyGrant(p) {
-    const q = permissionsFor(p);
-    for (const o of q.origins) {
-      try { if (await permissions.contains({ origins: [o] })) return true; } catch { /* 继续看下一项 */ }
-    }
-    return false;
-  }
+  const state = { current: null };
 
   async function render() {
-    state.denied = null;
     const tr = t();
     const p = registry.get(state.current);
     const vars = { provider: p.label, host: hostOf(p) };
-    if (!state.pending) setRadio(doc, state.current);
+    setRadio(doc, state.current);
     $('providerKeyLabel').textContent = fmt(tr.pdf_key_label, vars);
     const link = $('getKeyLink');
     $('getKeyText').textContent = fmt(tr.pdf_get_key, vars);
     link.setAttribute('href', KEY_LINKS[p.id] || '#');
-    if (state.pending) refreshPanelText();
     const key = $('providerKey');
     key.dataset.provider = p.id;
     key.value = (await storage.getProviderKey(p.id)) || '';
@@ -77,185 +62,28 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
       else hint.replaceChildren(...segOf('pdf_key_here', fmt(tr.pdf_key_here, vars)));
     }
 
-    const needs = permissionsFor(p).origins.length > 0;
-    const granted = await hasProviderPermission(permissions, p);
-    $('permissionRow').hidden = !needs;
-    $('permissionStatus').replaceChildren(...(needs ? segOf('pdf_perm', fmt(granted ? tr.pdf_perm_granted : tr.pdf_perm_missing, vars)) : []));
-    $('grantPermissionBtn').hidden = !needs || granted;
-    $('grantPermissionBtn').textContent = tr.pdf_grant_btn;
-    // 审查员 P3：权限已授予但网络规则没装上（dnr_not_ready）时的恢复入口：重新载入扩展，让后台带着已授予的权限重新启动
+    // 审查员 P3：网络规则没装上（dnr_not_ready）时的恢复入口：重新载入扩展，让后台重新装规则
     const reinit = $('reinitBtn');
-    if (reinit) { reinit.hidden = !(needs && granted && p.id === 'paddleocr'); reinit.textContent = tr.pdf_reinit_btn; reinit.title = tr.pdf_reinit_hint; }
-
-    // 切换后端后，旧后端还有可撤销的权限 → 显示“撤销”
-    const stale = [];
-    for (const id of UI_PROVIDERS) {
-      const other = registry.get(id);
-      if (id !== p.id && other && canRevoke(other) && (await hasAnyGrant(other))) stale.push(other);
-    }
-    $('revokeRow').hidden = stale.length === 0;
-    $('revokeText').textContent = stale.length ? fmt(tr.pdf_revoke_text, { provider: stale[0].label, host: hostOf(stale[0]) }) : '';
-    $('revokePermissionBtn').dataset.provider = stale.length ? stale[0].id : '';
+    if (reinit) { reinit.hidden = p.id !== 'paddleocr'; reinit.textContent = tr.pdf_reinit_btn; reinit.title = tr.pdf_reinit_hint; }
+    const row = $('reinitRow');
+    if (row) row.hidden = p.id !== 'paddleocr';
   }
 
   async function init() {
     state.current = await storage.getPdfProvider((id) => UI_PROVIDERS.includes(id) && registry.has(id));
-    for (const id of UI_PROVIDERS) state.acked[id] = await isDisclosureAcked(id, local);
     await render();
-    // C10：从摘要页 / popup / 右键菜单跳过来（#disclose=<provider>）→ 直接打开该后端的数据说明
-    await openFromHash();
-    // 设计验收 30a6e1b 建议 b / a：设置页已开着、后台把它切到 #disclose=<provider> 时同样展开面板并聚焦标题
-    const win = doc.defaultView;
-    if (win && typeof win.addEventListener === 'function') win.addEventListener('hashchange', () => { openFromHash(); });
   }
 
-  async function openFromHash() {
-    const want = parseDisclosureHash(loc && loc.hash);
-    if (!want || !registry.has(want)) return;
-    state.acked[want] = await isDisclosureAcked(want, local);
-    if (state.acked[want]) return;
-    state.fromHash = want;
-    const panel = openDisclosure(want);
-    if (panel && typeof panel.scrollIntoView === 'function') panel.scrollIntoView({ block: 'nearest' });
-  }
-
-  // ---- 附录 C：数据说明面板 ----
-  function closePanel() {
-    const old = $('pdPanel');
-    if (old) old.remove();
-    state.pending = null;
-  }
-
-  function refreshPanelText() {
-    const id = state.pending;
-    closePanel();
-    openDisclosure(id, { focus: false });
-  }
-
-  /** 设计验收 30a6e1b #6：确认后的提示行（✓ 前缀）。
-   *  设计复验 6a49976 M2：放进 fieldset 网格，紧跟被确认的卡片；双列时 CSS 按 data-col 放到该卡片所在列的第 2 行 */
-  function showConfirmed(text, id) {
-    const el = $('pdConfirmed');
-    if (!el) return;
-    const card = id && doc.querySelector(`.provider-card[data-provider="${id}"]`);
-    if (card) {
-      card.after(el);
-      el.dataset.col = String([...card.parentNode.querySelectorAll('.provider-card')].indexOf(card) + 1);
-    }
-    el.textContent = `✓ ${text}`;
-    el.hidden = false;
-  }
-  function hideConfirmed() {
-    const el = $('pdConfirmed');
-    if (el) { el.hidden = true; el.textContent = ''; }
-  }
-
-  function openDisclosure(id, { focus = true } = {}) {
-    closePanel();
-    hideConfirmed();
-    const p = registry.get(id);
-    const tr = t();
-    const { panel, title, ok, cancel } = buildDisclosurePanel(doc, tr, p, segOf);
-    state.pending = id;
-    setRadio(doc, id); // 被点的卡片保持「已选」外观，面板在它下方
-    const card = doc.querySelector(`.provider-card[data-provider="${id}"]`);
-    card.after(panel);
-    ok.addEventListener('click', () => { onAgree(id); });
-    cancel.addEventListener('click', () => { onCancelDisclosure(); });
-    panel.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') { ev.preventDefault(); onCancelDisclosure(); } });
-    const live = $('pdLive');
-    if (live) live.textContent = fmt(tr.pdf_disc_live, { provider: p.label });
-    if (focus && typeof title.focus === 'function') title.focus();
-    return panel;
-  }
-
-  function onCancelDisclosure() {
-    closePanel();
-    state.fromHash = null;
-    setRadio(doc, state.current);
-    const r = radios(doc).find((x) => x.value === state.current);
-    if (r && typeof r.focus === 'function') r.focus();
-    const live = $('pdLive');
-    if (live) live.textContent = '';
-  }
-
-  /**
-   * 「确认并继续」（用户手势）：写确认记录、切换后端，并在同一个手势里申请权限。
-   * 存储写入不 await，保证 permissions.request 仍在手势内。用户拒绝授权时后端照样保存，权限行显示「需要授权访问」。
-   */
-  async function onAgree(id) {
-    const p = registry.get(id);
-    const fromHash = state.fromHash === id;
-    closePanel();
-    state.fromHash = null;
-    state.acked[id] = true;
-    const writes = [ackDisclosure(id, local), storage.setPdfProvider(id)];
-    state.current = id;
-    setRadio(doc, id);
-    const granted = await requestProviderPermission(permissions, p);
-    await Promise.all(writes.map((w) => Promise.resolve(w).catch(() => {})));
-    $('permissionRow').classList.remove('denied');
-    $('tokenStatus').style.display = 'none';
-    const tr = t();
-    await render();
-    showConfirmed(fromHash ? tr.pdf_disc_confirmed.replace('{name}', providerLabel(id)) : tr.toast_saved, id); // 设计验收 30a6e1b #6：卡片下方内联，不用 toast
-    return granted;
-  }
-
-  /** 单选卡片 change（用户手势）：未确认过的后端先显示数据说明；已确认的走原来的授权 → 保存流程 */
-  function onPick(id) {
-    if (!registry.has(id)) return render();
-    if (state.pending && state.pending !== id) closePanel();
-    if (id === state.current && !state.pending) return render();
-    if (id === state.current) { onCancelDisclosure(); return null; }
-    if (needsDisclosure(id) && !state.acked[id]) return openDisclosure(id);
-    return onSelect(id);
-  }
-
-  /** 下拉框 change（用户手势） */
+  /** 单选卡片 change：选中即保存，不弹确认、不申请权限 */
   async function onSelect(nextId) {
-    const prev = state.current;
     const next = registry.get(nextId);
-    if (!next || nextId === prev) return render();
-    const ok = await requestProviderPermission(permissions, next);
-    const tr = t();
-    if (!ok) {
-      setRadio(doc, prev);
-      // 设计验收 M6：拒绝的说明留在权限行里（不随 toast 消失），附「重新授权」，并滚到可见处
-      state.denied = nextId;
-      const msg = fmt(tr.pdf_perm_denied, { host: hostOf(next), provider: registry.get(prev).label, next: next.label });
-      const row = $('permissionRow');
-      row.hidden = false;
-      row.classList.add('denied');
-      $('permissionStatus').textContent = msg;
-      const btn = $('grantPermissionBtn');
-      btn.textContent = tr.pdf_regrant_btn;
-      btn.hidden = false;
-      if (typeof row.scrollIntoView === 'function') row.scrollIntoView({ block: 'center' });
-      toast(msg, 'error');
-      return false;
-    }
+    if (!next || nextId === state.current) return render();
     state.current = nextId;
-    $('permissionRow').classList.remove('denied');
     await storage.setPdfProvider(nextId);
     $('tokenStatus').style.display = 'none';
-    toast(tr.toast_saved, 'success');
+    toast(t().toast_saved, 'success');
     await render();
     return true;
-  }
-
-  async function onGrant() {
-    if (state.denied) {
-      const id = state.denied;
-      const ok = await onSelect(id);
-      if (ok) $('permissionRow').classList.remove('denied');
-      return ok;
-    }
-    const p = registry.get(state.current);
-    const ok = await requestProviderPermission(permissions, p);
-    if (!ok) toast(fmt(t().pdf_perm_missing, { provider: p.label, host: hostOf(p) }), 'error');
-    await render();
-    return ok;
   }
 
   /** dnr_not_ready 恢复（P3-3）：先只读核对规则；规则已在 → 提示已就绪、不重载；有任务在跑 → 不重载；否则重新载入扩展。不申请任何权限 */
@@ -289,16 +117,6 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
     return 'unavailable';
   }
 
-  async function onRevoke() {
-    const id = $('revokePermissionBtn').dataset.provider;
-    const p = id && registry.get(id);
-    if (!p) return false;
-    const ok = await removeProviderPermission(permissions, p);
-    if (ok) toast(fmt(t().pdf_revoked, { host: hostOf(p) }), 'success');
-    await render();
-    return ok;
-  }
-
   /** 测试连接：PaddleOCR 是 GET 随机 jobId，不提交任务、不扣额度 */
   async function onTest() {
     const tr = t();
@@ -307,11 +125,6 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
     const status = $('tokenStatus');
     status.style.display = '';
     if (!token) { status.className = 'token-status error'; status.textContent = tr.token_empty_error; return { ok: false }; }
-    if (!(await hasProviderPermission(permissions, p))) {
-      status.className = 'token-status error';
-      status.textContent = fmt(tr.err_PERMISSION_MISSING, { host: hostOf(p), provider: p.label });
-      return { ok: false };
-    }
     status.className = 'token-status testing';
     status.textContent = tr.token_testing;
     const r = p.testConnection ? await p.testConnection({ token }, {}) : { ok: true };
@@ -347,13 +160,11 @@ export function createPdfProviderSection({ doc, storage, permissions, registry, 
 
   function bind() {
     $('pdfProviderGroup').addEventListener('change', (ev) => {
-      if (ev.target && ev.target.name === 'pdfProvider' && ev.target.checked) onPick(ev.target.value);
+      if (ev.target && ev.target.name === 'pdfProvider' && ev.target.checked) onSelect(ev.target.value);
     });
-    $('grantPermissionBtn').addEventListener('click', () => { onGrant(); });
     if ($('reinitBtn')) $('reinitBtn').addEventListener('click', () => { onReinit(); });
-    $('revokePermissionBtn').addEventListener('click', () => { onRevoke(); });
     $('testTokenBtn').addEventListener('click', () => { onTest(); });
   }
 
-  return { init, render, bind, onSelect, onPick, onAgree, onCancelDisclosure, openDisclosure, onGrant, onRevoke, onReinit, onTest, get current() { return state.current; }, get pending() { return state.pending; } };
+  return { init, render, bind, onSelect, onReinit, onTest, get current() { return state.current; } };
 }

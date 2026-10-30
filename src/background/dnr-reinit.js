@@ -1,6 +1,7 @@
 // QA L-01（第二版）：同一浏览器会话里刚授予可选权限 declarativeNetRequestWithHostAccess 后，
 // Chromium 里本扩展的所有 DNR 调用（updateDynamicRules / getDynamicRules / updateSessionRules，
 // SW、已开页面、新开页面、SW 停掉重启后都一样）一直挂起，只有重新载入扩展或重启浏览器才恢复（证据见 dev-log「待决策」）。
+// 1.2.2 起该权限改为安装时授予，上面的情况不会再由运行时授权触发；这里保留为 DNR 一直不就绪时的兜底。
 // 所以仍需 runtime.reload，但不能在用户眼前关掉设置页 / popup：这里只在「没有任何扩展页面开着、
 // 也没有别的解析任务在跑」时才重载；否则每 intervalMs 再看一次。SW 被回收也没关系：任务保持 PENDING，
 // keepAlive alarm 唤醒后 resume 会再走到这里重新排队。

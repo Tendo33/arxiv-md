@@ -100,7 +100,6 @@ body{min-width:360px}
 /* 设计复核 S3：待确认行标题至少 80px，放不下时操作按钮换行并靠右 */
 .row[data-status="awaiting_consent"] .n{min-width:80px}
 /* 设计验收 M9：待确认行的徽标和按钮不能把标题挤成 0 宽 */
-.row[data-status=awaiting_consent] .row-act .btn[data-action=consent]{max-width:7em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* 设计验收建议：「待确认」用等待样式（信息色 + 描边），和「处理中」（警示色）区分 */
 .badge.wait{background:var(--info-bg);color:var(--info);box-shadow:inset 0 0 0 1px currentColor}
 /* 设计验收 M3：英文窄宽下两个次按钮各占一半、文字省略，后端名换到按钮第二行 */

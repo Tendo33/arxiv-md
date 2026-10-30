@@ -81,7 +81,7 @@ test('扩展设置优先于浏览器语言：浏览器 en、设置 zh → 中文
   expect(c.message).toContain('MinerU 处理超时');
 });
 
-test('完成 / 待确认通知也按设置语言', async () => {
+test('完成通知也按设置语言；1.2.2 起没有待确认通知', async () => {
   let c = await send('en', 'completed', 'x.md');
   expect(c.title).toBe('✅ PDF parsed (MinerU)');
   expect(c.buttons).toEqual([{ title: 'View task' }]);
@@ -89,8 +89,7 @@ test('完成 / 待确认通知也按设置语言', async () => {
   c = await send('zh', 'completed', 'x.md');
   expect(c.buttons).toEqual([{ title: '查看任务' }]);
   chrome.notifications.create.mockClear();
-  c = await send('en', 'consent', '');
-  expect(c.title).toBe('Confirm before sending to MinerU');
+  c = await send('en', 'completed', 'x.md');
   expect(c.title + c.message.replace(task.paperInfo.title, '')).not.toMatch(han);
 });
 

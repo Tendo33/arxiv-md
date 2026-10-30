@@ -14,7 +14,7 @@ export const ERROR_CODES = Object.freeze({
 
 export const ALL_ERROR_CODES = Object.freeze(Object.keys(ERROR_CODES));
 
-/** 下一步动作：settings=去设置，switch=换后端（只跳设置页，不自动切换），retry=重试，grant=去授权 */
+/** 下一步动作：settings=去设置，switch=换后端（只跳设置页，不自动切换），retry=重试 */
 export const ERROR_ACTIONS = Object.freeze({
   AUTH_INVALID: ['settings'],
   QUOTA_EXCEEDED: ['switch'],
@@ -22,7 +22,7 @@ export const ERROR_ACTIONS = Object.freeze({
   FILE_UNSUPPORTED: ['switch'],
   TOO_LARGE: ['switch'],
   NETWORK: ['retry'],
-  PERMISSION_MISSING: ['grant'],
+  PERMISSION_MISSING: ['retry'],
   TIMEOUT: ['retry'],
   PROVIDER_FAILED: ['retry', 'switch'],
 });

@@ -86,19 +86,9 @@ export function triggerConversionInActiveTab(tabsApi, runtime, log = () => {}, h
 }
 
 /**
- * 审查 P1-1：只有扩展自己的页面（弹窗/设置页）能确认发送；content script 带 sender.tab，一律拒绝，
- * 这样网页里的脚本没法替用户点「发送并解析」。
+ * 审查 P1-1：只认扩展自己的页面（弹窗/设置页）；content script 带 sender.tab，一律拒绝。
  */
 export function isExtensionPageSender(sender, runtimeId, baseUrl) {
   if (!sender || !runtimeId || sender.id !== runtimeId || sender.tab) return false;
   return isExtensionPageUrl(sender.url, runtimeId, baseUrl);
-}
-
-/** P3-5：OPEN_DISCLOSURE 只接受本扩展 arxiv.org 内容脚本 / 扩展页面发来的、已知后端 id；返回是否打开了 */
-export const DISCLOSURE_PROVIDERS = ['paddleocr', 'mineru'];
-export function handleOpenDisclosure(message, sender, runtimeId, open, baseUrl) {
-  if (!isTrustedArxivSender(sender, runtimeId, baseUrl)) return false;
-  if (!message || !DISCLOSURE_PROVIDERS.includes(message.provider)) return false;
-  open(message.provider);
-  return true;
 }

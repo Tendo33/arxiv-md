@@ -683,15 +683,11 @@ body {
 .autosave-note.error { color: var(--danger); font-weight: 600; white-space: normal; }
 
 /* R4-14：PDF 解析分组 */
-.permission-row, .revoke-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 8px; font-size: 13px; color: var(--text-secondary, #475569); }
-.permission-row[hidden], .revoke-row[hidden] { display: none; }
+.permission-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 8px; font-size: 13px; color: var(--text-secondary, #475569); }
+.permission-row[hidden] { display: none; }
 
-
-/* 设计验收 M5：授权/撤销按钮用设置页按钮样式；窄屏下不拉满整行 */
-.permission-row .btn, .revoke-row .btn { min-height: 36px; padding: 0 12px; width: auto; flex: none; }
-
-/* 设计验收 M6：权限被拒的说明 */
-.permission-row.denied #permissionStatus { color: var(--danger); }
+/* 设计验收 M5：「重新初始化」按钮用设置页按钮样式；窄屏下不拉满整行 */
+.permission-row .btn { min-height: 36px; padding: 0 12px; width: auto; flex: none; }
 
 .token-status-link { color: inherit; text-decoration: underline; font-weight: 600; display: inline-block; padding: 4px 0; margin: -4px 0; border-radius: 4px; } /* 设计复验 15fe0f9 必须改 2（R22）：横向不外扩，Key 无效时 #tokenStatus 不溢出 */
 /* 设计 D4（AX-08）：状态行内链接扩大点击区但不改行高；焦点环 2px --focus-ring（亮 #2563eb / 暗 #60a5fa）。#getKeyLink 不在此列 */
@@ -759,18 +755,6 @@ a:focus-visible {
 .form-hint a.key-link:hover { text-decoration: underline; text-underline-offset: 2px; }
 .form-hint a.key-link svg { width: 14px; height: 14px; flex: none; }
 
-/* 附录 C：首次选择后端的数据说明面板（卡片下方，占满一行） */
-.pd-panel { grid-column: 1 / -1; display: grid; gap: 8px; padding: 14px 16px; border: 1px solid var(--border-strong); border-radius: 10px; background: var(--surface); color: var(--text-primary); }
-.pd-panel .pd-title { margin: 0; padding: 0; font-size: 14px; font-weight: 600; line-height: 1.5; color: var(--text-primary); outline: none; }
-.pd-body { margin: 0; font-size: 13px; line-height: 1.6; color: var(--text-secondary); }
-.pd-link { display: inline-flex; align-items: center; gap: 4px; min-height: 24px; justify-self: start; font-size: 13px; font-weight: 500; color: var(--accent); text-decoration: none; border-radius: 4px; }
-.pd-link:hover { text-decoration: underline; text-underline-offset: 2px; }
-.pd-link svg { width: 14px; height: 14px; flex: none; margin-left: 4px; vertical-align: -2px; } /* C14：图标在 .nw 里随最后一段走 */
-.pd-link .nw { white-space: nowrap; }
-.pd-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
-.pd-actions .btn { box-sizing: border-box; width: auto; height: 36px; min-height: 36px; padding: 0 16px; line-height: 20px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
-@media (max-width: 359px) { .pd-actions .btn { flex: 1 1 100%; width: 100%; } }
-
 /* R09 / B8：中文按短语断行（text-wrap:pretty 对 CJK 无效） */
 .nw { white-space: nowrap; }
 .btn { white-space: nowrap; }
@@ -779,14 +763,6 @@ a:focus-visible {
 .btn-ghost { background: transparent; color: var(--text-secondary); border: none; box-shadow: none; }
 .btn-ghost:hover, .btn-ghost:focus-visible { background: var(--surface-2); color: var(--text-primary); }
 .permission-row .btn-ghost { box-sizing: border-box; height: 36px; min-height: 36px; }
-
-/* 设计验收 30a6e1b #6：确认后提示在卡片下方单独一行，前缀 ✓，不进底部 toast */
-.pd-confirmed { margin: 8px 0 0; font-size: 13px; line-height: 20px; color: var(--success); }
-.pd-confirmed[hidden] { display: none; }
-/* 设计复验 6a49976 M2：✓ 行在网格里，对齐被确认卡片所在的列；单列（<540）时按 DOM 顺序紧跟卡片 */
-.provider-group > .pd-confirmed[data-col="1"] { grid-column: 1; grid-row: 2; }
-.provider-group > .pd-confirmed[data-col="2"] { grid-column: 2; grid-row: 2; }
-@media (max-width: 539px) { .provider-group > .pd-confirmed[data-col] { grid-column: auto; grid-row: auto; } }
 
 /* 设计验收 30a6e1b #7：主按钮 focus-visible 只留蓝色 outline，不叠红色阴影 */
 .btn-primary:focus-visible { box-shadow: none; transition: none; } /* 设计复验 15fe0f9 必须改 1（R07）：去掉 0.3s 阴影过渡，Tab 进来第一帧就没有品牌红 */

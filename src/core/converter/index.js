@@ -1,6 +1,5 @@
 // 主转换器
 
-import { isDisclosureAcked, disclosureHash } from '@utils/disclosure-ack';
 import ar5ivConverter from './ar5iv-converter';
 import { assertSavableMarkdown, isEmptyResultError } from '@pdf-core/output/pre-save';
 import storage from '@utils/storage';
@@ -230,12 +229,6 @@ class MainConverter {
       throw new ParseError('AUTH_INVALID', { provider: readiness.provider });
     }
     const provider = readiness.provider;
-
-    // 附录 C10：首次使用该后端前必须在设置页确认数据说明。没确认 → 不发任何请求，打开设置页 #disclose=<provider>
-    if (!(await isDisclosureAcked(provider))) {
-      openDisclosureSettings(provider);
-      return { success: false, disclosureNeeded: true, provider, error: 'DISCLOSURE_NEEDED' };
-    }
 
     // 检测运行环境：background 还是 content script
     const isBackgroundContext = typeof chrome !== 'undefined' &&
@@ -476,40 +469,3 @@ class MainConverter {
 // 导出单例
 export default new MainConverter();
 
-/**
- * 设计验收 30a6e1b 建议 a：设置页已经开着就切过去（换 hash → 页面 hashchange 展开面板），不再新开一个。
- * 只用 runtime.getContexts（Chrome 116+，manifest 最低 121）+ tabs.update / windows.update 改本扩展自己的页面：
- * 不需要新权限，manifest 不变。拿不到就退回新开标签页。
- */
-export async function openOrReuseSettingsTab(url) {
-  const base = url.split('#')[0];
-  try {
-    if (chrome.runtime.getContexts) {
-      const ctxs = await chrome.runtime.getContexts({ contextTypes: ['TAB'], documentUrls: [base] }).catch(() => []);
-      // documentUrls 匹配不含 hash；兜底再按前缀过滤一次
-      const hit = (ctxs || []).find((c) => typeof c.tabId === 'number' && c.tabId >= 0 && String(c.documentUrl || '').split('#')[0] === base);
-      if (hit) {
-        await chrome.tabs.update(hit.tabId, { url, active: true });
-        if (chrome.windows && chrome.windows.update && typeof hit.windowId === 'number' && hit.windowId >= 0) await chrome.windows.update(hit.windowId, { focused: true }).catch(() => {});
-        return { reused: true, tabId: hit.tabId };
-      }
-    }
-  } catch (e) {
-    logger.warn('Reuse settings tab failed, opening a new one:', e && e.message);
-  }
-  await chrome.tabs.create({ url });
-  return { reused: false };
-}
-
-/** C10：打开（或切到）设置页并定位到数据说明。content script 里没有 tabs API → 交给 background */
-export function openDisclosureSettings(provider) {
-  try {
-    if (chrome.tabs && chrome.tabs.create) {
-      return openOrReuseSettingsTab(chrome.runtime.getURL(`settings.html${disclosureHash(provider)}`));
-    } else {
-      chrome.runtime.sendMessage({ type: 'OPEN_DISCLOSURE', provider });
-    }
-  } catch (e) {
-    logger.warn('Failed to open settings for disclosure:', e && e.message);
-  }
-}

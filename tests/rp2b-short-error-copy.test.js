@@ -6,7 +6,6 @@ import { parseHTML } from 'linkedom';
 import { translations } from '@config/locales';
 import { ALL_ERROR_CODES, ParseError } from '@pdf-core/errors';
 import { providerLabel } from '@config/pdf-providers';
-import { createPermissions } from './helpers/chrome-stubs';
 import { createDefaultRegistry } from '@pdf-core/providers/index';
 import { taskErrorText } from '../src/ui/popup/task-error-text';
 import { createPdfProviderSection } from '../src/ui/settings/pdf-provider';
@@ -16,14 +15,14 @@ const DESIGN = {
   zh: {
     AUTH_INVALID: 'Key 无效或未填写', QUOTA_EXCEEDED: '额度已用完，请稍后再试或换一个后端', RATE_LIMITED: '请求太频繁，请稍等片刻再重试',
     FILE_UNSUPPORTED: '无法处理这个 PDF', TOO_LARGE: 'PDF 太大，超出了限制', NETWORK: '连不上服务，请检查网络',
-    PERMISSION_MISSING: '需要授权访问 {host}', permission_plain: '需要网站访问授权，请到设置 › PDF 解析里授权', TIMEOUT: '处理超时，任务已停止',
+    PERMISSION_MISSING: '无法访问 {host}，请重启浏览器后重试', permission_plain: '无法访问解析服务的网站，请重启浏览器后重试', TIMEOUT: '处理超时，任务已停止',
     reason_forbidden_empty: '请求被拒绝（与 Key 或额度无关），可以稍后重试或换一个后端', failed_plain: '没能解析这个 PDF，可以重试，或在设置里换一个后端',
     reason_key_not_on_device: '本设备还没有 Key（Key 不会跨设备同步），请在设置 › PDF 解析里填写',
   },
   en: {
     AUTH_INVALID: 'Invalid or missing key', QUOTA_EXCEEDED: 'Quota exhausted. Try again later or switch provider', RATE_LIMITED: 'Too many requests. Wait a moment and retry',
     FILE_UNSUPPORTED: "Can't process this PDF", TOO_LARGE: 'PDF is too large for this provider', NETWORK: "Can't connect. Check your network",
-    PERMISSION_MISSING: 'Needs access to {host}', permission_plain: 'Needs site access. Grant it in Settings › PDF parsing', TIMEOUT: 'Timed out. The task was stopped',
+    PERMISSION_MISSING: "Can't access {host}. Restart the browser and retry", permission_plain: "Can't access the provider's site. Restart the browser and retry", TIMEOUT: 'Timed out. The task was stopped',
     reason_forbidden_empty: 'Request rejected (not a key or quota problem). Retry later or switch provider', failed_plain: "Couldn't parse this PDF. Retry, or switch provider in Settings",
     reason_key_not_on_device: "No key on this device (keys don't sync). Add it in Settings › PDF parsing",
   },
@@ -94,8 +93,7 @@ async function settingsRow(lang, error) {
   const p = { ...base.get('paddleocr'), testConnection: async () => ({ ok: false, error }) };
   const registry = { ...base, get: (id) => (id === 'paddleocr' ? p : base.get(id)), list: base.list ? base.list.bind(base) : undefined };
   const storage = { getPdfProvider: async () => 'paddleocr', setPdfProvider: async () => {}, getProviderKey: async () => 'fixture-key', setProviderKey: async () => {} };
-  const permissions = createPermissions({ origins: ['https://paddleocr.aistudio-app.com/*', 'https://*.bj.bcebos.com/*'], permissions: ['declarativeNetRequestWithHostAccess'] });
-  const sec = createPdfProviderSection({ doc: document, storage, permissions, registry, t: () => translations[lang] });
+  const sec = createPdfProviderSection({ doc: document, storage, registry, t: () => translations[lang] });
   await sec.init();
   await sec.onTest();
   return document.getElementById('tokenStatus').textContent;

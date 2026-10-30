@@ -18,8 +18,8 @@ describe('R09：中文按短语断行（.nw）', () => {
     expect(el.querySelector('span')).toBeNull();
     expect(el.textContent).toBe(translations.en.mode_desc);
   });
-  test('没有切分表的句子在标点后切开，拼回原文；数据说明正文也是', () => {
-    const t = translations.zh.pdf_disc_body_paddleocr;
+  test('没有切分表的句子在标点后切开，拼回原文', () => {
+    const t = translations.zh.err_reason_upload_limit;
     expect(splitZh(t).join('')).toBe(t);
     expect(splitZh(t).length).toBeGreaterThan(3);
     const { document } = parseHTML('<p></p>');

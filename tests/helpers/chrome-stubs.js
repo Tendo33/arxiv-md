@@ -1,4 +1,4 @@
-// R4-18：alarms / permissions / storage(local+sync) / onChanged 的 chrome 桩
+// R4-18：alarms / storage(local+sync) / onChanged 的 chrome 桩（1.2.2 起权限安装时授予，不再桩 permissions）
 export function createStorageArea(name, initial = {}, emit) {
   let data = JSON.parse(JSON.stringify(initial));
   const pick = (keys) => {
@@ -44,30 +44,12 @@ export function createAlarms() {
   };
 }
 
-/** granted: 已授予的 origins/permissions；answer: request() 的用户选择（true=同意） */
-export function createPermissions({ origins = [], permissions = [], answer = true } = {}) {
-  const state = { origins: new Set(origins), permissions: new Set(permissions), answer };
-  const has = (q) => (q.origins || []).every((o) => state.origins.has(o)) && (q.permissions || []).every((p) => state.permissions.has(p));
-  return {
-    state,
-    contains: jest.fn(async (q) => has(q)),
-    request: jest.fn(async (q) => {
-      if (!state.answer) return false;
-      (q.origins || []).forEach((o) => state.origins.add(o)); (q.permissions || []).forEach((p) => state.permissions.add(p));
-      return true;
-    }),
-    remove: jest.fn(async (q) => { (q.origins || []).forEach((o) => state.origins.delete(o)); (q.permissions || []).forEach((p) => state.permissions.delete(p)); return true; }),
-    getAll: jest.fn(async () => ({ origins: [...state.origins], permissions: [...state.permissions] })),
-  };
-}
-
-export function installChrome({ local = {}, sync = {}, ...perm } = {}) {
+export function installChrome({ local = {}, sync = {} } = {}) {
   const onChanged = createEvent();
   const emit = (changes, area) => onChanged.fire(changes, area);
   const chrome = {
     storage: { local: createStorageArea('local', local, emit), sync: createStorageArea('sync', sync, emit), onChanged },
     alarms: createAlarms(),
-    permissions: createPermissions(perm),
     runtime: { id: 'test', lastError: null, getURL: (p) => `chrome-extension://test/${p}`, onMessage: createEvent(), sendMessage: jest.fn(async () => ({})) },
     downloads: { download: jest.fn((opts, cb) => { if (cb) cb(1); return Promise.resolve(1); }) },
     notifications: { create: jest.fn((id, o, cb) => cb && cb(id)), onClicked: createEvent() },

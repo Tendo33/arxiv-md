@@ -8,7 +8,7 @@ export const ZH_ROW_ERR_SEGMENTS = [
   ['PDF 太大，', '超出了限制'],
   ['连不上服务，', '请检查网络'],
   ['处理超时，', '任务已停止'],
-  ['需要网站访问授权，', '请到', '设置 › PDF 解析', '里授权'],
+  ['无法访问解析服务的网站，', '请重启浏览器', '后重试'],
   ['没能解析这个 PDF，', '可以重试，', '或在设置里', '换一个后端'],
   ['请求被拒绝', '（与 Key 或额度无关），', '可以稍后重试', '或换一个后端'],
   ['本设备还没有 Key', '（Key 不会跨设备同步），', '请在', '设置 › PDF 解析', '里填写'],
@@ -16,12 +16,12 @@ export const ZH_ROW_ERR_SEGMENTS = [
   ['无法处理这个 PDF'],
 ];
 const BY_TEXT = new Map(ZH_ROW_ERR_SEGMENTS.map((s) => [s.join(''), s]));
-const HOST = /^(需要授权访问 )(\S+)$/;
+const HOST = /^(无法访问 )(\S+?)，请重启浏览器后重试$/;
 
 /** @returns {string[]|null} */
 export function rowErrSegments(text) {
   const s = String(text ?? '');
   if (BY_TEXT.has(s)) return BY_TEXT.get(s);
   const m = s.match(HOST);
-  return m ? [m[1], m[2]] : null;
+  return m ? [m[1], `${m[2]}，`, '请重启浏览器', '后重试'] : null;
 }

@@ -1,19 +1,13 @@
-// R4-02：DNR 规则 4001 由 background 维护：onAdded 装、onRemoved 删、提交前缺了就补（幂等）
-import { ensurePaddleOriginRule, installPaddleOriginRuleListeners, PADDLE_ORIGIN_RULE_ID, DNR_PERMISSION } from '../src/background/paddle-origin-rule';
+// R4-02：DNR 规则 4001 由 background 维护：启动时装、提交前缺了就补（幂等）。1.2.2 起权限安装时授予，不再监听 permissions 事件
+import { ensurePaddleOriginRule, installPaddleOriginRule, PADDLE_ORIGIN_RULE_ID } from '../src/background/paddle-origin-rule';
 import { createParseTaskRunner } from '../src/background/parse-task-runner';
 const fs = require('fs');
 const path = require('path');
 
-function mkChrome(granted) {
+function mkChrome() {
   let rules = [];
-  const listeners = { added: [], removed: [] };
   const c = {
     runtime: { id: 'extid' },
-    permissions: {
-      contains: jest.fn(async () => granted),
-      onAdded: { addListener: (f) => listeners.added.push(f) },
-      onRemoved: { addListener: (f) => listeners.removed.push(f) },
-    },
     declarativeNetRequest: {
       getDynamicRules: jest.fn(async () => rules.slice()),
       updateDynamicRules: jest.fn(async ({ removeRuleIds = [], addRules = [] }) => {
@@ -21,45 +15,24 @@ function mkChrome(granted) {
       }),
     },
   };
-  return { c, listeners, setGranted: (g) => { granted = g; }, rules: () => rules };
+  return { c, rules: () => rules };
 }
-const flush = () => new Promise((r) => setTimeout(r, 0));
 
 describe('R4-02 规则生命周期', () => {
-  test('onAdded（授予 DNR 权限）→ 装上规则 4001', async () => {
-    const h = mkChrome(false);
-    installPaddleOriginRuleListeners(h.c);
-    await flush();
-    expect(h.rules()).toEqual([]);
-    h.setGranted(true);
-    h.listeners.added.forEach((f) => f({ permissions: [DNR_PERMISSION] }));
-    await flush();
+  test('后台启动 → 装上规则 4001（不查 permissions）', async () => {
+    const h = mkChrome();
+    expect(await installPaddleOriginRule(h.c)).toBe(true);
     expect(h.rules().map((r) => r.id)).toEqual([PADDLE_ORIGIN_RULE_ID]);
   });
 
-  test('onRemoved（撤销 DNR 权限）→ 删除规则 4001', async () => {
-    const h = mkChrome(true);
-    installPaddleOriginRuleListeners(h.c);
-    await flush();
-    expect(h.rules().map((r) => r.id)).toEqual([PADDLE_ORIGIN_RULE_ID]);
-    h.setGranted(false);
-    h.listeners.removed.forEach((f) => f({ permissions: [DNR_PERMISSION] }));
-    await flush();
-    expect(h.rules()).toEqual([]);
+  test('background/index.js 启动时调用 installPaddleOriginRule，不再注册权限监听', () => {
+    const src = fs.readFileSync(path.join(__dirname, '../src/background/index.js'), 'utf8');
+    expect(src).toMatch(/\ninstallPaddleOriginRule\(\);/);
+    expect(src).not.toMatch(/installPaddleOriginRuleListeners|permissions\.onAdded|permissions\.onRemoved/);
   });
 
-  test('与 DNR 无关的权限变化不触发重装', async () => {
-    const h = mkChrome(true);
-    installPaddleOriginRuleListeners(h.c);
-    await flush();
-    h.c.declarativeNetRequest.updateDynamicRules.mockClear();
-    h.listeners.added.forEach((f) => f({ origins: ['https://x.example/*'], permissions: [] }));
-    await flush();
-    expect(h.c.declarativeNetRequest.updateDynamicRules).not.toHaveBeenCalled();
-  });
-
-  test('提交前：有权限但规则缺失 → 补装；已在 → 不重复写（幂等）', async () => {
-    const h = mkChrome(true);
+  test('提交前：规则缺失 → 补装；已在 → 不重复写（幂等）', async () => {
+    const h = mkChrome();
     expect(await ensurePaddleOriginRule(h.c)).toBe(true);
     expect(h.rules().map((r) => r.id)).toEqual([PADDLE_ORIGIN_RULE_ID]);
     h.c.declarativeNetRequest.updateDynamicRules.mockClear();
@@ -68,17 +41,15 @@ describe('R4-02 规则生命周期', () => {
     expect(h.rules()).toHaveLength(1);
   });
 
-  test('提交前：没权限 → 不装规则', async () => {
-    const h = mkChrome(false);
-    expect(await ensurePaddleOriginRule(h.c)).toBe(false);
-    expect(h.rules()).toEqual([]);
+  test('提交前：DNR 不可用 → 返回 false', async () => {
+    expect(await ensurePaddleOriginRule({ runtime: { id: 'extid' } })).toBe(false);
   });
 
   test('runner：首次 submit 之前调用 beforeSubmit（规则缺失时在提交前补上）', async () => {
-    const h = mkChrome(true);
+    const h = mkChrome();
     const order = [];
     const provider = { id: 'paddleocr', mode: 'sync', submit: jest.fn(async () => { order.push(`submit rules=${h.rules().length}`); return { result: { markdown: '# T\n\nbody' } }; }) };
-    const task = { id: 't1', provider: 'paddleocr', paperInfo: { arxivId: '2401.00001', title: 'T', pdfUrl: 'https://arxiv.org/pdf/2401.00001' }, oa: true, consent: true };
+    const task = { id: 't1', provider: 'paddleocr', paperInfo: { arxivId: '2401.00001', title: 'T', pdfUrl: 'https://arxiv.org/pdf/2401.00001' } };
     const runner = createParseTaskRunner({
       registry: { get: () => provider },
       taskManager: { getTask: async () => task, updateTask: async () => {} },

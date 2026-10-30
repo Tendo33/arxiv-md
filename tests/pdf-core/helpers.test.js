@@ -22,8 +22,8 @@ test('fetch mock 按 method 区分，可入队 Error', async () => {
   expect(await (await fm.fetch('https://a')).json()).toBe(1);
 });
 
-test('chrome 桩：storage / onChanged / alarms / permissions', async () => {
-  const c = installChrome({ sync: { a: 1 }, origins: ['https://x/*'], answer: false });
+test('chrome 桩：storage / onChanged / alarms（不再桩 permissions）', async () => {
+  const c = installChrome({ sync: { a: 1 } });
   const seen = [];
   c.storage.onChanged.addListener((ch, area) => seen.push([area, Object.keys(ch)]));
   await c.storage.local.set({ k: { v: 1 } });
@@ -35,11 +35,7 @@ test('chrome 桩：storage / onChanged / alarms / permissions', async () => {
   expect((await c.alarms.getAll()).map((a) => a.name)).toEqual(['keepAlive']);
   await c.alarms.clear('keepAlive');
   expect(await c.alarms.getAll()).toEqual([]);
-  expect(await c.permissions.contains({ origins: ['https://x/*'] })).toBe(true);
-  expect(await c.permissions.request({ origins: ['https://y/*'] })).toBe(false);
-  c.permissions.state.answer = true;
-  expect(await c.permissions.request({ origins: ['https://y/*'], permissions: ['p'] })).toBe(true);
-  expect(await c.permissions.contains({ origins: ['https://y/*'], permissions: ['p'] })).toBe(true);
+  expect(c.permissions).toBeUndefined();
 });
 
 test('fixture 里没有真实 Key / 真实 jobId', () => {

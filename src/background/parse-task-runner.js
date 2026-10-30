@@ -6,11 +6,9 @@
 import { ParseError, isParseError, ERROR_REASONS } from '@pdf-core/errors';
 import { normalizeMarkdown, shouldNormalize } from '@pdf-core/normalize/index';
 import { buildMineruLayout } from '@pdf-core/output/mineru-layout';
-import { ensureProviderPermission } from '@pdf-core/permissions';
 import { assertSavableMarkdown } from '@pdf-core/output/pre-save';
 import { TASK_STATUS } from '@config/constants';
 import { pdfUrlOf } from './pdf-url';
-import { uploadAllowed } from './oa-gate';
 
 export const SYNC_PROVIDER_TIMEOUT_MS = 60 * 1000;
 export const DEFAULT_ASYNC_TIMEOUT_MS = 10 * 60 * 1000;
@@ -52,7 +50,7 @@ export function createParseTaskRunner(deps) {
       errorCode: e.code,
       errorReason: e.reason || null,
       errorHttpStatus: e.httpStatus || null,
-      errorHost: e.host || null, // R4-03：PERMISSION_MISSING 文案要用
+      errorHost: e.host || null,
     });
     // rp2：界面文案不再出现 HTTP 状态码，状态码只进日志（和任务记录 errorHttpStatus）
     try { log.error(`PDF parse task ${task.id} failed: ${e.code}${e.reason ? ` (${e.reason})` : ''}${e.httpStatus ? ` HTTP ${e.httpStatus}` : ''}`); } catch { /* 日志失败不影响任务 */ }
@@ -132,19 +130,7 @@ export function createParseTaskRunner(deps) {
       if (!task) return { skipped: 'missing' };
       const provider = registry.get(task.provider || 'mineru');
       if (!provider) return { error: await fail(task, new ParseError('PROVIDER_FAILED', { reason: `unknown provider ${task.provider}` })) };
-      // 审查 30a6e1b P2（C10）：重试 / SW 续跑 / 内部消息 / 确认发送都汇到这里 → 发出任何请求前统一查 disclosureAck.<provider>。
-      // 没确认 → 任务停在中性的 awaiting_disclosure（不是失败），不取 Key、不发任何请求
-      if (deps.isDisclosureAcked && !(await deps.isDisclosureAcked(provider.id))) {
-        await taskManager.updateTask(taskId, { status: TASK_STATUS.AWAITING_DISCLOSURE, error: null, errorCode: null, errorReason: null });
-        notify(task, 'disclosure', '', provider);
-        return { disclosureNeeded: true, provider: provider.id };
-      }
-      // 审查 P1-1：非 OA（或判断不了）的 PDF 先停下等用户确认，确认前不发任何请求
-      if (!uploadAllowed(task)) {
-        await taskManager.updateTask(taskId, { status: TASK_STATUS.AWAITING_CONSENT });
-        notify(task, 'consent', '', provider);
-        return { needsConsent: true };
-      }
+      // 1.2.2：使用时零确认——不再有数据说明确认和非 OA 确认，有 Key 就直接解析
       const key = await storage.getProviderKey(provider.id);
       if (!key) {
         // 复审 P2-A：Key 不跨设备同步。后端是选过的（sync 带过来）但本设备没有 Key → 明确提示在本设备重新填写
@@ -154,16 +140,12 @@ export function createParseTaskRunner(deps) {
           : { provider: provider.id };
         return { error: await fail(task, new ParseError('AUTH_INVALID', info), provider) };
       }
-      // R4-08：缺域名权限 → 不发任何请求，任务失败为 PERMISSION_MISSING（UI 显示“去设置授权”）
-      if (deps.permissions) {
-        try { await ensureProviderPermission(deps.permissions, provider); } catch (e) { return { error: await fail(task, e, provider) }; }
-      }
       const creds = { token: key };
       // R4-02：首次提交前（还没有 jobId）让 background 确认该 provider 需要的网络规则已就绪（幂等）
       if (deps.beforeSubmit && !task.jobId) {
         // R5-01：不再吞掉错误继续提交（规则没装好提交必然 403 / 卡住），直接让任务失败并给可读原因
         try { await deps.beforeSubmit(provider); } catch (e) {
-          // QA L-01：刚授权后的同一会话里 DNR 调用一直挂起（见 dnr-reinit.js），只能重新载入扩展才恢复。
+          // QA L-01：DNR 调用一直挂起时（见 dnr-reinit.js）只能重新载入扩展才恢复。
           // 任务保持 PENDING，排队等「没有扩展页面开着、没有别的任务在跑」时重载一次（不在用户眼前关掉设置页 / popup），
           // 重载后 resume 续跑。每个任务最多重载一次；最多等 DNR_REINIT_MAX_WAIT_MS，超时照常失败
           if (e && e.reason === ERROR_REASONS.DNR_NOT_READY && typeof deps.reinit === 'function' && !task.dnrAutoReinit) {
@@ -222,16 +204,6 @@ export function createParseTaskRunner(deps) {
     return ids;
   }
 
-  /** 用户在确认框里同意发送 PDF 链接后调用：只放行这一个任务，不记住“总是允许” */
-  async function confirmSend(taskId) {
-    const task = await taskManager.getTask(taskId);
-    if (!task || task.status !== TASK_STATUS.AWAITING_CONSENT) return { skipped: 'not-awaiting' };
-    await taskManager.updateTask(taskId, { uploadConsent: true, status: TASK_STATUS.PENDING });
-    const done = process(taskId);
-    done.catch((e) => log.error('confirmed task failed', taskId, e));
-    return { confirmed: true, done };
-  }
-
   /** 用户删除任务：立即中止进行中的发送/轮询（删除标记由调用方先落盘） */
   function abort(taskId) {
     const c = controllers.get(taskId);
@@ -239,7 +211,7 @@ export function createParseTaskRunner(deps) {
     c.abort(); return true;
   }
 
-  return { process, confirmSend, resumeActiveTasks, abort, isRunning: (id) => running.has(id) };
+  return { process, resumeActiveTasks, abort, isRunning: (id) => running.has(id) };
 }
 
 export { pdfUrlOf };

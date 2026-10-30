@@ -1,8 +1,9 @@
 // 按目标浏览器调整构建产物里的 manifest。
 // Chrome 对 MV3 的 background.scripts 报「'background.scripts' requires manifest version of 2 or lower」，
 // 所以 Chrome/Edge 包去掉 scripts；Firefox 不支持 service_worker，Firefox 包保留 scripts。
+// 1.2.2 起所有权限（含 declarativeNetRequestWithHostAccess 和 PaddleOCR 域名）都在源 manifest 里安装时一次授予，
+// Chrome / Firefox 两个包的权限完全相同，这里不再搬动权限。
 const TARGETS = ['chrome', 'firefox'];
-const FIREFOX_REQUIRED_DNR = 'declarativeNetRequestWithHostAccess';
 
 // 只有「没给」（undefined/null）才默认 chrome；给了空值（--env target= / --target=）、
 // 非字符串（--env target → true）或未知值都报错，不能悄悄构建成 Chrome 包
@@ -39,15 +40,6 @@ function manifestForTarget(manifest, target) {
   const t = normalizeTarget(target);
   const out = JSON.parse(JSON.stringify(manifest));
   if (t === 'chrome' && out.background) delete out.background.scripts;
-  // FF-01 方案 A（Simon 10-29 22:49）：Firefox 包把 DNR 权限改成安装时必需，Chrome 包不变。其它权限一个不动
-  if (t === 'firefox') {
-    const opt = out.optional_permissions || [];
-    if (opt.includes(FIREFOX_REQUIRED_DNR)) {
-      out.optional_permissions = opt.filter((p) => p !== FIREFOX_REQUIRED_DNR);
-      if (!out.optional_permissions.length) delete out.optional_permissions;
-      out.permissions = [...(out.permissions || []), FIREFOX_REQUIRED_DNR];
-    }
-  }
   return out;
 }
 
@@ -74,4 +66,4 @@ function assertEnvTargetNotEmpty(argv) {
   }
 }
 
-module.exports = { TARGETS, FIREFOX_REQUIRED_DNR, normalizeTarget, parseVerifyArgs, assertEnvTargetNotEmpty, manifestForTarget, verifyBackground };
+module.exports = { TARGETS, normalizeTarget, parseVerifyArgs, assertEnvTargetNotEmpty, manifestForTarget, verifyBackground };

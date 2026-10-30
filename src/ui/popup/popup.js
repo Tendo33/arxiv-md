@@ -6,7 +6,7 @@ import logger from '@utils/logger';
 import storage from '@utils/storage';
 import { translations } from '@config/locales';
 import { showConfirm } from './confirm-dialog';
-import { confirmSendFlow, refocusTask } from './send-consent';
+import { refocusTask } from './task-focus';
 import { renderTaskRows, setTaskListLanguage, alignRowNotes } from './task-list';
 import { bindListScroll, fitListToHalfRow, refitOnResize } from './list-scroll';
 import { pageContext, recentTasks } from './page-context';
@@ -231,10 +231,6 @@ async function runExport(mode) {
   if (res && res.ok) {
     if (mode === 'mineru') showOk(tr.popup_saved_bg.replace('{provider}', providerLabel(active.id)), tr.content_progress_submitted, 'submitted');
     else showOk(res.filename || res.message || '');
-  } else if (res?.notice) {
-    // 设计验收 30a6e1b #5：C10 拦截不是失败，用中性 info 卡（#alertKey，role=status），不用 showErr
-    showNeedKey(res.title || tr.pdf_disc_needed_title, res.hint || tr.pdf_disc_needed_body);
-    ctx.state = 'notice';
   } else {
     showErr(res?.error || tr.popup_badge_err, res?.unreachable ? '' : tr.popup_err_generic_hint);
     showRefresh(!!res?.unreachable);
@@ -291,8 +287,6 @@ function bindTaskActions() {
     const { action, taskId, url } = btn.dataset;
     if (action === 'download') handleDownload(url);
     else if (action === 'retry') await handleRetry(taskId);
-    else if (action === 'consent') await handleConsent(taskId, btn.dataset.provider);
-    else if (action === 'disclose') chrome.runtime.sendMessage({ type: 'OPEN_DISCLOSURE', provider: btn.dataset.provider });
     else if (action === 'delete') await handleDelete(taskId);
   });
 }
@@ -314,13 +308,6 @@ async function taskCall(message, okKey, failKey, extra) {
     logger.error(`${message.type} failed:`, error);
     showToast(t()[failKey]);
   }
-}
-
-async function handleConsent(taskId, providerId) {
-  const task = currentTasks.find((x) => x.id === taskId) || taskId;
-  await confirmSendFlow(task, providerId, { showConfirm, sendMessage: (m) => chrome.runtime.sendMessage(m), tr: t() });
-  await loadTasks();
-  refocusTask(document, taskId);
 }
 
 async function handleRetry(taskId) {

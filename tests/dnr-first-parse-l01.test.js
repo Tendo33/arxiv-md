@@ -1,6 +1,6 @@
-// QA L-01（第二版）：确认数据说明 / 授权后立即解析——不在用户眼前重载扩展
+// QA L-01（第二版）：首次解析——不在用户眼前重载扩展（1.2.2 起权限安装时授予，不再查 permissions）
 // - 规则在提交前的核对 / 重装里就绪 → 直接成功，runtime.reload 一次都不调
-// - DNR 调用挂起（Chromium 同会话刚授权的真实情况）→ 任务保持 PENDING；设置页 / popup 开着时不重载，关掉后才重载一次
+// - DNR 调用挂起 → 任务保持 PENDING；设置页 / popup 开着时不重载，关掉后才重载一次
 jest.mock('@utils/logger', () => ({ __esModule: true, default: { error: jest.fn(), info: jest.fn(), warn: jest.fn(), debug: jest.fn() } }));
 import { makeHarness, fakeProvider } from './helpers/runner-harness';
 import { requirePaddleOriginRule, PADDLE_ORIGIN_RULE_ID } from '../src/background/paddle-origin-rule';
@@ -12,7 +12,6 @@ function fakeChrome({ hang = false } = {}) {
   let rules = [];
   const c = {
     state: { hang, pages: [] },
-    permissions: { contains: async () => true },
     declarativeNetRequest: {
       getDynamicRules: jest.fn(() => (c.state.hang ? new Promise(() => {}) : Promise.resolve(rules))),
       updateDynamicRules: jest.fn((o) => (c.state.hang ? new Promise(() => {}) : Promise.resolve(void (rules = o.addRules || [])))),
@@ -35,7 +34,7 @@ function setup(c) {
   return { p, h, statuses, runner: () => createParseTaskRunner(h.deps) };
 }
 
-test('首次确认后立即解析：规则在提交前核对 / 重装后就绪 → 成功，且没有调用 runtime.reload', async () => {
+test('首次解析：规则在提交前核对 / 重装后就绪 → 成功，且没有调用 runtime.reload', async () => {
   const c = fakeChrome();
   const s = setup(c);
   const r = await s.runner().process('t1');

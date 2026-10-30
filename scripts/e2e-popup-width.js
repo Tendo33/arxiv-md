@@ -1,7 +1,7 @@
 /* eslint-env node */
 /* eslint-disable no-console */
 // 设计必改（R05 类布局跳动）：popup 在所有状态下外宽都固定 360px。
-// 状态（两张状态表的并集）：不支持页 / 空列表 / 有任务 / 需要 Key / 有 Key / 清空确认 / 门禁（awaiting_consent）/ 出错（失败任务 + 无法连接提示），
+// 状态（两张状态表的并集）：不支持页 / 空列表 / 有任务 / 需要 Key / 有 Key / 清空确认 / 旧版待确认任务（awaiting_consent，1.2.2 起不再产生，显示「重试」）/ 出错（失败任务 + 无法连接提示），
 // 每种在 320、360、375 宽视口下各量一次 html、body、.pop 的外宽，断言全部 = 360（差 ≤0.5px）。
 // 说明：Playwright 打不开工具栏 action popup，这里用固定视口页面模拟；真实 popup 由 QA 在 Chrome 里复核。
 // 运行条件同 e2e-shortcut.js。E2E_WIDTH_OUT=<file> 时写出测量 JSON。

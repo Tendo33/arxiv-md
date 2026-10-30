@@ -188,7 +188,7 @@ export async function downloadImages(images, ctx = {}, concurrency = 4) {
         img.data = r.data;
         img.contentType = r.contentType;
       } catch (e) {
-        if (isParseError(e) && e.code === 'PERMISSION_MISSING') throw e; // 没 bcebos 权限：整体失败，让用户重新授权
+        if (isParseError(e) && e.code === 'PERMISSION_MISSING') throw e; // 访问不了 bcebos：整体失败，不逐张记错
         img.error = (e && (e.code || e.message)) || 'download failed';
       }
     }
@@ -216,10 +216,7 @@ export const paddleocrProvider = defineProvider({
   id: ID,
   label: 'PaddleOCR',
   hosts: [`${PADDLEOCR_BASE}/*`, PADDLEOCR_RESULT_HOSTS],
-  // R4-08：optional_host_permissions，选中 PaddleOCR 时在用户手势里申请
-  permissionMode: 'optional',
-  // DNR 可选权限：和域名权限一起申请，用于删除星河请求的 Origin 头（否则网关返回空 body 403）
-  optionalPermissions: ['declarativeNetRequestWithHostAccess'],
+  // 1.2.2：域名和 DNR 权限（删除星河请求的 Origin 头，否则网关返回空 body 403）都在 manifest 里安装时授予
   credentialFields: [{ key: 'token', label: 'Access Token', secret: true }],
   keyUrl: 'https://aistudio.baidu.com/account/accessToken',
   dataHost: 'paddleocr.aistudio-app.com',

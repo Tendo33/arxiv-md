@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 // 设计复验 15fe0f9 R07 扩展回归：所有 primary / confirm 按钮键盘聚焦后，在 0/50/150/350ms
 // 采样 computed outline 和 box-shadow，都不能含品牌红 rgb(179,27,27) / rgb(248,113,113)（含过渡中间帧）。
-// 按钮按 class/role 选，不按文案选。另核对 en 披露确认按钮的可见文字和可访问名是 "Confirm and continue"。
+// 按钮按 class/role 选，不按文案选。（1.2.2 起没有数据说明面板，不再测 .pd-ok / .pd-cancel）
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -18,7 +18,6 @@ function loadPlaywright() {
   process.exit(2);
 }
 const SAMPLES = [0, 50, 150, 350];
-const SETTINGS_SEL = '.btn-primary, .pd-ok, .pd-cancel, [role=dialog] .btn, [role=alertdialog] .btn';
 const POPUP_SEL = '.btn-primary, .confirm-btn';
 
 // 在页面里：键盘模式下逐个聚焦，按时间点采样
@@ -67,7 +66,6 @@ const sampleAll = ([sel, SAMPLES]) => new Promise((resolve) => {
       await sw.evaluate(async (l) => { await chrome.storage.sync.set({ language: l }); }, lang);
       for (const theme of ['light', 'dark']) {
         const views = [
-          ...['paddleocr', 'mineru'].map((pv) => ({ name: `disclose-${pv}`, url: `settings.html#disclose=${pv}`, sel: SETTINGS_SEL, wait: '.pd-ok' })),
           { name: 'settings', url: 'settings.html', sel: '.btn', wait: 'body' },
           { name: 'popup', url: 'popup.html', sel: POPUP_SEL, wait: '#exportBtn', popup: true },
         ];
@@ -81,12 +79,6 @@ const sampleAll = ([sel, SAMPLES]) => new Promise((resolve) => {
           await p.waitForSelector(v.wait, { timeout: 10000 });
           await p.waitForTimeout(400);
           if (v.popup) await p.evaluate(() => { const o = document.getElementById('confirmOverlay'); o.hidden = false; o.inert = false; o.classList.add('show'); });
-          if (v.name.startsWith('disclose') && lang === 'en') {
-            const ok = await p.evaluate(() => { const b = document.querySelector('.pd-ok'); return { text: b.textContent.trim(), aria: b.getAttribute('aria-label') }; });
-            const good = ok.text === 'Confirm and continue' && (ok.aria === null || ok.aria === 'Confirm and continue');
-            console.log(`${good ? 'PASS' : 'FAIL'} en-copy-${v.name}-${theme} ${JSON.stringify(ok)}`);
-            if (!good) fail++;
-          }
           await p.keyboard.press('Shift'); // 让后续 focus() 走键盘模式（:focus-visible）
           const recs = await p.evaluate(sampleAll, [v.sel, SAMPLES]);
           for (const r of recs) {

@@ -1,7 +1,5 @@
 // Background Service Worker
 
-import { isDisclosureAcked } from '@utils/disclosure-ack';
-import { openDisclosureSettings } from '@core/converter/index';
 import converter from '@core/converter';
 import ar5ivConverter from '@core/converter/ar5iv-converter';
 import taskManager from '@core/task-manager';
@@ -9,10 +7,10 @@ import logger from '@utils/logger';
 import storage from '@utils/storage';
 import { TASK_STATUS } from '@config/constants';
 import { arxivApiUrl } from '@core/metadata-extractor';
-import { installPaddleOriginRuleListeners } from './paddle-origin-rule';
-import { deletedTaskGuard, processMinerUTaskInBackground, providerRegistry, resumeParseTasks, confirmPdfSend, abortParseTask } from './mineru-task-runner';
+import { installPaddleOriginRule } from './paddle-origin-rule';
+import { deletedTaskGuard, processMinerUTaskInBackground, providerRegistry, resumeParseTasks, abortParseTask } from './mineru-task-runner';
 import { KEEP_ALIVE_ALARM, syncKeepAlive } from './keep-alive';
-import { handleOpenDisclosure, isExtensionPageSender, isTrustedArxivSender, isValidArxivId, triggerConversionInActiveTab } from './message-guards';
+import { isTrustedArxivSender, isValidArxivId, triggerConversionInActiveTab } from './message-guards';
 import { createActionBadge, handleShortcutResult, conversionBadgeState } from './action-badge';
 import { createContextMenus } from './context-menu';
 import { runMigrations } from '@utils/migrations';
@@ -83,12 +81,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     handleGetStatistics(sendResponse);
     return true;
 
-  case 'OPEN_DISCLOSURE':
-    // 附录 C10：content script 请求打开设置页的数据说明（只接受已知后端 id，由 disclosureHash 校验格式）
-    // P3-5：同时核对发送方（本扩展、arxiv.org 或扩展页面）
-    if (!handleOpenDisclosure(message, sender, chrome.runtime.id, openDisclosureSettings)) logger.warn('OPEN_DISCLOSURE rejected');
-    return false;
-
   case 'START_PDF_TASK':
     // R4-11：通用入口 {data: paperInfo, provider?, force?}
     _doStartPdfTask(message.data, sendResponse, !!message.force, message.provider);
@@ -102,18 +94,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   case 'START_MINERU_TASK_FORCE':
     // 强制创建任务，跳过重复检查
     handleStartMinerUTaskForce(message.data, sendResponse);
-    return true;
-
-  case 'CONFIRM_PDF_SEND':
-    // 审查 P1-1：非 OA PDF 用户确认后才发送；只接受扩展页面发来的确认
-    if (!isExtensionPageSender(sender, chrome.runtime.id)) {
-      logger.warn('CONFIRM_PDF_SEND rejected: untrusted sender', sender && sender.url);
-      sendResponse({ success: false, error: 'Untrusted sender' });
-      return false;
-    }
-    confirmPdfSend(message.taskId)
-      .then((r) => { refreshKeepAlive(); sendResponse({ success: !!(r && r.confirmed), skipped: r && r.skipped }); })
-      .catch((e) => sendResponse({ success: false, error: e && e.message }));
     return true;
 
   case 'GET_TASKS':
@@ -250,12 +230,6 @@ async function resolvePdfProvider(requested) {
 async function _doStartPdfTask(paperInfo, sendResponse, skipDuplicateCheck, requestedProvider) {
   try {
     const provider = await resolvePdfProvider(requestedProvider);
-    // 附录 C10：没确认过数据说明 → 不建任务、不发请求，打开设置页
-    if (!(await isDisclosureAcked(provider))) {
-      openDisclosureSettings(provider);
-      sendResponse({ success: false, disclosureNeeded: true, provider, error: 'DISCLOSURE_NEEDED' });
-      return;
-    }
     if (!skipDuplicateCheck) {
       const existingTask = await taskManager.findTaskByArxivId(paperInfo.arxivId, provider);
       if (existingTask) {
@@ -366,10 +340,6 @@ async function handleRetryTask(taskId, sendResponse) {
 
     sendResponse({ success: true });
 
-    // QA 6a49976 R-4：没确认数据说明就点重试 → 和新建任务一样重新打开披露页（任务由 runner 停在 awaiting_disclosure，不发请求）
-    const provider = task.provider || 'mineru';
-    if (!(await isDisclosureAcked(provider))) openDisclosureSettings(provider);
-
     // 重新处理
     startParseTask(taskId);
   } catch (error) {
@@ -465,7 +435,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   }
 });
 resumeAndRefresh();
-// DNR 可选权限：用户授权后才安装星河 Origin 规则
-installPaddleOriginRuleListeners();
+// DNR 权限安装时已授予：后台启动时装好星河 Origin 规则
+installPaddleOriginRule();
 
 export { processMinerUTaskInBackground };

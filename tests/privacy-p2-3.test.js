@@ -46,9 +46,10 @@ describe('隐私说明（Simon：arXiv 论文都算 OA，直接解析）和实�
     expect(p).not.toMatch(/Neither provider receives the PDF file/);
     expect(p).toMatch(/PDF hosted on arXiv[^\n]*PaddleOCR receives the PDF file itself[^\n]*50 MB[^\n]*MinerU receives only the PDF link/);
     expect(p).toMatch(/Any other PDF\*\*: both providers receive only the PDF link/);
-    expect(p).toMatch(/\| `https:\/\/\*\.bj\.bcebos\.com\/\*` \(optional\) \|/);
+    expect(p).toMatch(/\| `https:\/\/\*\.bj\.bcebos\.com\/\*` \|/); // 1.2.2：安装时授予，不再标 optional
     expect(p).not.toMatch(/pending QA/);
-    expect(p.match(/Access to (both domains|this domain) is requested/g)).toHaveLength(1);
+    expect(p).not.toMatch(/Access to (both domains|this domain) is requested/);
+    expect(p).toContain('Access to both domains is granted when you install or update the extension');
   });
   test('README_CN 隐私段同一说法', () => {
     expect(rd('README_CN.md')).toMatch(/MinerU 收到 arXiv PDF 链接；PaddleOCR 收到 arXiv PDF 文件本身（上传，50 MB 以内），非 arXiv 的 PDF 只发链接/);

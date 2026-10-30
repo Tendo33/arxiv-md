@@ -1,4 +1,3 @@
-import { withRequiredPermissions, requiredPermissionsOf } from '@pdf-core/permissions';
 // R4-11：保留旧模块路径（兼容旧 import）；实现已迁到 parse-task-runner.js，一个版本后删除
 import { scheduleReloadWhenIdle } from './dnr-reinit';
 import taskManager from '@core/task-manager';
@@ -12,7 +11,6 @@ import { saveDeliverable } from '@pdf-core/output/save';
 import { createParseTaskRunner } from './parse-task-runner';
 import { taskNotificationText } from './task-notification-text';
 import { requirePaddleOriginRule } from './paddle-origin-rule';
-import { isDisclosureAcked, needsDisclosure } from '@utils/disclosure-ack';
 
 export const deletedTaskGuard = createDeletedTaskGuard(chrome.storage.local);
 export const providerRegistry = createDefaultRegistry();
@@ -42,8 +40,6 @@ export async function showTaskNotification(task, status, detail = '', provider =
 export const backgroundReinit = (opts) => scheduleReloadWhenIdle(opts);
 
 export const parseTaskRunner = createParseTaskRunner({
-  // FF-01 A：Firefox 包里 DNR 已是必需权限，contains 不再查它
-  permissions: typeof chrome !== 'undefined' && chrome.permissions ? withRequiredPermissions(chrome.permissions, requiredPermissionsOf(chrome.runtime)) : null,
   registry: providerRegistry,
   taskManager,
   storage,
@@ -56,18 +52,12 @@ export const parseTaskRunner = createParseTaskRunner({
   beforeSubmit: (provider) => (provider && provider.id === 'paddleocr' ? requirePaddleOriginRule() : undefined),
   // QA L-01：首次解析 DNR 没就绪 → 等没有扩展页面开着、也没有别的任务在跑时重新载入扩展一次，启动后 resume 续跑
   reinit: backgroundReinit,
-  // 审查 30a6e1b P2：所有走 runner 的路径在提交前查数据说明确认
-  isDisclosureAcked: (id) => (needsDisclosure(id) ? isDisclosureAcked(id) : true),
   log: logger,
 });
 
 /** 旧名字：处理任意 provider 的任务 */
 export function processMinerUTaskInBackground(taskId) {
   return parseTaskRunner.process(taskId);
-}
-/** 审查 P1-1：用户确认把非 OA PDF 的链接发给后端 */
-export function confirmPdfSend(taskId) {
-  return parseTaskRunner.confirmSend(taskId);
 }
 
 /** R4-12：续上 SW 被杀前未完成的任务 */
