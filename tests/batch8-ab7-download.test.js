@@ -246,7 +246,7 @@ describe.each([['zh'], ['en']])('通知与状态卡（%s）', (lang) => {
     expect(r.success).toBe(false);
     expect(last()).toEqual([t[`notify_${notifyKey}_title`], t[`notify_${notifyKey}_body`], 'basic']);
     // content/index.js 快捷键路径：response.data 是后台结果
-    expect(statusCardErrorText({ success: true, data: r }, t, 'Conversion failed')).toBe(t[cardKey]);
+    expect(statusCardErrorText({ success: true, data: r }, t, 'Export failed')).toBe(t[cardKey]);
   });
 
   test('快捷键的 PDF 回退：complete 才提示已保存为 PDF', async () => {
@@ -519,9 +519,9 @@ describe('batch9 ①：4 分钟后仍在下载 → 不报失败、不取消；�
 
   test('zh/en 文案', () => {
     // batch9 设计验收 M1：标题已是「仍在下载」，正文不再重复
-    expect(translations.zh.content_download_pending).toBe('完成后会出现在浏览器的下载列表');
-    expect(translations.zh.notify_download_pending_body).toBe('完成后会出现在浏览器的下载列表');
-    expect(translations.en.content_download_pending).toBe('It\'ll appear in your browser\'s downloads when it finishes.');
+    expect(translations.zh.content_download_pending).toBe('下载完成后会出现在浏览器的下载列表');
+    expect(translations.zh.notify_download_pending_body).toBe('下载完成后会出现在浏览器的下载列表。');
+    expect(translations.en.content_download_pending).toBe('It will appear in your browser downloads when finished.');
     expect(translations.en.notify_download_pending_body).toBe(translations.en.content_download_pending);
     for (const l of ['zh', 'en']) {
       const title = translations[l].content_progress_still_downloading;
@@ -581,8 +581,8 @@ describe('batch9 ②：search 返回空数组 → 立刻 reject「已取消或�
   test('zh/en 文案', () => {
     // batch9 设计验收 M3：卡片和通知同一句
     expect(translations.zh.content_error_download_removed).toBe('下载已取消，或已从下载列表中移除');
-    expect(translations.zh.notify_download_removed_body).toBe('下载已取消，或已从下载列表中移除');
-    expect(translations.en.content_error_download_removed).toBe('The download was canceled or removed from your downloads.');
+    expect(translations.zh.notify_download_removed_body).toBe('下载已取消，或已从下载列表中移除。');
+    expect(translations.en.content_error_download_removed).toBe('The download was canceled or removed from your downloads list.');
     expect(translations.en.notify_download_removed_body).toBe(translations.en.content_error_download_removed);
   });
 });

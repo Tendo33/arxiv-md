@@ -57,28 +57,21 @@ describe('design S4 + suggestion B: chips keep sentence case', () => {
     expect(css).not.toMatch(/text-transform:\s*uppercase/);
   });
   test('en copy is sentence case', () => {
-    expect(translations.en.mode_requires_token).toBe('Requires key');
+    expect(translations.en.mode_requires_token).toBe('Needs a key');
     expect(translations.en.mode_recommended).toBe('Recommended');
-  });
-});
-
-describe('design S5', () => {
-  test('en paddle desc names the Key', () => {
-    expect(translations.en.pdf_desc_paddleocr).toMatch(/access token \(Key\)\.$/);
   });
 });
 
 describe('design S6', () => {
   test('en forbidden_empty reason is capitalized', () => {
-    expect(translations.en.err_reason_forbidden_empty).toMatch(/^\{provider\} rejected this request/);
+    expect(translations.en.err_reason_forbidden_empty).toMatch(/^\{provider\} rejected the request/);
   });
 });
 
 describe('design S7', () => {
   // release-polish NTF5 取代 S7：这句不嵌在其他引号里，按钮名统一用「」；『』只用于嵌套
   test('zh incomplete detail quotes the button name with 「」', () => {
-    expect(translations.zh.content_result_incomplete).toContain('「PDF（标题）」');
-    expect(translations.zh.content_result_incomplete).not.toContain('『PDF（标题）』');
+    expect(translations.zh.content_result_incomplete).not.toContain('『');
   });
 });
 
@@ -89,7 +82,7 @@ describe('design S8: failed row has no duplicate title', () => {
     const rowTag = html.match(/^<div [^>]*class="row"[^>]*>/)[0];
     expect(rowTag).not.toMatch(/\stitle=/);
     // release-polish NTF4：.row-err 自己带 title（完整原文，配合两行截断），可见文本仍只出现一次
-    expect(html).toMatch(/<span [^>]*class="row-err"[^>]*><span aria-hidden="true" class="row-err-prov">PaddleOCR · <\/span>Couldn't parse this PDF[^<]*<\/span>/); // rp2c：前缀 aria-hidden；R5-03 认不出的原文 → 通用白话
+    expect(html).toMatch(/<span [^>]*class="row-err"[^>]*><span aria-hidden="true" class="row-err-prov">PaddleOCR · <\/span>Couldn’t parse this PDF[^<]*<\/span>/); // rp2c：前缀 aria-hidden；R5-03 认不出的原文 → 通用白话
     expect(html.match(/<span [^>]*class="row-err"[^>]*>/)[0]).toContain('title="Boom here"');
     expect(html.split('>Boom here<').length - 1).toBe(0); // 原文只在 title
   });

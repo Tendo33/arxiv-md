@@ -32,8 +32,8 @@ describe('AF3 设计验收：_locales', () => {
     global.chrome = { i18n: { getUILanguage: () => ui, getMessage: () => 'UI-LOCALE' } };
     try { return fn(); } finally { global.chrome = prev; }
   };
-  const zh = { title: '\u26a0 导出可能不完整', message: '约 58 个标题只导出了 25 个，请核对。\n已保存：paper.md' };
-  const en = { title: '\u26a0 Export may be incomplete', message: 'Only 25 of ~58 headings exported — please check.\nSaved: paper.md' };
+  const zh = { title: '\u26a0 导出可能不完整', message: '约 58 个标题只导出了 25 个，请核对文件。\n已保存：paper.md' };
+  const en = { title: '\u26a0 Export may be incomplete', message: 'Found about 58 headings but exported only 25. Please check the file.\nSaved: paper.md' };
 
   test('设置为 zh（浏览器是 en-US）→ 中文通知，先写缺失再写文件名', () => {
     expect(withUiLang('en-US', () => incompleteNotification(args, 'zh'))).toEqual(zh);

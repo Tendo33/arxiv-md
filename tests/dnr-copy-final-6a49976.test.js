@@ -12,9 +12,9 @@ const css = fs.readFileSync(path.join(__dirname, '../src/ui/popup/popup.css'), '
 const row = () => createTaskRow({ id: 'a', status: TASK_STATUS.PENDING, dnrReinitWaitSince: 1, paperInfo: { title: 'x' } }, document).querySelector('.row-note');
 
 test('定稿文案逐字一致', () => {
-  expect(translations.zh.popup_note_dnr_wait).toBe('正在完成网络设置。关闭此弹窗和设置页后，扩展会自动重启一次并继续。');
-  expect(translations.en.popup_note_dnr_wait).toBe('Finishing network setup. Close this popup and the settings page, and the extension will restart once and continue.');
-  expect(NW_ZH.popup_note_dnr_wait).toEqual(['正在完成网络设置。', '关闭此弹窗和设置页后，', '扩展会自动重启一次', '并继续。']);
+  expect(translations.zh.popup_note_dnr_wait).toBe('正在完成初始化。关闭此弹窗和设置页后，扩展会自动重启一次并继续。');
+  expect(translations.en.popup_note_dnr_wait).toBe('Finishing setup. Close this popup and the Settings page; the extension will restart once and continue.');
+  expect(NW_ZH.popup_note_dnr_wait).toEqual(['正在完成初始化。', '关闭此弹窗和设置页后，', '扩展会自动重启一次', '并继续。']);
   expect(NW_ZH.popup_note_dnr_wait.join('')).toBe(translations.zh.popup_note_dnr_wait);
 });
 test('zh：4 个 .nw 片段，内容为分段表', () => {

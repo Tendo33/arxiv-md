@@ -42,10 +42,10 @@ describe('建议 A：缺 Key 提示', () => {
     expect(box.classList.contains('info')).toBe(true);
     expect(box.classList.contains('err')).toBe(false);
     expect(document.getElementById('alertErr').classList.contains('hidden')).toBe(true);
-    expect(document.getElementById('keyHereTitle').textContent).toBe('MinerU key is not set');
+    expect(document.getElementById('keyHereTitle').textContent).toBe('No MinerU key yet');
     const btn = document.getElementById('keySettingsBtn');
     expect(btn).not.toBeNull();
-    expect(btn.textContent.trim()).toBe('Open settings');
+    expect(btn.textContent.trim()).toBe('Settings');
     btn.dispatchEvent(new window.Event('click'));
     expect(openOptionsPage).toHaveBeenCalledTimes(1);
   });

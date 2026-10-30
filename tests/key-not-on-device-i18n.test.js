@@ -14,8 +14,8 @@ const errText = (html) => { const m = html.match(/<span [^>]*class="row-err"[^>]
 describe('err_reason_key_not_on_device', () => {
   afterAll(() => setTaskListLanguage('en'));
   test('zh 和 en 都有', () => {
-    expect(translations.zh.err_reason_key_not_on_device).toContain('请在本设备');
-    expect(translations.en.err_reason_key_not_on_device).toMatch(/Re-enter it on this device/);
+    expect(translations.zh.err_reason_key_not_on_device).toContain('请在设置 › PDF 解析里填写');
+    expect(translations.en.err_reason_key_not_on_device).toMatch(/Enter it in Settings › PDF parsing/);
   });
   test('中文界面显示中文', () => {
     setTaskListLanguage('zh');
@@ -25,7 +25,7 @@ describe('err_reason_key_not_on_device', () => {
   test('英文界面显示英文，不含中文', () => {
     setTaskListLanguage('en');
     const s = errText(rowHtml(task));
-    expect(s).toBe("No key on this device (keys don't sync). Add it in Settings › PDF parsing");
+    expect(s).toBe("No key on this device (keys don’t sync). Add it in Settings › PDF parsing");
     expect(s).not.toMatch(/[\u4e00-\u9fff]/);
   });
   test('没有对应文案的 reason → 按错误码显示白话（R4-03：不再显示原文）', () => {

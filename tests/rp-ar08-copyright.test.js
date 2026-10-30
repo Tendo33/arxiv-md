@@ -18,7 +18,7 @@ test.each([[2025, '2025'], [2026, '2025–2026'], [2031, '2025–2031']])('%s �
 test('renderCopyrightYear 按当前年份写回页脚', () => {
   const { document } = parseHTML(html);
   renderCopyrightYear(document, new Date(2027, 0, 1));
-  expect(document.querySelector('.footer-copyright').textContent.trim()).toMatch(/^© 2025–2027 SimonSun\./);
+  expect(document.querySelector('.footer-copyright').textContent.trim()).toMatch(/^© 2025–2027 SimonSun$/);
 });
 
 test('settings.js 初始化时调用', () => {

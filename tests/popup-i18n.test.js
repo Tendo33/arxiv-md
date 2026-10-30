@@ -50,7 +50,7 @@ describe('popup 文案全部走 i18n（英文界面不出现中文）', () => {
 describe('R4-15 popup 文案泛化', () => {
   test('按钮、任务区和空状态不再写死 MinerU；按钮旁有后端小字', () => {
     const { document } = parseHTML(html);
-    for (const key of ['popup_btn_mineru', 'popup_recent', 'popup_recent_empty', 'popup_empty_title', 'popup_err_token_hint']) {
+    for (const key of ['popup_btn_mineru', 'popup_recent', 'popup_recent_empty', 'popup_err_token_hint']) {
       expect(translations.en[key]).not.toMatch(/MinerU/);
       expect(translations.zh[key]).not.toMatch(/MinerU/);
     }

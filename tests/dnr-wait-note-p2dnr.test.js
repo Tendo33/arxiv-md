@@ -7,7 +7,7 @@ const { document } = parseHTML('<!doctype html><html><body></body></html>');
 
 describe('QA P2-DNR：等 DNR 重载的任务不再静默 0%', () => {
   test('zh/en 都有文案', () => {
-    expect(translations.en.popup_note_dnr_wait).toMatch(/Close this popup and the settings page/);
+    expect(translations.en.popup_note_dnr_wait).toMatch(/Close this popup and the Settings page/);
     expect(translations.zh.popup_note_dnr_wait).toMatch(/关闭此弹窗和设置页/);
   });
   test.each(['en','zh'])('%s：带 dnrReinitWaitSince 的 PENDING 行显示说明，普通 PENDING 不显示', (lang) => {

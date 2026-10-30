@@ -2,7 +2,7 @@
 import { translations as LOCALES } from '../src/config/locales';
 
 test('en content_result_empty 用 "use PDF parsing"', () => {
-  expect(LOCALES.en.content_result_empty).toMatch(/use PDF parsing to get Markdown/);
+  expect(LOCALES.en.content_result_empty).toMatch(/Use PDF parsing to get Markdown/);
   expect(LOCALES.en.content_result_empty).not.toMatch(/PDF parse\b/);
   expect(LOCALES.en.popup_btn_mineru).toBe('PDF parsing');
 });

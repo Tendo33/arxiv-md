@@ -27,8 +27,8 @@
 - **可选 YAML frontmatter**：`title`、`arxiv_id`、`source`、`authors`、`year`，方便 Obsidian、Logseq、Zotero 之类的工具索引。
 - **PDF 按标题命名**：不再是 `1706.03762.pdf`，而是 `Attention Is All You Need (2017).pdf` 这样的文件名。
 - **BibTeX 一键复制**：取 arXiv 官方引用；取不到时用页面上的标题、作者和年份生成。
-- **复制给 AI 或笔记**：转换成功后页面上保留结果卡片，可一键「复制 Markdown」。带操作按钮的卡片保留到手动关闭，其他已完成卡片 10 秒后收起（悬停或聚焦时暂停计时）。
-- **PDF 解析（可选）**：填入你自己的 API Key 后，可把 PDF 交给设置里选定的后端在后台解析，支持 PaddleOCR（默认，免费额度）和 MinerU；PaddleOCR 结果保存为与 MinerU 同样结构的 ZIP 包（`full.md` + `images/`），MinerU 保留原始 ZIP 包，任务进度在弹窗里查看。
+- **复制给 AI 或笔记**：导出后页面上的结果卡片有「复制 Markdown」按钮。带操作按钮的卡片保留到手动关闭，其他已完成卡片 10 秒后收起（悬停或聚焦时暂停计时）。
+- **PDF 解析（可选）**：适合没有 HTML 版本的论文。填入你自己的 API Key 后，由你选的服务在后台解析 PDF：PaddleOCR（默认，有免费额度）或 MinerU。PaddleOCR 结果保存为与 MinerU 同样结构的 ZIP 包（`full.md` + `images/`），进度在弹窗里查看。
 - **多个入口**：页面按钮、工具栏弹窗、右键菜单、快捷键，PDF 页右下角还有悬浮按钮。
 - **中英文界面**，支持浅色和深色模式。
 
@@ -56,15 +56,15 @@ npm run build
 ## 使用
 
 1. 打开任意 arXiv 论文页，例如 <https://arxiv.org/abs/1706.03762>。
-2. 点击页面上的 `Markdown` 按钮，按设置里的默认模式转换并下载 `.md`。
+2. 点击页面上的 `Markdown` 按钮，下载 `.md` 文件。
 3. 也可以点击工具栏图标，在弹窗里「导出 Markdown」「PDF 解析」或「下载 PDF」。
 
 | 入口 | 说明 |
 | --- | --- |
 | 页面按钮 | 摘要页 `Submission history` 下方：`Markdown`、`PDF`、`BibTeX` |
-| 工具栏弹窗 | 识别当前论文，提供导出按钮、当前解析后端和 PDF 解析任务列表 |
-| 快捷键 | `Alt+Shift+M`（macOS 为 `Option+Shift+M`），在摘要页、PDF 页、HTML 页转换当前论文。显示「未设置」时，弹窗里有「去设置」入口，也可以在 `chrome://extensions/shortcuts` 修改 |
-| 右键菜单 | 论文页上：「导出本论文为 Markdown」「用 PDF 解析转换（后端名）」（仅在当前后端已填 Key 时显示）；arXiv 论文链接上：「导出链接指向的论文为 Markdown」 |
+| 工具栏弹窗 | 当前论文的导出按钮和 PDF 解析任务列表 |
+| 快捷键 | `Alt+Shift+M`（macOS 为 `Option+Shift+M`），在摘要页、PDF 页、HTML 页导出当前论文。弹窗显示「未设置快捷键」时，点「去设置」或打开 `chrome://extensions/shortcuts` |
+| 右键菜单 | 论文页上：「导出论文为 Markdown」，选定的服务填好 Key 后还有「用 PDF 解析导出」；arXiv 论文链接上：「导出链接指向的论文为 Markdown」 |
 | PDF 页悬浮按钮 | 在 `arxiv.org/pdf/*` 页右下角，可在设置里关闭 |
 
 <img src="docs/screenshots/popup.png" width="300" alt="工具栏弹窗">
@@ -75,24 +75,24 @@ npm run build
 
 | 设置项 | 说明 |
 | --- | --- |
-| 转换模式 | `标准模式`（推荐）：官方 HTML → ar5iv → PDF；`PDF 解析模式`：始终用当前选定的后端做 PDF 解析，需要对应的 Key |
-| PDF 解析 | 选择后端（默认 PaddleOCR，也可选 MinerU）并填写对应的 API Key；Key 只存在本机 `chrome.storage.local`，不会同步；可在设置页测试连接 |
-| 自动转换 | 进入论文页时弹出转换提示 |
-| Markdown 元数据 | 是否写入 YAML frontmatter |
+| 导出方式 | `标准`（推荐）：官方 HTML → ar5iv → PDF；`PDF 解析`：总是用选定的服务解析 PDF（需要对应的 Key） |
+| PDF 解析 | 选择解析服务（默认 PaddleOCR，也可选 MinerU），填写并测试 API Key。Key 只存在本机，不会同步 |
+| 询问是否导出 | 打开论文时询问是否导出 |
+| 元数据 | 在文件开头写入 YAML frontmatter |
 | 桌面通知 | PDF 解析任务完成或失败时通知 |
-| PDF 页悬浮按钮 | 是否在 PDF 页显示悬浮转换按钮 |
+| PDF 页悬浮按钮 | 在 PDF 页显示悬浮导出按钮 |
 | 界面语言 | 中文 / English |
-| 使用统计 | 转换次数等计数存在 `chrome.storage.sync`（开启浏览器同步时会随账号同步），不会上传，可一键重置 |
+| 使用统计 | 导出次数，开启浏览器同步时随账号同步，不会上传，可重置 |
 
-设置改动会自动保存。
+改动自动保存。「恢复默认」会同时删除已保存的 API Key。
 
 ## 权限说明
 
 | 权限 | 用途 |
 | --- | --- |
-| `storage` | 设置（含选定的 PDF 解析后端）和使用统计存在 `chrome.storage.sync`，开启浏览器同步时会随浏览器账号同步；各后端的 API Key 和 PDF 解析任务状态存在 `chrome.storage.local`，只留在本机。旧版本存在同步区的 MinerU Key 会移到本机（先复制到 local，再从同步区删除）；Key 不跨设备同步，其他设备上会提示在本设备重新填写 Key |
-| `downloads` | 把 Markdown、PDF 或 PDF 解析结果 保存到本地 |
-| `activeTab` | 读取你当前打开的 arXiv 页面，用于转换 |
+| `storage` | 设置（含选定的 PDF 解析服务）和使用统计存在 `chrome.storage.sync`，开启浏览器同步时会随浏览器账号同步；各服务的 API Key 和 PDF 解析任务状态存在 `chrome.storage.local`，只留在本机。旧版本存在同步区的 MinerU Key 会移到本机（先复制到 local，再从同步区删除） |
+| `downloads` | 把 Markdown、PDF 或 PDF 解析结果保存到本地 |
+| `activeTab` | 读取你当前打开的 arXiv 页面，用于导出 |
 | `notifications` | PDF 解析任务完成或失败时发桌面通知 |
 | `alarms` | PDF 解析任务进行中时定时唤醒后台、轮询进度 |
 | `contextMenus` | 提供右键菜单入口 |
@@ -106,25 +106,24 @@ npm run build
 
 ## 隐私
 
-- 扩展没有自己的服务器，开发者不收集你的数据，也没有统计或埋点。标准模式在浏览器本地转换；只有使用 PDF 解析时，才会把内容发给你选定的第三方解析服务：PaddleOCR 会上传 arXiv 上 50MB 以内的 PDF 文件，其他 PDF 只发链接；MinerU 只发 PDF 链接。
-- 标准模式下，转换完全在你的浏览器里完成，只访问 arXiv 和 ar5iv。
-- 只有你主动使用 PDF 解析时，论文才会和你的 Key 一起发给你选定的那一个后端（PaddleOCR 或 MinerU，均为第三方服务，受其条款约束）：MinerU 收到 arXiv PDF 链接；PaddleOCR 收到 arXiv PDF 文件本身（上传，50 MB 以内），非 arXiv 的 PDF 只发链接；超过 50 MB 的 PDF 不会发送，扩展会提示改用 MinerU。扩展不会自动切换后端。
+- 扩展没有自己的服务器，开发者不收集你的数据，也没有统计或埋点。标准模式完全在你的浏览器里完成，只访问 arXiv 和 ar5iv。只有使用 PDF 解析时才会发给第三方：PaddleOCR 会上传 arXiv 上 50MB 以内的 PDF 文件，其他 PDF 只发链接；MinerU 只发 PDF 链接。
+- 只有你主动使用 PDF 解析时，论文才会和你的 Key 一起发给你选定的那一个服务（PaddleOCR 或 MinerU，均为第三方服务，受其条款约束）：MinerU 收到 arXiv PDF 链接；PaddleOCR 收到 arXiv PDF 文件本身（上传，50 MB 以内），非 arXiv 的 PDF 只发链接；超过 50 MB 的 PDF 不会发送，扩展会提示改用 MinerU。扩展不会自动切换服务。
 - 解析服务如何处理和保留你提交的内容由其自身条款决定。百度 AI Studio（PaddleOCR）和 MinerU 目前都没有公开上传文件和解析结果的具体保留期限；适用的政策是[百度隐私权保护声明（中文）](https://www.baidu.com/duty/yinsiquan.html)；[飞桨 AI Studio 隐私政策](https://aistudio.baidu.com/privacy)正文写明适用于「微信小程序、移动端浏览器（不含PC端）」，不覆盖插件的 API 调用，仅作参考，其中只写了"在提供服务所需的期限内保存"。请不要发送你无权分享给第三方的 PDF。
 - 详见 [PRIVACY.md](./PRIVACY.md)。
 
 ## 常见问题
 
 **为什么有的论文导出的是 PDF？**
-官方 HTML 和 ar5iv 都没有这篇论文的可转换版本时，标准模式会回退为下载 PDF。想要 Markdown 可以改用 PDF 解析。
+arXiv 和 ar5iv 都没有这篇论文的 HTML 版本时，标准模式会保存 PDF。想要 Markdown 请用 PDF 解析。
 
 **图片会下载到本地吗？**
-不会。Markdown 里的图片是指向 arXiv / ar5iv 的远程链接。
+标准模式不会。Markdown 里的图片是指向 arXiv / ar5iv 的远程链接。
 
-**快捷键显示「未设置」？**
-通常是被其他扩展或浏览器占用。点击弹窗里的「去设置」，或打开 `chrome://extensions/shortcuts` 自行指定。
+**弹窗显示「未设置快捷键」？**
+通常是被其他扩展或浏览器占用。点弹窗里的「去设置」，或打开 `chrome://extensions/shortcuts` 自行指定。
 
-**MinerU 导出的为什么是 ZIP？**
-MinerU 返回的结果包包含 Markdown 和图片等文件，扩展按原样保存。
+**PDF 解析的结果为什么是 ZIP？**
+里面是 Markdown（`full.md`）和它引用的图片。
 
 更多见 [docs/FAQ.md](./docs/FAQ.md)。
 

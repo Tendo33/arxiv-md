@@ -22,7 +22,7 @@ describe('审查员 P3：dnr_not_ready 的恢复入口（1.2.2 起权限安装�
     const btn = document.getElementById('reinitBtn');
     expect(btn.hidden).toBe(false);
     expect(document.getElementById('reinitRow').hidden).toBe(false);
-    expect(btn.textContent).toBe('重新初始化');
+    expect(btn.textContent).toBe('重新初始化网络规则');
     btn.dispatchEvent(new document.defaultView.Event('click'));
     await new Promise((r) => setTimeout(r, 0));
     expect(runtime.reload).toHaveBeenCalledTimes(1);

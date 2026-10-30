@@ -14,7 +14,7 @@ describe('B1 徽标', () => {
   });
   test('文案：zh 已提交 / en Submitted', () => {
     expect(translations.zh.content_progress_submitted).toBe('已提交');
-    expect(translations.en.content_progress_submitted).toBe('Submitted');
+    expect(translations.en.content_progress_submitted).toBe('Sent');
   });
 });
 

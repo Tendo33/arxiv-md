@@ -13,18 +13,18 @@ import { createPdfProviderSection } from '../src/ui/settings/pdf-provider';
 const { zh, en } = translations;
 const DESIGN = {
   zh: {
-    AUTH_INVALID: 'Key 无效或未填写', QUOTA_EXCEEDED: '额度已用完，请稍后再试或换一个后端', RATE_LIMITED: '请求太频繁，请稍等片刻再重试',
-    FILE_UNSUPPORTED: '无法处理这个 PDF', TOO_LARGE: 'PDF 太大，超出了限制', NETWORK: '连不上服务，请检查网络',
-    PERMISSION_MISSING: '无法访问 {host}，请重启浏览器后重试', permission_plain: '无法访问解析服务的网站，请重启浏览器后重试', TIMEOUT: '处理超时，任务已停止',
-    reason_forbidden_empty: '请求被拒绝（与 Key 或额度无关），可以稍后重试或换一个后端', failed_plain: '没能解析这个 PDF，可以重试，或在设置里换一个后端',
+    AUTH_INVALID: 'Key 无效或未填写', QUOTA_EXCEEDED: '额度已用完，请稍后再试或换一个服务', RATE_LIMITED: '请求太频繁，请稍等再重试',
+    FILE_UNSUPPORTED: '无法处理这个 PDF', TOO_LARGE: 'PDF 超出了大小限制', NETWORK: '连不上服务，请检查网络',
+    PERMISSION_MISSING: '无法访问 {host}，请重启浏览器后重试', permission_plain: '无法访问解析服务，请重启浏览器后重试', TIMEOUT: '处理超时，任务已停止',
+    reason_forbidden_empty: '请求被拒绝（与 Key 或额度无关），请稍后重试或换一个服务', failed_plain: '没能解析这个 PDF，请重试，或在设置里换一个服务',
     reason_key_not_on_device: '本设备还没有 Key（Key 不会跨设备同步），请在设置 › PDF 解析里填写',
   },
   en: {
-    AUTH_INVALID: 'Invalid or missing key', QUOTA_EXCEEDED: 'Quota exhausted. Try again later or switch provider', RATE_LIMITED: 'Too many requests. Wait a moment and retry',
-    FILE_UNSUPPORTED: "Can't process this PDF", TOO_LARGE: 'PDF is too large for this provider', NETWORK: "Can't connect. Check your network",
-    PERMISSION_MISSING: "Can't access {host}. Restart the browser and retry", permission_plain: "Can't access the provider's site. Restart the browser and retry", TIMEOUT: 'Timed out. The task was stopped',
-    reason_forbidden_empty: 'Request rejected (not a key or quota problem). Retry later or switch provider', failed_plain: "Couldn't parse this PDF. Retry, or switch provider in Settings",
-    reason_key_not_on_device: "No key on this device (keys don't sync). Add it in Settings › PDF parsing",
+    AUTH_INVALID: 'Key is missing or invalid', QUOTA_EXCEEDED: 'Quota used up. Try later or switch provider', RATE_LIMITED: 'Too many requests. Wait a moment and retry',
+    FILE_UNSUPPORTED: "Can’t process this PDF", TOO_LARGE: 'PDF is too large for this provider', NETWORK: "Can’t connect. Check your network",
+    PERMISSION_MISSING: "Can’t access {host}. Restart the browser and retry", permission_plain: "Can’t access the provider. Restart the browser and retry", TIMEOUT: 'Timed out. The task was stopped',
+    reason_forbidden_empty: 'Request rejected (not a key or quota issue). Retry later or switch provider', failed_plain: "Couldn’t parse this PDF. Retry, or switch provider in Settings",
+    reason_key_not_on_device: "No key on this device (keys don’t sync). Add it in Settings › PDF parsing",
   },
 };
 const LABELS = ['PaddleOCR', 'MinerU'];

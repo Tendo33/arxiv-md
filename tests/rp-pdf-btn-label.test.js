@@ -21,11 +21,11 @@ afterAll(() => { delete global.window; delete global.document; delete global.chr
 
 test('en 副标题是 "by title"，zh 不变', () => {
   expect(translations.en.content_btn_sub_title).toBe('by title');
-  expect(translations.zh.content_btn_sub_title).toBe('标题');
+  expect(translations.zh.content_btn_sub_title).toBe('按标题命名');
 });
 test.each([
-  ['en', 'Download PDF named after the paper title', 'by title'],
-  ['zh', '下载以论文标题命名的 PDF', '标题'],
+  ['en', 'Download the PDF, named after the paper title', 'by title'],
+  ['zh', '下载 PDF，文件名用论文标题', '按标题命名'],
 ])('%s PDF 按钮 title/aria-label', async (lang, label, sub) => {
   const btn = await inject(lang);
   expect(btn).toBeTruthy();

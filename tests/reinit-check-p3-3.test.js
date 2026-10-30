@@ -77,8 +77,8 @@ test('PROCESSING 任务即使带 dnrReinitWaitSince 也算忙', async () => {
   expect(await s.sec.onReinit()).toBe('busy');
 });
 test('英文单复数：1 PDF task / N PDF tasks', () => {
-  expect(translations.en.pdf_reinit_busy_one).toMatch(/^1 PDF task still running/);
-  expect(translations.en.pdf_reinit_busy).toMatch(/^\{n\} PDF tasks still running/);
+  expect(translations.en.pdf_reinit_busy_one).toMatch(/^1 PDF task is still running/);
+  expect(translations.en.pdf_reinit_busy).toMatch(/^\{n\} PDF tasks are still running/);
   expect(translations.en.pdf_reinit_busy).not.toMatch(/\(s\)/);
 });
 test('英文 toast：1 个用单数，2 个用复数', async () => {
@@ -89,9 +89,9 @@ test('英文 toast：1 个用单数，2 个用复数', async () => {
     return { sec, toast };
   };
   const a = mk([{ status: 'pending' }]); await a.sec.onReinit();
-  expect(a.toast.mock.calls[0][0]).toBe('1 PDF task still running. Reinitialize after it finishes so it isn\'t interrupted.');
+  expect(a.toast.mock.calls[0][0]).toBe('1 PDF task is still running. Reinitialize after it finishes.');
   const b = mk([{ status: 'pending' }, { status: 'processing' }]); await b.sec.onReinit();
-  expect(b.toast.mock.calls[0][0]).toBe('2 PDF tasks still running. Reinitialize after they finish so they aren\'t interrupted.');
+  expect(b.toast.mock.calls[0][0]).toBe('2 PDF tasks are still running. Reinitialize after they finish.');
 });
 
 // 审查 P3-b：ready 只认规则 4001（「任意规则都算 ready」的变异要被杀死）

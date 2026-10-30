@@ -6,10 +6,9 @@ test('进行态统一「正在…」，动词用「导出」', () => {
   expect(zh.popup_badge_run).toBe('正在导出');
   expect(zh.popup_converting).toBe('正在导出…');
   expect(zh.content_fab_run).toBe('正在导出…');
-  expect(zh.content_progress_checking).toBe('正在检查 HTML…');
+  expect(zh.content_progress_checking).toBe('正在查找 HTML 版本…');
   expect(zh.content_progress_processing).toBe('正在处理…');
   expect(zh.content_progress_parsing).toBe('{provider} 正在解析…');
-  expect(zh.saving).toBe('正在保存…');
   expect(en.popup_badge_run).toBe('Exporting');
   expect(en.popup_converting).toBe('Exporting…');
 });

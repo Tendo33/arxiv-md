@@ -53,15 +53,15 @@ test('失败：.error 常驻，role=alert 节点播报，不自动恢复', () =>
   show(`${translations.en.toast_save_failed} quota`, 'error');
   const n = document.getElementById('saveStatus');
   expect(n.classList.contains('error')).toBe(true);
-  expect(n.textContent).toBe('Could not save: quota');
-  expect(document.getElementById('saveAlert').textContent).toBe('Could not save: quota');
+  expect(n.textContent).toBe('Couldn’t save: quota');
+  expect(document.getElementById('saveAlert').textContent).toBe('Couldn’t save: quota');
   fire();
   expect(n.classList.contains('error')).toBe(true);
 });
 
 test('恢复默认 / 重置统计的成功文案短、不带 emoji', () => {
   for (const L of ['zh', 'en']) for (const k of ['toast_saved', 'toast_reset', 'toast_stats_reset']) expect(translations[L][k]).not.toMatch(/[✅❌]/u);
-  expect([translations.zh.toast_reset, translations.zh.toast_stats_reset]).toEqual(['已恢复默认', '已重置']);
+  expect([translations.zh.toast_reset, translations.zh.toast_stats_reset]).toEqual(['已恢复默认', '统计已重置']);
 });
 
 test('操作栏单行左右分组，按钮不拉满', () => {
