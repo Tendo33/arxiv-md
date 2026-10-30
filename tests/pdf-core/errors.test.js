@@ -122,7 +122,9 @@ describe('formatParseError', () => {
   });
   test('PERMISSION_MISSING 填域名', () => {
     const f = formatParseError(new ParseError('PERMISSION_MISSING', { host: 'paddleocr.aistudio-app.com' }), translations.en, { providerLabel: 'PaddleOCR' });
-    expect(f.message).toBe('Permission for paddleocr.aistudio-app.com is required to use PaddleOCR');
+    expect(f.message).toBe("Can't access paddleocr.aistudio-app.com, so PaddleOCR can't be used right now. Restart the browser and retry");
+    const z = formatParseError(new ParseError('PERMISSION_MISSING', { host: 'paddleocr.aistudio-app.com' }), translations.zh, { providerLabel: 'PaddleOCR' });
+    expect(z.message).toBe('无法访问 paddleocr.aistudio-app.com，暂时不能使用 PaddleOCR。请重启浏览器后重试');
   });
   test('403 空 body 的提示和额度/Key 不同', () => {
     const e = classifyHttpError({ status: 403, bodyText: '' }, 'paddleocr');

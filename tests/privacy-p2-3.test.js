@@ -1,4 +1,4 @@
-// 审查 P2-3：PRIVACY 按代码写清楚每个后端发送的内容和 OA 规则
+// 审查 P2-3：PRIVACY 按代码写清楚每个后端发送的内容和发送规则（1.2.2 起有 Key 即发送、无确认）
 import fs from 'fs';
 import path from 'path';
 const doc = fs.readFileSync(path.join(__dirname, '../PRIVACY.md'), 'utf8');
@@ -16,11 +16,12 @@ test('MinerU 只发链接；PaddleOCR 仅 arXiv 上传 PDF 文件，其他来源
   expect(doc.match(/does not upload the PDF file/g)).toHaveLength(1); // 只剩 MinerU 段
 });
 
-test('写明 OA 规则：arXiv 视为 OA，其余或判断不了先确认', () => {
-  expect(doc).toMatch(/\*\*Open access\.\*\* All papers on arXiv are treated as open access/);
-  expect(doc).toMatch(/arxiv\.org\/pdf/);
-  expect(doc).toMatch(/cannot be determined, nothing is sent/);
-  expect(doc).toMatch(/popup, right-click menu, floating button and keyboard shortcut/);
+test('写明发送规则：有 Key 即直接上传/解析，不再按 OA 确认', () => {
+  expect(doc).toContain('**No confirmation prompt.**');
+  expect(doc).toContain('Choosing a provider and saving its key in Settings is your consent to send PDFs to that provider.');
+  expect(doc).toMatch(/popup, right-click menu, floating button and keyboard shortcut\) sends the PDF right away, whether or not it is hosted on arXiv/);
+  expect(doc).toContain('Without a key, nothing is sent.');
+  expect(doc).not.toMatch(/\*\*Open access\.\*\*|treated as open access|cannot be determined, nothing is sent/);
 });
 
 describe('路线 2：界面 / README / ARCHITECTURE 与实际行为一致（arXiv PDF 文件本身发往 PaddleOCR）', () => {

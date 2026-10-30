@@ -108,7 +108,8 @@ describe('任务行', () => {
     setTaskListLanguage('zh');
     const html = rowHtml({ id: 't1', status, provider: 'paddleocr', paperInfo: { title: 'T' }, createdAt: Date.now() });
     expect(html).toContain('待确认');
-    expect(html).toMatch(/<button[^>]*data-action="retry"[^>]*data-task-id="t1"/);
+    const buttons = html.match(/<button[^>]*>/g) || [];
+    expect(buttons.some((b) => b.includes('data-action="retry"') && b.includes('data-task-id="t1"'))).toBe(true);
     expect(html).not.toContain('data-action="consent"');
     expect(html).not.toContain('data-action="disclose"');
     expect(html).not.toContain('row-note');
