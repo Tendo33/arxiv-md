@@ -13,9 +13,11 @@
 这取决于设置页里的默认模式：
 
 - `标准模式`：先尝试官方 arXiv HTML，再尝试 ar5iv，两者都不可用或转换失败时回退到 PDF
-- `PDF 解析模式`：直接把 arXiv PDF URL 提交给 MinerU，后台异步处理
+- `PDF 解析模式`：把 PDF 交给设置页里选中的解析后端，后台异步处理。默认后端是
+  `PaddleOCR`（星河，免费额度）：后台先下载 PDF 再以 multipart 上传，上限 50 MB；
+  选 `MinerU` 时只提交 arXiv PDF 链接，由对方拉取
 
-按钮副标题会显示当前模式是 `HTML` 还是 `MinerU`。
+按钮副标题会显示当前模式：标准模式是 `HTML`，PDF 解析模式是 `PDF 解析 · <所选后端>`。
 
 ### 3. `PDF` 按钮和 Markdown 失败后的 PDF 兜底是一回事吗？
 
@@ -50,22 +52,22 @@
 
 ## 模式与任务
 
-### 7. 标准模式是不是“HTML -> MinerU -> PDF”的自动降级？
+### 7. 标准模式是不是“HTML -> PDF 解析后端 -> PDF”的自动降级？
 
 不是。当前实现里：
 
 - 标准模式：`官方 arXiv HTML -> ar5iv -> PDF`
-- PDF 解析模式：单独的手动默认模式，需要 Token
+- PDF 解析模式：单独的手动默认模式，需要所选后端的 Key
 
-也就是说，标准模式不会在 HTML 失败后自动切到 MinerU。
+也就是说，标准模式不会在 HTML 失败后自动切到 PDF 解析后端。
 
 ### 8. 为什么我做了标准模式转换，Popup 里却没有记录？
 
-因为 Popup 只显示 MinerU 后台任务，不显示标准模式的 Markdown 成功记录，也不显示普通 PDF 下载历史。
+因为 Popup 只显示 PDF 解析后台任务（不分后端），不显示标准模式的 Markdown 成功记录，也不显示普通 PDF 下载历史。
 
-### 9. MinerU 任务结果是什么格式？
+### 9. PDF 解析任务的结果是什么格式？
 
-是 ZIP 包，不是直接返回 `.md` 文件。任务完成后：
+有图片时是 ZIP 包（Markdown + 抽出的图片），没有图片时直接给 `.md`。任务完成后：
 
 - 后台会触发下载
 - Popup 中会保留任务卡片
@@ -73,7 +75,7 @@
 
 ### 10. 为什么会提示“已有重复任务”？
 
-MinerU 任务会按 arXiv ID 查重。如果同一篇论文已有任务，页面会弹出确认框，让你决定是否强制再创建一个新任务。
+PDF 解析任务会按 arXiv ID 查重。如果同一篇论文已有任务，页面会弹出确认框，让你决定是否强制再创建一个新任务。
 
 ## 设置与存储
 
@@ -81,12 +83,15 @@ MinerU 任务会按 arXiv ID 查重。如果同一篇论文已有任务，页面
 
 当前代码实际使用的主要选项有：
 
-- 转换模式
-- MinerU Token
+- 转换模式（标准模式 / PDF 解析模式）
+- PDF 解析后端（PaddleOCR / MinerU）
+- 所选后端的 Key
 - 是否显示桌面通知
 - 是否在页面加载时显示自动转换提示
 - 是否在 Markdown 中包含元数据
 - 界面语言
+- 是否显示页面上的 PDF 浮动按钮
+- 标准模式无 HTML 时是否回退保存 PDF
 
 ### 12. 自动转换会直接开始跑任务吗？
 
@@ -96,10 +101,10 @@ MinerU 任务会按 arXiv ID 查重。如果同一篇论文已有任务，页面
 
 分成两类：
 
-- `chrome.storage.sync`：设置、语言、统计、MinerU Token
-- `chrome.storage.local`：MinerU 任务队列、任务状态、结果链接
+- `chrome.storage.sync`：设置、语言、统计、所选 PDF 解析后端
+- `chrome.storage.local`：各后端的 Key（`providerKeys`）、任务队列、任务状态、结果链接
 
-如果你登录了浏览器同步账号，`sync` 里的内容可能会跟随浏览器账号同步，而不是只留在单机。
+**Key 只存 `local`，不会进 `sync`**：旧版本曾把 MinerU Token 写进 `sync`，升级时会自动迁移到 `local` 并从 `sync` 删除。设置和统计在 `sync` 里，如果登录了浏览器同步账号，会跟随账号同步，而不是只留在单机。
 
 ## 故障排查
 
@@ -111,15 +116,18 @@ MinerU 任务会按 arXiv ID 查重。如果同一篇论文已有任务，页面
 
 这是内容脚本和后台 service worker 之间的连接失效了，常见于你刚重新构建并重载扩展。刷新当前 arXiv 页面后再试即可。
 
-### 16. MinerU Token 测试失败怎么办？
+### 16. 后端 Key 测试失败怎么办？
 
 先确认三件事：
 
-- Token 已正确粘贴
-- 网络能访问 `https://mineru.net`
-- Token 没有过期或失效
+- Key 已粘贴到设置页，且和**当前选中的后端**对应（换后端要填对应那一个的 Key）
+- 网络能访问所选后端的域名：`https://paddleocr.aistudio-app.com`（PaddleOCR/星河）或
+  `https://mineru.net`（MinerU）
+- Key 没有过期或失效
 
-设置页的“测试连接”本质上是拿这个 Token 去请求 MinerU 的任务查询接口，所以网络或鉴权问题都会直接反映在这里。
+设置页的“测试连接”本质上是拿这个 Key 去请求所选后端的接口，所以网络或鉴权问题都会直接反映在这里。
+PaddleOCR 的 Key 在 `https://aistudio.baidu.com/account/accessToken` 获取，
+MinerU 的在 `https://mineru.net/apiManage/token`。
 
 ### 17. PDF 下载失败时先查什么？
 
