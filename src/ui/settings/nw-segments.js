@@ -6,7 +6,7 @@ export const NW_MAX = 12;
 
 export const NW_ZH = {
   mode_standard_desc: ['转换 HTML 版本', '（先 arXiv，', '再 ar5iv），', '都没有时保存 PDF。'],
-  mode_mineru_desc: ['总是用下方选择的服务', '解析 PDF。', '较慢，', '但所有论文都能用。'],
+  mode_mineru_desc: ['总是用下方选择的服务', '解析 PDF。', '较慢，', '但没有 HTML 版本的', '论文也能用。'],
   welcome_desc: ['打开任意 arXiv 论文，', '点「Submission history」', '下方的', ' ', 'Markdown 按钮即可。', '下面的设置', '都是可选的。'],
   advanced_auto: ['打开论文时', '询问是否导出'],
   advanced_metadata: ['在文件开头', '写入元数据', '（标题、作者、', 'arXiv ID、年份）'],
