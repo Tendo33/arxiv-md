@@ -11,12 +11,12 @@ describe('R09：中文按短语断行（.nw）', () => {
   test('zh 生成 .nw span（DOM API，无 innerHTML）；en 原样文字', () => {
     const { document } = parseHTML('<p id="x"></p>');
     const el = document.getElementById('x');
-    setNwText(el, 'mode_desc', translations.zh.mode_desc, 'zh');
-    expect([...el.querySelectorAll('span.nw')].map((s) => s.textContent)).toEqual(['选择论文转换的', '默认策略']);
-    expect(el.textContent).toBe(translations.zh.mode_desc);
-    setNwText(el, 'mode_desc', translations.en.mode_desc, 'en');
+    setNwText(el, 'advanced_auto', translations.zh.advanced_auto, 'zh');
+    expect([...el.querySelectorAll('span.nw')].map((s) => s.textContent)).toEqual(['打开论文时', '询问是否导出']);
+    expect(el.textContent).toBe(translations.zh.advanced_auto);
+    setNwText(el, 'advanced_auto', translations.en.advanced_auto, 'en');
     expect(el.querySelector('span')).toBeNull();
-    expect(el.textContent).toBe(translations.en.mode_desc);
+    expect(el.textContent).toBe(translations.en.advanced_auto);
   });
   test('没有切分表的句子在标点后切开，拼回原文', () => {
     const t = translations.zh.err_reason_upload_limit;

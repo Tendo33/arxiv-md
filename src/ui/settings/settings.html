@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title data-i18n="settings_page_title">arXiv to Markdown - Settings</title>
+    <title data-i18n="settings_page_title">arXiv to Markdown Settings</title>
     <link rel="stylesheet" href="settings.css" />
   </head>
   <body>
@@ -17,7 +17,7 @@
             <h1>arXiv to Markdown</h1>
           </div>
           <div class="header-actions">
-            <button class="btn-lang" id="langToggle" data-i18n-title="lang_switch" title="Switch Language">
+            <button class="btn-lang" id="langToggle" data-i18n-title="lang_switch" title="Switch language">
               <span id="langIcon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></span>
               <span id="langText">中文</span><span class="sr-only" data-i18n="lang_switch">Switch language</span>
             </button>
@@ -30,19 +30,15 @@
       <main class="main-content">
         <!-- Welcome Message (shown on first install) -->
         <div class="welcome-banner" id="welcomeBanner" style="display: none">
-          <h2 data-i18n="welcome_title">Welcome to arXiv to Markdown!</h2>
+          <h2 data-i18n="welcome_title">Welcome to arXiv to Markdown</h2>
           <p data-i18n="welcome_desc">
-            Convert arXiv papers to Markdown with one click. Tries arXiv HTML,
-            then ar5iv, then PDF.
+            Open any arXiv paper and click Markdown under Submission history. Everything below is optional.
           </p>
         </div>
 
         <!-- Conversion mode Section -->
         <section class="settings-section">
-          <h2 data-i18n="mode_title">Conversion mode</h2>
-          <p class="section-description" data-i18n="mode_desc">
-            Choose your default conversion strategy
-          </p>
+          <h2 data-i18n="mode_title">Export mode</h2>
 
           <div class="mode-cards">
             <label class="mode-card">
@@ -50,10 +46,10 @@
               <div class="mode-content">
               <div class="mode-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 2-9 12h7l-1 8 9-12h-7l1-8Z"/></svg></div>
                 <div class="mode-title" data-i18n="mode_standard_title">
-                  Standard mode
+                  Standard
                 </div>
                 <div class="mode-description" data-i18n="mode_standard_desc">
-                  arXiv HTML, then ar5iv, then PDF
+                  Converts the HTML version (arXiv, then ar5iv). Saves the PDF if there is none.
                 </div>
                 <div
                   class="mode-badge mode-badge-recommended"
@@ -69,13 +65,13 @@
               <div class="mode-content">
                 <div class="mode-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="m6 3 6-1 6 1 4 6-10 13L2 9l4-6Z"/><path d="m2 9h20M6 3l6 6 6-6M12 9v12"/></svg></div>
                 <div class="mode-title" data-i18n="mode_mineru_title">
-                  PDF parsing mode
+                  PDF parsing
                 </div>
                 <div class="mode-description" data-i18n="mode_mineru_desc">
-                  Always use PDF parsing (with the backend chosen below)
+                  Always parses the PDF with the provider below. Slower, but also works for papers without an HTML version.
                 </div>
                 <div class="mode-badge" data-i18n="mode_requires_token">
-                  Requires key
+                  Needs a key
                 </div>
               </div>
             </label>
@@ -86,7 +82,7 @@
         <section class="settings-section" id="pdfProviderSection" aria-labelledby="pdfProviderTitle">
           <h2 id="pdfProviderTitle" data-i18n="pdf_title">PDF parsing</h2>
           <p class="section-description" data-i18n="pdf_desc">
-            PaddleOCR uploads PDFs from arXiv (up to 50 MB); MinerU, and PDFs from other sites, get only the link. Your key is stored only on this device and sent only to the provider you choose. Once a key is saved, PDFs are sent for parsing right away, with no confirmation prompt.
+            Converts the PDF itself, for papers without an HTML version. Needs a key from the provider. Your key stays on this device and goes only to that provider; PDFs are sent when you export, without asking again.
           </p>
 
           <div class="form-group">
@@ -96,7 +92,7 @@
                 <input type="radio" name="pdfProvider" value="paddleocr" aria-describedby="pcDesc-paddleocr pcNote-paddleocr" />
                 <span class="pc-body">
                   <span class="pc-head">PaddleOCR <span class="pc-badge free" data-i18n="pdf_badge_default_free">Default · free quota</span> <span class="pc-badge" data-i18n="pdf_badge_needs_key">Needs a key</span></span>
-                  <span class="pc-desc" id="pcDesc-paddleocr"><span data-i18n="pdf_card_paddleocr">Uploads PDFs from arXiv (up to 50 MB) to Baidu AI Studio; other PDFs are sent as links. Includes a free daily quota.</span></span>
+                  <span class="pc-desc" id="pcDesc-paddleocr"><span data-i18n="pdf_card_paddleocr">Uploads arXiv PDFs (up to 50 MB) to Baidu AI Studio; sends only the link for other PDFs. Free daily quota.</span></span>
                   <span class="pc-note" id="pcNote-paddleocr" data-i18n="pdf_card_paddleocr_slow">Usually slower than MinerU.</span>
                 </span>
               </label>
@@ -114,12 +110,12 @@
               <a id="privacyLinkMineru" class="key-link" href="https://sso.openxlab.org.cn/protocol/privacy" target="_blank" rel="noopener noreferrer"><span data-i18n="pdf_privacy_link_mineru">MinerU privacy policy (OpenXLab, in Chinese)</span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></svg><span class="sr-only" data-i18n="link_new_tab">(opens in a new tab)</span></a>
             </p>
             <div class="reinit-row" id="reinitRow" hidden>
-              <button type="button" id="reinitBtn" class="btn btn-ghost" data-i18n="pdf_reinit_btn" hidden>Reinitialize</button>
+              <button type="button" id="reinitBtn" class="btn btn-ghost" data-i18n="pdf_reinit_btn" hidden>Reinitialize network rule</button>
             </div>
           </div>
 
           <div class="form-group">
-            <label for="providerKey" id="providerKeyLabel" data-i18n="pdf_key_label">API Key</label>
+            <label for="providerKey" id="providerKeyLabel" data-i18n="pdf_key_label">{provider} API key</label>
             <div class="input-group">
               <div class="key-field">
                 <input
@@ -129,11 +125,11 @@
                   autocomplete="off"
                   spellcheck="false"
                   data-i18n-placeholder="pdf_key_placeholder"
-                  placeholder="Paste your API key"
+                  placeholder="Paste your key"
                   class="input-field"
                   aria-describedby="keyHereHint tokenStatus getKeyHint"
                 />
-                <button type="button" id="toggleTokenBtn" class="btn-icon" data-i18n-title="token_toggle" data-i18n-aria="token_toggle" title="Show/Hide" aria-label="Show/Hide" aria-pressed="false">
+                <button type="button" id="toggleTokenBtn" class="btn-icon" data-i18n-title="token_toggle" data-i18n-aria="token_toggle" title="Show or hide key" aria-label="Show or hide key" aria-pressed="false">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                     <circle cx="12" cy="12" r="3" />
@@ -144,12 +140,12 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                   <path d="M5 12l5 5L20 7" />
                 </svg>
-                <span data-i18n="mineru_test_btn">Test connection</span>
+                <span data-i18n="mineru_test_btn">Test key</span>
               </button>
               <div class="token-status" id="tokenStatus" role="status" aria-live="polite"></div>
             </div>
             <div class="form-hint" id="getKeyHint">
-              <a id="getKeyLink" class="key-link" href="https://aistudio.baidu.com/account/accessToken" target="_blank" rel="noopener noreferrer"><span id="getKeyText" data-i18n="pdf_get_key">Get a key</span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></svg><span class="sr-only" data-i18n="link_new_tab">(opens in a new tab)</span></a>
+              <a id="getKeyLink" class="key-link" href="https://aistudio.baidu.com/account/accessToken" target="_blank" rel="noopener noreferrer"><span id="getKeyText" data-i18n="pdf_get_key">Get a {provider} key</span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></svg><span class="sr-only" data-i18n="link_new_tab">(opens in a new tab)</span></a>
             </div>
             <div class="form-hint key-here" id="keyHereHint" role="status" hidden></div>
           </div>
@@ -157,7 +153,7 @@
 
         <!-- Advanced Settings -->
         <section class="settings-section">
-          <h2 data-i18n="advanced_title">Advanced options</h2>
+          <h2 data-i18n="advanced_title">Options</h2>
 
           <div class="form-group">
             <label class="checkbox-label">
@@ -200,30 +196,30 @@
         <section class="settings-section" id="aboutSection" aria-labelledby="aboutTitle">
           <h2 id="aboutTitle" data-i18n="about_title">About</h2>
           <div class="about-version"><span data-i18n="about_version">Version</span> <b id="aboutVersion">v</b></div>
-          <h3 data-i18n="stats_title">Usage statistics</h3>
+          <h3 data-i18n="stats_title">Usage</h3>
 
           <div class="stats-grid">
             <div class="stat-item">
               <div class="stat-number" id="totalConversions">0</div>
               <div class="stat-label" data-i18n="stats_total">
-                Total conversions
+                Exports
               </div>
             </div>
             <div class="stat-item">
               <div class="stat-number" id="ar5ivSuccess">0</div>
               <div class="stat-label" data-i18n="stats_ar5iv">
-                HTML success
+                From HTML
               </div>
             </div>
             <div class="stat-item">
               <div class="stat-number" id="mineruSuccess">0</div>
               <div class="stat-label" data-i18n="stats_mineru">
-                PDF parsing success
+                From PDF parsing
               </div>
             </div>
             <div class="stat-item">
               <div class="stat-number" id="pdfFallback">0</div>
-              <div class="stat-label" data-i18n="stats_pdf">PDF fallback</div>
+              <div class="stat-label" data-i18n="stats_pdf">Saved as PDF</div>
             </div>
           </div>
 
@@ -232,16 +228,16 @@
             id="resetStatsBtn"
             data-i18n="stats_reset"
           >
-            Reset statistics
+            Reset counts
           </button>
         </section>
 
         <!-- Actions -->
         <div class="actions-bar">
           <button class="btn btn-secondary" id="resetBtn" data-i18n="btn_reset">
-            Reset to default
+            Restore defaults
           </button>
-          <span class="autosave-note" id="saveStatus" role="status" aria-live="polite" aria-atomic="true"><span data-i18n="autosave_note">Changes are saved automatically</span></span>
+          <span class="autosave-note" id="saveStatus" role="status" aria-live="polite" aria-atomic="true"><span data-i18n="autosave_note">Changes save automatically</span></span>
           <span class="sr-only" id="saveAlert" role="alert"></span>
         </div>
       </main>
@@ -262,7 +258,7 @@
             >
           </div>
           <div class="footer-copyright">
-            © <span id="copyrightYears">2025–2026</span> SimonSun. Made with ❤️ for researchers.
+            © <span id="copyrightYears">2025–2026</span> SimonSun
           </div>
         </div>
       </footer>

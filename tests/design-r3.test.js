@@ -17,8 +17,8 @@ test('B1：.body 不滚动，.recent 可收缩，#taskList 自己滚', () => {
 test('文案：MinerU 任务 / 空状态', () => {
   expect(translations.zh.popup_recent).toBe('PDF 解析任务');
   expect(translations.en.popup_recent).toBe('PDF parsing tasks');
-  expect(translations.zh.popup_recent_empty).toBe('用 PDF 解析导出后，任务进度会显示在这里');
-  expect(translations.en.popup_recent_empty).toBe('PDF parsing exports will appear here');
+  expect(translations.zh.popup_recent_empty).toBe('还没有任务');
+  expect(translations.en.popup_recent_empty).toBe('No tasks yet');
   expect(read('src/ui/popup/popup.html')).toContain('id="recentEmpty"');
 });
 

@@ -31,8 +31,8 @@ describe('快捷键未设置引导', () => {
     for (const k of ['popup_shortcut_unset', 'popup_shortcut_setup', 'popup_shortcut_firefox_hint']) {
       expect(translations.zh[k]).toBeTruthy(); expect(translations.en[k]).toBeTruthy();
     }
-    expect(translations.zh.popup_shortcut_firefox_hint).toBe('在附加组件管理里设置');
-    expect(translations.en.popup_shortcut_firefox_hint).toBe('Set it in Add-ons Manager');
+    expect(translations.zh.popup_shortcut_firefox_hint).toBe('在附加组件管理器里设置');
+    expect(translations.en.popup_shortcut_firefox_hint).toBe('Set it in the Add-ons Manager');
   });
   test('命令缺失也视为未设置', () => {
     expect(shortcutGuide([], UA.chrome).set).toBe(false);

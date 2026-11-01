@@ -7,10 +7,10 @@ const read = (p) => fs.readFileSync(path.join(root, p), 'utf8');
 
 describe('设计验收 M1：模式卡、页面按钮、进度、统计不再写死 MinerU', () => {
   test('模式卡：PDF 解析模式 / 需要 Key（中英）', () => {
-    expect(translations.zh.mode_mineru_title).toBe('PDF 解析模式');
+    expect(translations.zh.mode_mineru_title).toBe('PDF 解析');
     expect(translations.zh.mode_requires_token).toBe('需要 Key');
-    expect(translations.en.mode_mineru_title).toBe('PDF parsing mode');
-    expect(translations.en.mode_requires_token).toBe('Requires key');
+    expect(translations.en.mode_mineru_title).toBe('PDF parsing');
+    expect(translations.en.mode_requires_token).toBe('Needs a key');
     const html = read('src/ui/settings/settings.html');
     expect(html).not.toMatch(/MinerU mode|Always use MinerU|Requires token|MinerU success/);
   });

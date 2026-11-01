@@ -5,24 +5,23 @@
 export const NW_MAX = 12;
 
 export const NW_ZH = {
-  mode_desc: ['选择论文转换的', '默认策略'],
-  mode_standard_desc: ['先 arXiv HTML，', '再 ar5iv，', '失败时下载 PDF'],
-  mode_mineru_desc: ['始终用 PDF 解析', '（使用下方选择的后端）'],
-  welcome_desc: ['一键将 arXiv 论文', '转换为 Markdown。', '先用 arXiv HTML，', '再试 ar5iv，', '失败时下载 PDF。'],
-  advanced_auto: ['自动转换', '（进入论文页面', '自动弹出转换提示）'],
-  advanced_metadata: ['在 Markdown 中', '包含元数据', '（标题、作者、ID 等）'],
-  pdf_desc: ['PaddleOCR 会上传', '来自 arXiv 的 PDF 文件', '（50 MB 以内）；', 'MinerU 和', '其他网站的 PDF', ' ', '只发送链接。', 'Key 只保存在本机，', '只发给你选择的服务。', '填好 Key 后', '会直接发送解析，', '不再弹出确认。'],
+  mode_standard_desc: ['转换 HTML 版本', '（先 arXiv，', '再 ar5iv），', '都没有时保存 PDF。'],
+  mode_mineru_desc: ['总是用下方选择的服务', '解析 PDF。', '较慢，', '但没有 HTML 版本的', '论文也能用。'],
+  welcome_desc: ['打开任意 arXiv 论文，', '点「Submission history」', '下方的', ' ', 'Markdown 按钮即可。', '下面的设置', '都是可选的。'],
+  advanced_auto: ['打开论文时', '询问是否导出'],
+  advanced_metadata: ['在文件开头', '写入元数据', '（标题、作者、', 'arXiv ID、年份）'],
+  pdf_desc: ['直接解析 PDF，', '适合没有 HTML 版本的论文，', '需要解析服务的 Key。', 'Key 只保存在本机，', '只发给对应的服务；', '导出时会直接发送 PDF，', '不再确认。'],
   // 设计验收 30a6e1b #3：卡片描述手工分段，避免「百|度」「免|费」「页|数」拆词；短语间的空格单列为 ' '，放在 span 外
-  pdf_card_paddleocr: ['把来自 arXiv 的', ' ', 'PDF 文件', '（50 MB 以内）', '上传到', '百度飞桨星河社区；', '其他 PDF', ' ', '只发送链接。', '每日有免费额度。'],
-  pdf_card_mineru: ['只把 PDF 链接', '发往', ' ', 'mineru.net，', '免费账号', '每日有页数上限。'],
+  pdf_card_paddleocr: ['把 arXiv 的', ' ', 'PDF 文件', '（50 MB 以内）', '上传到', '百度飞桨星河社区，', '其他 PDF', ' ', '只发链接。', '每日有免费额度。'],
+  pdf_card_mineru: ['只把 PDF 链接', '发给', ' ', 'mineru.net，', '免费账号', '每日有页数上限。'],
   // 设计复验 15fe0f9 必须改 3（R09）：弹窗无 Key / 未确认提示 #keyHereHint 不拆词（「解|析」「备|的」）
-  popup_key_here_hint: ['Key 不会', '跨设备同步，', '请在本设备的', '设置 › PDF 解析', '里重新填写'],
-  popup_err_token_hint: ['到', '设置 › PDF 解析', '填写 Key，', '或改用普通导出'],
+  popup_key_here_hint: ['Key 不会', '跨设备同步，', '请在', '设置 › PDF 解析', '里重新填写'],
+  popup_err_token_hint: ['在', '设置 › PDF 解析', '里填写，', '或改用「导出 Markdown」'],
   advanced_pdf_fab: ['在 PDF 页显示', '悬浮导出按钮'],
   pdf_privacy_link_paddleocr: ['百度隐私权保护声明', '（中文）'],
   pdf_privacy_link_mineru: ['MinerU', ' ', '个人信息保护政策', '（OpenXLab，', '中文）'],
   // 设计复验 6a49976 裁定 3（P2-DNR 文案定稿）：popup 任务行等待提示不拆词（「展|会」「动|重」）
-  popup_note_dnr_wait: ['正在完成网络设置。', '关闭此弹窗和设置页后，', '扩展会自动重启一次', '并继续。'],
+  popup_note_dnr_wait: ['正在完成初始化。', '关闭此弹窗和设置页后，', '扩展会自动重启一次', '并继续。'],
 };
 
 /** 没有手工切分表的中文句子：在 ，。；） 之后、以及中英文之间的空格处切开（如「访问 {host} 才能使用」），片段仍不超过一个分句 */

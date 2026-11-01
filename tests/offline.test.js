@@ -54,8 +54,8 @@ describe('离线 / 网络错误', () => {
   });
 
   test('中文和英文都有明确的断网提示', () => {
-    expect(translations.zh.content_error_offline).toBe('网络连接失败，请检查网络后重试');
-    expect(translations.en.content_error_offline).toMatch(/Network connection failed/);
+    expect(translations.zh.content_error_offline).toBe('网络未连接，请检查网络后重试');
+    expect(translations.en.content_error_offline).toMatch(/No network connection/);
   });
 
   test('隐藏进度条时清掉上一次的“Completed 100%”', () => {
@@ -63,7 +63,7 @@ describe('离线 / 网络错误', () => {
       <div class="arxiv-md-progress"><span class="progress-text"></span>
       <span class="progress-percent"></span><div class="progress-detail"></div></div></body></html>`);
     global.document = document;
-    setProgressState({ text: 'Completed', percent: 100, state: 'success' });
+    setProgressState({ text: 'Done', percent: 100, state: 'success' });
     clearProgressState();
     const box = document.querySelector('.arxiv-md-progress');
     expect(box.style.display).toBe('none');

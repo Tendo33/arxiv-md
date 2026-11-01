@@ -1,9 +1,9 @@
 {
   "extDescription": {
-    "message": "Save arXiv papers as Markdown in one click: math, tables and references kept, PDFs named by title."
+    "message": "Save arXiv papers as Markdown in one click, with math, tables and references intact. PDFs are named by title."
   },
   "cmdConvertDescription": {
-    "message": "Convert the current arXiv paper to Markdown",
+    "message": "Export the current arXiv paper as Markdown",
     "description": "AR-07: chrome://extensions/shortcuts description of the convert-current-paper command"
   },
   "notify_incomplete_title": {
@@ -11,7 +11,7 @@
     "description": "AF3-01: notification title when the export may be incomplete"
   },
   "notify_incomplete_body": {
-    "message": "Only $ACTUAL$ of ~$EXPECTED$ headings exported — please check.\nSaved: $FILENAME$",
+    "message": "Found about $EXPECTED$ headings but exported only $ACTUAL$. Please check the file.\nSaved: $FILENAME$",
     "description": "AF3-01: notification body; $EXPECTED$ = headings on page, $ACTUAL$ = headings exported, $FILENAME$ = saved file",
     "placeholders": {
       "expected": {

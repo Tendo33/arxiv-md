@@ -48,9 +48,9 @@ describe('P2-A popup', () => {
     expect(document.getElementById('alertKey').classList.contains('hidden')).toBe(true);
   });
   test('wording: zh says 本设备重新填写, en says re-enter on this device', () => {
-    expect(translations.zh.popup_key_here_hint).toContain('请在本设备');
+    expect(translations.zh.popup_key_here_hint).toContain('不会跨设备同步');
     expect(translations.zh.popup_key_here_hint).toContain('重新填写');
-    expect(translations.en.popup_key_here_hint).toMatch(/Re-enter the key on this device/);
+    expect(translations.en.popup_key_here_hint).toMatch(/Enter it again/);
     expect(keyHereMessage({ keyMissingHere: false }, translations.en, 'X')).toBeNull();
   });
   test('runExport uses the device hint when starting a parse', () => {

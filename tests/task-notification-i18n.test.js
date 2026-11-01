@@ -48,7 +48,7 @@ describe('已知 reason / code', () => {
   });
   test('en：code=QUOTA_EXCEEDED → err_QUOTA_EXCEEDED（填好 provider）', async () => {
     const c = await send('en', 'failed', new ParseError('QUOTA_EXCEEDED', { message: 'raw quota text' }));
-    expect(c.message).toContain('MinerU quota exhausted');
+    expect(c.message).toContain('MinerU quota used up');
     expect(c.message).not.toContain('raw quota text');
   });
 });

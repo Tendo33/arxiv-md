@@ -117,19 +117,19 @@ describe('classifyHttpError：403 空 body vs 401 vs 额度', () => {
 describe('formatParseError', () => {
   test('填入后端名和动作', () => {
     const f = formatParseError(new ParseError('QUOTA_EXCEEDED', { provider: 'paddleocr' }), translations.zh, { providerLabel: 'PaddleOCR' });
-    expect(f.message).toBe('PaddleOCR 的额度已用完，请稍后再试或换一个后端');
-    expect(f.actions).toEqual([{ id: 'switch', label: '换后端' }]);
+    expect(f.message).toBe('PaddleOCR 的额度已用完，请稍后再试或换一个服务');
+    expect(f.actions).toEqual([{ id: 'switch', label: '换服务' }]);
   });
   test('PERMISSION_MISSING 填域名', () => {
     const f = formatParseError(new ParseError('PERMISSION_MISSING', { host: 'paddleocr.aistudio-app.com' }), translations.en, { providerLabel: 'PaddleOCR' });
-    expect(f.message).toBe("Can't access paddleocr.aistudio-app.com, so PaddleOCR can't be used right now. Restart the browser and retry");
+    expect(f.message).toBe('Can’t access paddleocr.aistudio-app.com, so PaddleOCR is unavailable. Restart the browser and retry');
     const z = formatParseError(new ParseError('PERMISSION_MISSING', { host: 'paddleocr.aistudio-app.com' }), translations.zh, { providerLabel: 'PaddleOCR' });
     expect(z.message).toBe('无法访问 paddleocr.aistudio-app.com，暂时不能使用 PaddleOCR。请重启浏览器后重试');
   });
   test('403 空 body 的提示和额度/Key 不同', () => {
     const e = classifyHttpError({ status: 403, bodyText: '' }, 'paddleocr');
     const f = formatParseError(e, translations.zh, { providerLabel: 'PaddleOCR' });
-    expect(f.message).toContain('PaddleOCR 拒绝了这次请求（与 Key 或额度无关）');
+    expect(f.message).toContain('PaddleOCR 拒绝了请求（与 Key 或额度无关）');
     expect(f.message).not.toMatch(/403|\{provider\}/); // rp2：状态码只进日志
     expect(e.httpStatus).toBe(403);
     expect(f.message).not.toBe(formatParseError(new ParseError('QUOTA_EXCEEDED'), translations.zh, { providerLabel: 'PaddleOCR' }).message);

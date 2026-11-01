@@ -25,7 +25,7 @@ describe('rp2b ③ 提交卡', () => {
   test.each([['mineru', 'MinerU'], ['paddleocr', 'PaddleOCR']])('%s：标题 Submitted，无百分比，正文带后端名', (id, label) => {
     showSubmitted(id);
     const box = document.querySelector('.arxiv-md-progress');
-    expect(box.querySelector('.progress-text').textContent).toBe('Submitted');
+    expect(box.querySelector('.progress-text').textContent).toBe('Sent');
     expect(box.querySelector('.progress-percent').textContent).toBe('');
     expect(box.querySelector('.progress-detail').textContent).toBe(t.content_submitted_body.replace('{provider}', label));
     expect(box.textContent).not.toMatch(/100%|Completed|Done/);
@@ -61,8 +61,8 @@ describe('rp2b ③ 提交卡', () => {
 
   test('zh 文案与设计一致', () => {
     expect(translations.zh.content_progress_submitted).toBe('已提交');
-    expect(translations.zh.content_submitted_body).toBe('{provider} 正在解析，完成后会通知你。可在扩展弹窗的「PDF 解析任务」里查看');
-    expect(t.content_submitted_body).toBe("{provider} is parsing it. You'll be notified when it's done. Track it under PDF parsing tasks in the popup.");
+    expect(translations.zh.content_submitted_body).toBe('{provider} 正在解析 PDF，完成后会通知你，进度可在扩展弹窗里查看。');
+    expect(t.content_submitted_body).toBe("{provider} is parsing the PDF. You’ll be notified when it’s done; progress is in the extension popup.");
   });
 
   test('接线：content 的 background 分支走 showSubmitted；converter 返回实际后端；CSS 有信息蓝与暗色', () => {

@@ -14,6 +14,6 @@ describe('设计验收 M7：Key 区统一叫 Key', () => {
     expect(zh.token_valid).toBe('✅ Key 格式正确');
     expect(zh.token_empty_error).toBe('请先填写 Key');
     expect(zh.token_api_valid).toBe('✅ Key 可用');
-    expect(zh.token_toggle).toBe('显示/隐藏 Key');
+    expect(zh.token_toggle).toBe('显示或隐藏 Key');
   });
 });

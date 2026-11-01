@@ -11,6 +11,6 @@ test('commands 的 description 全部是 __MSG_ 占位', () => {
 
 test('convert-current-paper 中英文案', () => {
   expect(manifest.commands['convert-current-paper'].description).toBe('__MSG_cmdConvertDescription__');
-  expect(en.cmdConvertDescription.message).toBe('Convert the current arXiv paper to Markdown');
-  expect(zh.cmdConvertDescription.message).toBe('把当前 arXiv 论文转换为 Markdown');
+  expect(en.cmdConvertDescription.message).toBe('Export the current arXiv paper as Markdown');
+  expect(zh.cmdConvertDescription.message).toBe('把当前 arXiv 论文导出为 Markdown');
 });
