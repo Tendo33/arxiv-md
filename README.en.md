@@ -38,7 +38,7 @@
 
 | In-page buttons | Exported Markdown |
 | --- | --- |
-| <img src="docs/screenshots/page-buttons.png" alt="In-page buttons and result card"> | <img src="docs/screenshots/markdown-output.png" alt="Exported Markdown file"> |
+| <img src="docs/screenshots/page-entry.png" alt="In-page buttons and result card"> | <img src="docs/screenshots/markdown-output.png" alt="Exported Markdown file"> |
 
 ## Install
 

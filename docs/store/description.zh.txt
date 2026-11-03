@@ -1,0 +1,30 @@
+把 arXiv 论文一键存为干净的 Markdown，直接放进 Obsidian、Zotero、Logseq，或交给 AI 阅读。
+
+能做什么
+• 一键导出：论文摘要页 Submission history 下方多出 Markdown、PDF、BibTeX 三个按钮。
+• 先用官方 HTML：优先转换 arXiv 官方 HTML 版，没有时用 ar5iv，都没有时保存 PDF。
+• 结构完整：LaTeX 公式保留为 $…$ / $$…$$，表格转 Markdown（有合并单元格时保留 HTML），正文引用链接到参考文献，脚注转成 [^n]。
+• 元数据：可选 YAML 头信息（标题、作者、arXiv ID、年份），方便笔记软件索引。
+• PDF 按标题命名：下载的是「Attention Is All You Need (2017).pdf」，不是「1706.03762.pdf」。
+• BibTeX 一键复制。
+• PDF 解析（可选）：没有 HTML 版的论文，填入你自己的 PaddleOCR 或 MinerU Key 后解析 PDF，结果是含图片的 ZIP。
+• 多个入口：页面按钮、工具栏弹窗、右键菜单、快捷键 Alt+Shift+M，PDF 页还有悬浮按钮。
+• 中英文界面，跟随系统浅色 / 深色。
+
+怎么用
+1. 打开任意 arXiv 论文页，例如 arxiv.org/abs/1706.03762。
+2. 点页面上的「Markdown」按钮，或点工具栏图标后选「导出 Markdown」。
+3. 文件保存到浏览器的下载目录。
+
+隐私
+• 没有自己的服务器，不收集数据，没有统计或埋点。
+• 标准模式完全在浏览器里完成，只访问 arXiv 和 ar5iv。
+• 只有你主动使用 PDF 解析时，论文才会和你的 Key 一起发给你选定的那一个服务（PaddleOCR 或 MinerU）。Key 只保存在本机。
+
+同系列
+• Zhihu to Markdown：知乎文章、回答、问题和热榜存为 Markdown。
+• Journal to Markdown：PMC、Nature、Frontiers 等期刊全文存为 Markdown。
+
+需要 Chrome 121 或更高版本。
+
+开源（MIT）：github.com/Tendo33/arxiv-md

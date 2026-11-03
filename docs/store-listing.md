@@ -56,6 +56,8 @@
 • Zhihu to Markdown：知乎文章、回答、问题和热榜存为 Markdown。
 • Journal to Markdown：PMC、Nature、Frontiers 等期刊全文存为 Markdown。
 
+需要 Chrome 121 或更高版本。
+
 开源（MIT）：github.com/Tendo33/arxiv-md
 ```
 
@@ -89,8 +91,24 @@ Also in the series
 • Zhihu to Markdown — save Zhihu articles, answers, questions and the hot list as Markdown.
 • Journal to Markdown — save full-text articles from PMC, Nature, Frontiers and more as Markdown.
 
+Requires Chrome 121 or later.
+
 Open source (MIT): github.com/Tendo33/arxiv-md
 ```
+
+## 图片素材（中文，可直接上传）
+
+全部由真实扩展界面截取后合成，三款插件同一版式。生成方式：无界面 Chromium 加载 `dist/`，截取弹窗、设置页和页面内元素，导出的 Markdown 来自真实导出结果。
+
+| 文件 | 尺寸 | 内容 |
+| --- | --- | --- |
+| `docs/store/screenshot-1.png` | 1280×800 | 一键把 arXiv 论文存为 Markdown（论文页按钮 + 弹窗） |
+| `docs/store/screenshot-2.png` | 1280×800 | 公式、表格、参考文献原样保留（导出的 Markdown） |
+| `docs/store/screenshot-3.png` | 1280×800 | 没有 HTML 版？用 PDF 解析（设置页） |
+| `docs/store/screenshot-4.png` | 1280×800 | 浅色、深色都顺眼（深色模式） |
+| `docs/store/promo-small-440x280.png` | 440×280 | 小型宣传图块（必填） |
+| `docs/store/promo-marquee-1400x560.png` | 1400×560 | 顶部宣传图块（可选） |
+| `docs/store/description.zh.txt` | — | 中文详细说明，粘贴到「说明」 |
 
 ## 单一用途说明
 

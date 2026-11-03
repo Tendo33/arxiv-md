@@ -36,7 +36,7 @@
 
 | 页面内按钮 | 导出的 Markdown |
 | --- | --- |
-| <img src="docs/screenshots/page-buttons.png" alt="页面内按钮与结果卡片"> | <img src="docs/screenshots/markdown-output.png" alt="导出的 Markdown 文件"> |
+| <img src="docs/screenshots/page-entry.png" alt="页面内按钮与结果卡片"> | <img src="docs/screenshots/markdown-output.png" alt="导出的 Markdown 文件"> |
 
 ## 安装
 
