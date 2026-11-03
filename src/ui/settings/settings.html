@@ -4,25 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title data-i18n="settings_page_title">arXiv to Markdown Settings</title>
+    <link rel="stylesheet" href="ui-v2.css" />
+    <link rel="stylesheet" href="series.css" />
     <link rel="stylesheet" href="settings.css" />
   </head>
-  <body>
-    <div class="settings-container">
-      <!-- Header -->
-      <header class="header">
-        <div class="header-content">
-          <div class="logo">
-            <!-- Brand Logo -->
-            <img src="assets/icon-128.png" alt="" width="36" height="36" />
-            <h1>arXiv to Markdown</h1>
-          </div>
-          <div class="header-actions">
-            <button class="btn-lang" id="langToggle" data-i18n-title="lang_switch" title="Switch language">
-              <span id="langIcon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></span>
-              <span id="langText">中文</span><span class="sr-only" data-i18n="lang_switch">Switch language</span>
-            </button>
-            <div class="version" id="versionDisplay">v</div>
-          </div>
+  <body class="sp-body">
+    <div class="sp settings-container">
+      <!-- 系列外壳（series.css）：图标 + 产品名 + 「设置」，右侧语言和版本号 -->
+      <header class="sp-hd header">
+        <img src="assets/icon-128.png" alt="" width="40" height="40" />
+        <div class="sp-ttl">
+          <h1>arXiv to Markdown</h1>
+          <p data-i18n="settings_subtitle">Settings</p>
+        </div>
+        <div class="sp-acts header-actions">
+            <span class="chip version" id="versionDisplay">v</span>
         </div>
       </header>
 
@@ -151,44 +147,31 @@
           </div>
         </section>
 
-        <!-- Advanced Settings -->
-        <section class="settings-section">
-          <h2 data-i18n="advanced_title">Options</h2>
-
-          <div class="form-group">
-            <label class="checkbox-label">
-              <input type="checkbox" id="autoConvert" />
-              <span data-i18n="advanced_auto"
-                >Auto-convert (show prompt on paper page load)</span
-              >
-            </label>
+        <!-- Options：开关行（同 zhihu-md / journal-md 设置页） -->
+        <section class="settings-section" aria-labelledby="advancedTitle">
+          <h2 id="advancedTitle" data-i18n="advanced_title">Options</h2>
+          <div class="it">
+            <div class="tx"><span class="lbl" id="uiLanguageLabel" data-i18n="lang_label">Language</span></div>
+            <fieldset class="segmented" id="uiLanguage" aria-labelledby="uiLanguageLabel">
+              <label><input type="radio" name="uiLanguage" value="zh" /><span>中文</span></label>
+              <label><input type="radio" name="uiLanguage" value="en" /><span>English</span></label>
+            </fieldset>
           </div>
-
-          <div class="form-group">
-            <label class="checkbox-label">
-              <input type="checkbox" id="includeMetadata" checked />
-              <span data-i18n="advanced_metadata"
-                >Include metadata in Markdown (title, authors, ID, etc.)</span
-              >
-            </label>
+          <div class="it">
+            <div class="tx"><label class="lbl" for="autoConvert" data-i18n="advanced_auto">Ask whether to export when a paper opens</label></div>
+            <span class="switch"><input type="checkbox" role="switch" id="autoConvert" /><span aria-hidden="true"></span></span>
           </div>
-
-          <div class="form-group">
-            <label class="checkbox-label">
-              <input type="checkbox" id="showNotifications" checked />
-              <span data-i18n="advanced_notifications"
-                >Show desktop notifications</span
-              >
-            </label>
+          <div class="it">
+            <div class="tx"><label class="lbl" for="includeMetadata" data-i18n="advanced_metadata">Include metadata in Markdown (title, authors, ID, etc.)</label></div>
+            <span class="switch"><input type="checkbox" role="switch" id="includeMetadata" checked /><span aria-hidden="true"></span></span>
           </div>
-
-          <div class="form-group">
-            <label class="checkbox-label">
-              <input type="checkbox" id="showPdfFab" checked />
-              <span data-i18n="advanced_pdf_fab"
-                >Show a floating export button on PDF pages</span
-              >
-            </label>
+          <div class="it">
+            <div class="tx"><label class="lbl" for="showNotifications" data-i18n="advanced_notifications">Show desktop notifications</label></div>
+            <span class="switch"><input type="checkbox" role="switch" id="showNotifications" checked /><span aria-hidden="true"></span></span>
+          </div>
+          <div class="it">
+            <div class="tx"><label class="lbl" for="showPdfFab" data-i18n="advanced_pdf_fab">Show a floating export button on PDF pages</label></div>
+            <span class="switch"><input type="checkbox" role="switch" id="showPdfFab" checked /><span aria-hidden="true"></span></span>
           </div>
         </section>
 
@@ -242,25 +225,20 @@
         </div>
       </main>
 
-      <!-- Footer -->
-      <footer class="footer">
-        <div class="footer-content">
-          <div class="footer-links">
-            <a href="https://github.com/Tendo33/arxiv-md" target="_blank"
-              >GitHub</a
-            >
-            <span>•</span>
-            <a
-              href="https://github.com/Tendo33/arxiv-md/issues"
-              target="_blank"
-              data-i18n="footer_report_issue"
-              >报告问题</a
-            >
-          </div>
-          <div class="footer-copyright">
-            © <span id="copyrightYears">2025–2026</span> SimonSun
-          </div>
+      <!-- 页脚（series.css）：链接行 → 同系列 → 版权 -->
+      <footer class="sp-ft footer">
+        <nav class="sp-links footer-links" data-i18n-aria="footer_links" aria-label="Links">
+          <a href="https://github.com/Tendo33/arxiv-md" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a href="https://github.com/Tendo33/arxiv-md/issues" target="_blank" rel="noopener noreferrer" data-i18n="footer_report_issue">Report an issue</a>
+          <a href="https://github.com/Tendo33/arxiv-md/blob/main/PRIVACY.md" target="_blank" rel="noopener noreferrer" data-i18n="footer_privacy">Privacy</a>
+          <a href="https://github.com/Tendo33/arxiv-md/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer" data-i18n="footer_changelog">Changelog</a>
+        </nav>
+        <div class="series">
+          <span data-i18n="footer_series">Also in the series</span>
+          <a data-p="zhihu" href="https://chromewebstore.google.com/detail/zhihu-md/heeilejdelmogpbnbbhdokgfabmhkenh" target="_blank" rel="noopener noreferrer">Zhihu to Markdown</a>
+          <a data-p="journal" href="https://github.com/Tendo33/journal-md" target="_blank" rel="noopener noreferrer">Journal to Markdown</a>
         </div>
+        <p class="footer-copyright">© <span id="copyrightYears">2025–2026</span> SimonSun</p>
       </footer>
     </div>
 

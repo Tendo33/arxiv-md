@@ -10,8 +10,8 @@ describe('设计建议：统一叫「PDF 解析」，中文全角括号、英文
     for (const [k, v] of Object.entries(translations.zh)) if (typeof v === 'string') expect(`${k}=${v}`).not.toMatch(/高质量/);
     for (const [k, v] of Object.entries(translations.en)) if (typeof v === 'string') expect(`${k}=${v}`).not.toMatch(/\(HQ\)|high-quality/i);
     expect(read('src/ui/popup/popup.html')).not.toMatch(/高质量/);
-    expect(read('README_CN.md')).not.toMatch(/PDF 高质量解析/);
-    expect(read('README.md')).not.toMatch(/\(HQ\)|high-quality/i);
+    expect(read('README.md')).not.toMatch(/PDF 高质量解析/);
+    expect(read('README.en.md')).not.toMatch(/\(HQ\)|high-quality/i);
     expect(translations.zh.popup_btn_mineru).toBe('PDF 解析');
     expect(translations.en.popup_btn_mineru).toBe('PDF parsing');
   });

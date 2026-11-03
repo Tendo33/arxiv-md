@@ -33,8 +33,8 @@ describe('路线 2：界面 / README / ARCHITECTURE 与实际行为一致（arXi
     expect(d).toMatch(l === 'zh' ? /PDF 文件[\s\S]*只发链接/ : /Uploads arXiv PDFs[\s\S]*only the link/);
   });
   test('README / ARCHITECTURE 提到 bcebos 与 ZIP 结构', () => {
-    expect(rd('README.md')).toMatch(/\*\.bj\.bcebos\.com/);
-    expect(rd('README.md')).toMatch(/full\.md/);
+    expect(rd('README.en.md')).toMatch(/\*\.bj\.bcebos\.com/);
+    expect(rd('README.en.md')).toMatch(/full\.md/);
     expect(rd('docs/ARCHITECTURE.md')).toMatch(/\*\.bj\.bcebos\.com/);
     expect(rd('docs/ARCHITECTURE.md')).toMatch(/≤50 MB/);
   });
@@ -52,8 +52,8 @@ describe('隐私说明（Simon：arXiv 论文都算 OA，直接解析）和实�
     expect(p).not.toMatch(/Access to (both domains|this domain) is requested/);
     expect(p).toContain('Access to both domains is granted when you install or update the extension');
   });
-  test('README_CN 隐私段同一说法', () => {
-    expect(rd('README_CN.md')).toMatch(/MinerU 收到 arXiv PDF 链接；PaddleOCR 收到 arXiv PDF 文件本身（上传，50 MB 以内），非 arXiv 的 PDF 只发链接/);
+  test('README（中文）隐私段同一说法', () => {
+    expect(rd('README.md')).toMatch(/MinerU 收到 arXiv PDF 链接；PaddleOCR 收到 arXiv PDF 文件本身（上传，50 MB 以内），非 arXiv 的 PDF 只发链接/);
   });
   test('代码事实：MinerU submit 只发 url；PaddleOCR 只对 arXiv 主机上传', () => {
     const m = rd('packages/pdf-parse-core/src/providers/mineru.js');
@@ -71,9 +71,9 @@ test('PRIVACY 保留期限按 PM 核实结果写明；>50 MB 不发送、建议 
   expect(p).not.toMatch(/Retention periods/);
   expect(p).toMatch(/Neither Baidu AI Studio \(PaddleOCR\) nor MinerU publishes a specific retention period/);
   expect(p).toMatch(/larger than 50 MB is stopped before upload[^\n]*MinerU/);
-  expect(rd('README.md')).toMatch(/over 50 MB is not sent[^\n]*MinerU/);
-  expect(rd('README_CN.md')).toMatch(/超过 50 MB 的 PDF 不会发送[^\n]*MinerU/);
-  expect(rd('README_CN.md')).toMatch(/bcebos\.com/);
+  expect(rd('README.en.md')).toMatch(/over 50 MB is not sent[^\n]*MinerU/);
+  expect(rd('README.md')).toMatch(/超过 50 MB 的 PDF 不会发送[^\n]*MinerU/);
+  expect(rd('README.md')).toMatch(/bcebos\.com/);
 });
 
 test('PRIVACY 写明 MinerU 运营主体，不再写待核实；保留期限句不变', () => {

@@ -1,6 +1,6 @@
 {
   "extDescription": {
-    "message": "Save arXiv papers as Markdown in one click, with math, tables and references intact. PDFs are named by title."
+    "message": "Save arXiv papers as Markdown in one click: math, tables and references intact, PDFs named by title. Optional PDF parsing."
   },
   "cmdConvertDescription": {
     "message": "Export the current arXiv paper as Markdown",

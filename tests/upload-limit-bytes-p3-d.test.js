@@ -10,5 +10,5 @@ test('PADDLEOCR_MAX_UPLOAD_BYTES === 50,000,000', () => {
 test('PRIVACY / ARCHITECTURE 写明字节数，不出现 MiB', () => {
   expect(rd('PRIVACY.md')).toMatch(/up to 50 MB, i\.e\. 50,000,000 bytes/);
   expect(rd('docs/ARCHITECTURE.md')).toMatch(/≤50 MB，即 50,000,000 字节/);
-  for (const f of ['PRIVACY.md', 'README.md', 'README_CN.md', 'docs/ARCHITECTURE.md', 'src/config/locales.js']) expect(rd(f)).not.toMatch(/MiB/);
+  for (const f of ['PRIVACY.md', 'README.en.md', 'README.md', 'docs/ARCHITECTURE.md', 'src/config/locales.js']) expect(rd(f)).not.toMatch(/MiB/);
 });

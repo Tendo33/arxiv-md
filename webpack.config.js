@@ -86,6 +86,7 @@ module.exports = (env, argv) => {
           { from: "src/ui/settings/settings.html", to: "settings.html" },
           { from: "src/ui/settings/settings.css", to: "settings.css" },
           { from: "src/ui/shared/ui-v2.css", to: "ui-v2.css" },
+          { from: "src/ui/shared/series.css", to: "series.css" },
           // R3 perf：只拷扩展实际用到的资源，README 截图（paper-page.png / popup.png）不进包；
           // AR-06：icon.svg（约 200KB）也不进包，设置页 logo 改用 icon-128.png
           { from: "assets/icon-*.png", to: "assets/[name][ext]" },

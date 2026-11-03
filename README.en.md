@@ -1,0 +1,160 @@
+<div align="center">
+
+<img src="assets/icon-128.png" width="96" alt="arXiv to Markdown icon">
+
+# arXiv to Markdown
+
+**Save arXiv papers as Markdown in one click, with PDFs named by title.**
+
+[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/pphdggfbjddgdljndgdablkhbdpbfnbd?style=flat-square&label=Chrome%20Web%20Store&color=b31b1b)](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd)
+[![License: MIT](https://img.shields.io/badge/License-MIT-black?style=flat-square)](./LICENSE)
+[![Manifest V3](https://img.shields.io/badge/Manifest-V3-4285F4?style=flat-square&logo=googlechrome&logoColor=white)](./src/manifest.json)
+
+[Install](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd) · [中文说明](./README.md) · [FAQ](./docs/FAQ.md) · [Privacy](./PRIVACY.md) · [Changelog](./CHANGELOG.md)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/hero-dark.png">
+  <img src="docs/screenshots/hero-light.png" width="860" alt="Export buttons on an arXiv abstract page, with the extension popup">
+</picture>
+
+</div>
+
+> **The "to Markdown" series**: **arXiv to Markdown** · [Zhihu to Markdown](https://github.com/Tendo33/zhihu-md) · [Journal to Markdown](https://github.com/Tendo33/journal-md). Three extensions with the same interface and export habits, for arXiv preprints, Zhihu and journal full text.
+
+> Screenshots show the Chinese UI. The extension follows your browser language (Chinese or English) and can be switched in Settings.
+
+## Features
+
+- **One-click Markdown export**: adds `Markdown`, `PDF` and `BibTeX` buttons under `Submission history` on arXiv abstract pages.
+- **Official HTML first**: converts arXiv's official HTML version, falls back to ar5iv, and downloads the PDF when neither is available.
+- **Keeps math and structure**: LaTeX stays as `$...$` / `$$...$$`; simple tables become GFM, tables with merged cells stay as HTML; in-text citations link to the numbered references and footnotes become `[^n]`.
+- **Optional YAML frontmatter**: `title`, `arxiv_id`, `source`, `authors`, `year` for Obsidian, Logseq, Zotero and similar tools.
+- **PDFs named by title**: `Attention Is All You Need (2017).pdf` instead of `1706.03762.pdf`.
+- **Copy BibTeX**: uses arXiv's official citation, or builds one from the page title, authors and year.
+- **Copy for AI or notes**: after an export, the result card on the page has a "Copy Markdown" button. Cards with action buttons stay until you close them; other finished cards hide after 10 seconds (paused while hovered or focused).
+- **Optional PDF parsing**: for papers without an HTML version. With your own API key, the provider you pick (PaddleOCR by default, with a free quota, or MinerU) parses the PDF in the background. PaddleOCR results are saved as a ZIP laid out like MinerU's (`full.md` + `images/`); progress shows in the popup.
+- **Several entry points**: page buttons, toolbar popup, context menu, keyboard shortcut, and a floating button on PDF pages.
+- **Chinese and English UI**, light and dark themes.
+
+| In-page buttons | Exported Markdown |
+| --- | --- |
+| <img src="docs/screenshots/page-buttons.png" alt="In-page buttons and result card"> | <img src="docs/screenshots/markdown-output.png" alt="Exported Markdown file"> |
+
+## Install
+
+**Chrome**: install from the [Chrome Web Store](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd). Requires Chrome 121 or later.
+
+**Edge / Firefox**: planned, not yet listed.
+
+**From source**:
+
+```bash
+git clone https://github.com/Tendo33/arxiv-md.git
+cd arxiv-md
+npm install
+npm run build
+```
+
+Open `chrome://extensions`, enable Developer mode, click "Load unpacked" and pick `dist/`.
+
+## Usage
+
+1. Open any arXiv paper, e.g. <https://arxiv.org/abs/1706.03762>.
+2. Click `Markdown` on the page to download a `.md` file.
+3. Or click the toolbar icon and choose Export Markdown, PDF parsing, or Download PDF.
+
+| Entry point | What it does |
+| --- | --- |
+| Page buttons | Under `Submission history`: `Markdown`, `PDF`, `BibTeX` |
+| Toolbar popup | Export buttons for the current paper and the PDF parsing task list |
+| Shortcut | `Alt+Shift+M` (`Option+Shift+M` on macOS) exports the current paper from its abstract, PDF or HTML page. If the popup shows "No shortcut set", click Set or open `chrome://extensions/shortcuts` |
+| Context menu | On a paper page: "Export paper as Markdown" and, once the selected provider has a key, "Export with PDF parsing"; on an arXiv link: "Export linked arXiv paper as Markdown" |
+| PDF floating button | Bottom-right on `arxiv.org/pdf/*`; can be turned off in Settings |
+
+<img src="docs/screenshots/popup.png" width="300" alt="Toolbar popup">
+
+## Settings
+
+<img src="docs/screenshots/settings.png" width="720" alt="Settings page">
+
+| Setting | Description |
+| --- | --- |
+| Export mode | `Standard` (recommended): official HTML → ar5iv → PDF; `PDF parsing`: always parse the PDF with the selected provider (needs its key) |
+| PDF parsing | Pick the provider (PaddleOCR by default, or MinerU), enter its API key and test it. Keys stay on this device and never sync |
+| Ask to export | Offer to export when you open a paper |
+| Metadata | Add YAML frontmatter to the top of the file |
+| Desktop notifications | Notify when a PDF parsing task finishes or fails |
+| PDF floating button | Show the floating button on PDF pages |
+| Language | 中文 / English |
+| Usage | Export counts, synced with your browser account if sync is on, never uploaded; can be reset |
+
+Changes save automatically. "Restore defaults" also deletes saved API keys.
+
+## Permissions
+
+| Permission | Why |
+| --- | --- |
+| `storage` | Settings (including the selected PDF parsing provider) and usage statistics are kept in `chrome.storage.sync`, so they sync with your browser account if browser sync is on; provider API keys and PDF parsing task state stay in `chrome.storage.local` on this device. A MinerU token saved by an older version is moved to local storage (copied, then deleted from sync) |
+| `downloads` | Saves Markdown, PDF or PDF parsing results |
+| `activeTab` | Reads the arXiv page you are on so it can be converted |
+| `notifications` | Desktop notice when a PDF parsing task finishes or fails |
+| `alarms` | Wakes the background worker to poll running PDF parsing tasks |
+| `contextMenus` | Adds the right-click menu items |
+| `arxiv.org`, `export.arxiv.org` | Paper HTML, metadata and PDF |
+| `ar5iv.org`, `ar5iv.labs.arxiv.org` | ar5iv fallback when official HTML is missing |
+| `mineru.net`, `cdn-mineru.openxlab.org.cn` | Only when you use MinerU: submit tasks and download results |
+| `paddleocr.aistudio-app.com` | Only when you use PaddleOCR: submit tasks |
+| `*.bj.bcebos.com` | Only when you use PaddleOCR: PaddleOCR serves parse results and figures from this Baidu storage domain |
+| `declarativeNetRequestWithHostAccess` | Only removes the `Origin` header on this extension's requests to `paddleocr.aistudio-app.com` |
+| Content script on `arxiv.org/abs/*`, `arxiv.org/pdf/*`, `arxiv.org/html/*` | Adds the page buttons, result card and PDF floating button on those pages |
+
+## Privacy
+
+- No backend, no analytics, and no data collection by the developer. Standard mode runs entirely in your browser and only talks to arXiv and ar5iv. Only PDF parsing sends anything to a third party: PaddleOCR uploads arXiv PDFs up to 50 MB as files and sends only the link for other PDFs; MinerU sends only the PDF link.
+- Only when you use PDF parsing is the paper sent, with your key, to the one provider you selected (PaddleOCR or MinerU, third-party services under their own terms): MinerU gets the arXiv PDF URL; PaddleOCR gets the arXiv PDF file itself (uploaded, up to 50 MB), and only the link for non-arXiv PDFs. A PDF over 50 MB is not sent; the extension suggests switching to MinerU. The extension never switches providers on its own. PaddleOCR is run by Baidu AI Studio. The applicable policy is the [Baidu privacy policy (in Chinese)](https://www.baidu.com/duty/yinsiquan.html). For reference only, the [PaddlePaddle AI Studio privacy policy (in Chinese)](https://aistudio.baidu.com/privacy) states that it applies to "WeChat Mini Program and mobile browsers (excluding PC)", so it does not cover this extension's API calls.
+- See [PRIVACY.md](./PRIVACY.md).
+
+## FAQ
+
+**Why did I get a PDF instead of Markdown?**
+Neither arXiv nor ar5iv has an HTML version of that paper, so Standard mode saves the PDF. Use PDF parsing to get Markdown.
+
+**Are images downloaded?**
+Not in Standard mode. Images in the Markdown are remote links to arXiv / ar5iv.
+
+**The popup says "No shortcut set".**
+Another extension or the browser took it. Click Set in the popup or open `chrome://extensions/shortcuts`.
+
+**Why is the PDF parsing result a ZIP?**
+It holds the Markdown (`full.md`) and the images it uses.
+
+More in [docs/FAQ.md](./docs/FAQ.md).
+
+## Development
+
+```bash
+npm install
+npm run dev       # watch build
+npm run build     # unpacked extension in dist/
+npm run lint
+npm test
+npm run package   # build/arxiv-md-v<version>.zip
+```
+
+See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md), [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md) and [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+## Also in the series
+
+| Extension | For | Get it |
+| --- | --- | --- |
+| **arXiv to Markdown** | arXiv papers (abstract, PDF and HTML pages) | [Chrome Web Store](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd) |
+| [Zhihu to Markdown](https://github.com/Tendo33/zhihu-md) | Zhihu articles, answers, questions, feeds, hot list | [Chrome Web Store](https://chromewebstore.google.com/detail/zhihu-md/heeilejdelmogpbnbbhdokgfabmhkenh) |
+| [Journal to Markdown](https://github.com/Tendo33/journal-md) | PMC, PubMed, Springer, Nature, Frontiers, MDPI, PLOS, eLife | [Releases](https://github.com/Tendo33/journal-md/releases) |
+
+## Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md).
+
+## License
+
+[MIT](./LICENSE)

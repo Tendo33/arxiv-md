@@ -1,6 +1,6 @@
 {
   "extDescription": {
-    "message": "一键把 arXiv 论文存为 Markdown，保留公式、表格和参考文献；PDF 按标题命名。"
+    "message": "一键把 arXiv 论文存为 Markdown：公式、表格、参考文献原样保留，PDF 按标题命名；没有 HTML 版的论文也能用 PDF 解析。"
   },
   "cmdConvertDescription": {
     "message": "把当前 arXiv 论文导出为 Markdown",

@@ -13,12 +13,15 @@ const rule = (sel) => {
   return css.slice(i, css.indexOf('}', i));
 };
 
-test('--focus-ring 亮色 #2563eb、暗色 #60a5fa', () => {
-  const [light, dark] = [...css.matchAll(/--focus-ring:(#[0-9a-f]{6})/g)].map((m) => m[1]);
+// 系列外壳：--focus-ring 映射到 ui-v2 的 --focus（arXiv 品牌下亮 #2563eb / 暗 #60a5fa），设置页不再自己定义颜色
+test('--focus-ring = ui-v2 --focus，亮色 #2563eb、暗色 #60a5fa', () => {
+  expect(css).toMatch(/--focus-ring: var\(--focus\);/);
+  const v2 = fs.readFileSync(path.join(__dirname, '../src/ui/shared/ui-v2.css'), 'utf8');
+  const [light, dark] = [...v2.matchAll(/--focus:(#[0-9a-f]{6})/g)].map((m) => m[1]);
   expect([light, dark]).toEqual(['#2563eb', '#60a5fa']);
 });
 
-test.each(['.input-field:focus-visible', '.btn-icon:focus-visible', '.btn:focus-visible', '.footer-links a:focus-visible', 'a:focus-visible', '.btn-lang:focus-visible'])(
+test.each(['.input-field:focus-visible', '.btn-icon:focus-visible', '.btn:focus-visible', 'a:focus-visible'])(
   '%s：一圈 2px --focus-ring，无 box-shadow 双圈',
   (sel) => {
     const r = rule(sel);
@@ -43,10 +46,9 @@ test('焦点样式里不再引用 --accent-ring', () => {
   expect(focusRules.filter((r) => /accent-ring/.test(r))).toEqual([]);
 });
 
-test('R03：操作栏 static + margin-top 8px；R16：header-actions gap 16px', () => {
+test('R03：操作栏 static + margin-top 8px；R16：页头间距见 series.css', () => {
   const bar = rule('.actions-bar');
   expect(bar).toMatch(/position: static;/);
   expect(bar).toMatch(/margin-top: 8px;|margin: 8px /);
   expect(bar).not.toMatch(/sticky/);
-  expect(rule('.header-actions')).toMatch(/gap: 16px;/);
 });

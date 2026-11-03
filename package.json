@@ -1,9 +1,17 @@
 {
   "name": "arxiv-md",
   "version": "1.2.2",
-  "description": "Chrome extension to save arXiv papers as Markdown",
+  "description": "arXiv to Markdown — browser extension that saves arXiv papers as clean Markdown, with math, tables and references intact.",
   "author": "SimonSun",
   "license": "MIT",
+  "homepage": "https://github.com/Tendo33/arxiv-md#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tendo33/arxiv-md.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Tendo33/arxiv-md/issues"
+  },
   "workspaces": [
     "packages/*"
   ],
