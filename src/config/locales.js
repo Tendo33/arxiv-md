@@ -30,6 +30,11 @@ export const translations = {
     popup_btn_cancel: 'Cancel',
     popup_btn_confirm: 'Delete',
     footer_report_issue: 'Report an issue',
+    footer_privacy: 'Privacy',
+    footer_changelog: 'Changelog',
+    footer_series: 'Also in the series',
+    footer_links: 'Links',
+    settings_subtitle: 'Settings',
 
     // Settings
     welcome_title: 'Welcome to arXiv to Markdown',
@@ -113,6 +118,7 @@ export const translations = {
     token_test_error: '❌ Test failed: network error',
     mineru_test_btn: 'Test key',
     lang_switch: 'Switch language',
+    lang_label: 'Language',
     token_toggle: 'Show or hide key',
 
     // Content Script
@@ -298,6 +304,11 @@ export const translations = {
     popup_btn_cancel: '取消',
     popup_btn_confirm: '删除',
     footer_report_issue: '反馈问题',
+    footer_privacy: '隐私说明',
+    footer_changelog: '更新日志',
+    footer_series: '同系列',
+    footer_links: '相关链接',
+    settings_subtitle: '设置',
 
     // Settings
     welcome_title: '欢迎使用 arXiv to Markdown',
@@ -381,6 +392,7 @@ export const translations = {
     token_test_error: '❌ 测试失败：网络错误',
     mineru_test_btn: '测试 Key',
     lang_switch: '切换语言',
+    lang_label: '界面语言',
     token_toggle: '显示或隐藏 Key',
 
     // Content Script

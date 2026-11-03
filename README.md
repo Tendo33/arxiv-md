@@ -1,50 +1,50 @@
 <div align="center">
 
-<img src="assets/icon-128.png" width="96" alt="arXiv to Markdown icon">
+<img src="assets/icon-128.png" width="96" alt="arXiv to Markdown 图标">
 
 # arXiv to Markdown
 
-**Save arXiv papers as Markdown in one click, with PDFs named by title.**
+**把 arXiv 论文一键保存为 Markdown，PDF 自动按标题命名。**
 
 [![Chrome Web Store](https://img.shields.io/chrome-web-store/v/pphdggfbjddgdljndgdablkhbdpbfnbd?style=flat-square&label=Chrome%20Web%20Store&color=b31b1b)](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd)
 [![License: MIT](https://img.shields.io/badge/License-MIT-black?style=flat-square)](./LICENSE)
 [![Manifest V3](https://img.shields.io/badge/Manifest-V3-4285F4?style=flat-square&logo=googlechrome&logoColor=white)](./src/manifest.json)
 
-[Install](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd) · [中文说明](./README_CN.md) · [FAQ](./docs/FAQ.md) · [Privacy](./PRIVACY.md) · [Changelog](./CHANGELOG.md)
+[安装](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd) · [English](./README.en.md) · [常见问题](./docs/FAQ.md) · [隐私说明](./PRIVACY.md) · [更新日志](./CHANGELOG.md)
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/hero-dark.png">
-  <img src="docs/screenshots/hero-light.png" width="860" alt="Export buttons on an arXiv abstract page, with the extension popup">
+  <img src="docs/screenshots/hero-light.png" width="860" alt="arXiv 摘要页上的导出按钮和扩展弹窗">
 </picture>
 
 </div>
 
-> Screenshots show the Chinese UI. The extension follows your browser language (Chinese or English) and can be switched in Settings.
+> **「to Markdown」系列**：**arXiv to Markdown** · [Zhihu to Markdown](https://github.com/Tendo33/zhihu-md) · [Journal to Markdown](https://github.com/Tendo33/journal-md)。三款插件同一套界面和导出习惯，分别覆盖 arXiv 预印本、知乎和期刊全文。
 
-## Features
+## 功能
 
-- **One-click Markdown export**: adds `Markdown`, `PDF` and `BibTeX` buttons under `Submission history` on arXiv abstract pages.
-- **Official HTML first**: converts arXiv's official HTML version, falls back to ar5iv, and downloads the PDF when neither is available.
-- **Keeps math and structure**: LaTeX stays as `$...$` / `$$...$$`; simple tables become GFM, tables with merged cells stay as HTML; in-text citations link to the numbered references and footnotes become `[^n]`.
-- **Optional YAML frontmatter**: `title`, `arxiv_id`, `source`, `authors`, `year` for Obsidian, Logseq, Zotero and similar tools.
-- **PDFs named by title**: `Attention Is All You Need (2017).pdf` instead of `1706.03762.pdf`.
-- **Copy BibTeX**: uses arXiv's official citation, or builds one from the page title, authors and year.
-- **Copy for AI or notes**: after an export, the result card on the page has a "Copy Markdown" button. Cards with action buttons stay until you close them; other finished cards hide after 10 seconds (paused while hovered or focused).
-- **Optional PDF parsing**: for papers without an HTML version. With your own API key, the provider you pick (PaddleOCR by default, with a free quota, or MinerU) parses the PDF in the background. PaddleOCR results are saved as a ZIP laid out like MinerU's (`full.md` + `images/`); progress shows in the popup.
-- **Several entry points**: page buttons, toolbar popup, context menu, keyboard shortcut, and a floating button on PDF pages.
-- **Chinese and English UI**, light and dark themes.
+- **一键导出 Markdown**：在 arXiv 摘要页 `Submission history` 下方注入 `Markdown`、`PDF`、`BibTeX` 三个按钮。
+- **先用官方 HTML**：优先转换 arXiv 官方 HTML 版，没有时用 ar5iv；两者都没有时下载 PDF。
+- **公式和结构尽量保留**：LaTeX 公式保留为 `$...$` / `$$...$$`；简单表格转 GFM，含合并单元格的表格保留 HTML；正文引用链接到参考文献，脚注转成 `[^n]`。
+- **可选 YAML frontmatter**：`title`、`arxiv_id`、`source`、`authors`、`year`，方便 Obsidian、Logseq、Zotero 之类的工具索引。
+- **PDF 按标题命名**：不再是 `1706.03762.pdf`，而是 `Attention Is All You Need (2017).pdf` 这样的文件名。
+- **BibTeX 一键复制**：取 arXiv 官方引用；取不到时用页面上的标题、作者和年份生成。
+- **复制给 AI 或笔记**：导出后页面上的结果卡片有「复制 Markdown」按钮。带操作按钮的卡片保留到手动关闭，其他已完成卡片 10 秒后收起（悬停或聚焦时暂停计时）。
+- **PDF 解析（可选）**：适合没有 HTML 版本的论文。填入你自己的 API Key 后，由你选的服务在后台解析 PDF：PaddleOCR（默认，有免费额度）或 MinerU。PaddleOCR 结果保存为与 MinerU 同样结构的 ZIP 包（`full.md` + `images/`），进度在弹窗里查看。
+- **多个入口**：页面按钮、工具栏弹窗、右键菜单、快捷键，PDF 页右下角还有悬浮按钮。
+- **中英文界面**，支持浅色和深色模式。
 
-| In-page buttons | Exported Markdown |
+| 页面内按钮 | 导出的 Markdown |
 | --- | --- |
-| <img src="docs/screenshots/page-buttons.png" alt="In-page buttons and result card"> | <img src="docs/screenshots/markdown-output.png" alt="Exported Markdown file"> |
+| <img src="docs/screenshots/page-buttons.png" alt="页面内按钮与结果卡片"> | <img src="docs/screenshots/markdown-output.png" alt="导出的 Markdown 文件"> |
 
-## Install
+## 安装
 
-**Chrome**: install from the [Chrome Web Store](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd). Requires Chrome 121 or later.
+**Chrome**：从 [Chrome 应用商店](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd) 安装。需要 Chrome 121 或更高版本。
 
-**Edge / Firefox**: planned, not yet listed.
+**Edge / Firefox**：计划中，尚未上架。
 
-**From source**:
+**从源码加载**：
 
 ```bash
 git clone https://github.com/Tendo33/arxiv-md.git
@@ -53,97 +53,106 @@ npm install
 npm run build
 ```
 
-Open `chrome://extensions`, enable Developer mode, click "Load unpacked" and pick `dist/`.
+打开 `chrome://extensions`，开启「开发者模式」，点击「加载已解压的扩展程序」，选择 `dist/` 目录。
 
-## Usage
+## 使用
 
-1. Open any arXiv paper, e.g. <https://arxiv.org/abs/1706.03762>.
-2. Click `Markdown` on the page to download a `.md` file.
-3. Or click the toolbar icon and choose Export Markdown, PDF parsing, or Download PDF.
+1. 打开任意 arXiv 论文页，例如 <https://arxiv.org/abs/1706.03762>。
+2. 点击页面上的 `Markdown` 按钮，下载 `.md` 文件。
+3. 也可以点击工具栏图标，在弹窗里「导出 Markdown」「PDF 解析」或「下载 PDF」。
 
-| Entry point | What it does |
+| 入口 | 说明 |
 | --- | --- |
-| Page buttons | Under `Submission history`: `Markdown`, `PDF`, `BibTeX` |
-| Toolbar popup | Export buttons for the current paper and the PDF parsing task list |
-| Shortcut | `Alt+Shift+M` (`Option+Shift+M` on macOS) exports the current paper from its abstract, PDF or HTML page. If the popup shows "No shortcut set", click Set or open `chrome://extensions/shortcuts` |
-| Context menu | On a paper page: "Export paper as Markdown" and, once the selected provider has a key, "Export with PDF parsing"; on an arXiv link: "Export linked arXiv paper as Markdown" |
-| PDF floating button | Bottom-right on `arxiv.org/pdf/*`; can be turned off in Settings |
+| 页面按钮 | 摘要页 `Submission history` 下方：`Markdown`、`PDF`、`BibTeX` |
+| 工具栏弹窗 | 当前论文的导出按钮和 PDF 解析任务列表 |
+| 快捷键 | `Alt+Shift+M`（macOS 为 `Option+Shift+M`），在摘要页、PDF 页、HTML 页导出当前论文。弹窗显示「未设置快捷键」时，点「去设置」或打开 `chrome://extensions/shortcuts` |
+| 右键菜单 | 论文页上：「导出论文为 Markdown」，选定的服务填好 Key 后还有「用 PDF 解析导出」；arXiv 论文链接上：「导出链接指向的论文为 Markdown」 |
+| PDF 页悬浮按钮 | 在 `arxiv.org/pdf/*` 页右下角，可在设置里关闭 |
 
-<img src="docs/screenshots/popup.png" width="300" alt="Toolbar popup">
+<img src="docs/screenshots/popup.png" width="300" alt="工具栏弹窗">
 
-## Settings
+## 设置
 
-<img src="docs/screenshots/settings.png" width="720" alt="Settings page">
+<img src="docs/screenshots/settings.png" width="720" alt="设置页">
 
-| Setting | Description |
+| 设置项 | 说明 |
 | --- | --- |
-| Export mode | `Standard` (recommended): official HTML → ar5iv → PDF; `PDF parsing`: always parse the PDF with the selected provider (needs its key) |
-| PDF parsing | Pick the provider (PaddleOCR by default, or MinerU), enter its API key and test it. Keys stay on this device and never sync |
-| Ask to export | Offer to export when you open a paper |
-| Metadata | Add YAML frontmatter to the top of the file |
-| Desktop notifications | Notify when a PDF parsing task finishes or fails |
-| PDF floating button | Show the floating button on PDF pages |
-| Language | 中文 / English |
-| Usage | Export counts, synced with your browser account if sync is on, never uploaded; can be reset |
+| 导出方式 | `标准`（推荐）：官方 HTML → ar5iv → PDF；`PDF 解析`：总是用选定的服务解析 PDF（需要对应的 Key） |
+| PDF 解析 | 选择解析服务（默认 PaddleOCR，也可选 MinerU），填写并测试 API Key。Key 只存在本机，不会同步 |
+| 询问是否导出 | 打开论文时询问是否导出 |
+| 元数据 | 在文件开头写入 YAML frontmatter |
+| 桌面通知 | PDF 解析任务完成或失败时通知 |
+| PDF 页悬浮按钮 | 在 PDF 页显示悬浮导出按钮 |
+| 界面语言 | 中文 / English |
+| 使用统计 | 导出次数，开启浏览器同步时随账号同步，不会上传，可重置 |
 
-Changes save automatically. "Restore defaults" also deletes saved API keys.
+改动自动保存。「恢复默认」会同时删除已保存的 API Key。
 
-## Permissions
+## 权限说明
 
-| Permission | Why |
+| 权限 | 用途 |
 | --- | --- |
-| `storage` | Settings (including the selected PDF parsing provider) and usage statistics are kept in `chrome.storage.sync`, so they sync with your browser account if browser sync is on; provider API keys and PDF parsing task state stay in `chrome.storage.local` on this device. A MinerU token saved by an older version is moved to local storage (copied, then deleted from sync) |
-| `downloads` | Saves Markdown, PDF or PDF parsing results |
-| `activeTab` | Reads the arXiv page you are on so it can be converted |
-| `notifications` | Desktop notice when a PDF parsing task finishes or fails |
-| `alarms` | Wakes the background worker to poll running PDF parsing tasks |
-| `contextMenus` | Adds the right-click menu items |
-| `arxiv.org`, `export.arxiv.org` | Paper HTML, metadata and PDF |
-| `ar5iv.org`, `ar5iv.labs.arxiv.org` | ar5iv fallback when official HTML is missing |
-| `mineru.net`, `cdn-mineru.openxlab.org.cn` | Only when you use MinerU: submit tasks and download results |
-| `paddleocr.aistudio-app.com` | Only when you use PaddleOCR: submit tasks |
-| `*.bj.bcebos.com` | Only when you use PaddleOCR: PaddleOCR serves parse results and figures from this Baidu storage domain |
-| `declarativeNetRequestWithHostAccess` | Only removes the `Origin` header on this extension's requests to `paddleocr.aistudio-app.com` |
-| Content script on `arxiv.org/abs/*`, `arxiv.org/pdf/*`, `arxiv.org/html/*` | Adds the page buttons, result card and PDF floating button on those pages |
+| `storage` | 设置（含选定的 PDF 解析服务）和使用统计存在 `chrome.storage.sync`，开启浏览器同步时会随浏览器账号同步；各服务的 API Key 和 PDF 解析任务状态存在 `chrome.storage.local`，只留在本机。旧版本存在同步区的 MinerU Key 会移到本机（先复制到 local，再从同步区删除） |
+| `downloads` | 把 Markdown、PDF 或 PDF 解析结果保存到本地 |
+| `activeTab` | 读取你当前打开的 arXiv 页面，用于导出 |
+| `notifications` | PDF 解析任务完成或失败时发桌面通知 |
+| `alarms` | PDF 解析任务进行中时定时唤醒后台、轮询进度 |
+| `contextMenus` | 提供右键菜单入口 |
+| `arxiv.org`、`export.arxiv.org` | 读取论文 HTML、元数据和 PDF |
+| `ar5iv.org`、`ar5iv.labs.arxiv.org` | 官方 HTML 不可用时读取 ar5iv 版本 |
+| `mineru.net`、`cdn-mineru.openxlab.org.cn` | 仅在你使用 MinerU 时提交任务、下载结果 |
+| `paddleocr.aistudio-app.com` | 仅在你使用 PaddleOCR 时提交任务 |
+| `*.bj.bcebos.com` | 仅在你使用 PaddleOCR 时访问；PaddleOCR 的解析结果和图片从这个百度存储域名下载 |
+| `declarativeNetRequestWithHostAccess` | 只去掉本扩展发往 `paddleocr.aistudio-app.com` 的请求的 `Origin` 头 |
+| 内容脚本：`arxiv.org/abs/*`、`arxiv.org/pdf/*`、`arxiv.org/html/*` | 在这些页面注入导出按钮、结果卡片和 PDF 页悬浮按钮 |
 
-## Privacy
+## 隐私
 
-- No backend, no analytics, and no data collection by the developer. Standard mode runs entirely in your browser and only talks to arXiv and ar5iv. Only PDF parsing sends anything to a third party: PaddleOCR uploads arXiv PDFs up to 50 MB as files and sends only the link for other PDFs; MinerU sends only the PDF link.
-- Only when you use PDF parsing is the paper sent, with your key, to the one provider you selected (PaddleOCR or MinerU, third-party services under their own terms): MinerU gets the arXiv PDF URL; PaddleOCR gets the arXiv PDF file itself (uploaded, up to 50 MB), and only the link for non-arXiv PDFs. A PDF over 50 MB is not sent; the extension suggests switching to MinerU. The extension never switches providers on its own. PaddleOCR is run by Baidu AI Studio. The applicable policy is the [Baidu privacy policy (in Chinese)](https://www.baidu.com/duty/yinsiquan.html). For reference only, the [PaddlePaddle AI Studio privacy policy (in Chinese)](https://aistudio.baidu.com/privacy) states that it applies to "WeChat Mini Program and mobile browsers (excluding PC)", so it does not cover this extension's API calls.
-- See [PRIVACY.md](./PRIVACY.md).
+- 扩展没有自己的服务器，开发者不收集你的数据，也没有统计或埋点。标准模式完全在你的浏览器里完成，只访问 arXiv 和 ar5iv。只有使用 PDF 解析时才会发给第三方：PaddleOCR 会上传 arXiv 上 50MB 以内的 PDF 文件，其他 PDF 只发链接；MinerU 只发 PDF 链接。
+- 只有你主动使用 PDF 解析时，论文才会和你的 Key 一起发给你选定的那一个服务（PaddleOCR 或 MinerU，均为第三方服务，受其条款约束）：MinerU 收到 arXiv PDF 链接；PaddleOCR 收到 arXiv PDF 文件本身（上传，50 MB 以内），非 arXiv 的 PDF 只发链接；超过 50 MB 的 PDF 不会发送，扩展会提示改用 MinerU。扩展不会自动切换服务。
+- 解析服务如何处理和保留你提交的内容由其自身条款决定。百度 AI Studio（PaddleOCR）和 MinerU 目前都没有公开上传文件和解析结果的具体保留期限；适用的政策是[百度隐私权保护声明（中文）](https://www.baidu.com/duty/yinsiquan.html)；[飞桨 AI Studio 隐私政策](https://aistudio.baidu.com/privacy)正文写明适用于「微信小程序、移动端浏览器（不含PC端）」，不覆盖插件的 API 调用，仅作参考，其中只写了"在提供服务所需的期限内保存"。请不要发送你无权分享给第三方的 PDF。
+- 详见 [PRIVACY.md](./PRIVACY.md)。
 
-## FAQ
+## 常见问题
 
-**Why did I get a PDF instead of Markdown?**
-Neither arXiv nor ar5iv has an HTML version of that paper, so Standard mode saves the PDF. Use PDF parsing to get Markdown.
+**为什么有的论文导出的是 PDF？**
+arXiv 和 ar5iv 都没有这篇论文的 HTML 版本时，标准模式会保存 PDF。想要 Markdown 请用 PDF 解析。
 
-**Are images downloaded?**
-Not in Standard mode. Images in the Markdown are remote links to arXiv / ar5iv.
+**图片会下载到本地吗？**
+标准模式不会。Markdown 里的图片是指向 arXiv / ar5iv 的远程链接。
 
-**The popup says "No shortcut set".**
-Another extension or the browser took it. Click Set in the popup or open `chrome://extensions/shortcuts`.
+**弹窗显示「未设置快捷键」？**
+通常是被其他扩展或浏览器占用。点弹窗里的「去设置」，或打开 `chrome://extensions/shortcuts` 自行指定。
 
-**Why is the PDF parsing result a ZIP?**
-It holds the Markdown (`full.md`) and the images it uses.
+**PDF 解析的结果为什么是 ZIP？**
+里面是 Markdown（`full.md`）和它引用的图片。
 
-More in [docs/FAQ.md](./docs/FAQ.md).
+更多见 [docs/FAQ.md](./docs/FAQ.md)。
 
-## Development
+## 开发
 
 ```bash
 npm install
-npm run dev       # watch build
-npm run build     # unpacked extension in dist/
+npm run dev       # 监听构建
+npm run build     # 输出未打包扩展到 dist/
 npm run lint
 npm test
-npm run package   # build/arxiv-md-v<version>.zip
+npm run package   # 生成 build/arxiv-md-v<version>.zip
 ```
 
-See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md), [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md) and [CONTRIBUTING.md](./CONTRIBUTING.md).
+架构见 [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)，开发和发版见 [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md)，贡献方式见 [CONTRIBUTING.md](./CONTRIBUTING.md)。
 
-## Changelog
+## 同系列
 
-See [CHANGELOG.md](./CHANGELOG.md).
+| 插件 | 适用 | 获取 |
+| --- | --- | --- |
+| **arXiv to Markdown** | arXiv 论文（摘要页、PDF、HTML） | [Chrome 应用商店](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd) |
+| [Zhihu to Markdown](https://github.com/Tendo33/zhihu-md) | 知乎文章、回答、问题、信息流、热榜 | [Chrome 应用商店](https://chromewebstore.google.com/detail/zhihu-md/heeilejdelmogpbnbbhdokgfabmhkenh) |
+| [Journal to Markdown](https://github.com/Tendo33/journal-md) | PMC、PubMed、Springer、Nature、Frontiers、MDPI、PLOS、eLife | [Releases](https://github.com/Tendo33/journal-md/releases) |
+
+## 更新日志
+
+见 [CHANGELOG.md](./CHANGELOG.md)。
 
 ## License
 

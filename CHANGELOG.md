@@ -2,11 +2,21 @@
 
 This file records release notes and documentation-visible changes to the repository.
 
-For current product behavior, prefer `README.md`, `README_CN.md`, and the files under `docs/`, because historical release notes may describe older workflows.
+For current product behavior, prefer `README.md` (中文), `README.en.md` (English), and the files under `docs/`, because historical release notes may describe older workflows.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### 变更
+
+- 视觉：开关、单选卡片的选中态改用中性深色（红色只留给主按钮和错误提示），选中卡片去掉粉底、红图标和红徽标；主按钮改为纯色；关闭态开关更轻；说明文字 13px；统计改为一行四个小数据块。
+- 界面语言从页头按钮移到「选项」分组，改为分段选择（与 Journal to Markdown 相同）。
+- 弹窗：不是论文页且没有任务时不再显示「PDF 解析任务 / 还没有任务」；空状态图标改为「此页不可用」。
+- 设置页改用「to Markdown」系列统一外壳（与 Zhihu to Markdown、Journal to Markdown 相同）：页头为图标、产品名、「设置」和版本号，各分组是同一种卡片；四个选项从复选框改为开关；页脚加上隐私说明、更新日志链接和同系列入口。颜色、字号、焦点环全部改用共用的 `ui-v2.css` tokens，新增三仓库同源的 `series.css`。
+- 弹窗「不支持的页面」空状态与另外两款同一写法（图标、标题、去哪里）。
+- 商店简短说明改写；新增 `docs/store-listing.md`（中英文名称、简短说明、详细说明、单一用途说明）。
+- README 改为 `README.md`（中文）+ `README.en.md`（英文），与另外两款相同；加上同系列一节；设置页截图更新。
 
 ## [1.2.2] - 2026-11-01
 

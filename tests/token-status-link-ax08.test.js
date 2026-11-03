@@ -9,8 +9,7 @@ test('点击区：inline-block + padding 4px 0 + 负 margin（R22 收窄） + �
 });
 test('focus-visible：2px --focus-ring', () => {
   expect(rule('.token-status-link:focus-visible')).toContain('outline: 2px solid var(--focus-ring)');
-  expect(css).toMatch(/--focus-ring:\s*#2563eb/);
-  expect(css).toMatch(/--focus-ring:\s*#60a5fa/);
+  expect(css).toMatch(/--focus-ring: var\(--focus\);/);
 });
 test('#getKeyLink 不套用', () => {
   expect(css).not.toMatch(/#getKeyLink[^{]*\{[^}]*margin: -4px -2px/);

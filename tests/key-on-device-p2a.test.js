@@ -114,11 +114,11 @@ describe('P2-A parse entry (runner)', () => {
 
 describe('P2-A docs match code', () => {
   test('PRIVACY / README say the synced token is deleted, not kept', () => {
-    for (const f of ['PRIVACY.md', 'README.md', 'README_CN.md']) {
+    for (const f of ['PRIVACY.md', 'README.en.md', 'README.md']) {
       const d = read(f);
       expect(d).not.toMatch(/left in place|is left \(unused\)|暂时保留/);
     }
     expect(read('PRIVACY.md')).toMatch(/deleted from `chrome\.storage\.sync`/);
-    expect(read('README_CN.md')).toContain('再从同步区删除');
+    expect(read('README.md')).toContain('再从同步区删除');
   });
 });

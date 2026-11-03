@@ -28,11 +28,13 @@ describe('R01：后端不再用原生下拉框', () => {
   });
 });
 
-describe('a11y：语言按钮的可访问名称包含可见文字', () => {
-  test('不用覆盖可见文字的 aria-label，说明放在 sr-only 里', () => {
-    const btn = html.match(/<button[^>]*id="langToggle"[^>]*>[\s\S]*?<\/button>/)[0];
-    expect(btn).not.toMatch(/aria-label=/);
-    expect(btn).toMatch(/<span id="langText">[^<]*<\/span><span class="sr-only" data-i18n="lang_switch">/);
+describe('a11y：语言是设置分组里的分段选择（系列统一），可访问名称来自可见文字', () => {
+  test('fieldset 由可见的「界面语言」标签命名，两个单选项各自有可见文字，页头不再有语言按钮', () => {
+    expect(html).not.toMatch(/id="langToggle"/);
+    const fs_ = html.match(/<fieldset class="segmented" id="uiLanguage"[^>]*>[\s\S]*?<\/fieldset>/)[0];
+    expect(fs_).toMatch(/aria-labelledby="uiLanguageLabel"/);
+    expect(html).toMatch(/<span class="lbl" id="uiLanguageLabel" data-i18n="lang_label">/);
+    expect(fs_.match(/<input type="radio" name="uiLanguage" value="(zh|en)" \/><span>[^<]+<\/span>/g)).toHaveLength(2);
     expect(css).toMatch(/\.sr-only\{position:absolute;width:1px;height:1px/);
   });
 });

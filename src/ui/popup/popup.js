@@ -256,8 +256,10 @@ function renderRecent() {
   const wrap = $('recent');
   if (!wrap) return;
   const tr = t();
-  wrap.classList.remove('hidden');
   const empty = !currentTasks.length;
+  // 不是论文页、也没有任务时不显示任务区：空状态卡已经说明了去哪里，「还没有任务」只是噪音
+  wrap.classList.toggle('hidden', empty && !ctx.supported);
+  if (empty && !ctx.supported) return;
   $('recentEmpty').classList.toggle('hidden', !empty);
   $('taskList').classList.toggle('hidden', empty);
   if (empty) { $('recentAll').classList.add('hidden'); $('clearCompletedBtn').classList.add('hidden'); return; }

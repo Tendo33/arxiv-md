@@ -178,8 +178,8 @@ E2E_PLAYWRIGHT_DIR=/path/to/tools CHROME_PATH=/path/to/chrome xvfb-run -a npm ru
 
 通常至少要检查这些文件：
 
+- `README.en.md`
 - `README.md`
-- `README_CN.md`
 - `docs/FAQ.md`
 - `docs/ARCHITECTURE.md`
 - `docs/DEVELOPMENT.md`

@@ -19,7 +19,8 @@ describe('Round 2 设计验收建议（S 级）', () => {
   const popup = read('src/ui/popup/popup.css');
   const { translations } = require('../src/config/locales');
   test('设置页：h1 20/600，.btn 8/16 + min-height 36，.btn-icon 1px，toast 用 token 且淡入淡出', () => {
-    expect(rule(settings, '.logo h1')).toMatch(/font-size: 20px[^;]*;\s*\/?\*?[^\n]*\n\s*font-weight: 600/);
+    // 页头 h1 20/600 由系列外壳 series.css 提供
+    expect(fs.readFileSync(path.join(__dirname, '../src/ui/shared/series.css'), 'utf8')).toMatch(/\.sp-ttl h1\{font:600 var\(--fs-xl\)/);
     expect(rule(settings, '.btn')).toMatch(/padding: 8px 16px/);
     expect(rule(settings, '.btn')).toMatch(/min-height: 36px/);
     expect(rule(settings, '.btn-icon')).toMatch(/border: 1px solid/);

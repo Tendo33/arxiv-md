@@ -95,9 +95,8 @@ function updateLanguage(lang) {
     }
   });
 
-  // 更新语言按钮文本
-  document.getElementById('langText').textContent =
-    lang === 'en' ? '中文' : 'English';
+  // 语言分段选择（系列统一：放在设置分组里，不在页头）
+  document.querySelectorAll('input[name="uiLanguage"]').forEach((r) => { r.checked = r.value === lang; });
 
   // 保存语言设置
   storage.setLanguage(lang);
@@ -148,11 +147,11 @@ async function loadStatistics() {
 
 function bindEvents() {
   // 语言切换
-  document.getElementById('langToggle').addEventListener('click', () => {
-    const newLang = currentLang === 'en' ? 'zh' : 'en';
-    updateLanguage(newLang);
+  document.querySelectorAll('input[name="uiLanguage"]').forEach((r) => r.addEventListener('change', () => {
+    if (!r.checked || r.value === currentLang) return;
+    updateLanguage(r.value);
     pdfSection.render();
-  });
+  }));
 
   // R4-14：后端选择 / 重新初始化 / 测试连接
   pdfSection.bind();

@@ -14,7 +14,7 @@
 
 对应文件：
 
-- 产品说明：[README.md](../README.md)、[README_CN.md](../README_CN.md)
+- 产品说明：[README.md](../README.md)（中文）、[README.en.md](../README.en.md)（English）
 - 更新日志：[CHANGELOG.md](../CHANGELOG.md)
 - 隐私：[PRIVACY.md](../PRIVACY.md)
 - 贡献：[CONTRIBUTING.md](../CONTRIBUTING.md)
