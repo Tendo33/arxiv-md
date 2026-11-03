@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-03
+
 ### 变更
 
 - 视觉：开关、单选卡片的选中态改用中性深色（红色只留给主按钮和错误提示），选中卡片去掉粉底、红图标和红徽标；主按钮改为纯色；关闭态开关更轻；说明文字 13px；统计改为一行四个小数据块。

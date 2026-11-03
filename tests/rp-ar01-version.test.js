@@ -1,21 +1,21 @@
-// release-polish AR-01：版本号三处一致（现为 1.2.2）；[Unreleased] 之后紧跟 1.2.2；1.2.0 中文说明保留
+// release-polish AR-01：版本号三处一致（现为 1.3.0）；[Unreleased] 之后紧跟 1.3.0；1.2.0 中文说明保留
 import fs from 'fs';
 import path from 'path';
 
 const root = path.join(__dirname, '..');
 const read = (f) => fs.readFileSync(path.join(root, f), 'utf8');
 
-test('package.json / package-lock / manifest 都是 1.2.2', () => {
+test('package.json / package-lock / manifest 都是 1.3.0', () => {
   const lock = JSON.parse(read('package-lock.json'));
-  expect(JSON.parse(read('package.json')).version).toBe('1.2.2');
-  expect(lock.version).toBe('1.2.2');
-  expect(lock.packages[''].version).toBe('1.2.2');
-  expect(JSON.parse(read('src/manifest.json')).version).toBe('1.2.2');
+  expect(JSON.parse(read('package.json')).version).toBe('1.3.0');
+  expect(lock.version).toBe('1.3.0');
+  expect(lock.packages[''].version).toBe('1.3.0');
+  expect(JSON.parse(read('src/manifest.json')).version).toBe('1.3.0');
 });
 
-test('CHANGELOG：[Unreleased] 之后紧跟 1.2.2（未发版的改动记在 Unreleased）；1.2.0 中文说明保留', () => {
+test('CHANGELOG：[Unreleased] 之后紧跟 1.3.0（未发版的改动记在 Unreleased）；1.2.0 中文说明保留', () => {
   const md = read('CHANGELOG.md');
-  expect(md).toMatch(/## \[Unreleased\]\n(?:(?!\n## \[)[\s\S])*\n## \[1\.2\.2\] - \d{4}-\d{2}-\d{2}\n/);
+  expect(md).toMatch(/## \[Unreleased\]\n(?:(?!\n## \[)[\s\S])*\n## \[1\.3\.0\] - \d{4}-\d{2}-\d{2}\n/);
   const m = md.match(/\n## \[1\.2\.0\] - \d{4}-\d{2}-\d{2}\n([\s\S]*?)\n## \[1\.1\.12\]/);
   expect(m).toBeTruthy();
   for (const h of ['### 新增', '### 改进', '### 修复']) expect(m[1]).toContain(h);
