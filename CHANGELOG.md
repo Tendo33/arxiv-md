@@ -8,6 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### 变更
+
+### 改进
+
+- 界面刷新（与 Journal to Markdown、Zhihu to Markdown 同一套视觉）：弹窗改成一张白纸，当前论文是一块浅色面板，任务列表是细线容器；次按钮改为无边浅色块，主按钮纯色，开关、分段选择、输入框统一为 8–14px 圆角。设置页分组改为细线容器，单选卡片选中态只留选中色描边。arXiv 页面上的导出按钮同步换成新样式（8px 圆角、次按钮浅色块）。浅色 / 深色都重新校对了文字与控件对比度（正文次级色 ≥4.5:1，关闭态开关 ≥3:1）。
+
+- Chrome / Edge 包不再带 `browser_specific_settings`；Firefox 包只留 `background.scripts`。与 Journal to Markdown、Zhihu to Markdown 相同。
+- `npm run package` 同时打出 Chrome / Edge 与 Firefox 两个 zip（`build/arxiv-md-v<version>-chrome.zip`、`-firefox.zip`）和 `build/SHA256SUMS.txt`。发版只在 `v*` 标签上运行，并核对标签与 `package.json`、`src/manifest.json` 的版本。
+
 ## [1.3.0] - 2026-11-03
 
 ### 变更

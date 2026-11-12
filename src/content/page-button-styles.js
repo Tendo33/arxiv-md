@@ -313,6 +313,24 @@ export const PAGE_BUTTON_STYLES = `
     .arxiv-md-hint { padding: 0; border: 0; background: none; font-size: 13px; }
     .arxiv-md-btn-container .nw { white-space: nowrap; }
 
+    /* ===== 系列视觉 v3（同弹窗和设置页）：中性色更新；8px 圆角；次按钮是无边浅色块，主按钮纯色 ===== */
+    .arxiv-md-btn-container {
+      --amd-surface-2: #f1f1f4; --amd-border: #e8e8ec; --amd-border-strong: #d2d3d9; --amd-text: #17181c; --amd-text-2: #5c6370;
+      --amd-fill: rgb(17 18 22 / .06); --amd-fill-hover: rgb(17 18 22 / .1); --amd-fill-press: rgb(17 18 22 / .14);
+    }
+    .arxiv-md-btn-container[data-theme="dark"] {
+      --amd-surface: #141518; --amd-surface-2: #202227; --amd-border: #2b2d33; --amd-border-strong: #42454d; --amd-text: #ecedf0; --amd-text-2: #a4aab5;
+      --amd-fill: rgb(236 237 240 / .08); --amd-fill-hover: rgb(236 237 240 / .13); --amd-fill-press: rgb(236 237 240 / .18);
+    }
+    .arxiv-md-btn { border-radius: 8px; font-weight: 500; }
+    .arxiv-md-btn-primary { font-weight: 600; }
+    .arxiv-md-btn-secondary, .arxiv-md-btn-quiet { background: var(--amd-fill); border-color: transparent; }
+    .arxiv-md-btn-secondary:not(:disabled):hover, .arxiv-md-btn-quiet:not(:disabled):hover { background: var(--amd-fill-hover); }
+    .arxiv-md-btn-secondary:not(:disabled):active, .arxiv-md-btn-quiet:not(:disabled):active { background: var(--amd-fill-press); }
+    .arxiv-md-btn:disabled { background: var(--amd-fill); border-color: transparent; }
+    .arxiv-md-auto { border-radius: 10px; }
+    .arxiv-md-auto-btn { border-radius: 8px; }
+
     @media (prefers-reduced-motion: reduce) {
       .arxiv-md-btn, .arxiv-md-result-btn, .arxiv-md-auto-btn { transition: none; }
       .animate-spin { animation: none; }

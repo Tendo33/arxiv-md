@@ -653,3 +653,29 @@ a:focus-visible {
 .reinit-row .btn-ghost { margin-left: -12px; }
 /* 选项里的语言行：分段选择不换行 */
 .settings-section .it .segmented { flex: none; }
+
+/* ===== 系列视觉 v3（series.css 同一套）：细线分组不带阴影；单选卡片选中 = 1px 选中色边 + 很浅的底；徽标和次按钮都是无边色块 ===== */
+.settings-section { box-shadow: none; border-color: var(--border); }
+.settings-section h2 { font-size: 15px; }
+.mode-card, .provider-card { border-color: var(--border); border-radius: var(--r-md); transition: border-color var(--dur-fast) var(--ease), background-color var(--dur-fast) var(--ease); }
+.mode-card:hover, .provider-card:hover { border-color: var(--border-strong); }
+.mode-card:has(input[type="radio"]:checked), .provider-card:has(input:checked) { border-color: var(--select); box-shadow: none; background: color-mix(in srgb, var(--select) 4%, var(--surface)); }
+@media (prefers-color-scheme: dark) { .provider-card:has(input:checked) { background: color-mix(in srgb, var(--select) 4%, var(--surface)); } }
+.mode-card::after { border-width: 1.5px; }
+.mode-icon { width: 32px; height: 32px; border-radius: var(--r-sm); background: var(--fill); }
+.mode-icon svg { width: 18px; height: 18px; }
+.mode-card:has(input[type="radio"]:checked) .mode-icon { background: var(--fill); }
+.mode-badge { border-radius: 6px; font-weight: 500; background: var(--fill); }
+.mode-badge-recommended { background: var(--success-bg); }
+.pc-badge { border: 0; border-radius: 6px; background: var(--fill); }
+.pc-badge.free { color: var(--success); background: var(--success-bg); }
+.key-field .input-field { border-color: var(--border-strong); border-radius: var(--r-sm); }
+.key-field .input-field:hover { border-color: var(--text-disabled); }
+.key-field .input-field::placeholder { color: var(--text-disabled); }
+.input-group #testTokenBtn.btn-test { border-color: transparent; border-radius: var(--r-sm); background: var(--fill); box-shadow: none; font-weight: 500; }
+.input-group #testTokenBtn.btn-test:hover { border-color: transparent; background: var(--fill-hover); }
+.btn { border-radius: var(--r-sm); font-weight: 500; }
+.btn-secondary { background: var(--fill); border-color: transparent; box-shadow: none; }
+.btn-secondary:hover { background: var(--fill-hover); border-color: transparent; }
+.stat-item { border: 0; background: var(--fill); border-radius: var(--r-md); }
+.stat-number { font-weight: 600; }
