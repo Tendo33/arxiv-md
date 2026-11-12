@@ -2,7 +2,7 @@
 
 这套文档说明当前代码怎么用、怎么分层、一次点击怎么走完，以及怎么构建和发版。
 
-两边扩展的构建约定相同：`npm run build` 输出 `dist/`，`npm run package` 输出 `build/<名字>-v<版本>.zip`。
+三个 to Markdown 插件的构建约定相同：`npm run build` 输出 `dist/`，`npm run build:firefox` 输出 `dist-firefox/`，`npm run package` 输出 `build/<名字>-v<版本>-chrome.zip`、`-firefox.zip` 和 `SHA256SUMS.txt`。
 
 推荐阅读顺序：
 

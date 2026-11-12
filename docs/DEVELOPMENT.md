@@ -42,7 +42,7 @@ npm run package
 - `dev`：watch 模式
 - `lint`：检查 `src/**/*.js`
 - `test`：运行 Jest。覆盖论文 ID、文件名、HTML 来源选择、MinerU 响应、删除守卫、BibTeX 和一段 HTML 夹具
-- `package`：先构建，再生成 `build/arxiv-md-v<version>.zip`
+- `package`：构建 Chrome 与 Firefox 包并校验，再生成 `build/arxiv-md-v<version>-chrome.zip`、`build/arxiv-md-v<version>-firefox.zip` 和 `build/SHA256SUMS.txt`
 
 ### 端到端测试（`npm run test:e2e`）
 
@@ -194,4 +194,4 @@ E2E_PLAYWRIGHT_DIR=/path/to/tools CHROME_PATH=/path/to/chrome xvfb-run -a npm ru
 5. 至少做一次标准模式手测
 6. 如果改了 MinerU 相关逻辑，再做一次 MinerU 手测
 7. 运行 `npm run package`
-8. 检查 `build/` 中生成的 ZIP
+8. 检查 `build/` 中的 Chrome / Firefox ZIP 和 `SHA256SUMS.txt`

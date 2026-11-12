@@ -138,7 +138,7 @@ npm run dev       # watch build
 npm run build     # unpacked extension in dist/
 npm run lint
 npm test
-npm run package   # build/arxiv-md-v<version>.zip
+npm run package   # build/arxiv-md-v<version>-chrome.zip, -firefox.zip, and SHA256SUMS.txt
 ```
 
 See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md), [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md) and [CONTRIBUTING.md](./CONTRIBUTING.md).

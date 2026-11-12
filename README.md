@@ -137,7 +137,7 @@ npm run dev       # 监听构建
 npm run build     # 输出未打包扩展到 dist/
 npm run lint
 npm test
-npm run package   # 生成 build/arxiv-md-v<version>.zip
+npm run package   # build/arxiv-md-v<version>-chrome.zip 与 -firefox.zip，外加 SHA256SUMS.txt
 ```
 
 架构见 [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)，开发和发版见 [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md)，贡献方式见 [CONTRIBUTING.md](./CONTRIBUTING.md)。

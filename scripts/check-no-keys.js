@@ -7,8 +7,12 @@ const PATTERNS = [
   { name: 'sk- key', re: /\bsk-[A-Za-z0-9_-]{16,}/g },
   { name: 'Bearer literal', re: /Bearer [A-Za-z0-9._~+/=-]{20,}/g },
   { name: 'JWT', re: /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g },
+  { name: 'AWS access key', re: /\bAKIA[0-9A-Z]{16}\b/g },
+  { name: 'Google API key', re: /\bAIza[0-9A-Za-z_-]{35}\b/g },
+  { name: 'GitHub token', re: /\bgh[pousr]_[A-Za-z0-9]{36,}\b/g },
+  { name: 'private key block', re: /-----BEGIN [A-Z ]*PRIVATE KEY-----/g },
 ];
-const EXT = /\.(m?js|json|html|css|md|txt)$/;
+const EXT = /\.(m?js|json|html|css|md|txt|xml)$/;
 
 function walk(dir, out) {
   if (!fs.existsSync(dir)) return out;
@@ -35,7 +39,7 @@ function scan(dirs) {
 module.exports = { scan, PATTERNS };
 
 if (require.main === module) {
-  const dirs = process.argv.slice(2).length ? process.argv.slice(2) : ['src', 'packages/pdf-parse-core/src', 'dist'];
+  const dirs = process.argv.slice(2).length ? process.argv.slice(2) : ['src', 'packages/pdf-parse-core/src', 'scripts', 'dist', 'dist-firefox'];
   const hits = scan(dirs);
   if (hits.length) {
     hits.forEach((h) => console.error(`${h.file}: ${h.name} ${h.sample}`));

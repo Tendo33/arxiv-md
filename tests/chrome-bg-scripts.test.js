@@ -10,19 +10,25 @@ const root = path.join(__dirname, '..');
 const { manifestForTarget, verifyBackground } = require('../scripts/manifest-target');
 const src = JSON.parse(fs.readFileSync(path.join(root, 'src/manifest.json'), 'utf8'));
 
-test('chrome：只去掉 background.scripts，其他字段不变', () => {
+test('chrome：去掉 background.scripts 和 browser_specific_settings，其他字段不变', () => {
   const m = manifestForTarget(src, 'chrome');
   expect(m.background).toEqual({ service_worker: src.background.service_worker });
-  const { background: _a, ...restSrc } = src;
+  expect(m.browser_specific_settings).toBeUndefined();
+  const { background: _a, browser_specific_settings: _c, ...restSrc } = src;
   const { background: _b, ...restOut } = m;
   expect(restOut).toEqual(restSrc);
   expect(src.background.scripts).toBeDefined(); // 不改原对象
+  expect(src.browser_specific_settings).toBeDefined();
   expect(verifyBackground(m, 'chrome')).toEqual([]);
 });
 
-test('firefox：manifest 与源文件完全相同（1.2.2 起权限都在源 manifest 里，不再搬动）', () => {
-  expect(manifestForTarget(src, 'firefox')).toEqual(src);
-  expect(verifyBackground(src, 'firefox')).toEqual([]);
+test('firefox：去掉 service_worker，保留 scripts 和 gecko 设置', () => {
+  const m = manifestForTarget(src, 'firefox');
+  const { service_worker: _sw, ...firefoxBackground } = src.background;
+  expect(m.background).toEqual(firefoxBackground);
+  expect(m.browser_specific_settings).toEqual(src.browser_specific_settings);
+  expect(verifyBackground(m, 'firefox')).toEqual([]);
+  expect(verifyBackground(src, 'firefox')).toEqual(['Firefox 产物不能有 background.service_worker（Firefox 包只用 background.scripts）']);
 });
 
 test('verifyBackground 的失败情况', () => {
@@ -31,7 +37,11 @@ test('verifyBackground 的失败情况', () => {
   expect(verifyBackground({ background: { service_worker: 'b.js', scripts: [] } }, 'chrome')).toHaveLength(1);
   expect(verifyBackground({ background: {} }, 'chrome')).toEqual(['Chrome/Edge 产物缺少 background.service_worker']);
   expect(verifyBackground({ background: { service_worker: 'b.js' } }, 'firefox'))
-    .toEqual(['Firefox 产物缺少 background.scripts（Firefox 不支持 service_worker）']);
+    .toEqual(['Firefox 产物缺少 background.scripts（Firefox 包只用 background.scripts）', 'Firefox 产物不能有 background.service_worker（Firefox 包只用 background.scripts）']);
+  expect(verifyBackground({ background: { scripts: ['b.js'], service_worker: 'b.js' } }, 'firefox'))
+    .toEqual(['Firefox 产物不能有 background.service_worker（Firefox 包只用 background.scripts）']);
+  expect(verifyBackground({ background: { service_worker: 'b.js' }, browser_specific_settings: { gecko: { id: 'x' } } }, 'chrome'))
+    .toEqual(['Chrome/Edge 产物不能有 browser_specific_settings']);
   expect(() => manifestForTarget(src, 'safari')).toThrow(/未知的 target/);
 });
 
@@ -41,7 +51,7 @@ test('webpack 配置：manifest 经 manifestForTarget 处理，firefox 输出到
   expect(cfg).toContain('dist-firefox');
 });
 
-test('verify-dist CLI：Chrome 产物带 scripts 时以 1 退出，--target=firefox 时通过', () => {
+test('verify-dist CLI：Chrome 产物带 scripts 时以 1 退出，Firefox 源清单带 service_worker 时以 1 退出', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'arxiv md dist '));
   const run = (...a) => spawnSync(process.execPath, [path.join(root, 'scripts/verify-dist.js'), dir, ...a], { encoding: 'utf8' });
   fs.writeFileSync(path.join(dir, 'manifest.json'), JSON.stringify(src));
@@ -49,7 +59,12 @@ test('verify-dist CLI：Chrome 产物带 scripts 时以 1 退出，--target=fire
   expect(r.status).toBe(1);
   expect(r.stderr).toMatch(/不能有 background\.scripts/);
   r = run('--target=firefox');
+  expect(r.status).toBe(1);
+  expect(r.stderr).toMatch(/不能有 background\.service_worker/);
+  fs.writeFileSync(path.join(dir, 'manifest.json'), JSON.stringify(manifestForTarget(src, 'firefox')));
+  r = run('--target=firefox');
   expect(r.status).toBe(0);
+  expect(r.stdout).toMatch(/verify:dist 通过（target: firefox）/);
   fs.writeFileSync(path.join(dir, 'manifest.json'), JSON.stringify(manifestForTarget(src, 'chrome')));
   r = run();
   expect(r.status).toBe(0);
@@ -106,6 +121,6 @@ describe('构建 / 校验参数加固：空值、空格写法、未知值都报�
   });
   test('CI build job 跑两种包的 verify:dist', () => {
     const ci = fs.readFileSync(path.join(root, '.github/workflows/ci.yml'), 'utf8');
-    expect(ci).toMatch(/run: npm run build\n\s*#[^\n]*\n\s*- run: npm run verify:dist\n\s*- run: npm run build:firefox\n\s*- run: npm run verify:dist:firefox/);
+    expect(ci).toMatch(/- run: npm run build\n\s*- run: npm run build:firefox\n\s*- run: npm run verify:dist:chrome\n\s*- run: npm run verify:dist:firefox/);
   });
 });

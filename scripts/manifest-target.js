@@ -1,6 +1,7 @@
 // 按目标浏览器调整构建产物里的 manifest。
 // Chrome 对 MV3 的 background.scripts 报「'background.scripts' requires manifest version of 2 or lower」，
-// 所以 Chrome/Edge 包去掉 scripts；Firefox 不支持 service_worker，Firefox 包保留 scripts。
+// 所以 Chrome/Edge 包去掉 scripts，也不带 browser_specific_settings。
+// Firefox 包只用 background.scripts，并保留 gecko 设置。与 journal-md 相同。
 // 1.2.2 起所有权限（含 declarativeNetRequestWithHostAccess 和 PaddleOCR 域名）都在源 manifest 里安装时一次授予，
 // Chrome / Firefox 两个包的权限完全相同，这里不再搬动权限。
 const TARGETS = ['chrome', 'firefox'];
@@ -39,7 +40,11 @@ function parseVerifyArgs(argv) {
 function manifestForTarget(manifest, target) {
   const t = normalizeTarget(target);
   const out = JSON.parse(JSON.stringify(manifest));
-  if (t === 'chrome' && out.background) delete out.background.scripts;
+  if (t === 'chrome') {
+    if (out.background) delete out.background.scripts;
+    delete out.browser_specific_settings;
+  }
+  if (t === 'firefox' && out.background) delete out.background.service_worker;
   return out;
 }
 
@@ -48,10 +53,12 @@ function verifyBackground(manifest, target) {
   const errors = [];
   const scripts = manifest.background && manifest.background.scripts;
   if (t === 'firefox') {
-    if (!Array.isArray(scripts) || !scripts.length) errors.push('Firefox 产物缺少 background.scripts（Firefox 不支持 service_worker）');
+    if (!Array.isArray(scripts) || !scripts.length) errors.push('Firefox 产物缺少 background.scripts（Firefox 包只用 background.scripts）');
+    if (manifest.background && manifest.background.service_worker) errors.push('Firefox 产物不能有 background.service_worker（Firefox 包只用 background.scripts）');
   } else {
     if (scripts !== undefined) errors.push('Chrome/Edge 产物不能有 background.scripts（MV3 下 Chrome 会报错）');
     if (!(manifest.background && manifest.background.service_worker)) errors.push('Chrome/Edge 产物缺少 background.service_worker');
+    if (manifest.browser_specific_settings) errors.push('Chrome/Edge 产物不能有 browser_specific_settings');
   }
   return errors;
 }
