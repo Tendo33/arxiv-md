@@ -48,6 +48,11 @@
     "webpack": "^5.90.0",
     "webpack-cli": "^5.1.4"
   },
+  "overrides": {
+    "archiver-utils": {
+      "glob": "14.0.6"
+    }
+  },
   "keywords": [
     "arxiv",
     "markdown",
