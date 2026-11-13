@@ -1,6 +1,6 @@
 {
   "name": "arxiv-md",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "arXiv to Markdown — browser extension that saves arXiv papers as clean Markdown, with math, tables and references intact.",
   "author": "SimonSun",
   "license": "MIT",

@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     env:
-      PLAYWRIGHT_VERSION: 1.60.0
+      PLAYWRIGHT_VERSION: 1.65.0
       E2E_SCRIPTS: |
         scripts/e2e-shortcut.js
         scripts/e2e-popup-a11y.js
@@ -110,7 +110,7 @@ jobs:
     timeout-minutes: 20
     continue-on-error: true
     env:
-      PLAYWRIGHT_VERSION: 1.60.0
+      PLAYWRIGHT_VERSION: 1.65.0
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
