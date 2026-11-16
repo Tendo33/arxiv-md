@@ -8,6 +8,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [1.3.2] - 2026-11-16
+
+### 修复
+
+- 公式在 Obsidian、GitHub 等 MathJax 渲染器里整条报错：ar5iv 原文里的 `\bm{…}` 换成 `\boldsymbol{…}`，`\textnormal` / `\textsc` 换成 `\text`。`\bm` 是 Springer 宏包的命令，KaTeX 认识但 MathJax 默认没有，一条公式里出现就会让整条公式渲染失败——一篇论文里常见几百处，表现为「好多公式显示不出来」，而本地 KaTeX 校验却是全过的。
+- 多行公式被拆成多个独立公式块：arXiv HTML 把一个方程行的左右两半放在两个单元格里，之前按单元格摊平成 4 个 `$$…$$`。现在按行合并成一条 display 公式，多行用 `\begin{aligned}` 对齐，编号还原成 `\tag{6}`，正文里的「Eq. 6」重新指得到东西。
+- 公式编号丢失：原文的 `(1)…(31)` 之前整列被丢弃，现在以 `\tag` 保留。
+- 表格里的公式不渲染：单元格内的块级公式降级成行内（分式改 `\dfrac` 避免变小号），表格不再因此回退成原始 HTML。GitHub / Obsidian 不在 HTML 块里解析 `$…$`，回退之后整张表的公式都会变成源码。
+- 带 `colspan` 的表格之前一律回退 HTML，现在拆成「内容 + 空格子」走 GFM 表格；只有 `rowspan` 无法用空格子表达，仍然保留 HTML。
+- 作者行混入单位、邮箱和「Equal contribution / Corresponding author」条目，输出成 `Xuan Ouyang , Zefan Cai , … Affiliation: UW-Madison  \*Equal contribution`。现在只保留作者姓名，逗号正常，被 `<span>` 包住的姓名不会误删，同一作者条目里用 `&` 并列的两个人会正确分开。
+- 正文残留：Turndown 转义的连字符（`$d$\-dimensional`、表格里的 `\-0.60`）还原为 `-`；`&#160;` 等数字实体解码，控制字符实体不再打断表格行；拆分公式后只含空格的孤行被清掉。
+- 公式和代码块内部不再被实体解码、空格清理等后处理改写。
+
+### 改进
+
+- 新增 LaTeX 兼容性回归测试（`tests/ar5iv-latex-compat.test.js`）与 MathJax 兼容断言：每个夹具的每条公式都检查不含 `\bm`、`\textnormal`、`\textsc`。之前只校验 KaTeX 能否解析，这类问题发现不了。
+- 架构文档补上两条硬约束：colspan 走 GFM、只有 rowspan 回退 HTML；公式必须能在 MathJax 渲染，不只是 KaTeX。
+
 ## [1.3.1] - 2026-11-13
 
 ### 改进

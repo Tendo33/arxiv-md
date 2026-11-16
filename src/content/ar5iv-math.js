@@ -221,11 +221,17 @@ export function cleanLatexFormula(latex) {
   result = result.replace(/\\mbox\s*\{([^}]*)\}/g, '$1'); // \mbox{text} -> text
   result = result.replace(/\\text\s*\{([^}]*)\}/g, '\\text{$1}'); // 保留 \text
 
+  // 6a. 通用性修补：Springer/ar5iv 常见的 bm 宏在 MathJax（Obsidian、GitHub）里默认不存在，
+  // 整条公式会因此报错；\boldsymbol 在 TeX、KaTeX、MathJax 里都可用。
+  result = result.replace(/\\bm(?![a-zA-Z])/g, '\\boldsymbol');
+
   // 6b. KaTeX 不支持的文本命令 / 交叉引用
   result = result.replace(/\\textsc\b/g, '\\text');
-  // 论文里常见的自定义算子宏（\newcommand\diag{\operatorname{diag}} 之类），KaTeX 不认识
-  // \text{\diag} 里不能用数学命令：直接换成纯文字
-  result = result.replace(/\\text\{([^{}]*)\}/g, (m, inner) => `\\text{${inner.replace(/\\(diag|argmax|argmin|Tr|tr|rank|sign|sgn)(?![a-zA-Z])\s*/g, '$1')}}`);
+  result = result.replace(/\\textnormal(?![a-zA-Z])/g, '\\text');
+  // \text{…} 里的数学命令（\text{\diag}、\text{\bm{x}}、\text{3\times 3}）在 text 模式下非法，
+  // KaTeX 会整条报错。用平衡大括号扫描处理（正则处理不了嵌套的 {}），
+  // 只剥命令外壳保留内容；含 $…$ 的文本组留给 6c 的 splitDollarsInTextGroups。
+  result = mapTextGroups(result, cleanTextGroupContent);
   // argmax/argmin 习惯用 \DeclareMathOperator*（下标在正下方）；前面是奇数个 \ 才是命令，\\diag 是换行 + 字母
   result = result.replace(/(?<=(?:^|[^\\])(?:\\\\)*)\\(argmax|argmin)(?![a-zA-Z])/g, '\\operatorname*{$1}');
   result = result.replace(/(?<=(?:^|[^\\])(?:\\\\)*)\\(diag|Tr|tr|rank|sign|sgn)(?![a-zA-Z])/g, '\\operatorname{$1}');
@@ -268,6 +274,74 @@ export function restoreMathPlaceholders(markdown, mathMap) {
 }
 
 const TEXT_GROUP_RE = /\\(?:text|textrm|textbf|textit|texttt|textsf|mbox)\s*\{/g;
+
+const TEXT_SYMBOLS = {
+  times: '×',
+  cdot: '·',
+  pm: '±',
+  leq: '≤',
+  geq: '≥',
+  neq: '≠',
+  approx: '≈',
+  to: '→',
+  rightarrow: '→',
+  prime: '′',
+  infty: '∞',
+};
+
+/**
+ * 用平衡大括号扫描遍历 \text{…} / \mbox{…} 组，对组内容调用 fn。
+ * 正则处理不了嵌套的 {}（\text{\bm{x}}），这里按深度配对。
+ */
+function mapTextGroups(latex, fn) {
+  let out = '';
+  let last = 0;
+  TEXT_GROUP_RE.lastIndex = 0;
+  let match;
+  while ((match = TEXT_GROUP_RE.exec(latex))) {
+    const start = match.index + match[0].length;
+    let depth = 1;
+    let i = start;
+    for (; i < latex.length && depth > 0; i += 1) {
+      if (latex[i] === '\\') { i += 1; continue; }
+      if (latex[i] === '{') depth += 1;
+      else if (latex[i] === '}') depth -= 1;
+    }
+    if (depth !== 0) break;
+    const body = latex.slice(start, i - 1);
+    const cmd = match[0].slice(0, match[0].length - 1).trim();
+    out += latex.slice(last, match.index) + cmd + '{' + fn(body) + '}';
+    last = i;
+    TEXT_GROUP_RE.lastIndex = i;
+  }
+  return out + latex.slice(last);
+}
+
+/**
+ * 文本组里不能出现数学命令（KaTeX: "Can't use function ... in text mode"）。
+ * 剥掉命令外壳保留内容：\bm{x} → x，\diag → diag，\times → ×。
+ * 含 $…$ 的组原样返回，交给 6c 的 splitDollarsInTextGroups 拆分。
+ */
+function cleanTextGroupContent(inner) {
+  if (inner.includes('$')) return inner;
+  let out = inner;
+  // 字体/数学字体命令可以嵌套，循环剥到不再变化为止（\bm{\bm{x}}）
+  const fontCmd = /\\(?:bm|boldsymbol|mathbf|mathbb|mathcal|mathrm|mathit|mathsf|mathtt|mathfrak|boxed)\s*\{([^{}]*)\}/;
+  for (let guard = 0; guard < 8 && fontCmd.test(out); guard += 1) {
+    out = out.replace(new RegExp(fontCmd.source, 'g'), '$1');
+  }
+  return out.replace(/\\([a-zA-Z]+)(?![a-zA-Z])\s*/g, (m, name) => {
+    if (TEXT_SYMBOLS[name]) return TEXT_SYMBOLS[name];
+    // \textbf{…} / \mbox{…} 这类文本命令在 text 模式下合法，保留命令本身
+    if (TEXT_FONT_CMDS.has(name)) return `\\${name}`;
+    // 其余数学命令（\diag、\argmax…）在 text 模式下非法，只留名字
+    return name;
+  });
+}
+
+const TEXT_FONT_CMDS = new Set([
+  'text', 'textrm', 'textbf', 'textit', 'texttt', 'textsf', 'textsc', 'textnormal', 'mbox',
+]);
 
 function splitDollarsInTextGroups(latex) {
   if (!latex.includes('$')) return latex;

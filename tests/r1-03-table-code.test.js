@@ -18,8 +18,14 @@ describe('R1-03 表格', () => {
     const md = conv(`<table class="ltx_tabular"><tr><td>a</td><td><math alttext="\\|x\\|"><mi>x</mi></math></td></tr></table>`);
     expect(md).toContain('$\\\\|x\\\\|$');
   });
-  test('有合并单元格仍回退 HTML', () => {
-    expect(conv(`<table class="ltx_tabular"><tr><td colspan="2">x</td></tr></table>`)).toContain('<table');
+  test('有 rowspan 的表格仍回退 HTML', () => {
+    expect(conv(`<table class="ltx_tabular"><tr><td rowspan="2">x</td><td>a</td></tr><tr><td>b</td></tr></table>`)).toContain('<table');
+  });
+  test('只有 colspan 的表格走 GFM，跨列用空格子补齐', () => {
+    const md = conv(`<table class="ltx_tabular"><tr><td colspan="2">x</td></tr><tr><td>a</td><td>b</td></tr></table>`);
+    expect(md).not.toContain('<table');
+    expect(md).toContain('| x |   |');
+    expect(md).toContain('| a | b |');
   });
 });
 

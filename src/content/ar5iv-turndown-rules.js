@@ -424,19 +424,28 @@ function isEmptyTable(table) {
     && !table.querySelector('img, object, embed, math');
 }
 
+// GFM 表格没有 colspan/rowspan。rowspan 无法用空格子表达，仍回退 HTML；
+// colspan 可以拆成「内容 + 若干空格子」，这样论文里大量 colspan 的表能走 GFM ——
+// 关键收益是 HTML 块里 GitHub / Obsidian 不解析 $…$，而 GFM 单元格会。
+function cellSpan(cell) {
+  return {
+    rs: parseInt(cell.getAttribute('rowspan') || '1', 10) || 1,
+    cs: parseInt(cell.getAttribute('colspan') || '1', 10) || 1,
+  };
+}
+
 function isSimpleTable(table, mathMap) {
   if (table.querySelector('table')) return false;
   const rows = Array.from(table.querySelectorAll('tr'));
   if (rows.length < 1) return false;
-  const cells = table.querySelectorAll('td, th');
-  for (const cell of cells) {
-    const rs = parseInt(cell.getAttribute('rowspan') || '1', 10);
-    const cs = parseInt(cell.getAttribute('colspan') || '1', 10);
-    if (rs > 1 || cs > 1) return false;
+  for (const cell of table.querySelectorAll('td, th')) {
+    if (cellSpan(cell).rs > 1) return false;
     if (cell.querySelector('ul, ol, figure, pre, blockquote')) return false;
   }
-  const width = rows[0].querySelectorAll('td, th').length;
-  if (!width || rows.some((r) => r.querySelectorAll('td, th').length !== width)) return false;
+  const widths = rows.map((r) => Array.from(r.querySelectorAll('td, th'))
+    .reduce((sum, cell) => sum + cellSpan(cell).cs, 0));
+  const width = widths[0];
+  if (!width || widths.some((w) => w !== width)) return false;
   if (mathMap) {
     const ids = table.textContent.match(/MATH(?:INLINE|BLOCK)START\d+MATH(?:INLINE|BLOCK)END/g) || [];
     if (ids.some((id) => mathMap.get(id)?.isBlock)) return false;
@@ -457,15 +466,21 @@ function tableToGfm(table, turndownService, mathMap) {
       }
     });
   }
-  const rows = Array.from(table.querySelectorAll('tr')).map((tr) =>
-    Array.from(tr.querySelectorAll('td, th')).map((cell) =>
-      turndownService
-        .turndown(cell.innerHTML)
-        .replace(/\s*\n+\s*/g, ' ')
-        .replace(/\|/g, '\\|')
-        .trim(),
-    ),
-  );
+  const rows = Array.from(table.querySelectorAll('tr')).map((tr) => {
+    const cells = [];
+    tr.querySelectorAll('td, th').forEach((cell) => {
+      const { cs } = cellSpan(cell);
+      cells.push(
+        turndownService
+          .turndown(cell.innerHTML)
+          .replace(/\s*\n+\s*/g, ' ')
+          .replace(/\|/g, '\\|')
+          .trim(),
+      );
+      for (let i = 1; i < cs; i += 1) cells.push('');
+    });
+    return cells;
+  });
   const width = rows[0].length;
   const line = (cells) => `| ${cells.map((c) => c || ' ').join(' | ')} |`;
   return [line(rows[0]), line(new Array(width).fill('---')), ...rows.slice(1).map(line)].join('\n');

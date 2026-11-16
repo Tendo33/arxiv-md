@@ -54,6 +54,37 @@ describe('arXiv HTML 夹具转换', () => {
       expect(errors).toEqual([]);
     });
 
+    test('公式里不出现 MathJax 默认不支持的命令（Obsidian / GitHub 渲染失败）', () => {
+      // KaTeX 支持 \bm / \textnormal，但 MathJax 默认不支持，整条公式会报错；
+      // 单靠 KaTeX 校验发现不了这类问题（2611.07226 全篇 628 处 \bm 就是这么漏掉的）。
+      const banned = [
+        [/\\bm(?![a-zA-Z])/, '\\bm 应为 \\boldsymbol'],
+        [/\\textnormal(?![a-zA-Z])/, '\\textnormal 应为 \\text'],
+        [/\\textsc(?![a-zA-Z])/, '\\textsc 应为 \\text'],
+      ];
+      const { display, inline } = extractFormulas(markdown);
+      const offenders = [];
+      for (const tex of [...display, ...inline]) {
+        for (const [re, msg] of banned) {
+          if (re.test(tex)) offenders.push({ msg, tex: tex.slice(0, 80) });
+        }
+      }
+      expect(offenders).toEqual([]);
+    });
+
+    test('不残留未解析的 HTML 数字实体和转义连字符', () => {
+      expect(markdown).not.toMatch(/&#\d+;|&#x[0-9a-fA-F]+;/);
+      expect(markdown).not.toMatch(/^[ \t]+$/m);
+    });
+
+    test('表格不因单元格公式回退成 HTML（HTML 块里 $…$ 不渲染）', () => {
+      // 只有 rowspan 的表允许回退；带 $$ 的 table 一律视为回归
+      const tables = markdown.match(/<table[\s\S]*?<\/table>/g) || [];
+      for (const t of tables) {
+        expect(t).not.toContain('$$');
+      }
+    });
+
     test('公式没有明显丢失', () => {
       const { display, inline } = extractFormulas(markdown);
       const source = countSourceMath(file);

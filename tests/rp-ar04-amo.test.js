@@ -73,7 +73,8 @@ describe('AR-04 DOM 构建行为', () => {
     const { document } = parseHTML('<html><body><span class="ltx_personname">A &amp; <a href="#">B</a> &amp; C</span></body></html>');
     preprocessAuthorsAndMetadata(document);
     const el = document.querySelector('.ltx_personname');
-    expect(el.textContent).toBe('A \n\n B \n\n C');
+    // 名字两侧的空白被压掉，"A ," 这类输出不会再出现
+    expect(el.textContent).toBe('A\n\nB\n\nC');
     expect(el.querySelector('a')).toBeTruthy();
   });
 

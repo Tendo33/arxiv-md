@@ -209,9 +209,26 @@
 
 标准模式的回退目标只有 PDF。
 
-### 3. 复杂表格不是 GFM 表格优先
+### 3. 表格：colspan 走 GFM，只有 rowspan 回退 HTML
 
-当前实现会优先保留 HTML 表格，以避免复杂结构损坏。
+GFM 表格没有合并单元格。`colspan` 可以拆成「内容 + 空格子」表达，所以走 GFM；
+`rowspan` 无法用格子补齐，仍保留 HTML。这条规则不是审美选择：GitHub / Obsidian
+不在原始 HTML 块里解析 `$…$`，表格一旦回退 HTML，里面的公式就全部变成源码。
+同理，单元格里的块级公式会降级成行内（分式用 `\dfrac`），否则整张表被迫回退。
+
+### 4. 公式必须能在 MathJax（Obsidian / GitHub）里渲染，不只是 KaTeX
+
+这是最容易漏的一条：KaTeX 认识 `\bm`、`\textnormal`，但 MathJax 默认不加载
+`bm` 宏，一条公式里出现就会整条报错。用户看到的是「公式渲染不出来」，
+而本地的 KaTeX 校验全部通过，所以必须单独守。
+
+输出侧的三条约束（`tests/ar5iv-latex-compat.test.js` 与
+`tests/paper-fixtures.test.js` 有对应断言）：
+
+- `\bm{…}` → `\boldsymbol{…}`；`\textnormal` / `\textsc` → `\text`
+- 不使用 `\tag` 以外的编号写法，且 `\tag` 只放在 display 公式里
+- 一条多行公式必须是单个 `$$…$$`（多行用 `\begin{aligned}`），
+  不能按 `<td>` 摊平成多个块
 
 ## 扩展点建议
 

@@ -34,7 +34,7 @@ export function convertAr5ivDocument(doc, options = {}) {
   convertImageObjects(cleanedDoc);
   preprocessLists(cleanedDoc);
   preprocessAr5ivElements(cleanedDoc, options);
-  preprocessTables(cleanedDoc);
+  preprocessTables(cleanedDoc, mathMap);
   removeMathMLArtifacts(cleanedDoc);
 
   // Turndown 转换

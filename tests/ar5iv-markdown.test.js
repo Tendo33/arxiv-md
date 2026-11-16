@@ -25,8 +25,10 @@ describe('ar5iv markdown', () => {
 
     expect(markdown).toContain('$E=mc^2$');
     expect(markdown).toMatch(/\$\$\s*a\+b\s*\$\$/);
-    expect(markdown).toContain('<table');
-    expect(markdown).toContain('colspan="2"');
+    // colspan 表格改走 GFM（HTML 块里 GitHub / Obsidian 不解析 $…$），跨列补空格子
+    expect(markdown).not.toContain('<table');
+    expect(markdown).toContain('| A | B |');
+    expect(markdown).toContain('| 1 |   |');
     expect(markdown).toContain('https://ar5iv.labs.arxiv.org/assets/fig.png');
     expect(markdown).toMatch(/#+\s+1 Intro/);
   });

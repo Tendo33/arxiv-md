@@ -50,6 +50,15 @@ export function postProcessMarkdown(markdown) {
     .replace(/&gt;/g, '>')
     .replace(/&amp;/g, '&')
     .replace(/&quot;/g, '"');
+  // 数字实体（ar5iv 的 &#160; 等）：不转换会在正文里原样显示。
+  // &#160; 解出来是不换行空格，Markdown 里按普通空格处理。
+  // 代码块和公式里原样保留：`&#10;` 这类在代码片段里是有意义的字面量。
+  // 控制字符（&#10; 之类）解出来会打断表格行和段落，统一换成空格。
+  const decodeEntity = (code) => (code < 0x20 || code === 0x7f ? ' ' : String.fromCharCode(code));
+  result = replaceOutsideProtected(result, (text) => text
+    .replace(/&#(\d+);/g, (_, d) => decodeEntity(Number(d)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => decodeEntity(parseInt(h, 16)))
+    .replace(/\u00a0/g, ' '));
 
   // 清理 LaTeX 命令残留
   result = result.replace(/\\\\AND/g, '').replace(/\\AND/g, '');
@@ -64,6 +73,15 @@ export function postProcessMarkdown(markdown) {
     /DOUBLEDOLLARSTART([^]*?)DOUBLEDOLLAREND/g,
     (_, content) => `\n\n$$\n${content.trim()}\n$$\n\n`,
   );
+
+  // 拆分公式后可能留下只含空格的孤行（"$$a$$ $$b$$" 中间那个空格），清掉。
+  // 代码块内部不动：那里面的空行是内容。
+  result = replaceOutsideProtected(result, (text) => text.replace(/^[ \t]+$/gm, ''));
+
+  // 正文里 Turndown 转义的连字符：$d$\-dimensional / | \-0.60 | 应显示为 "-"。
+  // 行首的 "\-"（列表项转义）必须保留，所以只处理前面不是换行的情况。
+  result = replaceOutsideProtected(result, (text) =>
+    text.replace(/(?<![\\\n])\\-/g, '-'));
 
   // 清理多余空行和非表格 HTML 标签残留
   // 只移除常见的非表格 HTML 标签，保留表格相关标签
