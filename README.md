@@ -182,7 +182,7 @@ npm test
 npm run package   # build/arxiv-md-v<version>-chrome.zip 与 -firefox.zip，外加 SHA256SUMS.txt
 ```
 
-架构见 [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)，开发和发版见 [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md)，贡献方式见 [CONTRIBUTING.md](./CONTRIBUTING.md)。
+架构见 [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)，开发和发版见 [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md)，贡献方式见 [CONTRIBUTING.md](./CONTRIBUTING.md)。完整文档索引见 [docs/index.md](./docs/index.md)。
 
 ## 同系列
 

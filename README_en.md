@@ -180,7 +180,7 @@ npm test
 npm run package   # build/arxiv-md-v<version>-chrome.zip, -firefox.zip, and SHA256SUMS.txt
 ```
 
-See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md), [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md) and [CONTRIBUTING.md](./CONTRIBUTING.md).
+See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md), [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md) and [CONTRIBUTING.md](./CONTRIBUTING.md). The full documentation index is [docs/index.md](./docs/index.md).
 
 ## Also in the series
 

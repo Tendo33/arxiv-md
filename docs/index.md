@@ -18,3 +18,4 @@
 - 更新日志：[CHANGELOG.md](../CHANGELOG.md)
 - 隐私：[PRIVACY.md](../PRIVACY.md)
 - 贡献：[CONTRIBUTING.md](../CONTRIBUTING.md)
+- 商店上架文案：[store-listing.md](./store-listing.md)
