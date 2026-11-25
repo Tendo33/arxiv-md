@@ -33,8 +33,8 @@ describe('路线 2：界面 / README / ARCHITECTURE 与实际行为一致（arXi
     expect(d).toMatch(l === 'zh' ? /PDF 文件[\s\S]*只发链接/ : /Uploads arXiv PDFs[\s\S]*only the link/);
   });
   test('README / ARCHITECTURE 提到 bcebos 与 ZIP 结构', () => {
-    expect(rd('README.en.md')).toMatch(/\*\.bj\.bcebos\.com/);
-    expect(rd('README.en.md')).toMatch(/full\.md/);
+    expect(rd('README_en.md')).toMatch(/\*\.bj\.bcebos\.com/);
+    expect(rd('README_en.md')).toMatch(/full\.md/);
     expect(rd('docs/ARCHITECTURE.md')).toMatch(/\*\.bj\.bcebos\.com/);
     expect(rd('docs/ARCHITECTURE.md')).toMatch(/≤50 MB/);
   });
@@ -71,7 +71,7 @@ test('PRIVACY 保留期限按 PM 核实结果写明；>50 MB 不发送、建议 
   expect(p).not.toMatch(/Retention periods/);
   expect(p).toMatch(/Neither Baidu AI Studio \(PaddleOCR\) nor MinerU publishes a specific retention period/);
   expect(p).toMatch(/larger than 50 MB is stopped before upload[^\n]*MinerU/);
-  expect(rd('README.en.md')).toMatch(/over 50 MB is not sent[^\n]*MinerU/);
+  expect(rd('README_en.md')).toMatch(/over 50 MB is not sent[^\n]*MinerU/);
   expect(rd('README.md')).toMatch(/超过 50 MB 的 PDF 不会发送[^\n]*MinerU/);
   expect(rd('README.md')).toMatch(/bcebos\.com/);
 });

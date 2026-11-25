@@ -27,7 +27,7 @@ src/
 └── config/       # constants and translations
 
 docs/
-├── README.md          # 中文；README.en.md 为英文，与 zhihu-md / journal-md 同一结构
+├── README.md          # 中文；README_en.md 为英文，与 zhihu-md / journal-md 同一结构
 ├── ARCHITECTURE.md
 ├── DEVELOPMENT.md
 ├── FAQ.md
@@ -56,7 +56,7 @@ If you change product behavior, update the docs in the same PR.
 
 Typical files to review:
 
-- `README.en.md`
+- `README_en.md`
 - `README.md`
 - `docs/FAQ.md`
 - `docs/ARCHITECTURE.md`

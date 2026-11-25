@@ -6,18 +6,23 @@
 
 **Save arXiv papers as Markdown in one click, with PDFs named by title.**
 
-[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/pphdggfbjddgdljndgdablkhbdpbfnbd?style=flat-square&label=Chrome%20Web%20Store&color=b31b1b)](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd)
-[![License: MIT](https://img.shields.io/badge/License-MIT-black?style=flat-square)](./LICENSE)
-[![Manifest V3](https://img.shields.io/badge/Manifest-V3-4285F4?style=flat-square&logo=googlechrome&logoColor=white)](./src/manifest.json)
+[![Chrome](https://img.shields.io/badge/Chrome-121%2B-4285F4?style=flat-square&logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd)
+[![Manifest V3](https://img.shields.io/badge/Manifest-V3-4285F4?style=flat-square&logo=googlechrome&logoColor=white)](src/manifest.json)
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES2022-F7DF1E?style=flat-square&logo=javascript&logoColor=black)](package.json)
+[![pdf.js](https://img.shields.io/badge/pdf.js-text_layer-E23F3F?style=flat-square&logo=mozilla&logoColor=white)](package.json)
 
-[Install](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd) · [中文说明](./README.md) · [FAQ](./docs/FAQ.md) · [Privacy](./PRIVACY.md) · [Changelog](./CHANGELOG.md)
+[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/pphdggfbjddgdljndgdablkhbdpbfnbd?style=flat-square&label=Chrome%20Web%20Store&color=b31b1b)](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd)
+[![License](https://img.shields.io/badge/License-MIT-2EA043?style=flat-square)](LICENSE)
+[![Privacy](https://img.shields.io/badge/Privacy-no_server-10B981?style=flat-square)](PRIVACY.md)
+
+[Install](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd) · [Usage](#usage) · [Export flow](#how-an-export-runs) · [Settings](#settings) · [FAQ](#faq)
+
+<sub>[中文](README.md) · English</sub>
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/hero-dark.png">
   <img src="docs/screenshots/hero-light.png" width="860" alt="Export buttons on an arXiv abstract page, with the extension popup">
 </picture>
-
-</div>
 
 > **The "to Markdown" series**: **arXiv to Markdown** · [Zhihu to Markdown](https://github.com/Tendo33/zhihu-md) · [Journal to Markdown](https://github.com/Tendo33/journal-md). Three extensions with the same interface and export habits, for arXiv preprints, Zhihu and journal full text.
 
@@ -73,6 +78,39 @@ Open `chrome://extensions`, enable Developer mode, click "Load unpacked" and pic
 
 <img src="docs/screenshots/popup.png" width="300" alt="Toolbar popup">
 
+## How an export runs
+
+Standard mode converts a paper to Markdown entirely on your device. PDF parsing is a separate opt-in branch that talks to a third-party service.
+
+```mermaid
+flowchart LR
+    A[arxiv.org/abs/ page<br/>page buttons, popup, shortcut, context menu] --> B{Export mode}
+    B -->|Standard| C{Official HTML?}
+    C -->|Yes| D[arxiv.org/html/ page]
+    C -->|No| E{ar5iv version?}
+    E -->|Yes| F[ar5iv page]
+    E -->|No| G[Download the PDF<br/>named after the title]
+    D --> H[HTML to Markdown<br/>math, tables, citations, footnotes]
+    F --> H
+    H --> I[Optional YAML frontmatter<br/>title / arxiv_id / source]
+    I --> J[Download the .md file<br/>result card can copy it]
+    B -->|PDF parsing| K[PaddleOCR or MinerU<br/>with your own API key]
+    K --> L[Poll task progress<br/>alarms wake the worker]
+    L --> M[Download a ZIP<br/>full.md + images/]
+
+    classDef client fill:#3B82F6,stroke:#2563EB,color:#fff,stroke-width:2px
+    classDef service fill:#10B981,stroke:#059669,color:#fff,stroke-width:2px
+    classDef data fill:#8B5CF6,stroke:#7C3AED,color:#fff,stroke-width:2px
+    classDef choice fill:#F59E0B,stroke:#D97706,color:#fff,stroke-width:2px
+    classDef external fill:#F43F5E,stroke:#E11D48,color:#fff,stroke-width:2px
+
+    class A client
+    class D,F,H,I service
+    class G,J,M data
+    class B,C,E choice
+    class K,L external
+```
+
 ## Settings
 
 <img src="docs/screenshots/settings.png" width="720" alt="Settings page">
@@ -111,7 +149,8 @@ Changes save automatically. "Restore defaults" also deletes saved API keys.
 ## Privacy
 
 - No backend, no analytics, and no data collection by the developer. Standard mode runs entirely in your browser and only talks to arXiv and ar5iv. Only PDF parsing sends anything to a third party: PaddleOCR uploads arXiv PDFs up to 50 MB as files and sends only the link for other PDFs; MinerU sends only the PDF link.
-- Only when you use PDF parsing is the paper sent, with your key, to the one provider you selected (PaddleOCR or MinerU, third-party services under their own terms): MinerU gets the arXiv PDF URL; PaddleOCR gets the arXiv PDF file itself (uploaded, up to 50 MB), and only the link for non-arXiv PDFs. A PDF over 50 MB is not sent; the extension suggests switching to MinerU. The extension never switches providers on its own. PaddleOCR is run by Baidu AI Studio. The applicable policy is the [Baidu privacy policy (in Chinese)](https://www.baidu.com/duty/yinsiquan.html). For reference only, the [PaddlePaddle AI Studio privacy policy (in Chinese)](https://aistudio.baidu.com/privacy) states that it applies to "WeChat Mini Program and mobile browsers (excluding PC)", so it does not cover this extension's API calls.
+- Only when you use PDF parsing is the paper sent, with your key, to the one provider you selected (PaddleOCR or MinerU, third-party services under their own terms): MinerU gets the arXiv PDF URL; PaddleOCR gets the arXiv PDF file itself (uploaded, up to 50 MB), and only the link for non-arXiv PDFs. A PDF over 50 MB is not sent; the extension suggests switching to MinerU. The extension never switches providers on its own.
+- How a provider handles and retains what you submit is governed by its own terms. Baidu AI Studio (PaddleOCR) and MinerU do not currently publish a retention period for uploaded files or parsing results. The applicable policy is the [Baidu privacy policy (in Chinese)](https://www.baidu.com/duty/yinsiquan.html). For reference only, the [PaddlePaddle AI Studio privacy policy (in Chinese)](https://aistudio.baidu.com/privacy) states that it applies to "WeChat Mini Program and mobile browsers (excluding PC)", so it does not cover the extension's API calls; it only promises to keep data "for as long as needed to provide the service". Do not send a PDF you have no right to share with a third party.
 - See [PRIVACY.md](./PRIVACY.md).
 
 ## FAQ

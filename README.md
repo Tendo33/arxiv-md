@@ -6,11 +6,18 @@
 
 **把 arXiv 论文一键保存为 Markdown，PDF 自动按标题命名。**
 
-[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/pphdggfbjddgdljndgdablkhbdpbfnbd?style=flat-square&label=Chrome%20Web%20Store&color=b31b1b)](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd)
-[![License: MIT](https://img.shields.io/badge/License-MIT-black?style=flat-square)](./LICENSE)
-[![Manifest V3](https://img.shields.io/badge/Manifest-V3-4285F4?style=flat-square&logo=googlechrome&logoColor=white)](./src/manifest.json)
+[![Chrome](https://img.shields.io/badge/Chrome-121%2B-4285F4?style=flat-square&logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd)
+[![Manifest V3](https://img.shields.io/badge/Manifest-V3-4285F4?style=flat-square&logo=googlechrome&logoColor=white)](src/manifest.json)
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES2022-F7DF1E?style=flat-square&logo=javascript&logoColor=black)](package.json)
+[![pdf.js](https://img.shields.io/badge/pdf.js-text_layer-E23F3F?style=flat-square&logo=mozilla&logoColor=white)](package.json)
 
-[安装](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd) · [English](./README.en.md) · [常见问题](./docs/FAQ.md) · [隐私说明](./PRIVACY.md) · [更新日志](./CHANGELOG.md)
+[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/pphdggfbjddgdljndgdablkhbdpbfnbd?style=flat-square&label=Chrome%20Web%20Store&color=b31b1b)](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd)
+[![License](https://img.shields.io/badge/License-MIT-2EA043?style=flat-square)](LICENSE)
+[![Privacy](https://img.shields.io/badge/Privacy-no_server-10B981?style=flat-square)](PRIVACY.md)
+
+[安装](https://chromewebstore.google.com/detail/arxiv-to-markdown/pphdggfbjddgdljndgdablkhbdpbfnbd) · [使用](#使用) · [导出流程](#导出是怎么走的) · [设置](#设置) · [常见问题](#常见问题)
+
+<sub>中文 · [English](README_en.md)</sub>
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/hero-dark.png">
@@ -20,6 +27,8 @@
 </div>
 
 > **「to Markdown」系列**：**arXiv to Markdown** · [Zhihu to Markdown](https://github.com/Tendo33/zhihu-md) · [Journal to Markdown](https://github.com/Tendo33/journal-md)。三款插件同一套界面和导出习惯，分别覆盖 arXiv 预印本、知乎和期刊全文。
+
+> 截图中的论文是演示页。
 
 ## 功能
 
@@ -70,6 +79,39 @@ npm run build
 | PDF 页悬浮按钮 | 在 `arxiv.org/pdf/*` 页右下角，可在设置里关闭 |
 
 <img src="docs/screenshots/popup.png" width="300" alt="工具栏弹窗">
+
+## 导出是怎么走的
+
+标准模式把论文转成 Markdown，只在本地进行；PDF 解析是另一条可选支路，才会请求第三方服务。
+
+```mermaid
+flowchart LR
+    A[arxiv.org/abs/ 页面<br/>页面按钮、弹窗、快捷键、右键] --> B{导出方式}
+    B -->|标准| C{有官方 HTML?}
+    C -->|有| D[arxiv.org/html/ 页面]
+    C -->|没有| E{有 ar5iv?}
+    E -->|有| F[ar5iv 页面]
+    E -->|没有| G[下载 PDF<br/>按标题命名]
+    D --> H[HTML 转 Markdown<br/>公式、表格、引用、脚注]
+    F --> H
+    H --> I[可选 YAML frontmatter<br/>title / arxiv_id / source]
+    I --> J[下载 .md 文件<br/>页面结果卡片可复制]
+    B -->|PDF 解析| K[PaddleOCR 或 MinerU<br/>用你自己的 API Key]
+    K --> L[轮询任务进度<br/>alarms 后台唤醒]
+    L --> M[下载 ZIP<br/>full.md + images/]
+
+    classDef client fill:#3B82F6,stroke:#2563EB,color:#fff,stroke-width:2px
+    classDef service fill:#10B981,stroke:#059669,color:#fff,stroke-width:2px
+    classDef data fill:#8B5CF6,stroke:#7C3AED,color:#fff,stroke-width:2px
+    classDef choice fill:#F59E0B,stroke:#D97706,color:#fff,stroke-width:2px
+    classDef external fill:#F43F5E,stroke:#E11D48,color:#fff,stroke-width:2px
+
+    class A client
+    class D,F,H,I service
+    class G,J,M data
+    class B,C,E choice
+    class K,L external
+```
 
 ## 设置
 

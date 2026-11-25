@@ -6,13 +6,13 @@ const BAIDU = 'https://www.baidu.com/duty/yinsiquan.html';
 const AIS = 'https://aistudio.baidu.com/privacy';
 
 describe('R-1 privacy links parity', () => {
-  test.each(['README.en.md', 'README.md', 'PRIVACY.md'])('%s lists both links', (f) => {
+  test.each(['README_en.md', 'README.md', 'PRIVACY.md'])('%s lists both links', (f) => {
     const s = read(f);
     expect(s).toContain(BAIDU);
     expect(s).toContain(AIS);
   });
-  test('README.en.md: Baidu is the applicable policy, AI Studio is reference with scope', () => {
-    const s = read('README.en.md');
+  test('README_en.md: Baidu is the applicable policy, AI Studio is reference with scope', () => {
+    const s = read('README_en.md');
     expect(s).toMatch(/applicable policy is the \[Baidu privacy policy/);
     expect(s).toMatch(/For reference only, the \[PaddlePaddle AI Studio privacy policy/);
     expect(s).toMatch(/excluding PC/);

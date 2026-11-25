@@ -6,7 +6,7 @@ describe('R5-05（已决定 A）：卡片收起规则写进文档', () => {
   test.each(['README.md', 'docs/ARCHITECTURE.md', 'CHANGELOG.md', 'src/content/progress-ui.js'])('%s', (f) => {
     expect(rd(f)).toContain(W);
   });
-  test('README.en.md 英文同义', () => {
-    expect(rd('README.en.md')).toMatch(/Cards with action buttons stay until you close them; other finished cards hide after 10 seconds/);
+  test('README_en.md 英文同义', () => {
+    expect(rd('README_en.md')).toMatch(/Cards with action buttons stay until you close them; other finished cards hide after 10 seconds/);
   });
 });

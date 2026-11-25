@@ -8,9 +8,9 @@ const EN = 'Baidu privacy policy (in Chinese)';
 
 test('PRIVACY / README / README.en 写的是同一个链接和文字', () => {
   expect(rd('PRIVACY.md')).toContain(`[${EN}](${URL_})`);
-  expect(rd('README.en.md')).toContain(`[${EN}](${URL_})`);
+  expect(rd('README_en.md')).toContain(`[${EN}](${URL_})`);
   expect(rd('README.md')).toContain(`[${ZH}](${URL_})`);
-  for (const f of ['PRIVACY.md', 'README.en.md', 'README.md']) expect(rd(f)).not.toMatch(/飞桨星河社区隐私政策/);
+  for (const f of ['PRIVACY.md', 'README_en.md', 'README.md']) expect(rd(f)).not.toMatch(/飞桨星河社区隐私政策/);
 });
 
 test('PRIVACY.md 保留期一句用句号断开，不是「; The」', () => {

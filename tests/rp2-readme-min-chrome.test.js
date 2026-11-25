@@ -4,8 +4,8 @@ import path from 'path';
 const root = path.join(__dirname, '..');
 const min = JSON.parse(fs.readFileSync(path.join(root, 'src/manifest.json'), 'utf8')).minimum_chrome_version;
 test('manifest 有 minimum_chrome_version', () => expect(min).toBe('121'));
-test('README.en.md 写明 Requires Chrome {min} or later', () => {
-  expect(fs.readFileSync(path.join(root, 'README.en.md'), 'utf8')).toContain(`Requires Chrome ${min} or later.`);
+test('README_en.md 写明 Requires Chrome {min} or later', () => {
+  expect(fs.readFileSync(path.join(root, 'README_en.md'), 'utf8')).toContain(`Requires Chrome ${min} or later.`);
 });
 test('README.md 写明 需要 Chrome {min} 或更高版本', () => {
   expect(fs.readFileSync(path.join(root, 'README.md'), 'utf8')).toContain(`需要 Chrome ${min} 或更高版本。`);

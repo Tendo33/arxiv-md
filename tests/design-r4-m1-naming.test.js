@@ -37,7 +37,7 @@ describe('设计验收 M1：模式卡、页面按钮、进度、统计不再写�
   });
 
   test('README 中英都叫 PDF 解析模式', () => {
-    expect(read('README.en.md')).not.toMatch(/MinerU mode/);
+    expect(read('README_en.md')).not.toMatch(/MinerU mode/);
     expect(read('README.md')).not.toMatch(/MinerU 模式/);
   });
 
